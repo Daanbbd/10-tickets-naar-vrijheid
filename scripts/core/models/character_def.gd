@@ -6,6 +6,9 @@ extends Resource
 @export var name: String = ""
 @export var role: String = ""
 @export var tagline: String = ""
+## Eén regel over hoe jouw dag speelt. Vervangt description en specialisms op
+## het selectiescherm: die zijn daar niet actiegericht.
+@export var stijl: String = ""
 @export var description: String = ""
 @export var traits: Array[StringName] = []
 @export var specialisms: Array[String] = []

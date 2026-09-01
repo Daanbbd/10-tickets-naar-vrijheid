@@ -93,6 +93,7 @@ func _load_characters(path: String) -> void:
 		c.role = String(d.get("role", ""))
 		c.tagline = String(d.get("tagline", ""))
 		c.description = String(d.get("description", ""))
+		c.stijl = String(d.get("stijl", ""))
 		c.traits = _sn_array(d.get("traits", []))
 		c.specialisms = _str_array(d.get("specialisms", []))
 		c.owned_tickets = _sn_array(d.get("owned_tickets", []))

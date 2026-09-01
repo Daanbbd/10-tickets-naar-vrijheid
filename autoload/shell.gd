@@ -19,6 +19,8 @@ var _busy: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_fade.color.a = 0.0
+	_fade.visible = false
 	_qa_shot()
 
 
@@ -45,8 +47,6 @@ func _qa_shot() -> void:
 	else:
 		printerr("[SHOT] kon %s niet schrijven" % pad)
 	get_tree().quit()
-	_fade.color.a = 0.0
-	_fade.visible = false
 
 
 # --- Routing --------------------------------------------------------------

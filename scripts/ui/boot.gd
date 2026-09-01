@@ -61,9 +61,6 @@ func _quick_minigame(id: StringName, character_id: StringName) -> void:
 	Session.start_new(character_id)
 	QuestEngine.initialise_tickets()
 	_status.text = "QA-minigame: %s" % id
-	# Deze route slaat _change_scene over, en daarmee ook de fade-in. Zonder dit
-	# blijft het zwarte overgangsvlak liggen en zie je de minigame niet.
-	await Shell.fade_in()
 	await get_tree().create_timer(0.2).timeout
 	var res: MinigameResult = await Shell.run_minigame(id, {})
 	print("[QA] minigame %s -> outcome=%d score=%d" % [id, res.outcome, res.score])

@@ -79,6 +79,14 @@ static func postit_kleur(naam: StringName) -> Color:
 	return POSTIT_KLEUREN.get(naam, POSTIT)
 
 
+## Zelfde paneel, maar met een krappe binnenmarge. Voor lijstrijen, waar de
+## standaard 6 px een rij van 26 px op 42 px brengt.
+static func panel_krap(bg: Color = PANEL, border: Color = INK, width: int = 1) -> StyleBoxFlat:
+	var sb := panel(bg, border, width)
+	sb.set_content_margin_all(2)
+	return sb
+
+
 static func label(text: String, size: int = FS_BODY, color: Color = INK) -> Label:
 	var l := Label.new()
 	l.text = text
