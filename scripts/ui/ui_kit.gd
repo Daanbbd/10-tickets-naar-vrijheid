@@ -27,10 +27,13 @@ const ROZE_TINT       := Color("#ffcee3")  # bb_pink — letterlijk bb-pink — 
 const NEUTRAAL_TINT   := Color("#e4e4e4")  # ui_neutraal_tint — letterlijk --color-line — voor niet-accent states
 # --- GEGENEREERD UIT palette.py, NIET HANDMATIG BEWERKEN — EINDE ---
 
-const FS_SMALL := 8
+# Ark Pixel is ontworpen op 10 px. Alleen hele veelvouden blijven scherp, dus
+# de ladder is 10 / 20 / 30. Klein onderscheid gaat via kleur, niet via 8 px:
+# een pixelfont onder zijn ontwerpmaat wordt onleesbaar.
+const FS_SMALL := 10
 const FS_BODY := 10
-const FS_HEAD := 14
-const FS_TITLE := 28
+const FS_HEAD := 20
+const FS_TITLE := 30
 
 
 static func panel(bg: Color = PANEL, border: Color = INK, width: int = 1) -> StyleBoxFlat:

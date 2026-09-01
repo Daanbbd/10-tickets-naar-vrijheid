@@ -32,18 +32,22 @@ De algemene dialogen triggeren wanneer de speler een NPC aanspreekt buiten een a
 **Context:** Dennis loopt zijn vaste ronde. Hij heeft het bord al bijgewerkt.
 
 ```
-Dennis: "Alles staat op het bord. Heb ik vanmorgen alvast bijgewerkt."
+Dennis start [bezocht]:  "oh jij nog een keer. bord staat nog goed."
+Dennis start [default]:  "Alles staat op het bord. Heb ik vanmorgen alvast bijgewerkt."
+
 Dennis: [< 4 done] "Ik heb de issues alvast nagelopen. Verder heb ik niks nodig."
 Dennis: [≥ 4 done] "De helft. Ik heb de rest alvast nagelopen en grof geschat."
 Dennis: [≥ 8 done] "Nog twee. Is maar weekje later."
 
 → [Keuze] "Het gaat goed."
      Dennis: "oke."
+     [flag: dennis_bezocht = true]
 → [Keuze] "Het is een puinhoop."
      Dennis: "-_- ik deploy het wel."
-     [flag: dennis_weet_het = true]
+     [flag: dennis_weet_het = true, dennis_bezocht = true]
 → [Keuze] "Ik heb even geen tijd."
      Dennis: "oke. andere mogelijkheid is er niet."
+     [flag: dennis_bezocht = true]
 
 Dennis slot [dennis_weet_het]: "Ik heb het al aangepast. Zei ik niks over."
 Dennis slot [default]: "cool. thanks is gedaan."
@@ -56,11 +60,17 @@ Dennis slot [default]: "cool. thanks is gedaan."
 **Context:** Koen zit in het Patchhok. Hij is bezig maar heeft er geen haast mee.
 
 ```
-Koen: [< 6 done] "Ik zal even kijken. Het duurt nog veertig minuten, vgm."
-Koen: [≥ 6 done] "De logs zijn stil. Is weer een pareltje hoor haha."
+Koen start [bezocht + ≥ 6 done]: "nog steeds stil, lekker ouwe. ben ik bijna nerveus van."
+Koen start [bezocht]:            "ah ben je er weer. ik zit in een andere rabbit hole. geen zorg haha."
+Koen start [≥ 6 done]:          "De logs zijn stil. Is weer een pareltje hoor haha."
+Koen start [default]:            "Ik zal even kijken. Het duurt nog veertig minuten, vgm."
+
 Koen: "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken."
+
 Koen: [< 6 done] "Ik kijk straks nog even naar de piepelienies. Iets met een timeout, vgm."
 Koen: [≥ 6 done] "De piepelienies lopen trouwens weer. Took a while haha."
+
+→ [Keuze] "Oke."   [flag: koen_bezocht = true]
 ```
 
 ---
@@ -70,13 +80,18 @@ Koen: [≥ 6 done] "De piepelienies lopen trouwens weer. Took a while haha."
 **Context:** Bastiaan zit voorover gebogen. Hij is ergens mee bezig waar hij zelf niet helemaal uit komt.
 
 ```
-Bastiaan: [start] "hiya,, ik zit nog in een ticket van vorige week,, ik kom er wel uit."
-Bastiaan: [≥ 3 done] "Ik heb een component gemaakt die niemand nodig heeft,, nog niet."
-Bastiaan: [≥ 7 done] "Ik heb de hele build nagelopen,, er zit niets fout in,, dat vertrouw ik niet."
+Bastiaan start [bezocht + ≥ 7 done]: "hiya,, alles is groen,, ik vertrouw het niet,,"
+Bastiaan start [bezocht + ≥ 3 done]: "ah jij nog een keer,, ik ben dezelfde component nog aan het verbeteren,, hij is nu echt goed,,"
+Bastiaan start [bezocht]:            "hiya nog een keer,, ik ben er nog,,"
+Bastiaan start [≥ 7 done]:          "Ik heb de hele build nagelopen,, er zit niets fout in,, dat vertrouw ik niet."
+Bastiaan start [≥ 3 done]:          "Ik heb een component gemaakt die niemand nodig heeft,, nog niet."
+Bastiaan start [default]:            "hiya,, ik zit nog in een ticket van vorige week,, ik kom er wel uit."
 
 Bastiaan tweede [trait: technisch]: "Kijk je straks even mee,, niet nu,, straks."
-Bastiaan tweede [trait: detail]: "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat ook hè."
-Bastiaan tweede [default]: "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
+Bastiaan tweede [trait: detail]:    "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat ook hè."
+Bastiaan tweede [default]:          "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
+
+→ [Keuze] "Oke."   [flag: bastiaan_bezocht = true]
 ```
 
 ---
@@ -133,14 +148,19 @@ Bezorger [default]: "Ze zei: geef maar aan degene die de website doet. Dus veel 
 ### Collega Daan *(Summit — als NPC voor andere characters)*
 
 ```
-Daan: [start] "Ik heb de tickets op volgorde gezet. Wilde het mezelf zo makkelijk mogelijk maken."
-Daan: [≥ 2 done] "We hebben scope. Dat is wellicht nieuw voor ons."
-Daan: [≥ 5 done] "De helft staat. De helft die overblijft is altijd de lastigste helft."
-Daan: [≥ 8 done] "Bijna. Ik durf het bijna hardop te zeggen."
+Daan start [bezocht + ≥ 8]: "Ik wil zeggen: bijna. Dan zeg ik het maar gewoon. Bijna."
+Daan start [bezocht + ≥ 4]: "Voortgang. Als het zo doorgaat wordt het nog wat."
+Daan start [bezocht]:        "Al iets gevonden?"
+Daan start [≥ 8 done]:      "Bijna. Ik durf het bijna hardop te zeggen."
+Daan start [≥ 5 done]:      "De helft staat. De helft die overblijft is altijd de lastigste helft."
+Daan start [≥ 2 done]:      "We hebben scope. Dat is wellicht nieuw voor ons."
+Daan start [default]:        "Ik heb de tickets op volgorde gezet. Wilde het mezelf zo makkelijk mogelijk maken."
 
-Daan tweede [trait: technisch]: "Kom je iets tegen dat niet in het ticket staat? Puur uit interesse: waar kwam dat dan vandaan."
+Daan tweede [trait: technisch]:   "Kom je iets tegen dat niet in het ticket staat? Puur uit interesse: waar kwam dat dan vandaan."
 Daan tweede [trait: commercieel]: "Als de klant belt: doorverbinden. Naar Willem. Altijd naar Willem."
-Daan tweede [default]: "Zeg het als iets niet klopt. Liever nu dan bij de oplevering."
+Daan tweede [default]:            "Zeg het als iets niet klopt. Liever nu dan bij de oplevering."
+
+→ [Keuze] "Oke."   [flag: daan_bezocht = true]
 ```
 
 ---
@@ -148,13 +168,17 @@ Daan tweede [default]: "Zeg het als iets niet klopt. Liever nu dan bij de opleve
 ### Collega Danny *(Basecamp — als NPC voor andere characters)*
 
 ```
-Danny: [start] "ik kijk naar wat mensen doen, niet naar wat ze zeggen. dat scheelt veel"
-Danny: [≥ 4 done] "ik heb een test lopen. vraag me over drie dagen wat eruit komt"
-Danny: [≥ 8 done] "joejoe. de cijfers lopen op. ik beloof nog niets"
+Danny start [bezocht + ≥ 8]: "de curve gaat omhoog. nu niet verpesten."
+Danny start [bezocht]:        "ah jij nog. psies. ik ben een test aan het analyseren."
+Danny start [≥ 8 done]:      "joejoe. de cijfers lopen op. ik beloof nog niets"
+Danny start [≥ 4 done]:      "ik heb een test lopen. vraag me over drie dagen wat eruit komt"
+Danny start [default]:        "ik kijk naar wat mensen doen, niet naar wat ze zeggen. dat scheelt veel"
 
-Danny tweede [trait: data]: "psies. meningen zijn ruis. gedrag is data"
+Danny tweede [trait: data]:   "psies. meningen zijn ruis. gedrag is data"
 Danny tweede [trait: detail]: "de knop staat twee pixels scheef. kost ons niets, maar ik zeg het toch"
-Danny tweede [default]: "alles is een funnel. de gang ook. mensen lopen linksom, altijd"
+Danny tweede [default]:       "alles is een funnel. de gang ook. mensen lopen linksom, altijd"
+
+→ [Keuze] "Oke."   [flag: danny_bezocht = true]
 ```
 
 ---
@@ -162,13 +186,17 @@ Danny tweede [default]: "alles is een funnel. de gang ook. mensen lopen linksom,
 ### Collega Victor *(De Vloer — als NPC voor andere characters)*
 
 ```
-Victor: [start] "Ik bouw wat anderen bedenken. Ik vraag alleen of iemand het heeft nagedacht."
-Victor: [≥ 4 done] "manmanman. Ik heb vandaag drie dingen rechtgezet die niemand scheef zag staan."
-Victor: [≥ 8 done] "De build is groen. Done."
+Victor start [bezocht + ≥ 8]: "Build is groen. Heb hem drie keer gecheckt. Heb hem nogmaals gecheckt."
+Victor start [bezocht]:        "Oh. Is er iets scheef?"
+Victor start [≥ 8 done]:      "De build is groen. Done."
+Victor start [≥ 4 done]:      "manmanman. Ik heb vandaag drie dingen rechtgezet die niemand scheef zag staan."
+Victor start [default]:        "Ik bouw wat anderen bedenken. Ik vraag alleen of iemand het heeft nagedacht."
 
 Victor tweede [trait: detail]: "Kijk eens naar de tweede rij. Nee? Precies. Dat is het probleem."
 Victor tweede [trait: proces]: "Zet het in een ticket. Anders bestaat het niet en doe ik het toch. hahaha"
-Victor tweede [default]: "Als je iets scheef ziet staan, zeg het. Dan zie ik het ook en slaap ik slechter."
+Victor tweede [default]:       "Als je iets scheef ziet staan, zeg het. Dan zie ik het ook en slaap ik slechter."
+
+→ [Keuze] "Oke."   [flag: victor_bezocht = true]
 ```
 
 ---
@@ -176,13 +204,17 @@ Victor tweede [default]: "Als je iets scheef ziet staan, zeg het. Dan zie ik het
 ### Collega Jonathan *(Het Patchhok — als NPC voor andere characters)*
 
 ```
-Jonathan: [start] "Als je mijn werk ziet, is er iets stuk. Dus je ziet me het liefst niet."
-Jonathan: [≥ 4 done] "Ik heb iets gerepareerd dat niemand kapot heeft zien gaan. Dat is het werk."
-Jonathan: [≥ 8 done] "De verbinding staat. Ben benieuwd hoe lang."
+Jonathan start [bezocht + ≥ 8]: "Nog een keer. De verbinding staat nog."
+Jonathan start [bezocht]:        "Ik ga er naartoe kijken, voor je het vraagt."
+Jonathan start [≥ 8 done]:      "De verbinding staat. Ben benieuwd hoe lang."
+Jonathan start [≥ 4 done]:      "Ik heb iets gerepareerd dat niemand kapot heeft zien gaan. Dat is het werk."
+Jonathan start [default]:        "Als je mijn werk ziet, is er iets stuk. Dus je ziet me het liefst niet."
 
-Jonathan tweede [trait: technisch]: "Zie je iets in de logs met een hoofdletter E: dat ben ik niet. Ik ga er wel naartoe kijken."
+Jonathan tweede [trait: technisch]:   "Zie je iets in de logs met een hoofdletter E: dat ben ik niet. Ik ga er wel naartoe kijken."
 Jonathan tweede [trait: commercieel]: "Beloof niets over snelheid. Ik weet niet waar die vandaan moet komen."
-Jonathan tweede [default]: "Het werkt lokaal. Moet zeggen dat dat ook iets is."
+Jonathan tweede [default]:            "Het werkt lokaal. Moet zeggen dat dat ook iets is."
+
+→ [Keuze] "Oke."   [flag: jonathan_bezocht = true]
 ```
 
 ---
@@ -190,13 +222,17 @@ Jonathan tweede [default]: "Het werkt lokaal. Moet zeggen dat dat ook iets is."
 ### Collega Willem *(Doorheen kantoor — als NPC voor andere characters)*
 
 ```
-Willem: [start] "Ik hou de klant bij je vandaan. Dat is geen grap, dat is de functieomschrijving."
-Willem: [≥ 4 done] "Ik heb drie dingen toegezegd. Twee daarvan kunnen ook echt. Absoluta."
-Willem: [≥ 8 done] "Ik heb de klant gesproken. Ze is heeeel enthousiast, en dat is nu nog terecht."
+Willem start [bezocht + ≥ 8]: "Ze heeft net gebeld. Positief. Dat is nu ook terecht, zei ze zelf."
+Willem start [bezocht]:        "Ben net terug. Ze is rustig. Voorlopig."
+Willem start [≥ 8 done]:      "Ik heb de klant gesproken. Ze is heeeel enthousiast, en dat is nu nog terecht."
+Willem start [≥ 4 done]:      "Ik heb drie dingen toegezegd. Twee daarvan kunnen ook echt. Absoluta."
+Willem start [default]:        "Ik hou de klant bij je vandaan. Dat is geen grap, dat is de functieomschrijving."
 
 Willem tweede [trait: technisch]: "Zeg tegen mij dat iets niet kan. Ik vertaal het wel naar iets vriendelijkers."
-Willem tweede [trait: sociaal]: "Jij begrijpt het. Nee zeggen kost een uur. Ja zeggen kost een kwartaal."
-Willem tweede [default]: "Als ze belt, ben ik in het hokje. Ook als ik daar niet ben."
+Willem tweede [trait: sociaal]:   "Jij begrijpt het. Nee zeggen kost een uur. Ja zeggen kost een kwartaal."
+Willem tweede [default]:          "Als ze belt, ben ik in het hokje. Ook als ik daar niet ben."
+
+→ [Keuze] "Oke."   [flag: willem_bezocht = true]
 ```
 
 ---

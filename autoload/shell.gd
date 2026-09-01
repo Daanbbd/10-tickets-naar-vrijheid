@@ -19,6 +19,32 @@ var _busy: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_qa_shot()
+
+
+## QA: `-- --shot=/pad/uit.png [--shot-na=3.0]` schrijft een frame weg en stopt.
+## Zit hier en niet in de wereldscene, zodat ook het titelscherm, de
+## personagekeuze en het eindscherm te controleren zijn.
+func _qa_shot() -> void:
+	var pad := ""
+	var na := 2.5
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--shot="):
+			pad = a.trim_prefix("--shot=")
+		elif a.begins_with("--shot-na="):
+			na = float(a.trim_prefix("--shot-na="))
+	if pad == "":
+		return
+	# process_always: tijdens een minigame staat de tree op pause en zou een
+	# gewone timer nooit aflopen.
+	await get_tree().create_timer(na, true, false, true).timeout
+	await RenderingServer.frame_post_draw
+	var img := get_viewport().get_texture().get_image()
+	if img.save_png(pad) == OK:
+		print("[SHOT] %s (%dx%d)" % [pad, img.get_width(), img.get_height()])
+	else:
+		printerr("[SHOT] kon %s niet schrijven" % pad)
+	get_tree().quit()
 	_fade.color.a = 0.0
 	_fade.visible = false
 

@@ -3,6 +3,10 @@ extends CanvasLayer
 ## Ticketteller, doelregel, interactieprompt, zonenaam, toasts, besturingskaart
 ## en ticketbord. De inventaris zit in het bord, niet permanent op het scherm.
 
+## Portretcanvas van 192 px breed: alles hangt aan de randen in plaats van
+## aan vaste pixelposities uit de oude 480x270-indeling.
+const MARGE := 4
+
 const NUDGE_NA := 45.0          ## seconden zonder voortgang voor een gratis hint
 const KAART_ZICHTBAAR := 9.0
 
@@ -31,7 +35,10 @@ func setup() -> void:
 	# --- ticketteller linksboven ---
 	var top := PanelContainer.new()
 	top.add_theme_stylebox_override("panel", UiKit.panel(UiKit.PANEL_DARK, UiKit.INK))
-	top.position = Vector2(6, 6)
+	top.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	top.offset_left = MARGE
+	top.offset_right = -MARGE
+	top.offset_top = MARGE
 	root.add_child(top)
 	_counter = UiKit.label("", UiKit.FS_BODY, UiKit.WIT)
 	top.add_child(_counter)
@@ -44,12 +51,13 @@ func setup() -> void:
 	# bovenrand van de wereld af.
 	_objective.add_theme_stylebox_override("panel",
 		UiKit.panel(Color(UiKit.PANEL_DARK, 0.80), UiKit.ORANJE))
-	_objective.position = Vector2(6, 30)
-	_objective.custom_minimum_size = Vector2(0, 0)
+	_objective.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_objective.offset_left = MARGE
+	_objective.offset_right = -MARGE
+	_objective.offset_top = MARGE + 18
 	root.add_child(_objective)
 	_objective_label = UiKit.label("", UiKit.FS_SMALL, UiKit.WIT)
 	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_objective_label.custom_minimum_size = Vector2(330, 0)
 	_objective.add_child(_objective_label)
 
 	# --- zonenaam onderaan ---
@@ -59,10 +67,10 @@ func setup() -> void:
 	_zone.anchor_right = 0.5
 	_zone.anchor_top = 1.0
 	_zone.anchor_bottom = 1.0
-	_zone.offset_top = -26
-	_zone.offset_bottom = -14
-	_zone.offset_left = -120
-	_zone.offset_right = 120
+	_zone.offset_top = -30
+	_zone.offset_bottom = -16
+	_zone.offset_left = -90
+	_zone.offset_right = 90
 	_zone.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_zone.modulate.a = 0.0
 	root.add_child(_zone)
@@ -75,10 +83,10 @@ func setup() -> void:
 	_prompt.anchor_right = 0.5
 	_prompt.anchor_top = 1.0
 	_prompt.anchor_bottom = 1.0
-	_prompt.offset_top = -46
-	_prompt.offset_bottom = -30
-	_prompt.offset_left = -110
-	_prompt.offset_right = 110
+	_prompt.offset_top = -50
+	_prompt.offset_bottom = -32
+	_prompt.offset_left = -90
+	_prompt.offset_right = 90
 	_prompt.visible = false
 	root.add_child(_prompt)
 	_prompt_label = UiKit.label("", UiKit.FS_SMALL)
@@ -90,9 +98,9 @@ func setup() -> void:
 	_toasts.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	_toasts.anchor_left = 1.0
 	_toasts.anchor_right = 1.0
-	_toasts.offset_left = -180
-	_toasts.offset_right = -6
-	_toasts.offset_top = 6
+	_toasts.offset_left = -(192 - MARGE * 2)
+	_toasts.offset_right = -MARGE
+	_toasts.offset_top = 46
 	_toasts.alignment = BoxContainer.ALIGNMENT_END
 	_toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_toasts)
@@ -136,10 +144,10 @@ func _build_card(root: Control) -> void:
 	_card.anchor_top = 1.0
 	_card.anchor_right = 1.0
 	_card.anchor_bottom = 1.0
-	_card.offset_left = -158
-	_card.offset_top = -58
-	_card.offset_right = -6
-	_card.offset_bottom = -6
+	_card.offset_left = -(192 - MARGE * 2)
+	_card.offset_top = -78
+	_card.offset_right = -MARGE
+	_card.offset_bottom = -MARGE
 	_card.modulate.a = 0.0
 	_card.visible = false
 	root.add_child(_card)
@@ -192,10 +200,10 @@ func _build_board(root: Control) -> void:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", UiKit.panel())
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	panel.offset_left = 24
-	panel.offset_right = -24
-	panel.offset_top = 16
-	panel.offset_bottom = -16
+	panel.offset_left = MARGE
+	panel.offset_right = -MARGE
+	panel.offset_top = MARGE
+	panel.offset_bottom = -MARGE
 	_board.add_child(panel)
 
 	var v := VBoxContainer.new()
