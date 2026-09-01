@@ -93,7 +93,12 @@ func _handle_inner(t: TicketDef) -> void:
 	if offer != &"":
 		await _dialogue.play(offer)
 
-	var result: MinigameResult = await Shell.run_minigame(t.minigame_id, t.minigame_config)
+		# Eigen vakgebied geeft een makkelijkere opgave, nooit een moeilijkere.
+	var voordeel := TraitModifier.voordeel_tekst(t)
+	if voordeel != "":
+		Bus.toast_requested.emit(voordeel, &"trait")
+	var result: MinigameResult = await Shell.run_minigame(
+		t.minigame_id, TraitModifier.pas_toe(t))
 
 	match result.outcome:
 		GameEnums.Outcome.SUCCESS:

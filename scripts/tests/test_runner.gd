@@ -17,6 +17,7 @@ func _ready() -> void:
 	_test_nederlands()
 	_test_wereld()
 	_test_karakterstemmen()
+	_test_traits()
 	_test_questketen_alle_personages()
 	_rapport()
 
@@ -359,6 +360,50 @@ func _test_wereld() -> void:
 		for wp: Vector2i in n.route:
 			_ok(not _solide(grid, legend, wp.x, wp.y),
 				"NPC '%s' heeft een waypoint op een solide tegel %s" % [n.id, wp])
+
+
+## Traits moeten iets doen, en nooit iets slechts. Zonder deze test kan een
+## voordeel stilletjes een nadeel worden bij de volgende contentwijziging.
+func _test_traits() -> void:
+	_kop("traits als voordeel")
+	var gezien := 0
+	for cid: Variant in GameData.character_ids():
+		Session.start_new(StringName(cid))
+		QuestEngine.initialise_tickets()
+		for tid: StringName in GameData.ticket_ids():
+			var t: TicketDef = GameData.ticket(tid)
+			if t.minigame_id == &"":
+				continue
+			var basis: Dictionary = t.minigame_config
+			var na: Dictionary = TraitModifier.pas_toe(t)
+			if not QuestEngine.is_own_expertise(tid):
+				_ok(na.hash() == basis.hash(),
+					"%s/%s: buiten je vakgebied mag de opgave niet veranderen" % [cid, t.code])
+				continue
+			gezien += 1
+			# nooit strenger: minder kaarten, meer fouten toegestaan, meer tijd
+			_ok(int(na.get("max_fouten", 99)) >= int(basis.get("max_fouten", 0)),
+				"%s/%s: max_fouten mag niet omlaag" % [cid, t.code])
+			_ok((na.get("cards", []) as Array).size() <= (basis.get("cards", []) as Array).size(),
+				"%s/%s: er mogen geen kaarten bijkomen" % [cid, t.code])
+			_ok(float(na.get("duur", 0.0)) >= float(basis.get("duur", 0.0)),
+				"%s/%s: de tijd mag niet korter worden" % [cid, t.code])
+			_ok(int(na.get("drempel", 0)) <= int(basis.get("drempel", 99)),
+				"%s/%s: de drempel mag niet omhoog" % [cid, t.code])
+			# het slotboard moet oplosbaar blijven: elk vak houdt een kaart
+			if String(na.get("type", "")) == "slotboard":
+				var ids := {}
+				for raw: Variant in (na.get("cards", []) as Array):
+					ids[String((raw as Dictionary).get("id", ""))] = true
+				for raw2: Variant in (na.get("slots", []) as Array):
+					var kan := false
+					for a: Variant in ((raw2 as Dictionary).get("accepts", []) as Array):
+						if ids.has(String(a)):
+							kan = true
+					_ok(kan, "%s/%s: een vak heeft geen passende kaart meer" % [cid, t.code])
+			_ok(TraitModifier.voordeel_tekst(t) != "",
+				"%s/%s: voordeel zonder uitleg aan de speler" % [cid, t.code])
+	_ok(gezien > 0, "geen enkel personage had een eigen minigame")
 
 
 func _test_questketen_alle_personages() -> void:
