@@ -59,9 +59,15 @@ def lan_ip() -> str:
 def certificaat(ip: str) -> tuple[Path, Path]:
     """Maakt zo nodig een zelfgetekend certificaat voor dit IP.
 
-    De subjectAltName is de reden dat dit met de hand gaat en niet met een
-    losse -subj: iOS negeert sinds versie 13 de CN volledig en kijkt alleen
-    naar de SAN. Zonder IP in de SAN weigert Safari ook ná het doorklikken.
+    Apple stelt sinds iOS 13 harde eisen aan servercertificaten, en een
+    certificaat dat daar niet aan voldoet wordt geweigerd zónder doorklik-optie
+    — je krijgt dan geen "bezoek deze website", maar een harde blokkade. De
+    eisen die hier gelden:
+
+    * subjectAltName met het IP erin; de CN wordt volledig genegeerd
+    * extendedKeyUsage met serverAuth; zonder deze faalt het stil
+    * SHA-256 of beter, RSA minimaal 2048 bits
+    * geldigheid maximaal 398 dagen
 
     Het certificaat en de sleutel staan onder build/, en die map is genegeerd —
     een privésleutel hoort niet in de geschiedenis.
@@ -75,10 +81,13 @@ def certificaat(ip: str) -> tuple[Path, Path]:
     try:
         subprocess.run(
             ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-sha256",
-             "-days", "365", "-nodes",
+             "-days", "397", "-nodes",
              "-keyout", str(key), "-out", str(cert),
              "-subj", f"/CN={ip}",
-             "-addext", f"subjectAltName=IP:{ip},IP:127.0.0.1,DNS:localhost"],
+             "-addext", f"subjectAltName=IP:{ip},IP:127.0.0.1,DNS:localhost",
+             "-addext", "extendedKeyUsage=serverAuth",
+             "-addext", "keyUsage=digitalSignature,keyEncipherment",
+             "-addext", "basicConstraints=critical,CA:FALSE"],
             check=True, capture_output=True, text=True)
     except FileNotFoundError:
         sys.exit("openssl niet gevonden; start met --http en test op 127.0.0.1")
