@@ -10,7 +10,7 @@ from PIL import Image
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 D = os.path.join(ROOT, "assets", "sprites", "characters")
 FW, FH = 18, 34
-VOLGORDE = ["hair_back", "body", "outfit", "hair", "facial", "accessory"]
+VOLGORDE = ["hair_back", "body", "outfit", "hair", "facial", "accessory", "bezigheid"]
 MET_ACHTERHAAR = {"lang", "staart", "knot"}
 SLEUTELS = {  # (basis, schaduw) -> veld
     ((255, 0, 0), (170, 0, 0)): "skin",
@@ -74,13 +74,16 @@ def cast():
 
 
 def main():
-    col = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    # zonder argument de idle-rij; met "bezig" de vier bezigheidsframes
+    bezig = len(sys.argv) > 1 and sys.argv[1] == "bezig"
+    kolommen = [8, 9, 10, 11] if bezig else [int(sys.argv[1]) if len(sys.argv) > 1 else 0]
     mensen = cast()
-    schaal = 5
-    blad = Image.new("RGBA", (FW * len(mensen), FH), (30, 30, 36, 255))
+    schaal = 6
+    blad = Image.new("RGBA", (FW * len(mensen), FH * len(kolommen)), (30, 30, 36, 255))
     for i, (naam, look, kl) in enumerate(mensen):
-        f = compose(look, kl, col)
-        blad.paste(f, (i * FW, 0), f)
+        for j, col in enumerate(kolommen):
+            f = compose(look, kl, col)
+            blad.paste(f, (i * FW, j * FH), f)
     uit = os.path.join(ROOT, "qa", "cast_preview.png")
     blad.resize((blad.width * schaal, blad.height * schaal), Image.NEAREST).save(uit)
     print(" ".join(n for n, _, _ in mensen))

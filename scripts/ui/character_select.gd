@@ -21,6 +21,9 @@ const PODIUM_H := 96
 const RIJ_H := 26
 const SPRITE_SCHAAL := 2
 const WISSEL_TIJD := 0.25
+## Na hoeveel rust de bezigheid één keer speelt. Niet doorlussen: dan wordt het
+## een tic in plaats van een grap.
+const BEZIG_NA := 1.2
 
 var _ids: Array[StringName] = []
 var _rijen: Array[PanelContainer] = []
@@ -36,6 +39,8 @@ var _stijl: Label
 var _blokjes: Array[ColorRect] = []
 var _wissel: Tween
 var _scroll: ScrollContainer
+var _bezig_t: float = 0.0
+var _bezig_gedaan: bool = false
 
 
 func _ready() -> void:
@@ -291,6 +296,8 @@ func _zet_sprite(c: CharacterDef, met_animatie: bool, van_rechts: bool) -> void:
 	if _wissel != null and _wissel.is_running():
 		_wissel.kill()
 
+	_bezig_t = 0.0
+	_bezig_gedaan = false
 	if not met_animatie:
 		_sprite.position = midden
 		_schaduw.position = midden
@@ -342,3 +349,24 @@ func _start() -> void:
 	Session.start_new(_ids[_index])
 	Bus.character_selected.emit(_ids[_index])
 	Shell.goto_game()
+
+
+func _process(delta: float) -> void:
+	if _bezig_gedaan or _sprite == null or _sprite.sprite_frames == null:
+		return
+	if _wissel != null and _wissel.is_running():
+		return
+	if _sprite.animation == &"bezig_down":
+		return
+	_bezig_t += delta
+	if _bezig_t < BEZIG_NA:
+		return
+	if not _sprite.sprite_frames.has_animation(&"bezig_down") \
+			or _sprite.sprite_frames.get_frame_count(&"bezig_down") == 0:
+		_bezig_gedaan = true
+		return
+	_bezig_gedaan = true
+	_sprite.play(&"bezig_down")
+	await _sprite.animation_finished
+	if is_instance_valid(_sprite):
+		_sprite.play(&"idle_down")

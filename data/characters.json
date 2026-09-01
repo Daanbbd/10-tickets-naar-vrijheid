@@ -31,7 +31,8 @@
       "hair": "kaal",
       "facial": "snor",
       "outfit": "tshirt",
-      "accessory": "lanyard"
+      "accessory": "lanyard",
+      "bezigheid": "huilen"
     },
     "pants": "#34384e",
     "stijl": "Twee tickets zelf. Jij bepaalt wat er wel en niet in zit."
@@ -67,7 +68,8 @@
       "hair": "zijscheiding",
       "facial": "stoppels",
       "outfit": "polo",
-      "accessory": ""
+      "accessory": "",
+      "bezigheid": "bier"
     },
     "pants": "#34384e",
     "stijl": "Twee tickets zelf. Jij kijkt naar wat mensen echt doen."
@@ -102,7 +104,8 @@
       "hair": "krullen",
       "facial": "snor",
       "outfit": "tshirt",
-      "accessory": "koptelefoon"
+      "accessory": "koptelefoon",
+      "bezigheid": "hobbyhorse"
     },
     "pants": "#34384e",
     "stijl": "Eén ticket zelf. Je zit veel aan je eigen bureau."
@@ -138,7 +141,8 @@
       "hair": "kort",
       "facial": "",
       "outfit": "trui",
-      "accessory": "bril"
+      "accessory": "bril",
+      "bezigheid": "gamen"
     },
     "pants": "#34384e",
     "stijl": "Eén ticket zelf. Als het stuk is, komen ze bij jou."
@@ -173,7 +177,8 @@
       "hair": "zijscheiding",
       "facial": "",
       "outfit": "blazer",
-      "accessory": ""
+      "accessory": "",
+      "bezigheid": "padel"
     },
     "pants": "#2f3242",
     "stijl": "Eén ticket zelf. Je loopt de hele dag heen en weer. Dat is het punt."
@@ -208,7 +213,8 @@
       "hair": "stekels",
       "facial": "",
       "outfit": "hoodie",
-      "accessory": ""
+      "accessory": "",
+      "bezigheid": "zoekglas"
     },
     "pants": "#34384e",
     "stijl": "Eén ticket zelf. Jij ziet wat niemand anders ziet."
@@ -243,7 +249,8 @@
       "hair": "knot",
       "facial": "",
       "outfit": "tshirt",
-      "accessory": "bril"
+      "accessory": "bril",
+      "bezigheid": "peuk"
     },
     "pants": "#34384e",
     "stijl": "Eén ticket zelf. Jij kent iemand of iets dat het kan."

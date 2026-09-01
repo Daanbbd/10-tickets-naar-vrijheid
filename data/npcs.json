@@ -89,7 +89,8 @@
       "hair": "stekels",
       "facial": "",
       "outfit": "hoodie",
-      "accessory": ""
+      "accessory": "",
+      "bezigheid": "zoekglas"
     },
     "pants": "#34384e",
     "is_playable_colleague": true
@@ -141,7 +142,8 @@
       "hair": "knot",
       "facial": "",
       "outfit": "tshirt",
-      "accessory": "bril"
+      "accessory": "bril",
+      "bezigheid": "peuk"
     },
     "pants": "#34384e",
     "is_playable_colleague": true
@@ -293,7 +295,8 @@
       "hair": "kaal",
       "facial": "snor",
       "outfit": "tshirt",
-      "accessory": "lanyard"
+      "accessory": "lanyard",
+      "bezigheid": "huilen"
     },
     "pants": "#34384e"
   },
@@ -333,7 +336,8 @@
       "hair": "zijscheiding",
       "facial": "stoppels",
       "outfit": "polo",
-      "accessory": ""
+      "accessory": "",
+      "bezigheid": "bier"
     },
     "pants": "#34384e"
   },
@@ -377,7 +381,8 @@
       "hair": "krullen",
       "facial": "snor",
       "outfit": "tshirt",
-      "accessory": "koptelefoon"
+      "accessory": "koptelefoon",
+      "bezigheid": "hobbyhorse"
     },
     "pants": "#34384e"
   },
@@ -413,7 +418,8 @@
       "hair": "kort",
       "facial": "",
       "outfit": "trui",
-      "accessory": "bril"
+      "accessory": "bril",
+      "bezigheid": "gamen"
     },
     "pants": "#34384e"
   },
@@ -457,7 +463,8 @@
       "hair": "zijscheiding",
       "facial": "",
       "outfit": "blazer",
-      "accessory": ""
+      "accessory": "",
+      "bezigheid": "padel"
     },
     "pants": "#2f3242"
   }

@@ -14,8 +14,12 @@ persoon een sheet bij komt.
 Frame : 18 x 34. Het personage staat in een logisch vak van 16 x 32 met 1 px
         transparante marge rondom. Die marge is er voor de outline-shader:
         zonder ruimte naast de sprite valt de rand eraf.
-Layout : 8 kolommen (idle, adem, knipper, loop 1-4, praat) x 4 rijen
-        (down, up, left, right). Rechts is een spiegeling van links.
+Layout : 12 kolommen x 4 rijen (down, up, left, right). Rechts is een
+        spiegeling van links.
+        0 idle - 1 adem - 2 knipper - 3-6 loop - 7 praat - 8-11 bezigheid.
+        De vier bezigheidsframes staan alleen in rij `down`: ze spelen op het
+        selectiescherm, waar het personage je altijd aankijkt. In de andere
+        rijen blijven die kolommen leeg. Dat is bedoeld, geen fout.
 Kleuren: alleen sleutelkleuren en vaste tinten. De runtime vervangt de
         sleutels per personage.
 """
@@ -27,7 +31,7 @@ from PIL import Image, ImageDraw
 MARGE = 1
 LW, LH = 16, 32                       # logisch vak
 FW, FH = LW + MARGE * 2, LH + MARGE * 2
-COLS, ROWS = 8, 4
+COLS, ROWS = 12, 4
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT_DIR = os.path.join(ROOT, "assets", "sprites", "characters")
 
@@ -99,7 +103,7 @@ class Vel:
         self.d.rectangle([x0 + MARGE, y0 + MARGE, x1 + MARGE, y1 + MARGE], outline=kleur)
 
 
-def pose(col):
+def _pose(col):
     """Wat er per kolom verandert. bob geldt voor alles boven de benen.
 
     `arm` is een paar (links, rechts) in plaats van één getal. Bij lopen zijn de
@@ -114,12 +118,28 @@ def pose(col):
         return dict(bob=0, been=(0, 0), arm=(0, 0), knipper=True, mond=False)
     if col == 7:                        # praten
         return dict(bob=0, been=(0, 0), arm=(0, 0), knipper=False, mond=True)
+    if col >= 8:
+        # De bezigheid-laag tekent de rechterarm zelf, gebogen naar het hoofd.
+        # Body en outfit slaan hem daarom over: een gestrekte arm omhoog
+        # schuiven zou dwars door het gezicht lopen.
+        return dict(bob=0, been=(0, 0), arm=(0, 0), knipper=False, mond=False,
+                    bezig=col - 8, verberg_rechterarm=True)
     stap = col - 3                      # 0..3
     # passeerstand staat het hoogst, contactstand het laagst
     bob = -1 if stap in (0, 2) else 0
     been = [(0, 0), (-2, 2), (0, 0), (2, -2)][stap]
     zwaai = [0, 1, 0, -1][stap]
     return dict(bob=bob, been=been, arm=(zwaai, -zwaai), knipper=False, mond=False)
+
+
+
+# Elke pose draagt `bezig`: -1 buiten de bezigheidskolommen, anders 0..3. Zo kan
+# elke laag ernaar kijken zonder te weten welke kolom hij tekent.
+def pose(col):
+    p = _pose(col)
+    p.setdefault("bezig", -1)
+    p.setdefault("verberg_rechterarm", False)
+    return p
 
 
 # =============================================================================
@@ -151,7 +171,10 @@ def laag_body(v, richting, p, variant):
         v.rect(bx - 1, SCHOEN_TOP, bx + 2, SCHOEN_TOP + 1, SHOES)
 
     # armen: 2 px breed, zwaaien tegengesteld aan de benen
-    for ax, zwaai in ((al, p["arm"][0]), (ar, p["arm"][1])):
+    armen = [(al, p["arm"][0])]
+    if not p["verberg_rechterarm"]:
+        armen.append((ar, p["arm"][1]))
+    for ax, zwaai in armen:
         v.rect(ax, ROMP_TOP + bob + zwaai, ax + 1, HAND_Y - 1 + bob + zwaai, SKIN)
         v.rect(ax, HAND_Y + bob + zwaai, ax + 1, HAND_Y + bob + zwaai, SKIN_S)
 
@@ -161,7 +184,8 @@ def laag_body(v, richting, p, variant):
     v.rect(rl, ROMP_TOP + bob, rr, ROMP_BOT + bob, SKIN)
     v.rect(rl, ROMP_TOP + bob, rr, ROMP_TOP + bob, OUT_C)
     v.rect(al, ROMP_TOP + bob + p["arm"][0], al, HAND_Y + bob + p["arm"][0], OUT_C)
-    v.rect(ar + 1, ROMP_TOP + bob + p["arm"][1], ar + 1, HAND_Y + bob + p["arm"][1], OUT_C)
+    if not p["verberg_rechterarm"]:
+        v.rect(ar + 1, ROMP_TOP + bob + p["arm"][1], ar + 1, HAND_Y + bob + p["arm"][1], OUT_C)
 
     # nek
     v.rect(6, NEK_TOP + bob, 9, NEK_BOT + bob, SKIN_S)
@@ -262,7 +286,10 @@ def laag_outfit(v, richting, p, variant):
     # mouwen over de armen
     if o["mouw"]:
         eind = (ROMP_TOP + 3) if o["mouw"] == 1 else (HAND_Y - 1)
-        for ax, zwaai in ((ARM_L, p["arm"][0]), (ARM_R, p["arm"][1])):
+        mouwen = [(ARM_L, p["arm"][0])]
+        if not p["verberg_rechterarm"]:
+            mouwen.append((ARM_R, p["arm"][1]))
+        for ax, zwaai in mouwen:
             v.rect(ax, ROMP_TOP + bob + zwaai, ax + 1, eind + bob + zwaai, SHIRT)
             v.rect(ax, eind + bob + zwaai, ax + 1, eind + bob + zwaai, SHIRT_S)
 
@@ -438,6 +465,90 @@ def laag_accessory(v, richting, p, variant):
 
 
 # =============================================================================
+# 7. bezigheid — waar iemand mee bezig is op het selectiescherm
+# =============================================================================
+# Alleen rij `down`, alleen kolom 8-11. Het is een introflourish op het
+# keuzescherm, niet iets wat in de wereld speelt.
+#
+# Deze laag tekent zijn eigen rechterarm, gebogen: schouder omlaag, onderarm
+# omhoog naar het hoofd. Een gestrekte arm omhoog schuiven zou dwars door het
+# gezicht lopen, en de andere lagen weten niet welke bezigheid erbij hoort.
+BEZIGHEDEN = ["bier", "peuk", "gamen", "hobbyhorse", "padel", "huilen", "zoekglas"]
+
+# hoogte van de hand per frame, gemeten vanaf de bovenkant van het logische vak
+HAND_HOOG = [19, 16, 13, 12]
+
+
+def _arm_naar_hand(v, hand_y, mouw=None):
+    """Bovenarm langs de romp, onderarm schuin omhoog naar voor het gezicht.
+
+    De hand moet naar binnen komen, anders staat het blikje of het zoekglas
+    naast de kop in plaats van ervoor en leest er niets.
+    """
+    kleur = mouw if mouw is not None else SKIN
+    elleboog_y = ROMP_TOP + 4
+    v.rect(ARM_R, ROMP_TOP, ARM_R + 1, elleboog_y, kleur)
+    v.rect(ARM_R + 1, ROMP_TOP, ARM_R + 1, elleboog_y, OUT_C)
+
+    # De onderarm blijft naast de romp staan in plaats van er schuin overheen.
+    # Over de borst heen las het als één grote onderarm dwars over het lichaam,
+    # en op 16 px is er geen ruimte om dat met schaduw te redden.
+    v.rect(ARM_R, hand_y, ARM_R + 1, elleboog_y, kleur)
+    v.rect(ARM_R + 1, hand_y, ARM_R + 1, elleboog_y, OUT_C)
+    v.rect(ARM_R, hand_y - 1, ARM_R + 1, hand_y, SKIN)     # hand
+    return ARM_R
+
+
+def laag_bezigheid(v, richting, p, variant):
+    f = p["bezig"]
+    if f < 0 or richting != 0:
+        return
+    hand_y = HAND_HOOG[f]
+    hx = _arm_naar_hand(v, hand_y)
+
+    if variant == "bier":
+        v.rect(hx, hand_y - 4, hx + 1, hand_y - 2, ACCENT)
+        v.rect(hx, hand_y - 4, hx + 1, hand_y - 4, WIT)
+        v.omlijn(hx - 1, hand_y - 4, hx + 2, hand_y - 1, OUT_C)
+
+    elif variant == "peuk":
+        v.rect(hx, hand_y - 3, hx, hand_y - 1, WIT)
+        v.px(hx, hand_y - 4, (240, 120, 60, 255))
+        for i in range(f + 1):                       # rook drijft omhoog
+            v.px(hx + (i % 2), hand_y - 5 - i * 2, (210, 210, 214, 120))
+
+    elif variant == "gamen":
+        # controller voor de romp, met de duim die tikt
+        v.rect(6, ROMP_TOP + 4, 10, ROMP_TOP + 5, OUT_C)
+        v.rect(7, ROMP_TOP + 4, 9, ROMP_TOP + 4, ACCENT)
+        v.px(6 if f % 2 == 0 else 10, ROMP_TOP + 3, SKIN)
+
+    elif variant == "hobbyhorse":
+        # kop boven de hand, stok eronder naar de vloer. Andersom kwam de kop
+        # op hoofdhoogte terecht en las het als een blauwe vlek in het haar.
+        v.rect(hx, hand_y + 1, hx, ROMP_BOT + 4, HAIR_S)
+        v.rect(hx - 1, hand_y - 4, hx + 2, hand_y - 1, ACCENT)
+        v.omlijn(hx - 1, hand_y - 4, hx + 2, hand_y - 1, OUT_C)
+        v.px(hx, hand_y - 3, OUT_C)                  # oog
+        v.rect(hx - 2, hand_y - 2, hx - 2, hand_y - 1, ACCENT)   # snuit
+
+    elif variant == "padel":
+        v.rect(hx - 1, hand_y - 7, hx + 2, hand_y - 3, ACCENT)
+        v.omlijn(hx - 1, hand_y - 7, hx + 2, hand_y - 3, OUT_C)
+        v.rect(hx, hand_y - 2, hx, hand_y - 1, OUT_C)
+
+    elif variant == "huilen":
+        v.px(KOP_L + 1, OOG_Y + 2 + f, (140, 200, 240, 220))   # traan valt
+        v.rect(4, ROMP_TOP + 3, 8, ROMP_TOP + 6, OUT_C)        # scherm
+        v.rect(5, ROMP_TOP + 4, 7, ROMP_TOP + 5, ACCENT_S)
+
+    elif variant == "zoekglas":
+        v.omlijn(hx - 1, hand_y - 5, hx + 2, hand_y - 2, OUT_C)
+        v.rect(hx, hand_y - 4, hx + 1, hand_y - 3, LENS)
+        v.rect(hx, hand_y - 1, hx, hand_y - 1, OUT_C)          # steel
+
+
+# =============================================================================
 # sheet-opbouw
 # =============================================================================
 LAGEN = [
@@ -447,6 +558,7 @@ LAGEN = [
     ("hair",      HAIRS,         laag_hair),
     ("facial",    FACIALS,       laag_facial),
     ("accessory", ACCESSORIES,   laag_accessory),
+    ("bezigheid", BEZIGHEDEN,    laag_bezigheid),
 ]
 
 

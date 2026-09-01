@@ -12,20 +12,21 @@ extends RefCounted
 const LAAG_PAD := "res://assets/sprites/characters/%s_%s.png"
 const FW := 18          # 16 px personage + 1 px marge rondom, voor de outline
 const FH := 34
-const COLS := 8
+const COLS := 12
 const DIRS: Array[String] = ["down", "up", "left", "right"]
 
 ## Tekenvolgorde. hair_back moet voor body, anders valt lang haar over het
 ## gezicht in plaats van erachter.
 const VOLGORDE: Array[StringName] = [
 	&"hair_back", &"body", &"outfit", &"hair", &"facial", &"accessory",
+	&"bezigheid",
 ]
 ## Alleen deze haarstijlen hebben een achterkant.
 const MET_ACHTERHAAR: Array[StringName] = [&"lang", &"staart", &"knot"]
 
 const STANDAARD_LOOK := {
 	&"body": &"gemiddeld", &"outfit": &"tshirt", &"hair": &"kort",
-	&"facial": &"", &"accessory": &"",
+	&"facial": &"", &"accessory": &"", &"bezigheid": &"",
 }
 
 ## Oud `sheet`-veld -> look, zodat data die nog niet gemigreerd is blijft werken.
@@ -102,6 +103,16 @@ static func frames_for(look: Dictionary, shirt: Color, skin: Color, hair: Color,
 		sf.set_animation_speed(loop, 9.0)
 		for col: int in range(3, 7):
 			sf.add_frame(loop, _regio(tex, col, rij))
+
+		# De bezigheid staat alleen in rij `down`: hij speelt op het
+		# selectiescherm, waar het personage je aankijkt. In de andere rijen zijn
+		# die kolommen leeg, dus daar heeft de animatie geen zin.
+		if rij == 0:
+			sf.add_animation(&"bezig_down")
+			sf.set_animation_loop(&"bezig_down", false)
+			sf.set_animation_speed(&"bezig_down", 6.0)
+			for col: int in range(8, COLS):
+				sf.add_frame(&"bezig_down", _regio(tex, col, rij))
 
 		var praat := StringName("talk_" + dir)
 		sf.add_animation(praat)
