@@ -87,6 +87,31 @@ nu een `.gdignore` in die map. Zet die niet weg.
   BBD-209 onbereikbaar was — gevonden door de speelbeurt, niet door de datasuite
 - `owner_character: ""` op BBD-210 maakte de finale onbereikbaar
 
+## Op een echte telefoon testen
+
+De duimbesturing, de veilige zone en de app-pauze zijn niet headless te
+controleren: ze hangen aan een aanraakscherm, aan `get_display_safe_area()` en
+aan een OS dat de app wegdrukt. Daarvoor is een webexport op het LAN de
+kortste weg — geen kabel, geen developer-account, geen installatie.
+
+```bash
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path . \
+  --export-release Web build/web/index.html
+python3 tools/serve_web.py            # standaard poort 8060
+```
+
+Het script print het LAN-adres dat je op de telefoon opent. Python's
+`http.server` kent `.wasm` niet op macOS, en zonder die mimetype weigert de
+browser `instantiateStreaming`; daarom zet `serve_web.py` de mimetypes en de
+COOP/COEP-headers zelf.
+
+De Web-preset staat op `variant/thread_support=false`, want mét threads eist de
+browser die COOP/COEP-headers ook van elke hostende partij. `build/` is
+genegeerd; `export_presets.cfg` ook, dus de preset staat niet in een verse
+clone.
+
+Dit werkt pas zodra de export templates geïnstalleerd zijn — zie hieronder.
+
 ## Bekende beperkingen
 
 - Geen export templates geïnstalleerd, dus geen standalone build. Het project

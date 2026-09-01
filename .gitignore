@@ -6,6 +6,9 @@ export_presets.cfg
 # QA-artefacten (gegenereerde frames en logs)
 qa/
 
+# Webexport: de Web-preset schrijft hierheen (wasm + pck, tientallen MB)
+build/
+
 # Python-toolchain voor de assetgeneratoren
 tools/.venv/
 
