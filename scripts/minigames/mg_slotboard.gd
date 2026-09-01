@@ -4,8 +4,10 @@ extends MinigameBase
 ##
 ## Er zijn altijd meer kaarten dan vakken: de afleiders zijn de grap.
 
+# Portret: 192 px breed met 4 px chrome-marge laat ~176 px over. Twee
+# kaarten naast elkaar past, drie niet.
 const CARD_W := 84
-const CARD_H := 20
+const CARD_H := 22
 
 
 class DragCard extends PanelContainer:
@@ -19,9 +21,9 @@ class DragCard extends PanelContainer:
 		text = t
 		tint = col
 		board = b
-		custom_minimum_size = Vector2(84, 20)
+		custom_minimum_size = Vector2(CARD_W, CARD_H)
 		mouse_filter = Control.MOUSE_FILTER_STOP
-		add_theme_stylebox_override("panel", UiKit.panel(tint, UiKit.LINE))
+		add_theme_stylebox_override("panel", UiKit.postit())
 		var l := UiKit.label(t, UiKit.FS_SMALL, UiKit.INK)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -30,8 +32,8 @@ class DragCard extends PanelContainer:
 
 	func _get_drag_data(_pos: Vector2) -> Variant:
 		var ghost := PanelContainer.new()
-		ghost.add_theme_stylebox_override("panel", UiKit.panel(tint, UiKit.BLUEBIRD_INK, 2))
-		ghost.custom_minimum_size = Vector2(84, 20)
+		ghost.add_theme_stylebox_override("panel", UiKit.postit(UiKit.POSTIT.lightened(0.12), UiKit.BLUEBIRD_INK))
+		ghost.custom_minimum_size = Vector2(CARD_W, CARD_H)
 		var gl := UiKit.label(text, UiKit.FS_SMALL, UiKit.INK)
 		gl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		gl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -40,11 +42,19 @@ class DragCard extends PanelContainer:
 		AudioDirector.play_ui(&"pak")
 		return {"card_id": card_id, "node": self}
 
+	## Tikken is de hoofdinteractie, slepen blijft bestaan voor wie het probeert.
+	## Op een telefoon is er geen enkele aanwijzing dat je iets kunt slepen, dus
+	## kiezen-en-plaatsen moet ook zonder sleepgebaar werken.
 	func _gui_input(event: InputEvent) -> void:
-		# Klikken haalt een geplaatste kaart terug: sleuren is niet verplicht.
 		if event is InputEventMouseButton and event.pressed \
 				and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
-			board.call(&"return_card", self)
+			accept_event()
+			board.call(&"tik_kaart", self)
+
+	func toon_opgepakt(aan: bool) -> void:
+		add_theme_stylebox_override("panel", UiKit.postit(
+			UiKit.POSTIT.lightened(0.18) if aan else UiKit.POSTIT,
+			UiKit.BLUEBIRD_INK if aan else UiKit.POSTIT_RAND))
 
 
 class DropSlot extends PanelContainer:
@@ -57,8 +67,8 @@ class DropSlot extends PanelContainer:
 		slot_label = lbl
 		accepts = acc
 		board = b
-		custom_minimum_size = Vector2(88, 46)
-		add_theme_stylebox_override("panel", UiKit.panel(Color("#e6e1d4"), UiKit.LINE))
+		custom_minimum_size = Vector2(56, 44)
+		add_theme_stylebox_override("panel", UiKit.postit(UiKit.POSTIT_LEEG, UiKit.POSTIT_LEEG_RAND))
 		var v := VBoxContainer.new()
 		v.add_theme_constant_override("separation", 1)
 		add_child(v)
@@ -67,7 +77,7 @@ class DropSlot extends PanelContainer:
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		v.add_child(l)
 		holder = HBoxContainer.new()
-		holder.custom_minimum_size = Vector2(84, 20)
+		holder.custom_minimum_size = Vector2(52, 20)
 		holder.alignment = BoxContainer.ALIGNMENT_CENTER
 		v.add_child(holder)
 
@@ -83,7 +93,14 @@ class DropSlot extends PanelContainer:
 	func _drop_data(_pos: Vector2, data: Variant) -> void:
 		board.call(&"place_card", (data as Dictionary)["node"], self)
 
+	func _gui_input(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed \
+				and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			accept_event()
+			board.call(&"tik_vak", self)
 
+
+var _opgepakt: DragCard = null
 var _slots: Array[DropSlot] = []
 var _pool: HFlowContainer = null
 var _fouten: int = 0
@@ -99,9 +116,10 @@ func _on_setup() -> void:
 	_max_fouten = int(c.get("max_fouten", 2))
 	var body := build_chrome(String(c.get("titel", default_title())), String(c.get("intro", "")))
 
-	var slot_row := HBoxContainer.new()
-	slot_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	slot_row.add_theme_constant_override("separation", 3)
+	var slot_row := HFlowContainer.new()
+	slot_row.alignment = FlowContainer.ALIGNMENT_CENTER
+	slot_row.add_theme_constant_override("h_separation", 2)
+	slot_row.add_theme_constant_override("v_separation", 2)
 	body.add_child(slot_row)
 	for raw: Variant in c.get("slots", []):
 		var sd := raw as Dictionary
@@ -109,7 +127,7 @@ func _on_setup() -> void:
 		slot_row.add_child(s)
 		_slots.append(s)
 
-	body.add_child(UiKit.label("Sleep de kaartjes naar het juiste vak. Klik een geplaatst kaartje om het terug te halen.",
+	body.add_child(UiKit.label("Tik een kaartje aan en tik dan het vak waar het hoort.",
 		UiKit.FS_SMALL, UiKit.GRIJS))
 
 	_pool = HFlowContainer.new()
@@ -132,6 +150,42 @@ func _on_setup() -> void:
 
 
 # --- Sleepacties (aangeroepen door de inner classes) ----------------------
+
+## Tik op een kaart: oppakken, weer neerleggen, of terughalen uit een vak.
+func tik_kaart(c: DragCard) -> void:
+	if c.get_parent() != _pool:          # kaart ligt in een vak
+		_leg_neer()
+		return_card(c)
+		return
+	if _opgepakt == c:
+		_leg_neer()
+		return
+	_leg_neer()
+	_opgepakt = c
+	c.toon_opgepakt(true)
+	AudioDirector.play_ui(&"pak")
+	_update_status()
+
+
+## Tik op een vak: de opgepakte kaart erin, of de kaart die er al ligt eruit.
+func tik_vak(s: DropSlot) -> void:
+	if s.is_filled():
+		var c := s.card()
+		_leg_neer()
+		return_card(c)
+		return
+	if _opgepakt == null:
+		return
+	var c2 := _opgepakt
+	_leg_neer()
+	place_card(c2, s)
+
+
+func _leg_neer() -> void:
+	if _opgepakt != null:
+		_opgepakt.toon_opgepakt(false)
+		_opgepakt = null
+
 
 func place_card(card: DragCard, slot: DropSlot) -> void:
 	if slot.is_filled():
@@ -184,7 +238,7 @@ func _check() -> void:
 
 	_fouten += 1
 	for s: DropSlot in wrong:
-		s.add_theme_stylebox_override("panel", UiKit.panel(Color("#f6e2e4"), UiKit.ROOD, 2))
+		s.add_theme_stylebox_override("panel", UiKit.postit(UiKit.POSTIT, UiKit.ROOD))
 		return_card(s.card())
 	AudioDirector.play_ui(&"fout")
 

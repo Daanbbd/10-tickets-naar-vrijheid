@@ -9,22 +9,26 @@ extends RefCounted
 ##   python3 tools/generators/gen_ui_kit_colors.py
 
 # --- GEGENEREERD UIT palette.py, NIET HANDMATIG BEWERKEN — START ---
-const INK             := Color("#242424")  # bb_night — letterlijk bb-night
-const PANEL           := Color("#f3f3f3")  # bb_day — letterlijk bb-day
-const PANEL_DARK      := Color("#2e2e2e")  # ui_panel_donker — neutrale derivaat
-const LINE            := Color("#4a4a4a")  # ui_line — neutrale derivaat
-const GRIJS           := Color("#8a8a8a")  # ui_grijs — neutrale derivaat
-const WIT             := Color("#eef0f4")  # wit — neutraal
-const BLUEBIRD_INK    := Color("#243cec")  # bb_blue — letterlijk bb-blue, voor lichte ondergrond
-const BLUEBIRD_BRIGHT := Color("#3a86ff")  # ui_bluebird_bright — derivaat voor donkere ondergrond — bb-blue zelf is daar te donker om te lezen
-const BLUEBIRD_TINT   := Color("#dbe9ff")  # bb_light_blue — letterlijk bb-light-blue
-const GROEN           := Color("#3fae6e")  # ui_groen — derivaat van bb-green, leesbaar op 8-10px
-const GROEN_TINT      := Color("#d8ffe0")  # bb_green — letterlijk bb-green
-const ROOD            := Color("#e05263")  # ui_rood — game-only utility — BBD heeft geen foutkleur
-const ORANJE          := Color("#f4a259")  # ui_oranje — derivaat van bb-orange, leesbaar op 8-10px
-const ORANJE_TINT     := Color("#f7d6c2")  # bb_orange — letterlijk bb-orange
-const ROZE_TINT       := Color("#ffcee3")  # bb_pink — letterlijk bb-pink — gereserveerd voor mensen/cultuur
-const NEUTRAAL_TINT   := Color("#e4e4e4")  # ui_neutraal_tint — letterlijk --color-line — voor niet-accent states
+const INK              := Color("#242424")  # bb_night — letterlijk bb-night
+const PANEL            := Color("#f3f3f3")  # bb_day — letterlijk bb-day
+const PANEL_DARK       := Color("#2e2e2e")  # ui_panel_donker — neutrale derivaat
+const LINE             := Color("#4a4a4a")  # ui_line — neutrale derivaat
+const GRIJS            := Color("#8a8a8a")  # ui_grijs — neutrale derivaat
+const WIT              := Color("#eef0f4")  # wit — neutraal
+const BLUEBIRD_INK     := Color("#243cec")  # bb_blue — letterlijk bb-blue, voor lichte ondergrond
+const BLUEBIRD_BRIGHT  := Color("#3a86ff")  # ui_bluebird_bright — derivaat voor donkere ondergrond — bb-blue zelf is daar te donker om te lezen
+const BLUEBIRD_TINT    := Color("#dbe9ff")  # bb_light_blue — letterlijk bb-light-blue
+const GROEN            := Color("#3fae6e")  # ui_groen — derivaat van bb-green, leesbaar op 8-10px
+const GROEN_TINT       := Color("#d8ffe0")  # bb_green — letterlijk bb-green
+const ROOD             := Color("#e05263")  # ui_rood — game-only utility — BBD heeft geen foutkleur
+const ORANJE           := Color("#f4a259")  # ui_oranje — derivaat van bb-orange, leesbaar op 8-10px
+const ORANJE_TINT      := Color("#f7d6c2")  # bb_orange — letterlijk bb-orange
+const ROZE_TINT        := Color("#ffcee3")  # bb_pink — letterlijk bb-pink — gereserveerd voor mensen/cultuur
+const NEUTRAAL_TINT    := Color("#e4e4e4")  # ui_neutraal_tint — letterlijk --color-line — voor niet-accent states
+const POSTIT           := Color("#f7e28a")  # postit_geel — papier van een ticket-briefje
+const POSTIT_RAND      := Color("#ceb458")  # postit_geel_rand — donkerder papier, geen zwarte lijn
+const POSTIT_LEEG      := Color("#dedad0")  # postit_leeg — lege plek op het bord
+const POSTIT_LEEG_RAND := Color("#c4bfb4")  # postit_leeg_rand — rand van een lege plek
 # --- GEGENEREERD UIT palette.py, NIET HANDMATIG BEWERKEN — EINDE ---
 
 # Ark Pixel is ontworpen op 10 px. Alleen hele veelvouden blijven scherp, dus
@@ -45,9 +49,28 @@ static func panel(bg: Color = PANEL, border: Color = INK, width: int = 1) -> Sty
 	return sb
 
 
+## Let op: labels breken standaard af. Een label zonder autowrap rapporteert de
+## volledige tekstbreedte als minimum, en een Container groeit daar buiten zijn
+## ankers voor uit. Op een canvas van 192 px trekt een enkele lange regel zo de
+## hele indeling van het scherm af.
+## Een ticket is een briefje op het bord, geen tabelrij. Vandaar papierkleur met
+## een rand in een donkerdere tint van datzelfde papier: een zwarte lijn van 1 px
+## maakt er op deze schaal een invoerveld van.
+static func postit(bg: Color = POSTIT, rand: Color = POSTIT_RAND) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.border_color = rand
+	sb.set_border_width_all(1)
+	# de onderrand iets dikker: dat leest als een briefje dat een beetje omkrult
+	sb.border_width_bottom = 2
+	sb.set_content_margin_all(4)
+	return sb
+
+
 static func label(text: String, size: int = FS_BODY, color: Color = INK) -> Label:
 	var l := Label.new()
 	l.text = text
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
 	return l
@@ -133,7 +156,8 @@ static func dimmer(alpha: float = 0.62) -> ColorRect:
 static func title_bar(text: String) -> PanelContainer:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", panel(PANEL_DARK, INK))
-	var l := label(text, FS_HEAD, WIT)
+	var l := label(text, FS_BODY, WIT)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	p.add_child(l)
 	return p

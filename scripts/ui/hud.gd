@@ -209,7 +209,7 @@ func _build_board(root: Control) -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 3)
 	panel.add_child(v)
-	v.add_child(UiKit.label("BLUEBIRD DAY / SPRINTBORD", UiKit.FS_HEAD, UiKit.INK))
+	v.add_child(UiKit.label("SPRINTBORD", UiKit.FS_HEAD, UiKit.INK))
 	v.add_child(UiKit.label("Webshop paardensupplementen", UiKit.FS_SMALL, UiKit.GRIJS))
 	v.add_child(UiKit.spacer(3))
 

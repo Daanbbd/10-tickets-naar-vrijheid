@@ -482,7 +482,7 @@
       },
       "stilte": {
         "speaker": "",
-        "text": "Je schrijft elf punten over. Mevrouw Van Zutphen vindt dat een prettige werkwijze.",
+        "text": "Je schrijft elf punten over. Mevrouw P. Aardenmens vindt dat een prettige werkwijze.",
         "next": "slot"
       },
       "slot": {
@@ -509,7 +509,7 @@
     "nodes": {
       "start": {
         "speaker": "",
-        "text": "Mevrouw Van Zutphen kijkt op. Ze heeft een mapje bij zich.",
+        "text": "Mevrouw P. Aardenmens kijkt op. Ze heeft een mapje bij zich.",
         "next": "wie"
       },
       "wie": {

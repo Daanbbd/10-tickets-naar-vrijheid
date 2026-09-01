@@ -43,6 +43,13 @@ P = {
     "ui_rood":            (224, 82, 99),   # #e05263 — game-only utility, BBD heeft geen foutkleur
     "ui_oranje":          (244, 162, 89),  # #f4a259 — verzadigd derivaat van bb_orange, leesbaar op 8-10px
     "ui_neutraal_tint":   (228, 228, 228), # #e4e4e4 — letterlijk --color-line, voor niet-accent states (bv. LOCKED)
+    # post-its — tickets zijn briefjes op het scrumbord, geen tabelrijen.
+    # De randkleur is een donkerder versie van het papier zelf: een zwarte lijn
+    # op 10 px maakt er een formulierveld van.
+    "postit_geel":       (247, 226, 138),
+    "postit_geel_rand":  (206, 180, 88),
+    "postit_leeg":       (222, 218, 208),
+    "postit_leeg_rand":  (196, 191, 180),
     # accenten
     "groen":      (67, 170, 139),
     "groen_donker":(42, 120, 96),

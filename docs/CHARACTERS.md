@@ -23,7 +23,7 @@ ticket hun vakgebied is.
 | `dennis` | Dennis | Scrum Master | patrouilleert de gang |
 | `bastiaan` | Bastiaan | Frontend developer | De Vloer |
 | `koen` | Koen | Backend developer | Patchhok |
-| `klant` | Mevrouw Van Zutphen | Klant, Manege De Vrije Teugel | entree |
+| `klant` | Mevrouw P. Aardenmens | Klant, Manege De Vrije Teugel | entree |
 | `stagiair` | De stagiair | Stagiair | staat in de doorgang bij de entree |
 | `bezorger` | De bezorger | Bezorger | verschijnt na BBD-208 |
 

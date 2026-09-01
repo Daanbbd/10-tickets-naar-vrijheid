@@ -75,33 +75,44 @@ func build_chrome(title: String, intro: String) -> VBoxContainer:
 	var frame := PanelContainer.new()
 	frame.add_theme_stylebox_override("panel", UiKit.panel())
 	UiKit.full_rect(frame)
-	frame.offset_left = 10; frame.offset_right = -10
-	frame.offset_top = 8; frame.offset_bottom = -8
+	frame.offset_left = 4; frame.offset_right = -4
+	frame.offset_top = 4; frame.offset_bottom = -4
 	add_child(frame)
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)
 	frame.add_child(col)
 
-	var bar := HBoxContainer.new()
-	col.add_child(bar)
-	var t := UiKit.label(title, UiKit.FS_HEAD, UiKit.INK)
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.add_child(t)
+	# Titel en status onder elkaar, niet naast elkaar: op 192 px is een kop op
+	# FS_HEAD naast een statusregel breder dan het scherm, en een Container
+	# groeit buiten zijn ankers om zijn kinderen te laten passen.
+	var t := UiKit.label(title, UiKit.FS_BODY, UiKit.INK)
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(t)
 	_status = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
-	bar.add_child(_status)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	col.add_child(_status)
 
 	if intro != "":
 		var i := UiKit.label(intro, UiKit.FS_SMALL, UiKit.GRIJS)
 		i.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		col.add_child(i)
 
+	# Op een portretcanvas past de inhoud van een minigame lang niet altijd in
+	# beeld. Zonder scroll valt de knop onderaan buiten het scherm en is de
+	# minigame niet uit te spelen.
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	col.add_child(scroll)
+
 	_body = VBoxContainer.new()
 	_body.add_theme_constant_override("separation", 3)
+	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	col.add_child(_body)
+	scroll.add_child(_body)
 
-	var foot := UiKit.label("Muis om te slepen en klikken   ·   ESC  afbreken", UiKit.FS_SMALL, UiKit.GRIJS)
+	var foot := UiKit.label("Tik om te kiezen  ·  Esc stoppen", UiKit.FS_SMALL, UiKit.GRIJS)
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(foot)
 
@@ -110,7 +121,7 @@ func build_chrome(title: String, intro: String) -> VBoxContainer:
 	_banner.set_anchors_preset(Control.PRESET_CENTER)
 	_banner.anchor_left = 0.5; _banner.anchor_right = 0.5
 	_banner.anchor_top = 0.5; _banner.anchor_bottom = 0.5
-	_banner.offset_left = -150; _banner.offset_right = 150
+	_banner.offset_left = -92; _banner.offset_right = 92
 	_banner.offset_top = -18; _banner.offset_bottom = 18
 	_banner.visible = false
 	add_child(_banner)

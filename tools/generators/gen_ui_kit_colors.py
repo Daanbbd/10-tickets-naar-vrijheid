@@ -44,6 +44,10 @@ MAPPING = [
     ("ORANJE_TINT", "bb_orange", "letterlijk bb-orange"),
     ("ROZE_TINT", "bb_pink", "letterlijk bb-pink — gereserveerd voor mensen/cultuur"),
     ("NEUTRAAL_TINT", "ui_neutraal_tint", "letterlijk --color-line — voor niet-accent states"),
+    ("POSTIT", "postit_geel", "papier van een ticket-briefje"),
+    ("POSTIT_RAND", "postit_geel_rand", "donkerder papier, geen zwarte lijn"),
+    ("POSTIT_LEEG", "postit_leeg", "lege plek op het bord"),
+    ("POSTIT_LEEG_RAND", "postit_leeg_rand", "rand van een lege plek"),
 ]
 
 

@@ -60,17 +60,27 @@ Dennis slot [default]: "cool. thanks is gedaan."
 **Context:** Koen zit in het Patchhok. Hij is bezig maar heeft er geen haast mee.
 
 ```
-Koen start [bezocht + ≥ 6 done]: "nog steeds stil, lekker ouwe. ben ik bijna nerveus van."
-Koen start [bezocht]:            "ah ben je er weer. ik zit in een andere rabbit hole. geen zorg haha."
-Koen start [≥ 6 done]:          "De logs zijn stil. Is weer een pareltje hoor haha."
-Koen start [default]:            "Ik zal even kijken. Het duurt nog veertig minuten, vgm."
+Koen start [bezocht + koen_verborgen_voor_jonathan]: "is jonathan al weg? psst. lekker ouwe."
+Koen start [bezocht + koen_piepelienies_uitgelegd + ≥ 6]: "piepelienies lopen nog steeds. heb ze goed ingesteld haha."
+Koen start [bezocht]:  "ah ben je er weer. ik zit in een andere rabbit hole. geen zorg haha."
+Koen start [≥ 6]:     "De logs zijn stil. Is weer een pareltje hoor haha."
+Koen start [default]: "Ik zal even kijken. Het duurt nog veertig minuten, vgm."
 
 Koen: "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken."
+Koen: [< 6] "Ik kijk straks nog even naar de piepelienies. Iets met een timeout, vgm."
+Koen: [≥ 6] "De piepelienies lopen trouwens weer. Took a while haha."
 
-Koen: [< 6 done] "Ik kijk straks nog even naar de piepelienies. Iets met een timeout, vgm."
-Koen: [≥ 6 done] "De piepelienies lopen trouwens weer. Took a while haha."
+Koen: "wat is er?"
+→ [Keuze] "Wat zijn piepelienies precies?"
+     Koen: "piepelienies. ci/cd. build, test, deploy. maar dan lekker. en als ze kapot zijn duurt het veertig minuten, vgm."
+     [flag: koen_piepelienies_uitgelegd, koen_bezocht]
 
-→ [Keuze] "Oke."   [flag: koen_bezocht = true]
+→ [Keuze] "Jonathan zoekt je."
+     Koen: "ah nee. zeg maar dat ik in een call zit. lekker ouwe."
+     [flag: koen_verborgen_voor_jonathan, koen_bezocht]
+
+→ [Keuze] "Niets. Ga zo door."
+     [flag: koen_bezocht]
 ```
 
 ---
@@ -91,12 +101,22 @@ Bastiaan tweede [trait: technisch]: "Kijk je straks even mee,, niet nu,, straks.
 Bastiaan tweede [trait: detail]:    "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat ook hè."
 Bastiaan tweede [default]:          "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
 
-→ [Keuze] "Oke."   [flag: bastiaan_bezocht = true]
+Bastiaan: ",,"
+→ [Keuze] "Wat bouw je?"
+     Bastiaan: "een accordion component,, maar dan eentje die echt goed werkt,, hij klapt uit en in,, niemand heeft hem gevraagd,, maar hij bestaat nu,,"
+     [flag: bastiaan_component_gevraagd, bastiaan_bezocht]
+
+→ [Keuze] "Kijk je mee straks?"
+     Bastiaan: "ja,, wanneer,, zeg maar wanneer,, ik ben er,,"
+     [flag: bastiaan_komt_meekijken, bastiaan_bezocht]
+
+→ [Keuze] "Oke."
+     [flag: bastiaan_bezocht]
 ```
 
 ---
 
-### Klant — Mevrouw Van Zutphen *(Entree)*
+### Klant — Mevrouw P. Aardenmens *(Entree)*
 
 **Context:** Ze is te vroeg. Ze heeft elf paarden en één website.
 
@@ -160,7 +180,24 @@ Daan tweede [trait: technisch]:   "Kom je iets tegen dat niet in het ticket staa
 Daan tweede [trait: commercieel]: "Als de klant belt: doorverbinden. Naar Willem. Altijd naar Willem."
 Daan tweede [default]:            "Zeg het als iets niet klopt. Liever nu dan bij de oplevering."
 
-→ [Keuze] "Oke."   [flag: daan_bezocht = true]
+Daan: "hoe zit het?"
+→ [Keuze] "Alles loopt goed."
+     Daan: "dat is fijn om te horen. echt."
+     [flag: daan_goed_nieuws, daan_bezocht]
+
+→ [Keuze] "Er is iets wat me dwars zit."
+     Daan: "zeg het."
+     Speler [trait: technisch]: "De backend gedraagt zich raar."
+     Speler [trait: commercieel]: "De klant verwacht meer dan in het ticket staat."
+     Speler [default]: "Ik weet het nog niet precies."
+     Daan [technisch]: "Jonathan weet dat. Of Jonathan heeft het gemaakt."
+     Daan [commercieel]: "Doorverbinden naar Willem. Die weet hoe hij dat landt."
+     Daan [default]: "Dan is het waarschijnlijk in een ticket. Zet het er anders in."
+     [flag: daan_op_de_hoogte, daan_bezocht]
+
+→ [Keuze] "Niets bijzonders."
+     Daan: "mooi."
+     [flag: daan_bezocht]
 ```
 
 ---
@@ -178,7 +215,24 @@ Danny tweede [trait: data]:   "psies. meningen zijn ruis. gedrag is data"
 Danny tweede [trait: detail]: "de knop staat twee pixels scheef. kost ons niets, maar ik zeg het toch"
 Danny tweede [default]:       "alles is een funnel. de gang ook. mensen lopen linksom, altijd"
 
-→ [Keuze] "Oke."   [flag: danny_bezocht = true]
+Danny: "?"
+→ [Keuze] "Wat test je?"
+     Danny: "kijken of mensen eerder klikken als de knop groter is. of roder. of allebei. drie varianten. morgen weten we het."
+     Danny: "wat denk jij?"
+     → "Groter."      → Danny: "psies. dat is het. maar bewijs het zelf maar."
+     → "Roder."       → Danny: "dat zegt iedereen. data zegt iets anders. biem."
+     → "Dat hangt ervan af." → Danny: "ah. je bent een van ons."
+     [flag: danny_test_uitgelegd, danny_bezocht]
+
+→ [Keuze] "Ik zag iets in het gedrag van de gebruikers."
+     Speler [trait: data]: "Ze haken af op de tweede stap."
+     Speler [default]: "Ze scrollen niet naar beneden."
+     Danny [data]: "dat weet ik. maar goed dat jij het ziet. zet hem in een segment."
+     Danny [default]: "de fold. het is altijd de fold. biem."
+     [flag: danny_tip_gekregen, danny_bezocht]
+
+→ [Keuze] "Ga door."
+     [flag: danny_bezocht]
 ```
 
 ---
@@ -196,7 +250,20 @@ Victor tweede [trait: detail]: "Kijk eens naar de tweede rij. Nee? Precies. Dat 
 Victor tweede [trait: proces]: "Zet het in een ticket. Anders bestaat het niet en doe ik het toch. hahaha"
 Victor tweede [default]:       "Als je iets scheef ziet staan, zeg het. Dan zie ik het ook en slaap ik slechter."
 
-→ [Keuze] "Oke."   [flag: victor_bezocht = true]
+Victor: "wat?"
+→ [Keuze] "Er zit iets scheef bij de entree."
+     Victor: "welke kant?"
+     Speler [trait: detail]: "Links. Drie pixels."
+     Speler [default]: "Links, denk ik."
+     Victor: "dat dacht ik al. ik fix het. godver."
+     [flag: victor_entree_gemeld, victor_bezocht]
+
+→ [Keuze] "De build ziet er goed uit."
+     Victor: "dat zei ik ook. maar ik vertrouw het nog niet. hahaha."
+     [flag: victor_compliment, victor_bezocht]
+
+→ [Keuze] "Oke."
+     [flag: victor_bezocht]
 ```
 
 ---
@@ -214,7 +281,22 @@ Jonathan tweede [trait: technisch]:   "Zie je iets in de logs met een hoofdlette
 Jonathan tweede [trait: commercieel]: "Beloof niets over snelheid. Ik weet niet waar die vandaan moet komen."
 Jonathan tweede [default]:            "Het werkt lokaal. Moet zeggen dat dat ook iets is."
 
-→ [Keuze] "Oke."   [flag: jonathan_bezocht = true]
+Jonathan: "."
+→ [Keuze] "Er is iets in de logs."
+     Jonathan: "welke letter?"
+     Speler [trait: technisch]: "Een E. En er staan er drie."
+     Speler [default]: "Een hoofdletter. Weet niet welke."
+     Jonathan [technisch]: "drie E's. één is echt, twee zijn gevolgen. ik ga er naartoe kijken."
+     Jonathan [default]: "als het een E is ben ik het niet. anders ook niet. ik kijk even."
+     [flag: jonathan_alert, jonathan_bezocht]
+
+→ [Keuze] "Logs zien er goed uit."
+     Jonathan: "dat zei ik ook. niemand gelooft het als ik het zeg."
+     [flag: jonathan_logs_ok, jonathan_bezocht]
+
+→ [Keuze] "Niets van belang."
+     Jonathan: "mooi."
+     [flag: jonathan_bezocht]
 ```
 
 ---
@@ -232,7 +314,20 @@ Willem tweede [trait: technisch]: "Zeg tegen mij dat iets niet kan. Ik vertaal h
 Willem tweede [trait: sociaal]:   "Jij begrijpt het. Nee zeggen kost een uur. Ja zeggen kost een kwartaal."
 Willem tweede [default]:          "Als ze belt, ben ik in het hokje. Ook als ik daar niet ben."
 
-→ [Keuze] "Oke."   [flag: willem_bezocht = true]
+Willem: "heeft ze al gebeld?"
+→ [Keuze] "Nog niet."
+     Willem: "dat duurt niet lang meer. absoluta."
+     [flag: willem_bezocht]
+
+→ [Keuze] "Ze belde al."
+     Willem: "wat zei ze?"
+     → "Blij."        → Willem: "gelukkig. anders had ik nu gerend. heeeel snel."    [flag: willem_klant_blij]
+     → "Vragen."      → Willem: "geef ze mij maar. ik vertaal ze naar iets uitvoerbaars." [flag: willem_vragen_op]
+     → "Ze belt terug." → Willem: "ah. dan ga ik vast staan. absoluta."              [flag: willem_wacht]
+     [flag: willem_bezocht]
+
+→ [Keuze] "Oke, ga door."
+     [flag: willem_bezocht]
 ```
 
 ---
@@ -390,7 +485,7 @@ Daan [anderen]: "Probeer het opnieuw. Begin bij de bovenste."
 ## T03 — BBD-203: De klant heeft feedback
 **Owner:** Willem | **Locatie:** Z1 Entree | **Minigame:** mg_klantfeedback
 
-### t03_offer — Gesprek met Mevrouw Van Zutphen
+### t03_offer — Gesprek met Mevrouw P. Aardenmens
 
 ```
 Klant: "Ik heb even wat puntjes opgeschreven. Het zijn er niet veel."
@@ -406,7 +501,7 @@ Klant: "Het logo mag groter. Maar niet te groot. En het moet premium worden. Maa
      [flag: klant_echtgenoot]
 
 → [Keuze] "Niets zeggen. Alles opschrijven."
-     [Omschrijving] Je schrijft elf punten over. Mevrouw Van Zutphen vindt dat een prettige werkwijze.
+     [Omschrijving] Je schrijft elf punten over. Mevrouw P. Aardenmens vindt dat een prettige werkwijze.
 
 Speler [willem]: "Wij gaan hiermee aan de slag. In deze volgorde."
 Willem [anderen]: "Wij gaan hiermee aan de slag. In een volgorde."
@@ -454,7 +549,7 @@ Willem [anderen]: "Nog een keer. Voorzichtiger dit keer."
 ### t03_done
 
 ```
-[Omschrijving] Mevrouw Van Zutphen is weg. De balie staat op 'Bezoek: afgerond'. De koffie staat er nog.
+[Omschrijving] Mevrouw P. Aardenmens is weg. De balie staat op 'Bezoek: afgerond'. De koffie staat er nog.
 ```
 
 ---

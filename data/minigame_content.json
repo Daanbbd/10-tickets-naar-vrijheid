@@ -158,7 +158,7 @@
  },
  "mg_klantfeedback": {
   "type": "choicescene",
-  "intro": "Mevrouw Van Zutphen zit in de entree met een uitgeprinte screenshot en elf punten. Drie ervan spreken elkaar tegen. Vertaal wat ze zegt naar iets dat je kunt bouwen.",
+  "intro": "Mevrouw P. Aardenmens zit in de entree met een uitgeprinte screenshot en elf punten. Drie ervan spreken elkaar tegen. Vertaal wat ze zegt naar iets dat je kunt bouwen.",
   "rondes": [
    {
     "prompt": "'Het moet rustiger worden. Maar het moet ook meer opvallen.'",
@@ -237,7 +237,7 @@
    }
   ],
   "drempel": 6,
-  "success": "Elf punten zijn drie concrete requirements geworden. Mevrouw Van Zutphen voelt zich gehoord en jij hebt iets om te bouwen. Beide waar, tegelijk.",
+  "success": "Elf punten zijn drie concrete requirements geworden. Mevrouw P. Aardenmens voelt zich gehoord en jij hebt iets om te bouwen. Beide waar, tegelijk.",
   "failure": "Het gesprek is heel gezellig geweest. Er is niets besloten. Willem kijkt je aan. Nog een keer."
  },
  "mg_frontend_fix": {
@@ -596,7 +596,7 @@
     "goed": true
    }
   ],
-  "eis": "Iets van twaalf seconden dat je zonder uitleg aan mevrouw Van Zutphen kunt laten horen.",
+  "eis": "Iets van twaalf seconden dat je zonder uitleg aan mevrouw P. Aardenmens kunt laten horen.",
   "success": "Twaalf seconden merksound. Willem speelt het af in de telefoon en de klant zegt 'oooh'. Dat is de hoogste score die bestaat.",
   "failure": "Dit gaan we niet aan de klant laten horen. Gooi de tags weg en genereer opnieuw.",
   "pogingen": 4
@@ -1023,7 +1023,7 @@
    },
    "willem": {
     "foutcode": "CLIENT APPROVAL REQUIRED",
-    "uitleg": "Technisch is alles klaar. Er ontbreekt één ja. Mevrouw Van Zutphen is aan de telefoon en heeft nog één vraag. Dit is jouw hokje.",
+    "uitleg": "Technisch is alles klaar. Er ontbreekt één ja. Mevrouw P. Aardenmens is aan de telefoon en heeft nog één vraag. Dit is jouw hokje.",
     "mechaniek": "choicescene",
     "config": {
      "type": "choicescene",
