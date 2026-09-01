@@ -62,6 +62,7 @@ Alles achter `--` en alleen voor testen:
 | `--auto=<world_id>` | zet de speler bij dat object en interacteert |
 | `--autoplay` | drukt zelf op de interactietoets en lost minigames op |
 | `--playthrough` | speelt alle tien de tickets af |
+| `--geen-pin` | speelbeurt zonder een ticket te kiezen, zodat de keuzevraag op een gedeeld object echt afgaat |
 | `--quit-when-done` | sluit af met exitcode 0/1 |
 | `--touch` | zet de duimbesturing aan op de desktop (stick + knoppen) |
 | `--geen-touch` | zet de duimbesturing uit op een aanraakscherm |
@@ -97,13 +98,32 @@ kortste weg — geen kabel, geen developer-account, geen installatie.
 ```bash
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . \
   --export-release Web build/web/index.html
-python3 tools/serve_web.py            # standaard poort 8060
+python3 tools/serve_web.py            # standaard poort 8060, met TLS
 ```
 
-Het script print het LAN-adres dat je op de telefoon opent. Python's
-`http.server` kent `.wasm` niet op macOS, en zonder die mimetype weigert de
-browser `instantiateStreaming`; daarom zet `serve_web.py` de mimetypes en de
-COOP/COEP-headers zelf.
+Het script print het LAN-adres dat je op de telefoon opent. Safari waarschuwt
+over het certificaat: **Toon details → deze website bezoeken**. Daarna is de
+origin `https` en start het spel.
+
+Die TLS is geen luxe. Godot 4.7 weigert te starten buiten een secure context:
+`getMissingFeatures()` in de shell checkt `window.isSecureContext` en meldt
+anders alleen `Secure Context - Check web server configuration (use HTTPS)`.
+Localhost is secure, een LAN-IP over http niet — dus een build die op je Mac via
+`127.0.0.1` prima draait, komt op je telefoon niet voorbij het laadscherm. Dat
+is de makkelijkste manier om een uur te verliezen.
+
+`serve_web.py` maakt daarom zelf een zelfgetekend certificaat in `build/cert/`
+(genegeerd, want daar staat een privésleutel). Het IP moet in de
+`subjectAltName` staan: iOS negeert sinds versie 13 de CN volledig, en zonder
+IP in de SAN weigert Safari ook ná het doorklikken.
+
+Python's `http.server` kent `.wasm` niet op macOS, en zonder die mimetype
+weigert de browser `instantiateStreaming`; daarom zet het script de mimetypes en
+de COOP/COEP-headers ook zelf.
+
+Wil je de certificaatwaarschuwing helemaal kwijt, dan is een tunnel met een echt
+certificaat (cloudflared, ngrok) de weg — maar dat zet de build op het open
+internet, dus dat is een bewuste keuze en geen standaardstap.
 
 De Web-preset staat op `variant/thread_support=false`, want mét threads eist de
 browser die COOP/COEP-headers ook van elke hostende partij.
