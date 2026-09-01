@@ -100,21 +100,26 @@ class Vel:
 
 
 def pose(col):
-    """Wat er per kolom verandert. bob geldt voor alles boven de benen."""
+    """Wat er per kolom verandert. bob geldt voor alles boven de benen.
+
+    `arm` is een paar (links, rechts) in plaats van één getal. Bij lopen zijn de
+    twee elkaars tegengestelde, maar de bezigheid-animaties hebben er juist één
+    arm omhoog voor nodig en dat kon met één waarde niet.
+    """
     if col == 0:                        # idle
-        return dict(bob=0, been=(0, 0), arm=0, knipper=False, mond=False)
+        return dict(bob=0, been=(0, 0), arm=(0, 0), knipper=False, mond=False)
     if col == 1:                        # ademen
-        return dict(bob=-1, been=(0, 0), arm=0, knipper=False, mond=False)
+        return dict(bob=-1, been=(0, 0), arm=(0, 0), knipper=False, mond=False)
     if col == 2:                        # knipperen
-        return dict(bob=0, been=(0, 0), arm=0, knipper=True, mond=False)
+        return dict(bob=0, been=(0, 0), arm=(0, 0), knipper=True, mond=False)
     if col == 7:                        # praten
-        return dict(bob=0, been=(0, 0), arm=0, knipper=False, mond=True)
+        return dict(bob=0, been=(0, 0), arm=(0, 0), knipper=False, mond=True)
     stap = col - 3                      # 0..3
     # passeerstand staat het hoogst, contactstand het laagst
     bob = -1 if stap in (0, 2) else 0
     been = [(0, 0), (-2, 2), (0, 0), (2, -2)][stap]
-    arm = [0, 1, 0, -1][stap]
-    return dict(bob=bob, been=been, arm=arm, knipper=False, mond=False)
+    zwaai = [0, 1, 0, -1][stap]
+    return dict(bob=bob, been=been, arm=(zwaai, -zwaai), knipper=False, mond=False)
 
 
 # =============================================================================
@@ -146,7 +151,7 @@ def laag_body(v, richting, p, variant):
         v.rect(bx - 1, SCHOEN_TOP, bx + 2, SCHOEN_TOP + 1, SHOES)
 
     # armen: 2 px breed, zwaaien tegengesteld aan de benen
-    for ax, zwaai in ((al, p["arm"]), (ar, -p["arm"])):
+    for ax, zwaai in ((al, p["arm"][0]), (ar, p["arm"][1])):
         v.rect(ax, ROMP_TOP + bob + zwaai, ax + 1, HAND_Y - 1 + bob + zwaai, SKIN)
         v.rect(ax, HAND_Y + bob + zwaai, ax + 1, HAND_Y + bob + zwaai, SKIN_S)
 
@@ -155,8 +160,8 @@ def laag_body(v, richting, p, variant):
     # armen als losse stokjes van de romp scheiden.
     v.rect(rl, ROMP_TOP + bob, rr, ROMP_BOT + bob, SKIN)
     v.rect(rl, ROMP_TOP + bob, rr, ROMP_TOP + bob, OUT_C)
-    v.rect(al, ROMP_TOP + bob + p["arm"], al, HAND_Y + bob + p["arm"], OUT_C)
-    v.rect(ar + 1, ROMP_TOP + bob - p["arm"], ar + 1, HAND_Y + bob - p["arm"], OUT_C)
+    v.rect(al, ROMP_TOP + bob + p["arm"][0], al, HAND_Y + bob + p["arm"][0], OUT_C)
+    v.rect(ar + 1, ROMP_TOP + bob + p["arm"][1], ar + 1, HAND_Y + bob + p["arm"][1], OUT_C)
 
     # nek
     v.rect(6, NEK_TOP + bob, 9, NEK_BOT + bob, SKIN_S)
@@ -257,7 +262,7 @@ def laag_outfit(v, richting, p, variant):
     # mouwen over de armen
     if o["mouw"]:
         eind = (ROMP_TOP + 3) if o["mouw"] == 1 else (HAND_Y - 1)
-        for ax, zwaai in ((ARM_L, p["arm"]), (ARM_R, -p["arm"])):
+        for ax, zwaai in ((ARM_L, p["arm"][0]), (ARM_R, p["arm"][1])):
             v.rect(ax, ROMP_TOP + bob + zwaai, ax + 1, eind + bob + zwaai, SHIRT)
             v.rect(ax, eind + bob + zwaai, ax + 1, eind + bob + zwaai, SHIRT_S)
 

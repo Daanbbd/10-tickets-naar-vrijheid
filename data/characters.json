@@ -30,7 +30,7 @@
       "body": "gemiddeld",
       "hair": "kaal",
       "facial": "snor",
-      "outfit": "overhemd",
+      "outfit": "tshirt",
       "accessory": "lanyard"
     },
     "pants": "#34384e",
@@ -200,7 +200,7 @@
     "finale_id": "visual_regression_detected",
     "color": "#e8e4dc",
     "skin": "#e9b89b",
-    "hair": "#4e3a2e",
+    "hair": "#1c1a1c",
     "portrait": "res://assets/sprites/portraits/bastiaan.png",
     "accent": "#e8c547",
     "look": {
@@ -208,7 +208,7 @@
       "hair": "stekels",
       "facial": "",
       "outfit": "hoodie",
-      "accessory": "pet"
+      "accessory": ""
     },
     "pants": "#34384e",
     "stijl": "Eén ticket zelf. Jij ziet wat niemand anders ziet."
@@ -241,7 +241,7 @@
     "look": {
       "body": "gemiddeld",
       "hair": "knot",
-      "facial": "baard",
+      "facial": "",
       "outfit": "tshirt",
       "accessory": "bril"
     },
