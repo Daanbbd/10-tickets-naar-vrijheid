@@ -1,7 +1,8 @@
 class_name TouchControls
 extends CanvasLayer
 ## Duimbesturing voor de wereldscene: een joystick die verschijnt waar je hem
-## neerzet, plus drie knoppen rechtsonder.
+## neerzet, een actieknop die het werkwoord draagt van waar je voor staat, en
+## twee hulpknoppen voor het ticketbord en de hint.
 ##
 ## Deze laag maakt geen eigen invoerbegrip. Hij drukt de bestaande acties in
 ## (`move_*`, `sprint`, `interact`, `ticketboard`, `hint`), zodat player.gd en
@@ -30,22 +31,11 @@ const ZONE_TOP := 0.38
 
 var _stick: Control
 var _knoppen: Control
+var _actieknop: Button = null
 var _vinger: int = -1
 var _midden: Vector2 = Vector2.ZERO
 var _uitslag: Vector2 = Vector2.ZERO
 var _ingedrukt: Array[StringName] = []
-
-
-## Alleen bouwen als er ook echt aangeraakt kan worden. `--touch` zet hem aan
-## op de desktop zodat de QA-shots de duimzone laten zien; `--geen-touch` zet
-## hem uit op een aanraakscherm dat met een toetsenbord getest wordt.
-static func gewenst() -> bool:
-	var args := OS.get_cmdline_user_args()
-	if "--touch" in args:
-		return true
-	if "--geen-touch" in args:
-		return false
-	return OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
 
 
 func setup() -> void:
@@ -68,37 +58,60 @@ func setup() -> void:
 	_bouw_knoppen()
 
 	Bus.input_lock_changed.connect(_on_input_lock)
+	Bus.interaction_prompt_changed.connect(_on_prompt)
 
 
 # --- Knoppen --------------------------------------------------------------
 
 func _bouw_knoppen() -> void:
-	# Rechtsonder, op duimafstand van de rand. De grote knop is interact omdat
-	# dat de enige is die je tijdens het lopen gebruikt.
-	_knop("E", KNOP_GROOT, &"interact", Vector2(-MARGE - KNOP_GROOT, -MARGE - KNOP_GROOT))
+	# De actieknop draagt het werkwoord van waar je voor staat — "Openen",
+	# "Praten" — in plaats van een toetsnaam. Een knop die "E" heet verwijst
+	# naar een toetsenbord dat er niet is; een knop die "Openen" heet vertelt
+	# je wat er gebeurt als je hem indrukt, en maakt de losse prompt half
+	# overbodig. Hij groeit mee met het woord en verdwijnt als er niets is.
+	_actieknop = _knop("", KNOP_GROOT, &"interact",
+		Vector2(-MARGE, -MARGE - KNOP_GROOT), Vector2(-MARGE, -MARGE))
+	_actieknop.visible = false
+
+	# Twee hulpknoppen op een rij erboven, buiten de plek waar de actieknop
+	# breed kan worden.
+	var y := -MARGE - KNOP_GROOT - 4
 	_knop("▤", KNOP_KLEIN, &"ticketboard",
-		Vector2(-MARGE - KNOP_KLEIN, -MARGE - KNOP_GROOT - 4 - KNOP_KLEIN))
+		Vector2(-MARGE - KNOP_KLEIN, y - KNOP_KLEIN), Vector2(-MARGE, y))
 	_knop("?", KNOP_KLEIN, &"hint",
-		Vector2(-MARGE - KNOP_GROOT - 4 - KNOP_KLEIN, -MARGE - KNOP_KLEIN))
+		Vector2(-MARGE - KNOP_KLEIN * 2 - 4, y - KNOP_KLEIN),
+		Vector2(-MARGE - KNOP_KLEIN - 4, y))
 
 
-func _knop(tekst: String, maat: int, actie: StringName, hoek: Vector2) -> void:
+func _knop(tekst: String, maat: int, actie: StringName,
+		links_boven: Vector2, rechts_onder: Vector2) -> Button:
 	var b := UiKit.button(tekst, UiKit.FS_BODY)
 	b.custom_minimum_size = Vector2(maat, maat)
 	b.focus_mode = Control.FOCUS_NONE  # geen focusrand op een aanraakscherm
 	b.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	b.anchor_left = 1.0
-	b.anchor_top = 1.0
-	b.offset_left = hoek.x
-	b.offset_top = hoek.y
-	b.offset_right = hoek.x + maat
-	b.offset_bottom = hoek.y + maat
+	b.offset_left = links_boven.x
+	b.offset_top = links_boven.y
+	b.offset_right = rechts_onder.x
+	b.offset_bottom = rechts_onder.y
+	# De knop mag naar links uitgroeien voor een lang werkwoord als
+	# "Onderzoeken", maar blijft rechtsonder verankerd.
+	b.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	b.modulate.a = 0.82  # je moet het kantoor eronder blijven zien
 	# button_down/-up in plaats van pressed: main.gd luistert op de neergaande
 	# flank, en de actie moet daarna weer los zodat is_action_pressed klopt.
 	b.button_down.connect(func() -> void: _actie(actie, true))
 	b.button_up.connect(func() -> void: _actie(actie, false))
 	_knoppen.add_child(b)
+	return b
+
+
+## De actieknop volgt exact dezelfde melding als de prompt in de HUD, zodat er
+## nooit een knop staat voor iets wat niet in bereik is.
+func _on_prompt(_text: String, shown: bool, _world_id: StringName, verb: String) -> void:
+	if _actieknop == null:
+		return
+	_actieknop.visible = shown and not Session.input_locked
+	_actieknop.text = verb
 
 
 ## Een echte InputEventAction, geen Input.action_press: main.gd leest deze

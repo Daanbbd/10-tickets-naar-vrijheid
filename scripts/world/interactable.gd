@@ -44,10 +44,16 @@ func set_enabled(v: bool) -> void:
 
 
 func prompt_text() -> String:
-	var verb := String(VERB.get(kind, "Gebruiken"))
+	return "%s  %s" % [verb(), label] if label != "" else verb()
+
+
+## Het werkwoord los, zonder het label. Op een aanraakscherm staat dit op de
+## actieknop zelf: de knop zegt dan wat hij doet in plaats van naar een toets
+## te verwijzen die er niet is.
+func verb() -> String:
 	if kind == Kind.TICKET and ticket_here() == null:
-		verb = "Bekijken"
-	return "%s  %s" % [verb, label] if label != "" else verb
+		return "Bekijken"
+	return String(VERB.get(kind, "Gebruiken"))
 
 
 ## Het openstaande ticket op dit object, of null. De HUD gebruikt dit om de

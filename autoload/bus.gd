@@ -36,7 +36,7 @@ signal follower_released(npc_id: StringName)
 
 # --- UI / input ---
 signal input_lock_changed(locked: bool)
-signal interaction_prompt_changed(text: String, shown: bool, world_id: StringName)
+signal interaction_prompt_changed(text: String, shown: bool, world_id: StringName, verb: String)
 signal toast_requested(text: String, icon_id: StringName)
 signal zone_entered(zone_id: StringName, zone_name: String)
 signal audio_cue_requested(cue_id: StringName)

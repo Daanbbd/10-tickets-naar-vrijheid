@@ -30,7 +30,8 @@ func _physics_process(_delta: float) -> void:
 		_current = best
 		Bus.interaction_prompt_changed.emit(
 			_current.prompt_text() if _current != null else "", _current != null,
-			_current.world_id if _current != null else &"")
+			_current.world_id if _current != null else &"",
+			_current.verb() if _current != null else "")
 
 
 func current() -> Interactable:

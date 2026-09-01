@@ -75,7 +75,8 @@ func _ready() -> void:
 	_choices.add_theme_constant_override("separation", 2)
 	v.add_child(_choices)
 
-	_hint = UiKit.label("E  verder", UiKit.FS_SMALL, UiKit.GRIJS)
+	_hint = UiKit.label("tik  verder" if Invoer.touch() else "E  verder",
+		UiKit.FS_SMALL, UiKit.GRIJS)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v.add_child(_hint)
 

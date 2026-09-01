@@ -111,6 +111,28 @@ func toon_sluitregel(regel: String) -> void:
 		_sluit.text = regel
 
 
+## Op een aanraakscherm wordt de sluitregel een echte knop op dezelfde plek.
+## Het bord vult het scherm en scrollt, dus "tik ergens om te sluiten" kan
+## niet: elke tik is daar ook het begin van een veeg. Zelfde vorm als de
+## Stoppen-knop in een minigame, zodat "hier kom je weg" er overal eender
+## uitziet.
+func zet_sluitknop(bij_klik: Callable) -> void:
+	if _sluit == null:
+		return
+	var v := _sluit.get_parent() as VBoxContainer
+	var idx := _sluit.get_index()
+	v.remove_child(_sluit)
+	_sluit.queue_free()
+	_sluit = null
+
+	var b := UiKit.button("Sluiten", UiKit.FS_SMALL)
+	b.custom_minimum_size = Vector2(0, 26)
+	b.focus_mode = Control.FOCUS_NONE
+	b.pressed.connect(bij_klik)
+	v.add_child(b)
+	v.move_child(b, idx)
+
+
 func toon_inventaris(regel: String) -> void:
 	if _inventaris != null:
 		_inventaris.text = regel

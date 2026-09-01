@@ -112,9 +112,20 @@ func build_chrome(title: String, intro: String) -> VBoxContainer:
 	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_body)
 
-	var foot := UiKit.label("Tik om te kiezen  ·  Esc stoppen", UiKit.FS_SMALL, UiKit.GRIJS)
-	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	col.add_child(foot)
+	# Esc bestaat niet op een telefoon. Zonder een zichtbare uitweg zit een
+	# speler vast in een minigame die hij niet kan oplossen, en dat is de enige
+	# plek in het spel waar de wereld niet meer bereikbaar is.
+	if Invoer.touch():
+		var stop := UiKit.button("Stoppen", UiKit.FS_SMALL)
+		stop.custom_minimum_size = Vector2(0, 26)
+		stop.focus_mode = Control.FOCUS_NONE
+		stop.pressed.connect(abort)
+		col.add_child(stop)
+	else:
+		var foot := UiKit.label("Tik om te kiezen  ·  Esc stoppen",
+			UiKit.FS_SMALL, UiKit.GRIJS)
+		foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		col.add_child(foot)
 
 	_banner = PanelContainer.new()
 	_banner.add_theme_stylebox_override("panel", UiKit.panel(UiKit.GROEN, UiKit.INK, 2))

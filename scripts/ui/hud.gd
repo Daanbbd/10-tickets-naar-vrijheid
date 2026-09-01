@@ -39,7 +39,7 @@ var _duimzone: int = 0
 
 func setup() -> void:
 	layer = 10
-	_duimzone = DUIMZONE if TouchControls.gewenst() else 0
+	_duimzone = DUIMZONE if Invoer.touch() else 0
 	var root := UiKit.full_rect(Control.new())
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
@@ -182,11 +182,11 @@ func _build_card(root: Control) -> void:
 ## dus daar blijven alleen de twee dingen over die je niet ziet — dat de
 ## stick overal in de linkerhelft opkomt, en dat ver uitduwen rennen is.
 func _kaartregels() -> Array[String]:
-	if TouchControls.gewenst():
+	if Invoer.touch():
 		return [
 			"Duim links  lopen",
 			"Ver uitduwen  rennen",
-			"E  praten / bekijken",
+			"Knop rechts  praten / bekijken",
 			"▤  ticketbord      ?  hint",
 		]
 	return [
@@ -235,7 +235,10 @@ func _build_board(root: Control) -> void:
 	_bord.bouw(false)
 	_board.add_child(_bord)
 
-	_bord.toon_sluitregel("TAB  sluiten")
+	if Invoer.touch():
+		_bord.zet_sluitknop(func() -> void: toggle_board())
+	else:
+		_bord.toon_sluitregel("TAB  sluiten")
 
 
 func toggle_board(close_up: bool = false) -> void:
@@ -321,9 +324,17 @@ func _refresh_items() -> void:
 
 ## Wie dit ticket bezit hoort zichtbaar te zijn vóór de interactie, niet pas
 ## nadat de speler er vergeefs op E heeft gedrukt.
-func _on_prompt(text: String, shown: bool, world_id: StringName) -> void:
+func _on_prompt(text: String, shown: bool, world_id: StringName, verb: String) -> void:
 	_prompt.visible = shown and not Session.input_locked
-	_prompt_label.text = "E   %s%s" % [text, _eigenaar_suffix(world_id)]
+	# Op een aanraakscherm staat het werkwoord al op de actieknop en verwijst
+	# een letter naar een toets die er niet is. Dan houdt de prompt alleen over
+	# waar je voor staat, en wie daar iets mee kan.
+	if _duimzone > 0:
+		var rest := text.substr(verb.length()).strip_edges()
+		_prompt_label.text = "%s%s" % [rest if rest != "" else verb,
+			_eigenaar_suffix(world_id)]
+	else:
+		_prompt_label.text = "E   %s%s" % [text, _eigenaar_suffix(world_id)]
 
 
 static func _eigenaar_suffix(world_id: StringName) -> String:

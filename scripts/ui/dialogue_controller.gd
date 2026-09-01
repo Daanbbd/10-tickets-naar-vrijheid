@@ -125,10 +125,22 @@ func _on_choice_picked(index: int) -> void:
 	_choice_index = index
 
 
+## Op een aanraakscherm is de hele dialoog de knop. Een speler die op een
+## telefoon een tekstblok ziet tikt erop; die tik moet doorzetten in plaats
+## van naar de actieknop rechtsonder te verwijzen.
+var _getikt: bool = false
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed:
+		_getikt = true
+
+
 func _next_press() -> void:
+	_getikt = false
 	while true:
 		await get_tree().process_frame
-		if Input.is_action_just_pressed("interact"):
+		if Input.is_action_just_pressed("interact") or _getikt:
 			return
 
 

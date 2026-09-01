@@ -62,7 +62,7 @@ func _ready() -> void:
 
 	# De duimbesturing hangt naast de HUD in plaats van erin: hij drukt alleen
 	# de gewone acties in, dus hij hoort niet bij het schermbeeld.
-	if TouchControls.gewenst():
+	if Invoer.touch():
 		var touch := TouchControls.new()
 		add_child(touch)
 		touch.setup()
