@@ -24,6 +24,60 @@ func _ready() -> void:
 	_qa_shot()
 
 
+# --- App-lifecycle --------------------------------------------------------
+
+## Wie de pauze bezit, bezit ook het naar de achtergrond gaan. Zou een losse
+## autoload dit doen, dan zou die bij het terugkomen `paused = false` zetten en
+## daarmee een lopende minigame ontpauzeren. Vandaar dat het hier staat en dat
+## de vorige stand bewaard wordt in plaats van hersteld naar false.
+var _pauze_voor_achtergrond: bool = false
+var _in_achtergrond: bool = false
+
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_APPLICATION_PAUSED:
+			_naar_achtergrond()
+		NOTIFICATION_APPLICATION_RESUMED:
+			_naar_voorgrond()
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+			# Op de desktop is focusverlies geen achtergrond: daar zou dit de
+			# QA-shots en het spelen naast een editor stukmaken.
+			if OS.has_feature("mobile"):
+				_naar_achtergrond()
+		NOTIFICATION_WM_WINDOW_FOCUS_IN:
+			if OS.has_feature("mobile"):
+				_naar_voorgrond()
+
+
+func _naar_achtergrond() -> void:
+	if _in_achtergrond:
+		return
+	_in_achtergrond = true
+
+	# Eerst opslaan, dan pas pauzeren: Android mag dit proces hierna zonder
+	# waarschuwing killen. `WM_CLOSE_REQUEST` komt daar niet, dus dit is het
+	# enige moment waarop de sessie nog veilig weggeschreven kan worden.
+	# Alleen als er een speelbeurt loopt: wegdrukken op het titelscherm zou
+	# anders een lege sessie over een bestaande save heen schrijven.
+	if Session.character_id != &"":
+		Session.save_to_disk()
+
+	_pauze_voor_achtergrond = get_tree().paused
+	get_tree().paused = true
+	Engine.max_fps = 1
+	AudioServer.set_bus_mute(0, true)
+
+
+func _naar_voorgrond() -> void:
+	if not _in_achtergrond:
+		return
+	_in_achtergrond = false
+	get_tree().paused = _pauze_voor_achtergrond
+	Engine.max_fps = 0
+	AudioServer.set_bus_mute(0, false)
+
+
 ## QA: `-- --shot=/pad/uit.png [--shot-na=3.0]` schrijft een frame weg en stopt.
 ## Zit hier en niet in de wereldscene, zodat ook het titelscherm, de
 ## personagekeuze en het eindscherm te controleren zijn.

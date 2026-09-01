@@ -109,6 +109,14 @@ debug_panel={
 ]
 }
 
+; De drie minigames met een tikbaar bord luisteren op InputEventMouseButton.
+; Dat werkt op een telefoon alleen zolang Godot muisgebeurtenissen uit touch
+; blijft afleiden. Het staat standaard aan, maar het staat hier expliciet:
+; wie het uitzet maakt mg_whack, mg_cableboard en mg_slotboard onbedienbaar.
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

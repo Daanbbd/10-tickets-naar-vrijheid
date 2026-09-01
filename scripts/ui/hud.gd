@@ -14,6 +14,13 @@ const BRIEFJE_ZICHTBAAR := 1.4
 const NUDGE_NA := 45.0          ## seconden zonder voortgang voor een gratis hint
 const KAART_ZICHTBAAR := 9.0
 
+## Hoe ver de onderste HUD-regels omhoog moeten als de duimbesturing aanstaat.
+## De knoppenkolom rechtsonder is 68 px hoog (4 marge + 34 interact + 4 + 26
+## bord). Alles wat daaronder blijft hangen wordt door een hand afgedekt op
+## precies het moment dat je het nodig hebt — de prompt zegt immers wat er
+## gebeurt als je die knop indrukt.
+const DUIMZONE := 68
+
 var _prompt: PanelContainer
 var _prompt_label: Label
 var _counter: Label
@@ -27,13 +34,19 @@ var _bord: Scrumbord
 var _card: PanelContainer
 var _card_tween: Tween = null
 var _nudge: Timer
+var _duimzone: int = 0
 
 
 func setup() -> void:
 	layer = 10
+	_duimzone = DUIMZONE if TouchControls.gewenst() else 0
 	var root := UiKit.full_rect(Control.new())
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
+
+	# Alles wat aan een rand plakt hangt aan de veilige zone; het ticketbord
+	# hangt bewust aan `root` omdat een overlay tot in de notch moet doorlopen.
+	var veilig := UiKit.veilige_laag(root)
 
 	# --- ticketteller linksboven ---
 	var top := PanelContainer.new()
@@ -42,7 +55,7 @@ func setup() -> void:
 	top.offset_left = MARGE
 	top.offset_right = -MARGE
 	top.offset_top = MARGE
-	root.add_child(top)
+	veilig.add_child(top)
 	_counter = UiKit.label("", UiKit.FS_BODY, UiKit.WIT)
 	top.add_child(_counter)
 
@@ -58,7 +71,7 @@ func setup() -> void:
 	_objective.offset_left = MARGE
 	_objective.offset_right = -MARGE
 	_objective.offset_top = MARGE + 18
-	root.add_child(_objective)
+	veilig.add_child(_objective)
 	_objective_label = UiKit.label("", UiKit.FS_SMALL, UiKit.WIT)
 	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_objective.add_child(_objective_label)
@@ -70,13 +83,13 @@ func setup() -> void:
 	_zone.anchor_right = 0.5
 	_zone.anchor_top = 1.0
 	_zone.anchor_bottom = 1.0
-	_zone.offset_top = -30
-	_zone.offset_bottom = -16
+	_zone.offset_top = -30 - _duimzone
+	_zone.offset_bottom = -16 - _duimzone
 	_zone.offset_left = -90
 	_zone.offset_right = 90
 	_zone.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_zone.modulate.a = 0.0
-	root.add_child(_zone)
+	veilig.add_child(_zone)
 
 	# --- interactieprompt ---
 	_prompt = PanelContainer.new()
@@ -86,12 +99,12 @@ func setup() -> void:
 	_prompt.anchor_right = 0.5
 	_prompt.anchor_top = 1.0
 	_prompt.anchor_bottom = 1.0
-	_prompt.offset_top = -50
-	_prompt.offset_bottom = -32
+	_prompt.offset_top = -50 - _duimzone
+	_prompt.offset_bottom = -32 - _duimzone
 	_prompt.offset_left = -90
 	_prompt.offset_right = 90
 	_prompt.visible = false
-	root.add_child(_prompt)
+	veilig.add_child(_prompt)
 	_prompt_label = UiKit.label("", UiKit.FS_SMALL)
 	_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.add_child(_prompt_label)
@@ -106,9 +119,9 @@ func setup() -> void:
 	_toasts.offset_top = 46
 	_toasts.alignment = BoxContainer.ALIGNMENT_END
 	_toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(_toasts)
+	veilig.add_child(_toasts)
 
-	_build_card(root)
+	_build_card(veilig)
 	_build_board(root)
 
 	_nudge = Timer.new()
@@ -148,9 +161,11 @@ func _build_card(root: Control) -> void:
 	_card.anchor_right = 1.0
 	_card.anchor_bottom = 1.0
 	_card.offset_left = -(192 - MARGE * 2)
-	_card.offset_top = -78
+	# Ook boven de duimzone: deze kaart legt juist die knoppen uit, dus hij
+	# mag ze niet afdekken terwijl hij in beeld staat.
+	_card.offset_top = -78 - _duimzone
 	_card.offset_right = -MARGE
-	_card.offset_bottom = -MARGE
+	_card.offset_bottom = -MARGE - _duimzone
 	_card.modulate.a = 0.0
 	_card.visible = false
 	root.add_child(_card)
@@ -158,13 +173,28 @@ func _build_card(root: Control) -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 1)
 	_card.add_child(v)
-	for regel: String in [
+	for regel: String in _kaartregels():
+		v.add_child(UiKit.label(regel, UiKit.FS_SMALL, UiKit.WIT))
+
+
+## Op een telefoon is een kaart met toetsen niet verkeerd maar zinloos: er is
+## geen Shift om te vinden. De duimbesturing legt zichzelf grotendeels uit,
+## dus daar blijven alleen de twee dingen over die je niet ziet — dat de
+## stick overal in de linkerhelft opkomt, en dat ver uitduwen rennen is.
+func _kaartregels() -> Array[String]:
+	if TouchControls.gewenst():
+		return [
+			"Duim links  lopen",
+			"Ver uitduwen  rennen",
+			"E  praten / bekijken",
+			"▤  ticketbord      ?  hint",
+		]
+	return [
 		"WASD  lopen        Shift  rennen",
 		"E     praten / bekijken",
 		"TAB   ticketbord   Q  hint",
 		"F1    deze kaart",
-	]:
-		v.add_child(UiKit.label(regel, UiKit.FS_SMALL, UiKit.WIT))
+	]
 
 
 ## Laat de kaart even zien en fade hem daarna weg. F1 haalt hem terug.

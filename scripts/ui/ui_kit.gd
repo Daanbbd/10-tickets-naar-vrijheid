@@ -181,3 +181,55 @@ static func title_bar(text: String) -> PanelContainer:
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	p.add_child(l)
 	return p
+
+
+## Insets van de veilige zone (notch, statusbalk, home-indicator) in
+## canvaspixels, in de volgorde links / boven / rechts / onder.
+##
+## `DisplayServer.get_display_safe_area()` rekent in fysieke schermpixels,
+## terwijl een Control op dit canvas in 192x416 rekent. De schermtransform van
+## de viewport is de enige omrekening die zowel de integer-schaal als de
+## letterbox-offset meeneemt; een deling door de vensterbreedte doet dat niet
+## en schuift de HUD op elk toestel met balken de verkeerde kant op.
+static func veilige_insets(c: Control) -> Vector4i:
+	if not OS.has_feature("mobile") or not c.is_inside_tree():
+		return Vector4i.ZERO
+	var scherm := Rect2(DisplayServer.get_display_safe_area())
+	if scherm.size.x <= 0.0 or scherm.size.y <= 0.0:
+		return Vector4i.ZERO
+	var veilig := c.get_viewport().get_screen_transform().affine_inverse() * scherm
+	var canvas := c.get_viewport_rect()
+	return Vector4i(
+		maxi(0, int(ceilf(veilig.position.x - canvas.position.x))),
+		maxi(0, int(ceilf(veilig.position.y - canvas.position.y))),
+		maxi(0, int(ceilf(canvas.end.x - veilig.end.x))),
+		maxi(0, int(ceilf(canvas.end.y - veilig.end.y))))
+
+
+## Een Control die het scherm vult op de notch na, en die zichzelf bijstelt als
+## het venster draait of van formaat verandert.
+##
+## Hang hier alles aan wat aan een rand plakt. Schermvullende overlays (het
+## ticketbord, een dimmer) horen juist aan de ouder: die moeten de hele ruit
+## dekken, ook het stuk naast de camera-uitsparing.
+static func veilige_laag(ouder: Control) -> Control:
+	var c := Control.new()
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	full_rect(c)
+	ouder.add_child(c)
+	var pas_toe := func() -> void:
+		if not is_instance_valid(c) or not c.is_inside_tree():
+			return
+		var i := veilige_insets(c)
+		c.offset_left = i.x
+		c.offset_top = i.y
+		c.offset_right = -i.z
+		c.offset_bottom = -i.w
+	if c.is_inside_tree():
+		pas_toe.call()
+		c.get_viewport().size_changed.connect(pas_toe)
+	else:
+		c.ready.connect(func() -> void:
+			pas_toe.call()
+			c.get_viewport().size_changed.connect(pas_toe))
+	return c

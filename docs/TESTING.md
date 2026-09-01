@@ -63,6 +63,8 @@ Alles achter `--` en alleen voor testen:
 | `--autoplay` | drukt zelf op de interactietoets en lost minigames op |
 | `--playthrough` | speelt alle tien de tickets af |
 | `--quit-when-done` | sluit af met exitcode 0/1 |
+| `--touch` | zet de duimbesturing aan op de desktop (stick + knoppen) |
+| `--geen-touch` | zet de duimbesturing uit op een aanraakscherm |
 | `--shot=<pad.png>` | schrijft één frame weg en stopt (niet met `--headless`) |
 | `--shot-na=<sec>` | wanneer die shot valt, standaard 2,5 s |
 

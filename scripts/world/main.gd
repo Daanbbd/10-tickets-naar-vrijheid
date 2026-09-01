@@ -60,6 +60,13 @@ func _ready() -> void:
 	tickets.setup(registry, npc_layer, builder)
 	hud.setup()
 
+	# De duimbesturing hangt naast de HUD in plaats van erin: hij drukt alleen
+	# de gewone acties in, dus hij hoort niet bij het schermbeeld.
+	if TouchControls.gewenst():
+		var touch := TouchControls.new()
+		add_child(touch)
+		touch.setup()
+
 	# De wereld is een pure functie van Session: speel alles opnieuw af.
 	mutator.replay_all()
 
