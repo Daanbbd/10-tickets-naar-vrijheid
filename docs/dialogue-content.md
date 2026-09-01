@@ -2,6 +2,8 @@
 
 Gesprekscontent voor alle characters, georganiseerd per scène. Formaat volgt de JSON node-graph structuur van het spel: elke sectie toont de scène als leesbaar script plus notities over character-specifieke varianten.
 
+Dit document is gegenereerd vanuit de daadwerkelijke spelbestanden (`data/dialogue/npcs.json` en `data/dialogue/tickets.json`) en beschrijft wat er nu daadwerkelijk in het spel staat.
+
 ---
 
 ## Character Voice Reference
@@ -17,13 +19,11 @@ Gesprekscontent voor alle characters, georganiseerd per scène. Formaat volgt de
 | **Bastiaan** | Enthousiast, vergeet leestekens | ",," (dubbele komma als pauze/afsluiter) |
 | **Dennis** | Minimalistisch, scrum-neutraal | "-_-", "oke.", "alvast" |
 
-> **Noot over Danny's olijfolie-moment:** "lekker insmeren met olijfolie" hoort thuis in de t06_complete of t06_recruit — het getal klopt, de conversieboost is afgerond, Danny is tevreden. Zie suggestie onder T06.
-
 ---
 
-## Algemene NPC-dialogen (`npcs.json`)
+## Algemene NPC-dialogen (`data/dialogue/npcs.json`)
 
-De algemene dialogen triggeren wanneer de speler een NPC aanspreekt buiten een actief ticket-moment. Ze reageren op `min_tickets_done` en op het trait van de gekozen character.
+De algemene dialogen triggeren wanneer de speler een NPC aanspreekt buiten een actief ticket-moment. Ze reageren op `min_tickets_done`, op flags uit eerdere gesprekken, en op het trait van de gekozen character.
 
 ---
 
@@ -90,6 +90,8 @@ Koen: "wat is er?"
 **Context:** Bastiaan zit voorover gebogen. Hij is ergens mee bezig waar hij zelf niet helemaal uit komt.
 
 ```
+Bastiaan start [bezocht + bastiaan_component_gevraagd + ≥ 5 done]: "hiya,, de accordion is klaar,, hij klapt perfect,, ik maak er nog een,,"
+Bastiaan start [bezocht + bastiaan_komt_meekijken]:                "hiya,, ik kom zo,, ik moet alleen nog even,, ik kom echt zo,,"
 Bastiaan start [bezocht + ≥ 7 done]: "hiya,, alles is groen,, ik vertrouw het niet,,"
 Bastiaan start [bezocht + ≥ 3 done]: "ah jij nog een keer,, ik ben dezelfde component nog aan het verbeteren,, hij is nu echt goed,,"
 Bastiaan start [bezocht]:            "hiya nog een keer,, ik ben er nog,,"
@@ -168,8 +170,8 @@ Bezorger [default]: "Ze zei: geef maar aan degene die de website doet. Dus veel 
 ### Collega Daan *(Summit — als NPC voor andere characters)*
 
 ```
-Daan start [bezocht + ≥ 8]: "Ik wil zeggen: bijna. Dan zeg ik het maar gewoon. Bijna."
-Daan start [bezocht + ≥ 4]: "Voortgang. Als het zo doorgaat wordt het nog wat."
+Daan start [bezocht + daan_op_de_hoogte]: "heb je dat ding gevonden wat je dwars zat?"
+Daan start [bezocht + daan_goed_nieuws + ≥ 6 done]: "jij zei dat het goed liep. dat klopt nog steeds, hoop ik."
 Daan start [bezocht]:        "Al iets gevonden?"
 Daan start [≥ 8 done]:      "Bijna. Ik durf het bijna hardop te zeggen."
 Daan start [≥ 5 done]:      "De helft staat. De helft die overblijft is altijd de lastigste helft."
@@ -205,7 +207,8 @@ Daan: "hoe zit het?"
 ### Collega Danny *(Basecamp — als NPC voor andere characters)*
 
 ```
-Danny start [bezocht + ≥ 8]: "de curve gaat omhoog. nu niet verpesten."
+Danny start [bezocht + danny_tip_gekregen]: "die tip van jou klopt trouwens. heb er een test op gezet."
+Danny start [bezocht + danny_test_uitgelegd + ≥ 5 done]: "de test van die knop is klaar. groter wint. psies."
 Danny start [bezocht]:        "ah jij nog. psies. ik ben een test aan het analyseren."
 Danny start [≥ 8 done]:      "joejoe. de cijfers lopen op. ik beloof nog niets"
 Danny start [≥ 4 done]:      "ik heb een test lopen. vraag me over drie dagen wat eruit komt"
@@ -240,7 +243,8 @@ Danny: "?"
 ### Collega Victor *(De Vloer — als NPC voor andere characters)*
 
 ```
-Victor start [bezocht + ≥ 8]: "Build is groen. Heb hem drie keer gecheckt. Heb hem nogmaals gecheckt."
+Victor start [bezocht + victor_entree_gemeld]: "die drie pixels bij de entree. gefixed. niemand zag het. behalve jij. en ik."
+Victor start [bezocht + victor_compliment]:    "ik heb de build nog een keer gecheckt. klopt nog steeds. voor nu."
 Victor start [bezocht]:        "Oh. Is er iets scheef?"
 Victor start [≥ 8 done]:      "De build is groen. Done."
 Victor start [≥ 4 done]:      "manmanman. Ik heb vandaag drie dingen rechtgezet die niemand scheef zag staan."
@@ -271,7 +275,8 @@ Victor: "wat?"
 ### Collega Jonathan *(Het Patchhok — als NPC voor andere characters)*
 
 ```
-Jonathan start [bezocht + ≥ 8]: "Nog een keer. De verbinding staat nog."
+Jonathan start [bezocht + jonathan_alert]:   "die E die je noemde. was een W. toch even naartoe gegaan."
+Jonathan start [bezocht + jonathan_logs_ok]: "logs nog steeds ok. verbazingwekkend."
 Jonathan start [bezocht]:        "Ik ga er naartoe kijken, voor je het vraagt."
 Jonathan start [≥ 8 done]:      "De verbinding staat. Ben benieuwd hoe lang."
 Jonathan start [≥ 4 done]:      "Ik heb iets gerepareerd dat niemand kapot heeft zien gaan. Dat is het werk."
@@ -304,7 +309,9 @@ Jonathan: "."
 ### Collega Willem *(Doorheen kantoor — als NPC voor andere characters)*
 
 ```
-Willem start [bezocht + ≥ 8]: "Ze heeft net gebeld. Positief. Dat is nu ook terecht, zei ze zelf."
+Willem start [bezocht + willem_klant_blij]:  "ze heeft nóg een keer gebeld. ook blij. dit is uitzonderlijk."
+Willem start [bezocht + willem_vragen_op]:   "die vragen van de klant. heb ze beantwoord. twee van de drie klopen ook."
+Willem start [bezocht + willem_wacht]:       "ze heeft nog niet teruggebeld. ik sta klaar. absoluta."
 Willem start [bezocht]:        "Ben net terug. Ze is rustig. Voorlopig."
 Willem start [≥ 8 done]:      "Ik heb de klant gesproken. Ze is heeeel enthousiast, en dat is nu nog terecht."
 Willem start [≥ 4 done]:      "Ik heb drie dingen toegezegd. Twee daarvan kunnen ook echt. Absoluta."
@@ -332,7 +339,7 @@ Willem: "heeft ze al gebeld?"
 
 ---
 
-## Ticket-dialogen (`tickets.json`)
+## Ticket-dialogen (`data/dialogue/tickets.json`)
 
 Per ticket: 6 fases. `offer` = aanbieding, `fetch` = tussenstand, `recruit` = collega ophalen, `complete` = succes, `fail` = mislukking, `done` = al opgelost.
 
@@ -353,13 +360,11 @@ Speler [trait: technisch]: "Ik kan dit bouwen. Ik weet alleen niet wat 'dit' is.
 Speler [trait: data]: "Er staat geen doel in. Dan valt er straks niets te meten."
 Speler [default]: "Dit is geen user story. Dit is een wens."
 
-[Omschrijving, daan] Niemand spreekt je tegen. Dat is het vervelende aan Product Owner zijn.
+[Omschrijving, daan]: "Niemand spreekt je tegen. Dat is het vervelende aan Product Owner zijn."
 Daan [anderen]: "Het is een wens. Van de klant. Dus het is een risico."
 
 Speler [daan]: "Dan schrijf ik hem nu opnieuw. Met een 'zodat'."
-Speler [trait: technisch]: "Zodat ik iets kan bouwen."
-Speler [trait: commercieel]: "Zodat de klant iets kan kopen."
-Speler [default]: "Iemand moet dit herschrijven."
+Speler [default]: "Dan maken we er een zin van waar iemand iets aan heeft."
 ```
 
 ### t01_fetch
@@ -374,24 +379,22 @@ Speler [default]: "Scope is van Daan. Ik ga hem halen."
 ### t01_recruit
 
 ```
-Daan [anderen]: "Wacht even."
-Speler: "Er staat geen zodat."
-Daan: "Ik kom. Vijf minuten."
+Daan: "Wat ligt er?"
+Speler: "Eén zin."
+Daan: "Dan is het geen story. Ait. Ik loop mee."
 ```
-
-> *Suggestie uitbreiding:* Voeg toe `[daan als speler]` — hij vindt zijn eigen A4 en kreunt.
 
 ### t01_complete
 
 ```
-Daan [daan als speler]: "User story compleet. Geschreven door mij. Over mijzelf. Dit vertelt iets."
-Daan [anderen]: "Goed. Nu weten we tenminste waarvoor we 's ochtends opstaan."
+Speler [daan]: "Er staat nu een 'zodat' in. Dit is letterlijk waar ik voor word betaald."
+Daan [anderen]: "Er staat nu een 'zodat' in. Dat is mijn hele vak, in vijf letters."
 
-[Omschrijving] Op het whiteboard staat een echte user story.
+[Omschrijving] Op het whiteboard staat één zin. Iedereen leest hem twee keer. Niemand vraagt iets.
 
-Speler [trait: proces]: "Nu kan er gebouwd worden."
-Speler [trait: data]: "Nu hebben we een meetpunt."
-Speler [default]: "Dat scheelt."
+Speler [trait: technisch]: "Nu kan ik het bouwen."
+Speler [trait: commercieel]: "Nu kan ik het uitleggen aan de klant."
+Speler [default]: "Dat is dan afgesproken."
 ```
 
 ### t01_fail
@@ -419,20 +422,16 @@ Daan [anderen]: "Nog een keer. Korter."
 ### t02_offer
 
 ```
-[Omschrijving] Op het scrumbord hangt een vel papier. In drie kolommen staan namen en taken.
-               De speler staat er driemaal op. In dezelfde kolom.
+[Omschrijving] Op het scrumbord staat jouw naam drie keer. Twee keer bij een project dat vorig jaar is opgeleverd.
 
-Speler [daan]: "Dit is mijn planning. Dit verklaart mijn stemming van deze week."
-Speler [trait: technisch]: "Dit is mijn naam. Dit is de kolom 'In Progress'. Ik doe dit allemaal tegelijk."
-Speler [trait: data]: "Drie taken, één persoon, één sprint. Rekenkundig onmogelijk."
-Speler [default]: "Er staat iets mis. Daan weet dit."
+Speler [daan]: "Ik heb deze planning zelf gemaakt. Dat wil ik even benoemd hebben."
+Speler [trait: data]: "Drie keer ingepland, één persoon. Dat is driehonderd procent bezetting."
+Speler [trait: technisch]: "Ik sta op een project dat niet meer bestaat."
+Speler [default]: "Sta ik hier nou wel of niet?"
 
-Daan [daan als speler]: "Ik weet het. Ik heb het zelf zo gezet. Tijdens een gesprek."
-Daan [anderen]: "Het klopt niet. Was een tussenstap. Maar goed."
+Dennis: "Dat is bewust. Dat heet flexibel plannen."
 
-Speler [daan]: "Ik verplaats mezelf. Één kaartje tegelijk."
-Speler [trait: technisch]: "Ik verplaats de prioriteit. Die van mij."
-Speler [default]: "Er moet iemand bij. Of er moet iets af."
+Speler: "Ik wil op één project staan. Dit project."
 ```
 
 ### t02_fetch
@@ -447,37 +446,38 @@ Speler [default]: "De planning is van Daan. Zonder hem verschuif ik hier niets."
 ### t02_recruit
 
 ```
-Daan [anderen]: "Het bord?"
-Speler: "Je naam staat er drie keer op."
-Daan: "Ah. Ja. Dat weet ik. Ik kom."
+Daan: "Wat is er met de planning?"
+Speler: "Ik sta er drie keer op."
+Daan: "Dat is twee keer te veel of drie keer te weinig. Ait, ik loop mee."
 ```
 
 ### t02_complete
 
 ```
-Daan [daan als speler]: "Eén naam per taak. Zo simpel. Had ik eerder kunnen bedenken."
-Daan [anderen]: "Het bord klopt. Dat is het beste gevoel van de week."
+Speler [daan]: "Eén naam, één project, één sprint. Dit is mijn werk in drie woorden."
+Daan [anderen]: "Eén naam, één project, één sprint. Meer is het niet."
 
-[Omschrijving] De kaartjes staan goed. Dennis zal dit zien en niets zeggen.
+Dennis: "Mooi. Ik zet hem ook in de tool. Daar staat hij dan anders."
 
-Speler [trait: proces]: "Nu ziet iedereen wie wat doet."
-Speler [trait: sociaal]: "Dit geeft ruimte."
-Speler [default]: "Dat is beter."
+Speler [trait: proces]: "Dan passen we de tool aan."
+Speler [trait: technisch]: "Dan is de tool stuk."
+Speler [default]: "Daar kijken we later naar."
 ```
 
 ### t02_fail
 
 ```
-Speler [daan]: "Nu staat mijn naam er vier keer op. Dat is progressie in de verkeerde richting."
-[Omschrijving, default]: "Het bord klopt nog steeds niet. Er is nu wel een Extra kolom."
+Speler [daan]: "Ik sta nu op vier projecten. Dat is groei."
+Speler [trait: data]: "De bezetting staat nu op vierhonderd procent. Dat is meetbaar fout."
+[Omschrijving, default]: "Je staat nu op vier projecten. Eén daarvan is de kerstborrel."
 
-Daan [anderen]: "Probeer het opnieuw. Begin bij de bovenste."
+Dennis: "Zullen we opnieuw beginnen? Zonder oordeel."
 ```
 
 ### t02_done
 
 ```
-[Omschrijving] Het scrumbord klopt. Eén naam per taak. Dennis heeft er 'goed' bij geschreven in groen.
+[Omschrijving] Op het bord staat SPRINT 14. Jouw naam staat er één keer op. Dat blijft wennen.
 ```
 
 ---
@@ -510,10 +510,10 @@ Willem [anderen]: "Wij gaan hiermee aan de slag. In een volgorde."
 ### t03_fetch
 
 ```
-[Omschrijving] De entree is leeg. Het mapje ligt op de balie.
+[Omschrijving] Mevrouw P. Aardenmens kijkt op. Ze heeft een mapje bij zich.
 
-Speler [trait: commercieel]: "Willem weet dit al. Hier heb ik hem voor nodig."
-Speler [default]: "Dit is de klant haar werk. Het uitvoeren is het onze. Dat doet Willem."
+Speler [trait: technisch]: "Ik ga hier niets zeggen. Ik haal Willem."
+Speler [default]: "Klanten zijn van Willem. Ik ga hem halen."
 ```
 
 ### t03_recruit
@@ -527,29 +527,32 @@ Willem: "Dan zijn het elf punten. Absoluta. Ik kom eraan."
 ### t03_complete
 
 ```
-Willem [willem als speler]: "Elf punten. Drie ervan spreken elkaar tegen. Dat heb ik aan haar uitgelegd. Dat ging prima."
-Willem [anderen]: "Ze is blij. Ze begrijpt niet precies wat we gaan doen. Maar ze is blij."
+Speler [willem]: "Elf punten, vier acties. Hier besta ik voor."
+Willem [anderen]: "Elf punten, vier acties. De rest was twee keer hetzelfde punt."
 
-[Omschrijving] De klant loopt naar de uitgang. De receptiebalie staat op 'Bezoek: afgerond'.
+Klant: "Fijn dat u zo goed luistert."
 
-Speler [trait: commercieel]: "Dat was goed werk, Willem."
-Speler [trait: technisch]: "Kunnen we nu beginnen?"
-Speler [default]: "Dat is geregeld."
+[Omschrijving, willem]: "Je hebt niet alles beloofd. Voor jou is dat een goede dag."
+Speler [trait: technisch]: "Ik ga terug naar iets dat gewoon een foutmelding geeft."
+Speler [default]: "Ze heeft ja gezegd. Volgens mij."
 ```
 
 ### t03_fail
 
 ```
-Willem [willem als speler]: "Ik heb hem uitgelegd. Ze heeft het opgeschreven. Er zijn nu veertien punten."
-[Omschrijving, default]: "Het gesprek heeft nieuwe input opgeleverd. En drie extra punten."
+Speler [willem]: "Ik heb punt vier en punt negen allebei toegezegd. Die sluiten elkaar uit."
+[Omschrijving, default]: "Punt vier en punt negen zijn allebei doorgevoerd. Ze sluiten elkaar uit."
 
-Willem [anderen]: "Nog een keer. Voorzichtiger dit keer."
+Klant: "Het logo is nu groter en kleiner. Dat is knap."
+
+Speler [willem]: "Ik doe het opnieuw. En nu kies ik."
+Willem [anderen]: "Nog een keer. En nu kiezen we."
 ```
 
 ### t03_done
 
 ```
-[Omschrijving] Mevrouw P. Aardenmens is weg. De balie staat op 'Bezoek: afgerond'. De koffie staat er nog.
+[Omschrijving] De bank is leeg. Het mapje ligt er nog. Niemand raakt het aan.
 ```
 
 ---
@@ -560,29 +563,25 @@ Willem [anderen]: "Nog een keer. Voorzichtiger dit keer."
 ### t04_offer
 
 ```
-[Omschrijving] De wandmonitor toont de staging. Het paard staat boven de header.
-               De CTA staat onder de footer. De productfoto is 4000 pixels breed.
+[Omschrijving] Op de wandmonitor toont de staging. Het paard staat boven de header.
 
-Speler [victor]: "Dit heb ik gisteren gebouwd. Dit heb ik gisteren niet getest."
-Speler [trait: technisch]: "De layout is gebroken. Ik zie drie problemen. Ze hangen samen."
-Speler [trait: data]: "4000 pixels breed. Dat is groter dan de meeste schermen."
-Speler [default]: "Er is iets mis met de pagina. Heel erg mis."
+Speler [victor]: "En de CTA staat onder de footer. Dan is het geen CTA meer, maar een voetnoot."
+Victor [anderen]: "En de CTA staat onder de footer. Dan is het geen CTA meer, maar een voetnoot."
 
-Victor [victor als speler]: "Godver. Wacht, ik weet het al."
-Victor [anderen]: "Dit is de merge van gisteren. Dat weet ik zeker."
+[Omschrijving] De productfoto is 4000 pixels breed. De pagina laadt in elf seconden.
 
-Speler [victor]: "Ik open het bestand. Ik los het op."
-Speler [trait: detail]: "Eén voor één. Niet alles tegelijk."
-Speler [default]: "Victor moet dit zien."
+Speler [victor]: "Ik weet precies welke regel dit is. Ik weet ook wie hem heeft geschreven."
+Speler [trait: data]: "Elf seconden. Daar wacht niemand op."
+Speler [default]: "Kom, we zetten het recht."
 ```
 
 ### t04_fetch
 
 ```
-[Omschrijving] De monitor staat er nog. Victor staat ernaast. Hij kijkt niet blij.
+[Omschrijving] Het paard staat boven de header. Het kijkt je aan.
 
-Speler [trait: detail]: "Eén ding. We beginnen met één ding."
-Speler [default]: "Hij weet het. Ik haal hem."
+Speler [trait: technisch]: "Ik kan CSS lezen. Ik kan deze CSS niet lezen. Ik haal Victor."
+Speler [default]: "Dit is frontend. Dus dit is Victor."
 ```
 
 ### t04_recruit
@@ -596,14 +595,14 @@ Victor: "Godver. Ik weet het al. Ff kijken, ik loop mee."
 ### t04_complete
 
 ```
-Victor [victor als speler]: "Paard weg. Footer terug. Foto is achtentachtig pixels. Done."
-Victor [anderen]: "Het staat recht. Zoals het hoort."
+Speler [victor]: "Header boven, CTA in beeld, foto van 900 pixels. Dit is mijn werk en nu is het stil."
+Victor [anderen]: "Header boven, CTA in beeld, foto van 900 pixels. Zo hoort het."
 
-[Omschrijving] De wandmonitor toont: staging: layout OK.
+[Omschrijving] Op de wandmonitor staat: layout OK.
 
-Speler [trait: detail]: "Het klopt nu."
-Speler [trait: commercieel]: "Nu ziet het er uit alsof we weten wat we doen."
-Speler [default]: "Dat is beter."
+Speler [trait: data]: "Van elf seconden naar twee. Dat scheelt de mensen die anders weglopen."
+Speler [trait: proces]: "Dan kan dit naar de review."
+Speler [default]: "Het staat recht."
 ```
 
 ### t04_fail
@@ -676,16 +675,17 @@ Speler [default]: "Er staat weer iets in de webshop."
 ### t05_fail
 
 ```
-Speler [jonathan]: "Nog steeds undefined. Maar nu ook een stack trace. Dat is meer informatie."
-[Omschrijving, default]: "Het rack staat nog op rood. Er zijn nu meer foutregels."
+Speler [jonathan]: "De prijs staat nu op nul euro. Technisch gezien is het opgelost."
+[Omschrijving, default]: "De prijs staat nu op nul euro. De voorraad op min drie."
 
-Jonathan [anderen]: "Wacht. Ik zie het. Vijf regels omhoog."
+[Omschrijving, jonathan]: "Je rolt terug. Niemand heeft het gezien."
+Jonathan [anderen]: "Rollback. En nu langzaam."
 ```
 
 ### t05_done
 
 ```
-[Omschrijving] Het rack staat op groen. 'productservice: 200 OK'. Jonathan heeft er niets bij geschreven.
+[Omschrijving] Het rack staat op groen. 'productservice: 200 OK'. Jonathan loopt er drie keer per dag langs om dat te controleren.
 ```
 
 ---
@@ -696,7 +696,7 @@ Jonathan [anderen]: "Wacht. Ik zie het. Vijf regels omhoog."
 ### t06_offer
 
 ```
-[Omschrijving] Op de dashboardmuur staat de conversie van deze week: 0,04%.
+[Omschrijving] Op de dashboardmuur staat de conversie van deze week. Nul komma nul vier procent.
 
 Speler [danny]: "Dat is geen conversie. Dat is een ongeluk."
 Danny [anderen]: "Dat is geen conversie. Dat is een ongeluk."
@@ -712,10 +712,10 @@ Speler [default]: "Ergens tussen kijken en kopen gaat het mis."
 ### t06_fetch
 
 ```
-[Omschrijving] De dashboardmuur staat er nog. 0,04%.
+[Omschrijving] Nul komma nul vier procent. Het staat er in grote cijfers bij.
 
-Speler [trait: data]: "Ik weet wat er mis is. Danny ook. Maar hij moet het zelf oplossen."
-Speler [default]: "Danny ziet dit soort dingen. Ik haal hem erbij."
+Speler [trait: technisch]: "Ik lees liever logs dan mensen. Danny doet mensen."
+Speler [default]: "Dit is conversie. Dus dit is Danny."
 ```
 
 ### t06_recruit
@@ -732,26 +732,27 @@ Danny: "psies. dan is het de knop. het is altijd de knop. biem, ik loop mee"
 Danny [danny als speler]: "pluszeventien. lekker insmeren met olijfolie en gaan. zo werkt dat."
 Danny [anderen]: "pluszeventien procent. de knop stond verkeerd. hij stond al jaren verkeerd."
 
-[Omschrijving] De dashboardmuur staat op: conversie +17%. Het getal staat groen.
+[Omschrijving] Op de muur springt het getal om. Iemand in de loungehoek kijkt op en gaat weer verder.
 
-Speler [trait: data]: "Zeventien procent op een week. Dat is meetbaar."
-Speler [trait: commercieel]: "De klant gaat dit fijn vinden."
-Speler [default]: "Goed gedaan."
+Speler [trait: proces]: "Dan zet ik die wijziging in de sprint."
+Speler [trait: detail]: "De knop staat nu ook recht."
+Speler [default]: "Zeventien procent van bijna niets is nog steeds meer."
 ```
 
 ### t06_fail
 
 ```
-Danny [danny als speler]: "zes procent. dat is niet zeventien. maar dat is ook niet nul komma nul vier."
-[Omschrijving, default]: "De muur staat op pluszes procent. Danny kijkt er schuin naar."
+Danny [danny als speler]: "De conversie staat nu op nul komma nul drie. Dat is ook een uitkomst."
+[Omschrijving, default]: "De conversie staat nu op nul komma nul drie procent. Lager dan daarvoor."
 
-Danny [anderen]: "nog een iteratie. we zijn er bijna"
+[Omschrijving, danny]: "Je zet het terug. Je vertelt niemand hoe laag het even stond."
+Danny [anderen]: "Terugzetten. En dan één ding tegelijk testen."
 ```
 
 ### t06_done
 
 ```
-[Omschrijving] De dashboardmuur staat op +17%. Danny heeft er 'biem' bij getypt op een sticky.
+[Omschrijving] Conversie plus zeventien procent. Danny heeft er al een presentatie over. Elf slides.
 ```
 
 ---
@@ -775,10 +776,10 @@ Danny [anderen]: "Elf seconden. Niet langer. Anders wordt het een liedje."
 ### t07_fetch
 
 ```
-[Omschrijving] De speaker hangt er. Hij is nog stil.
+[Omschrijving] De speaker in de koffiecorner staat uit. Het ticket staat open.
 
-Speler [danny]: "Ik doe het zelf. Elf seconden."
-Speler [default]: "Danny weet hoe lang het mag duren. Ik haal hem."
+Speler [trait: technisch]: "Ik kan geluid afspelen. Ik kan geen merk horen. Danny wel."
+Speler [default]: "Merk is van Danny. Ik ga hem halen."
 ```
 
 ### t07_recruit
@@ -792,29 +793,30 @@ Danny: "ein-de-lijk. ik weet nog steeds niet waarom. biem"
 ### t07_complete
 
 ```
-Danny [danny als speler]: "elf seconden. drie klanken. doet het. psies."
-Danny [anderen]: "elf seconden. drie klanken. niemand klaagt."
+Speler [danny]: "Elf seconden. Herkenbaar en net niet vervelend. Dat was de hele opdracht."
+Danny [anderen]: "Elf seconden. Herkenbaar en net niet vervelend."
 
-[Omschrijving] De speaker staat aan. Er klinkt iets dat klinkt als een paard dat positief verrast is.
+[Omschrijving] De speaker speelt het af. Twee mensen kijken op en gaan verder met hun brood.
 
-Speler [trait: detail]: "Het is subtiel."
-Speler [trait: commercieel]: "De klant zal dit mooi vinden."
-Speler [default]: "Dat klinkt goed genoeg."
+Speler [trait: detail]: "Er zit een hoefslag in. Dat had niemand gevraagd."
+Speler [trait: commercieel]: "Dit kan ook onder de video."
+Speler [default]: "Het staat erop."
 ```
 
 ### t07_fail
 
 ```
-Danny [danny als speler]: "dat waren twaalf seconden. dat is een liedje."
-[Omschrijving, default]: "De speaker speelt iets af. Het duurt twaalf seconden. Danny kijkt bedenkelijk."
+Speler [danny]: "Zeventien seconden en een saxofoon. Dat is geen merk, dat is een sfeer."
+[Omschrijving, default]: "Het duurt nu zeventien seconden en er zit een saxofoon in."
 
-Danny [anderen]: "opnieuw. korter. begin bij de tweede klank"
+[Omschrijving, danny]: "Je haalt de saxofoon eruit."
+Danny [anderen]: "Saxofoon eruit. Opnieuw."
 ```
 
 ### t07_done
 
 ```
-[Omschrijving] De speaker staat aan. Iemand heeft de timer op tien seconden gezet, voor de zekerheid.
+[Omschrijving] De merksound speelt elke keer als de koffiemachine klaar is. Dat was niet de bedoeling.
 ```
 
 ---
@@ -825,25 +827,25 @@ Danny [anderen]: "opnieuw. korter. begin bij de tweede klank"
 ### t08_offer
 
 ```
-[Omschrijving] Op de iPad in het hokje staat de briefing: een paard dat gelukkig door een weiland rent.
-               Er staat verder niets.
+[Omschrijving] In het vergaderhokje ligt een iPad. Op het briefje ernaast: paard rent gelukkig door weiland.
 
-Speler [victor]: "Dit is alles. Er staat geen kleur. Er staat geen lengte. Er staat geen paard."
-Speler [trait: detail]: "Er staat geen specificatie. Er staat een gevoel."
-Speler [trait: technisch]: "De input is één zin. De output moet overtuigend zijn. Dat is krap."
-Speler [default]: "De klant wil een video. Meer briefing is er niet."
+Speler [victor]: "Hoe zie je aan een paard dat het gelukkig is?"
+Victor [anderen]: "Hoe zie je aan een paard dat het gelukkig is?"
 
-Victor [victor als speler]: "manmanman. We gaan genereren. Dan zien we wat er uitkomt."
-Victor [anderen]: "Ik tel de benen. Als het paard vier benen heeft, is het goed."
+[Omschrijving, victor]: "Er staat verder niets op het briefje."
+Speler [anderen]: "Dat staat er niet bij."
+
+Speler [victor]: "Dan tel ik de benen en noem ik het klaar."
+Victor [anderen]: "Dan let ik op de benen. Vier. Dat is het criterium."
 ```
 
 ### t08_fetch
 
 ```
-[Omschrijving] De iPad ligt er. Er staat een promptveld open.
+[Omschrijving] De iPad ligt in het vergaderhokje. Iemand heeft er een geeltje op geplakt: AI-VIDEO.
 
-Speler [trait: technisch]: "Ik kan dit proberen. Victor kan controleren."
-Speler [default]: "Victor telt de benen. Ik haal hem erbij."
+Speler [trait: technisch]: "Ik doe servers, geen paarden. Victor kijkt er anders naar."
+Speler [default]: "Beeld is van Victor. Hij ziet meteen wat er niet klopt."
 ```
 
 ### t08_recruit
@@ -857,29 +859,30 @@ Victor: "manmanman. Ik ga mee. Iemand moet de benen tellen."
 ### t08_complete
 
 ```
-Victor [victor als speler]: "Vier benen. Goed weiland. Geen tekst over supplementen, maar dat hoeft ook niet van de briefing."
-Victor [anderen]: "Vier benen, één weiland, nul supplementen. De klant zei: precies."
+Speler [victor]: "Vier benen, één staart, één paard. Ik heb er twee uur naar gekeken."
+Victor [anderen]: "Vier benen, één staart, één paard. Drie keer beter dan de vorige."
 
-[Omschrijving] Op het scherm van de entree staat: 'Nu te zien: paard in weiland (4 benen)'.
+[Omschrijving] Op het scherm in de entree rent een paard door een weiland. Het is grotendeels overtuigend.
 
-Speler [trait: detail]: "Het klopt visueel."
-Speler [trait: commercieel]: "De klant is blij. Dat is genoeg."
+Speler [trait: commercieel]: "Dit gaat de klant prachtig vinden."
+Speler [trait: detail]: "In seconde zes doet het gras iets. Daar kijken we overheen."
 Speler [default]: "Goed genoeg."
 ```
 
 ### t08_fail
 
 ```
-Victor [victor als speler]: "Zes benen. Nee. Opnieuw."
-[Omschrijving, default]: "Het paard heeft zes benen. Victor telt ze twee keer."
+Speler [victor]: "Vijf benen. Ik zie het, en nu zie jij het ook."
+[Omschrijving, default]: "Het paard heeft vijf benen. Eén ervan loopt uit de maat."
 
-Victor [anderen]: "Andere prompt. En zeg er dit keer bij: geen insecten."
+[Omschrijving, victor]: "Je start de generatie opnieuw."
+Victor [anderen]: "Opnieuw. En zet 'weiland' er nog een keer in."
 ```
 
 ### t08_done
 
 ```
-[Omschrijving] Het scherm in de entree toont een paard met vier benen. Gelukkig. In een weiland.
+[Omschrijving] De video draait in de entree. Elke ronde tel je de benen. Elke keer weer vier.
 ```
 
 ---
@@ -890,7 +893,7 @@ Victor [anderen]: "Andere prompt. En zeg er dit keer bij: geen insecten."
 ### t09_offer
 
 ```
-[Omschrijving] Er staat een pony bij de printer. In de gang staat er nog een. Ze zijn er since de laatste release.
+[Omschrijving] Er staat een pony bij de printer. In de gang staat er nog een. Ze zijn er sinds de laatste release.
 
 Speler [jonathan]: "Dit komt uit mijn seed-data. Dat wordt een lange middag."
 Jonathan [anderen]: "Dit komt uit de seed-data. En nee, dat is niet grappig."
@@ -905,18 +908,18 @@ Speler [default]: "Kom, we drijven ze bij elkaar."
 ### t09_fetch
 
 ```
-[Omschrijving] Er loopt nog een pony door de gang. Hij doet niemand kwaad. Hij is er gewoon.
+[Omschrijving] Een pony kijkt je aan vanuit de gang. Hij kauwt op een sprintplanning.
 
-Speler [jonathan]: "Ik weet waar ze vandaan komen. En ik weet hoe ik ze wegkrijg."
-Speler [default]: "Jonathan gaat dit oplossen. Logisch. Het zijn zijn paarden."
+Speler [trait: detail]: "Ze staan niet eens netjes uitgelijnd. Dit is voor Jonathan."
+Speler [default]: "Dit komt uit de data. Dus dit is Jonathan."
 ```
 
 ### t09_recruit
 
 ```
 Jonathan: "Hoeveel?"
-Speler: "Acht."
-Jonathan: "Moet zeggen dat dat er precies acht te veel zijn. Ik ga er naartoe kijken."
+Speler: "Acht. Denk ik."
+Jonathan: "Dat is precies de testset. Ik ga er naartoe kijken."
 ```
 
 ### t09_complete
@@ -935,16 +938,17 @@ Speler [default]: "Dat is dan geregeld."
 ### t09_fail
 
 ```
-Jonathan [jonathan als speler]: "Ze lopen door de gang. Dat was niet de bedoeling."
-[Omschrijving, default]: "De pony's staan nu in twee ruimtes. En de gang."
+Speler [jonathan]: "Er zijn er nu negen. Dat kan niet en toch is het zo."
+[Omschrijving, default]: "Er lopen er nu negen. Niemand weet waar de negende vandaan komt."
 
-Jonathan [anderen]: "Drijf ze naar links. Ze gaan altijd naar links."
+[Omschrijving, jonathan]: "Je begint opnieuw. Bij de printer."
+Jonathan [anderen]: "Opnieuw. En doe de deur van de koffiecorner dicht."
 ```
 
 ### t09_done
 
 ```
-[Omschrijving] In de vergaderruimte staan acht pony's. Dennis heeft ze als blokkade gezet op het bord.
+[Omschrijving] Op de deur van de vergaderruimte hangt een blad: BEZET tot nader order. Er staat geen naam bij.
 ```
 
 ---
@@ -953,17 +957,14 @@ Jonathan [anderen]: "Drijf ze naar links. Ze gaan altijd naar links."
 **Owner:** (alle characters) | **Locatie:** Z7 Birdhouse | **Minigame:** mg_deploy
 **Vereist:** deploysleutel uit de plantenkast
 
-### t10_blocked — Geen deploysleutel
+### t10_blocked — De deploysleutel
 
 ```
-[Omschrijving] De deploymentcomputer vraagt om een sleutel. Die heb je niet.
+[Omschrijving] De deploymentcomputer vraagt om de deploysleutel. Een echte sleutel. Van metaal.
 
-Speler [daan]: "De deploysleutel staat niet in het ticket. Dat is een gat in de scope."
-Speler [danny]: "geen sleutel, geen deploy. psies."
-Speler [victor]: "Er is een sleutelgat. Ik had een sleutel verwacht. Er is geen sleutel."
-Speler [jonathan]: "Ik heb dit eerder gezien. De sleutel zit ergens waar hij niet hoort."
-Speler [willem]: "Ik zou dit uitzoeken, maar de klant belt zo."
-Speler [default]: "Er ontbreekt iets."
+Speler [trait: technisch]: "Tweefactor, uitgevoerd in staal. Hij ligt in de plantenkast, onder het speelgoedpaard."
+Speler [trait: proces]: "Dat is ooit zo besloten. De sleutel ligt in de plantenkast, onder het speelgoedpaard."
+Speler [default]: "Hij ligt in de plantenkast. Onder het speelgoedpaard."
 ```
 
 ### t10_offer
@@ -976,6 +977,7 @@ Speler [default]: "Er ontbreekt iets."
 [Rode regel, victor]: "ERROR: frontend build failed."
 [Rode regel, jonathan]: "FATAL: production database connection failed."
 [Rode regel, willem]: "HOLD: client approval required."
+[Rode regel, default]: "ERROR: deployment failed."
 
 Speler [daan]: "Natuurlijk. Van alle regels die er konden staan, staat die van mij er."
 Speler [danny]: "Eén rode regel, en het is mijn getal."
@@ -1021,8 +1023,7 @@ Speler [default]: "Terug naar nul. Nog een keer."
 ### t10_done
 
 ```
-[Omschrijving] Op de deploymentcomputer staat: productie: live. De deur staat open.
-               Iemand heeft een sticky geplakt: 'goed gedaan' — in het handschrift van Dennis.
+[Omschrijving] Productie staat live. Niemand durft de muis aan te raken.
 ```
 
 ---
@@ -1039,11 +1040,13 @@ Speler [default]: "Terug naar nul. Nog een keer."
 - Willem overdrijft positief. "Absoluta" en "heeeel" zijn zijn tells.
 - Daan is de rustigste. Hij ziet problemen voor ze uitgesproken zijn, maar zegt er dan ook weinig over.
 
+> **Let op — nog niet overal doorgevoerd:** Danny's eigen regels in `t06_fail` (`data/dialogue/tickets.json`) staan nog met hoofdletters ("De conversie staat nu op..." / "Terugzetten. En dan..."). Dat is inconsistent met de stijlregel hierboven en zou op termijn naar zijn kleine-letters-conventie gebracht moeten worden, zoals net gedaan is voor `t06_complete`.
+
 **Catchphrases — ingebouwd:**
 - Jonathan "ik ga er naartoe kijken" → t05_recruit, t09_recruit, collega_jonathan
 - Koen "lekker ouwe" → koen algemeen
 - Danny "psies" / "biem" → t06_recruit, t07_recruit, collega_danny
-- Danny "lekker insmeren met olijfolie" → t06_complete (nieuw toegevoegd)
+- Danny "lekker insmeren met olijfolie" → t06_complete
 - Bastiaan `,,` → bastiaan algemeen
 - Willem "Absoluta" → t03_recruit, collega_willem
 
@@ -1052,3 +1055,4 @@ Speler [default]: "Terug naar nul. Nog een keer."
 - `[trait]` wordt alleen gebruikt als er geen character-match is
 - `[default]` is altijd aanwezig als fallback
 - Narrator-regels (omschrijvingen) hebben geen speaker; ze zijn altijd in tegenwoordige tijd, altijd droog
+- Flag-combinatievarianten (bv. `daan_bezocht + daan_op_de_hoogte`) worden gecontroleerd vóór de losse `min_tickets_done`-varianten — een speler die al iets heeft opgebiecht krijgt bij een volgend bezoek voorrang op een generieke voortgangsregel

@@ -7,6 +7,10 @@ extends CanvasLayer
 ## aan vaste pixelposities uit de oude 480x270-indeling.
 const MARGE := 4
 
+## Hoe lang een nieuw briefje in beeld blijft. Dit gebeurt tien keer per
+## speelbeurt, dus het mag nooit in de weg gaan zitten.
+const BRIEFJE_ZICHTBAAR := 1.4
+
 const NUDGE_NA := 45.0          ## seconden zonder voortgang voor een gratis hint
 const KAART_ZICHTBAAR := 9.0
 
@@ -19,8 +23,7 @@ var _zone: Label
 var _zone_tween: Tween = null
 var _toasts: VBoxContainer
 var _board: Control
-var _board_list: VBoxContainer
-var _board_items: Label
+var _bord: Scrumbord
 var _card: PanelContainer
 var _card_tween: Tween = null
 var _nudge: Timer
@@ -197,102 +200,40 @@ func _build_board(root: Control) -> void:
 	root.add_child(_board)
 	_board.add_child(UiKit.dimmer(0.78))
 
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiKit.panel())
-	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	panel.offset_left = MARGE
-	panel.offset_right = -MARGE
-	panel.offset_top = MARGE
-	panel.offset_bottom = -MARGE
-	_board.add_child(panel)
+	_bord = Scrumbord.new()
+	UiKit.full_rect(_bord)
+	_bord.bouw(false)
+	_board.add_child(_bord)
 
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 3)
-	panel.add_child(v)
-	v.add_child(UiKit.label("SPRINTBORD", UiKit.FS_HEAD, UiKit.INK))
-	v.add_child(UiKit.label("Webshop paardensupplementen", UiKit.FS_SMALL, UiKit.GRIJS))
-	v.add_child(UiKit.spacer(3))
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	v.add_child(scroll)
-	_board_list = VBoxContainer.new()
-	_board_list.add_theme_constant_override("separation", 2)
-	_board_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_board_list)
-
-	# De inventaris hoort hier, niet permanent linksonder in het beeld.
-	_board_items = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
-	_board_items.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(_board_items)
-
-	var close := UiKit.label("TAB  sluiten", UiKit.FS_SMALL, UiKit.GRIJS)
-	close.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	v.add_child(close)
+	_bord.toon_sluitregel("TAB  sluiten")
 
 
-func toggle_board() -> void:
+func toggle_board(close_up: bool = false) -> void:
 	_board.visible = not _board.visible
 	AudioDirector.play_ui(&"klik")
 	if _board.visible:
+		_bord.zet_close_up(close_up)
 		_fill_board()
 
 
-## Sorteert op status: waar je nu iets mee kunt bovenaan, opgelost onderaan.
-## Anders staat BBD-201 boven een levend BBD-203 en leest het bord als kapot.
-static func _rang(st: GameEnums.TicketState) -> int:
-	match st:
-		GameEnums.TicketState.ACTIVE: return 0
-		GameEnums.TicketState.AVAILABLE: return 1
-		GameEnums.TicketState.LOCKED: return 2
-		_: return 3
+## Het bord openen en een net gevonden briefje zien landen. Dit is wat een
+## ticket vinden tot een moment maakt in plaats van een regel in een lijst.
+func toon_nieuw_briefje(t: TicketDef) -> void:
+	# Tijdens een geautomatiseerde speelbeurt niets tonen: die drukt geen toets
+	# in om weg te klikken en zou hier blijven hangen.
+	if t == null or _board.visible or Autopilot.gevraagd():
+		return
+	_board.visible = true
+	_bord.zet_close_up(true)
+	_fill_board()
+	_bord.laat_briefje_landen(t)
+	await get_tree().create_timer(BRIEFJE_ZICHTBAAR, true, false, true).timeout
+	_board.visible = false
 
 
 func _fill_board() -> void:
-	for c: Node in _board_list.get_children():
-		c.queue_free()
-		_board_list.remove_child(c)
-
-	var ids: Array[StringName] = GameData.ticket_ids()
-	ids.sort_custom(func(a: StringName, b: StringName) -> bool:
-		var ra := _rang(Session.ticket_state(a))
-		var rb := _rang(Session.ticket_state(b))
-		if ra != rb:
-			return ra < rb
-		return GameData.ticket(a).order < GameData.ticket(b).order)
-
-	for id: StringName in ids:
-		var t: TicketDef = GameData.ticket(id)
-		var st: GameEnums.TicketState = Session.ticket_state(id)
-		var row := PanelContainer.new()
-		var tint := UiKit.PANEL
-		match st:
-			GameEnums.TicketState.DONE: tint = UiKit.GROEN_TINT
-			GameEnums.TicketState.ACTIVE: tint = UiKit.ORANJE_TINT
-			GameEnums.TicketState.LOCKED: tint = UiKit.NEUTRAAL_TINT
-		row.add_theme_stylebox_override("panel", UiKit.panel(tint, UiKit.LINE))
-		_board_list.add_child(row)
-
-		var h := VBoxContainer.new()
-		h.add_theme_constant_override("separation", 0)
-		row.add_child(h)
-
-		# De titel blijft staan, ook als het ticket nog niet aan de beurt is.
-		# Negen geredigeerde regels lezen als negen weigeringen.
-		var head := "%s  %s" % [t.code, t.title]
-		if st == GameEnums.TicketState.DONE:
-			head = "%s  [OPGELOST]" % head
-		elif st == GameEnums.TicketState.LOCKED:
-			head = "%s  — nog niet aan de beurt" % head
-		var lbl := UiKit.label(head, UiKit.FS_SMALL, UiKit.INK)
-		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		h.add_child(lbl)
-
-		if st != GameEnums.TicketState.LOCKED and st != GameEnums.TicketState.DONE:
-			var sub := UiKit.label("%s  ·  %s  ·  %s" % [t.zone_name, _wie(t), t.hint],
-				UiKit.FS_SMALL, UiKit.GRIJS)
-			sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			h.add_child(sub)
+	if _bord != null:
+		_bord.vul()
 
 
 ## "Jij kunt dit zelf" of de naam van de collega die je moet ophalen — met de
@@ -344,8 +285,8 @@ func _refresh_items() -> void:
 		var it: ItemDef = GameData.item(id)
 		if it != null:
 			namen.append(it.name)
-	if _board_items != null:
-		_board_items.text = "Bij je: %s" % ", ".join(namen) if not namen.is_empty() else ""
+	if _bord != null:
+		_bord.toon_inventaris("Bij je: %s" % ", ".join(namen) if not namen.is_empty() else "")
 
 
 ## Wie dit ticket bezit hoort zichtbaar te zijn vóór de interactie, niet pas

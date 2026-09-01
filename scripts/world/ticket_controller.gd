@@ -7,6 +7,7 @@ var _registry: WorldRegistry
 var _npcs: NpcLayer
 var _builder: WorldBuilder
 var _dialogue: DialogueController
+var _hud: Hud
 var _busy: bool = false
 
 
@@ -15,6 +16,7 @@ func setup(registry: WorldRegistry, npcs: NpcLayer, builder: WorldBuilder) -> vo
 	_npcs = npcs
 	_builder = builder
 	_dialogue = get_parent().get_node("DialogueController") as DialogueController
+	_hud = get_parent().get_node("HUD") as Hud
 
 
 # --- Ticketobject aanspreken ---------------------------------------------
@@ -65,6 +67,10 @@ func _handle_inner(t: TicketDef) -> void:
 		return
 
 	QuestEngine.activate(t.id)
+	# Het briefje op het bord zien landen, vóór de dialoog. Dit is het moment
+	# waarop een ticket iets wordt in plaats van een regel in een lijst.
+	if _hud != null:
+		await _hud.toon_nieuw_briefje(t)
 
 	# Niet jouw vakgebied? Dan moet de eigenaar meegelopen zijn.
 	if not QuestEngine.is_own_expertise(t.id):

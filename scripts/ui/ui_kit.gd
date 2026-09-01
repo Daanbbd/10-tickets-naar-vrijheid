@@ -67,6 +67,18 @@ static func postit(bg: Color = POSTIT, rand: Color = POSTIT_RAND) -> StyleBoxFla
 	return sb
 
 
+## Papierkleur per vakgebied. De merk-tinten zijn al pastel, dus ze lezen
+## vanzelf als briefjes; geel is de neutrale die BBD zelf niet heeft.
+const POSTIT_KLEUREN := {
+	&"geel": POSTIT, &"roze": ROZE_TINT, &"blauw": BLUEBIRD_TINT,
+	&"groen": GROEN_TINT, &"oranje": ORANJE_TINT,
+}
+
+
+static func postit_kleur(naam: StringName) -> Color:
+	return POSTIT_KLEUREN.get(naam, POSTIT)
+
+
 static func label(text: String, size: int = FS_BODY, color: Color = INK) -> Label:
 	var l := Label.new()
 	l.text = text

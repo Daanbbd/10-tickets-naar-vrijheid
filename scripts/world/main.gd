@@ -76,6 +76,7 @@ func _ready() -> void:
 	_refresh_marker()
 	Bus.game_started.emit()
 	AudioDirector.play_music(&"kantoor")
+	_qa_bord()
 
 	if Autopilot.gevraagd():
 		add_child(Autopilot.new())
@@ -300,7 +301,9 @@ func _examine(it: Interactable) -> void:
 	if it.dialogue_id != &"":
 		await dialogue.play(it.dialogue_id, it.label)
 	if it.action == &"board":
-		hud.toggle_board()
+		# Aan het echte bord sta je ernaast: dat is de close-up. TAB blijft de
+		# snelle blik van overal.
+		hud.toggle_board(true)
 
 
 # --- Opbouw ---------------------------------------------------------------
@@ -356,6 +359,14 @@ func _spawn_player() -> void:
 
 
 # --- Wereldreacties -------------------------------------------------------
+
+## QA: `--bord` opent het sprintbord meteen, zodat het te controleren is.
+func _qa_bord() -> void:
+	if "--bord" not in OS.get_cmdline_user_args():
+		return
+	await get_tree().create_timer(0.5).timeout
+	hud.toggle_board()
+
 
 func _on_player_tile(t: Vector2i) -> void:
 	var z := builder.zone_at(t)
