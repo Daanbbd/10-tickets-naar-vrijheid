@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c5rwsudk33031"
-path="res://.godot/imported/person_beard.png-aa0eb32af69dd6d6d23b670f8f538625.ctex"
+uid="uid://djgnmrhl0c7ki"
+path="res://.godot/imported/outfit_polo.png-840ea31423e9034a2fea6f87e39e42d7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/person_beard.png"
-dest_files=["res://.godot/imported/person_beard.png-aa0eb32af69dd6d6d23b670f8f538625.ctex"]
+source_file="res://assets/sprites/characters/outfit_polo.png"
+dest_files=["res://.godot/imported/outfit_polo.png-840ea31423e9034a2fea6f87e39e42d7.ctex"]
 
 [params]
 

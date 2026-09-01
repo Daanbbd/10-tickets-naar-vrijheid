@@ -2,12 +2,20 @@ class_name GameCamera
 extends Camera2D
 ## Volgt de speler, maar los van hem zodat hij na een ticket naar het
 ## veranderde object kan pannen.
+##
+## De verdieping is 26 tegels = 416 px hoog en de viewport is even hoog, dus
+## verticaal valt er niets te volgen: de limieten klemmen Y volledig vast. De
+## camera is daarmee een pure horizontale volger. Wel een vooruitblik, want je
+## ziet in portrait maar 12 tegels breed.
 
 const FOCUS_SPEED := 260.0
+const VOORUITBLIK := 14.0
+const VOORUITBLIK_LERP := 3.0
 
 var target: Node2D = null
 var _focus_pos: Vector2 = Vector2.ZERO
 var _focus_left: float = 0.0
+var _vooruit: float = 0.0
 
 
 func _ready() -> void:
@@ -25,6 +33,7 @@ func setup(follow: Node2D, world: Rect2) -> void:
 	# Harde grenzen geven een schokkende visuele stop. Valt nu al op aan de
 	# randen van de entree, en straks permanent als de vloer smaller wordt.
 	limit_smoothed = true
+	_vooruit = 0.0
 	if target != null:
 		global_position = target.global_position
 		reset_smoothing()
@@ -35,8 +44,17 @@ func _process(delta: float) -> void:
 		_focus_left -= delta
 		global_position = global_position.move_toward(_focus_pos, FOCUS_SPEED * delta)
 		return
-	if target != null:
-		global_position = target.global_position
+	if target == null:
+		return
+
+	# Alleen X: de vooruitblik in Y zou in een gebouw van 26 tegels hoog steeds
+	# tegen de limiet aanlopen en dan schokken.
+	var wens := 0.0
+	var body := target as CharacterBody2D
+	if body != null and absf(body.velocity.x) > 10.0:
+		wens = signf(body.velocity.x) * VOORUITBLIK
+	_vooruit = lerpf(_vooruit, wens, VOORUITBLIK_LERP * delta)
+	global_position = target.global_position + Vector2(_vooruit, 0.0)
 
 
 func focus_on(pos: Vector2, hold: float) -> void:

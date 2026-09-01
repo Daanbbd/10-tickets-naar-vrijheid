@@ -99,7 +99,7 @@ func _make_card(c: CharacterDef) -> PanelContainer:
 func _portrait_for(c: CharacterDef) -> Texture2D:
 	if c.portrait != "" and ResourceLoader.exists(c.portrait):
 		return load(c.portrait)
-	var sf := CharacterSprites.frames_for(c.id, c.color, c.skin, c.hair, c.sheet)
+	var sf := CharacterSprites.frames_for(c.look, c.color, c.skin, c.hair, c.pants, c.accent)
 	return sf.get_frame_texture(&"idle_down", 0)
 
 

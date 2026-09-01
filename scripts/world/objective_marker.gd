@@ -7,7 +7,7 @@ extends Node2D
 ## Geen art-asset: een driehoekje dat zichzelf tekent, dus geen atlas-tile en
 ## geen import-stap. Er leeft er altijd maximaal één.
 
-const HOOGTE := 20.0
+const HOOGTE := 34.0
 const AMPLITUDE := 2.5
 const SNELHEID := 3.2
 

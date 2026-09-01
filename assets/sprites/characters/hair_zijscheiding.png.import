@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bo2wkwmrd7kso"
-path="res://.godot/imported/person_buttons.png-b7739d4983c5e9a248d6555deca74cc1.ctex"
+uid="uid://dcggntmfpmitr"
+path="res://.godot/imported/hair_zijscheiding.png-28b811489bdb9a60bb69ac4262c342df.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/person_buttons.png"
-dest_files=["res://.godot/imported/person_buttons.png-b7739d4983c5e9a248d6555deca74cc1.ctex"]
+source_file="res://assets/sprites/characters/hair_zijscheiding.png"
+dest_files=["res://.godot/imported/hair_zijscheiding.png-28b811489bdb9a60bb69ac4262c342df.ctex"]
 
 [params]
 

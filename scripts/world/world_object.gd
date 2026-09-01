@@ -9,7 +9,7 @@ extends Node2D
 @export var world_id: StringName = &""
 
 const LABEL_BREEDTE := 96.0
-const LABEL_HOOGTE := 20.0
+const LABEL_HOOGTE := 30.0
 
 @onready var _sprite: Sprite2D = get_node_or_null("Sprite") as Sprite2D
 

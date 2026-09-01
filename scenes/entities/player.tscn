@@ -17,7 +17,7 @@ motion_mode = 1
 script = ExtResource("1_player")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
-offset = Vector2(0, -12)
+offset = Vector2(0, -16)
 
 [node name="Body" type="CollisionShape2D" parent="."]
 position = Vector2(0, -3)

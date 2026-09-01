@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dsjv3k73vrfwt"
-path="res://.godot/imported/person_curly.png-22286a63356469c98ea77c203d395a9b.ctex"
+uid="uid://c2vshon5au28t"
+path="res://.godot/imported/hair_krullen.png-731e15e2a707be49660771ab5656c0a4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/person_curly.png"
-dest_files=["res://.godot/imported/person_curly.png-22286a63356469c98ea77c203d395a9b.ctex"]
+source_file="res://assets/sprites/characters/hair_krullen.png"
+dest_files=["res://.godot/imported/hair_krullen.png-731e15e2a707be49660771ab5656c0a4.ctex"]
 
 [params]
 

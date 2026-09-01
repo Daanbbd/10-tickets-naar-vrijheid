@@ -101,6 +101,9 @@ func _load_characters(path: String) -> void:
 		c.skin = _color(d.get("skin", "#dbb38f"))
 		c.hair = _color(d.get("hair", "#402e21"))
 		c.sheet = StringName(d.get("sheet", "plain"))
+		c.look = CharacterSprites.normaliseer_look(
+			d.get("look", {}) as Dictionary, c.sheet)
+		c.pants = _color(d.get("pants", "#34384e"))
 		c.portrait = String(d.get("portrait", ""))
 		c.accent = _color(d.get("accent", "#3a86ff"))
 		if c.id == &"":
@@ -126,6 +129,10 @@ func _load_npcs(path: String) -> void:
 		n.skin = _color(d.get("skin", "#dbb38f"))
 		n.hair = _color(d.get("hair", "#402e21"))
 		n.sheet = StringName(d.get("sheet", "plain"))
+		n.look = CharacterSprites.normaliseer_look(
+			d.get("look", {}) as Dictionary, n.sheet)
+		n.pants = _color(d.get("pants", "#34384e"))
+		n.accent = _color(d.get("accent", "#f4a259"))
 		n.portrait = String(d.get("portrait", ""))
 		n.spawn_when = d.get("spawn_when", {}) as Dictionary
 		var route: Array[Vector2i] = []

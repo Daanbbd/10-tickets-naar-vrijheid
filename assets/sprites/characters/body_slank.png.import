@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dljfr062wm2e8"
-path="res://.godot/imported/person_hoodie.png-f4b5baf85c1783b39672d95bf608fcaa.ctex"
+uid="uid://brq03mk5xbrc5"
+path="res://.godot/imported/body_slank.png-b6290d06cc0ec4c2cf0f623b83aff8c1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/person_hoodie.png"
-dest_files=["res://.godot/imported/person_hoodie.png-f4b5baf85c1783b39672d95bf608fcaa.ctex"]
+source_file="res://assets/sprites/characters/body_slank.png"
+dest_files=["res://.godot/imported/body_slank.png-b6290d06cc0ec4c2cf0f623b83aff8c1.ctex"]
 
 [params]
 

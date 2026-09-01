@@ -15,8 +15,15 @@
     "color": "#4a6d99",
     "skin": "#e8bd94",
     "hair": "#b99a63",
-    "sheet": "plain",
-    "portrait": "res://assets/sprites/portraits/dennis.png"
+    "portrait": "res://assets/sprites/portraits/dennis.png",
+    "look": {
+      "body": "stevig",
+      "hair": "dunnend",
+      "facial": "stoppels",
+      "outfit": "overhemd",
+      "accessory": ""
+    },
+    "pants": "#34384e"
   },
   {
     "id": "bastiaan",
@@ -34,8 +41,15 @@
     "color": "#e8e4dc",
     "skin": "#e9b89b",
     "hair": "#4e3a2e",
-    "sheet": "hoodie",
-    "portrait": "res://assets/sprites/portraits/bastiaan.png"
+    "portrait": "res://assets/sprites/portraits/bastiaan.png",
+    "look": {
+      "body": "slank",
+      "hair": "stekels",
+      "facial": "",
+      "outfit": "hoodie",
+      "accessory": "pet"
+    },
+    "pants": "#34384e"
   },
   {
     "id": "koen",
@@ -53,8 +67,15 @@
     "color": "#6f8fd0",
     "skin": "#eac09a",
     "hair": "#a8834e",
-    "sheet": "plain",
-    "portrait": "res://assets/sprites/portraits/koen.png"
+    "portrait": "res://assets/sprites/portraits/koen.png",
+    "look": {
+      "body": "gemiddeld",
+      "hair": "knot",
+      "facial": "baard",
+      "outfit": "tshirt",
+      "accessory": "bril"
+    },
+    "pants": "#34384e"
   },
   {
     "id": "klant",
@@ -72,7 +93,14 @@
     "color": "#d98cb3",
     "skin": "#f2d3b3",
     "hair": "#8d8d8d",
-    "sheet": "long"
+    "look": {
+      "body": "stevig",
+      "hair": "lang",
+      "facial": "",
+      "outfit": "blouse",
+      "accessory": "tas"
+    },
+    "pants": "#4a3c52"
   },
   {
     "id": "stagiair",
@@ -99,7 +127,14 @@
     "color": "#f5d76e",
     "skin": "#e8c39e",
     "hair": "#c98a3a",
-    "sheet": "plain"
+    "look": {
+      "body": "slank",
+      "hair": "stekels",
+      "facial": "",
+      "outfit": "vest",
+      "accessory": "doos"
+    },
+    "pants": "#3f4a3a"
   },
   {
     "id": "bezorger",
@@ -122,7 +157,14 @@
     "color": "#8d9aae",
     "skin": "#c98d63",
     "hair": "#2f2a24",
-    "sheet": "plain"
+    "look": {
+      "body": "stevig",
+      "hair": "kort",
+      "facial": "stoppels",
+      "outfit": "polo",
+      "accessory": "pet"
+    },
+    "pants": "#34384e"
   },
   {
     "id": "npc_daan",
@@ -141,8 +183,15 @@
     "color": "#2b2b30",
     "skin": "#dcae86",
     "hair": "#2a2320",
-    "sheet": "beard",
-    "portrait": "res://assets/sprites/portraits/daan.png"
+    "portrait": "res://assets/sprites/portraits/daan.png",
+    "look": {
+      "body": "gemiddeld",
+      "hair": "kaal",
+      "facial": "snor",
+      "outfit": "overhemd",
+      "accessory": "lanyard"
+    },
+    "pants": "#34384e"
   },
   {
     "id": "npc_danny",
@@ -161,8 +210,15 @@
     "color": "#26262b",
     "skin": "#eec39a",
     "hair": "#c9a86a",
-    "sheet": "plain",
-    "portrait": "res://assets/sprites/portraits/danny.png"
+    "portrait": "res://assets/sprites/portraits/danny.png",
+    "look": {
+      "body": "slank",
+      "hair": "zijscheiding",
+      "facial": "stoppels",
+      "outfit": "polo",
+      "accessory": ""
+    },
+    "pants": "#34384e"
   },
   {
     "id": "npc_victor",
@@ -181,8 +237,15 @@
     "color": "#3a3a40",
     "skin": "#f0c49a",
     "hair": "#cf8a48",
-    "sheet": "curly",
-    "portrait": "res://assets/sprites/portraits/victor.png"
+    "portrait": "res://assets/sprites/portraits/victor.png",
+    "look": {
+      "body": "gemiddeld",
+      "hair": "krullen",
+      "facial": "snor",
+      "outfit": "tshirt",
+      "accessory": "koptelefoon"
+    },
+    "pants": "#34384e"
   },
   {
     "id": "npc_jonathan",
@@ -201,8 +264,15 @@
     "color": "#2f4750",
     "skin": "#d6a578",
     "hair": "#1b1a1c",
-    "sheet": "glasses",
-    "portrait": "res://assets/sprites/portraits/jonathan.png"
+    "portrait": "res://assets/sprites/portraits/jonathan.png",
+    "look": {
+      "body": "stevig",
+      "hair": "kort",
+      "facial": "",
+      "outfit": "trui",
+      "accessory": "bril"
+    },
+    "pants": "#34384e"
   },
   {
     "id": "npc_willem",
@@ -221,7 +291,14 @@
     "color": "#ddd8cc",
     "skin": "#f0cba8",
     "hair": "#a07840",
-    "sheet": "buttons",
-    "portrait": "res://assets/sprites/portraits/willem.png"
+    "portrait": "res://assets/sprites/portraits/willem.png",
+    "look": {
+      "body": "gemiddeld",
+      "hair": "zijscheiding",
+      "facial": "",
+      "outfit": "blazer",
+      "accessory": ""
+    },
+    "pants": "#2f3242"
   }
 ]

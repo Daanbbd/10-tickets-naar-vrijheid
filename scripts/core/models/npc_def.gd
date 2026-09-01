@@ -16,6 +16,10 @@ extends Resource
 @export var color: Color = Color.WHITE
 @export var skin: Color = Color(0.86, 0.70, 0.56)
 @export var hair: Color = Color(0.25, 0.18, 0.13)
-@export var sheet: StringName = &"plain"
+@export var sheet: StringName = &"plain"   ## verouderd, valt terug via LEGACY_LOOKS
+## Silhouet in lagen: body, outfit, hair, facial, accessory.
+@export var look: Dictionary = {}
+@export var pants: Color = Color("#34384e")
+@export var accent: Color = Color("#f4a259")
 @export var portrait: String = ""
 @export var spawn_when: Dictionary = {}

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b4yoxtji5gd4e"
-path="res://.godot/imported/person_plain.png-51b077d2577342cc154bb98afa0f6508.ctex"
+uid="uid://6uexhimcuw2l"
+path="res://.godot/imported/accessory_bril.png-07182a31b93d3eaeccece3baac790588.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/characters/person_plain.png"
-dest_files=["res://.godot/imported/person_plain.png-51b077d2577342cc154bb98afa0f6508.ctex"]
+source_file="res://assets/sprites/characters/accessory_bril.png"
+dest_files=["res://.godot/imported/accessory_bril.png-07182a31b93d3eaeccece3baac790588.ctex"]
 
 [params]
 

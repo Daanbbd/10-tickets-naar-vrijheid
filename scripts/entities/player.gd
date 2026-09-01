@@ -26,7 +26,8 @@ func setup(character: CharacterDef, tile_size: int) -> void:
 	_tile_size = tile_size
 	if character != null:
 		sprite.sprite_frames = CharacterSprites.frames_for(
-			character.id, character.color, character.skin, character.hair, character.sheet)
+			character.look, character.color, character.skin, character.hair,
+			character.pants, character.accent)
 	_play("idle")
 
 
