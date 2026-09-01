@@ -17,15 +17,6 @@ extends Control
 
 const KOLOMMEN: Array[String] = ["TO DO", "DOING", "DONE"]
 
-## Kleur per vakgebied, zodat een stapel in een kolom in een oogopslag vertelt
-## wie er aan de beurt is.
-const ROL_KLEUR := {
-	"Product Owner":       &"geel",
-	"CRO-specialist":      &"roze",
-	"Frontend developer":  &"blauw",
-	"Backend developer":   &"groen",
-	"Client Lead":         &"oranje",
-}
 
 var _kolom: Array[VBoxContainer] = []
 var _detail: RichTextLabel
@@ -159,7 +150,7 @@ static func _kolom_van(st: GameEnums.TicketState) -> int:
 
 func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
 	var p := PanelContainer.new()
-	var kleur := UiKit.postit_kleur(ROL_KLEUR.get(t.owner_role, &"geel"))
+	var kleur := _papier(t)
 	if st == GameEnums.TicketState.LOCKED:
 		# geblokkeerd blijft leesbaar maar wijkt terug, zodat de kolom vertelt
 		# waar je nu iets mee kunt
@@ -201,6 +192,19 @@ func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
 		toon_detail(t))
 	p.add_child(knop)
 	return p
+
+
+## Papierkleur uit de accentkleur van de eigenaar, niet uit zijn rol. Er zijn
+## twee frontenders en twee backenders, dus op rol zouden vier briefjes twee
+## kleuren delen en zegt de kleur niets meer. De accentkleur is per persoon
+## uniek; verbleekt naar papier levert vanzelf een pastel post-it op.
+static func _papier(t: TicketDef) -> Color:
+	if t.owner_character == &"":
+		return UiKit.POSTIT                     # de gedeelde finale
+	var c: CharacterDef = GameData.character(t.owner_character)
+	if c == null:
+		return UiKit.POSTIT
+	return c.accent.lerp(UiKit.WIT, 0.62)
 
 
 ## Alleen de voornaam: op een briefje van 56 px past geen rol.

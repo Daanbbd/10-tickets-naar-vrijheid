@@ -115,293 +115,6 @@
       }
     }
   },
-  "bastiaan": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "bastiaan",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "bastiaan_bezocht",
-                "bastiaan_component_gevraagd"
-              ],
-              "min_tickets_done": 5
-            },
-            "text": "hiya,, de accordion is klaar,, hij klapt perfect,, ik maak er nog een,,"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "bastiaan_bezocht",
-                "bastiaan_komt_meekijken"
-              ]
-            },
-            "text": "hiya,, ik kom zo,, ik moet alleen nog even,, ik kom echt zo,,"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "bastiaan_bezocht"
-              ],
-              "min_tickets_done": 7
-            },
-            "text": "hiya,, alles is groen,, ik vertrouw het niet,,"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "bastiaan_bezocht"
-              ],
-              "min_tickets_done": 3
-            },
-            "text": "ah jij nog een keer,, ik ben dezelfde component nog aan het verbeteren,, hij is nu echt goed,,"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "bastiaan_bezocht"
-              ]
-            },
-            "text": "hiya nog een keer,, ik ben er nog,,"
-          },
-          {
-            "when": {
-              "min_tickets_done": 7
-            },
-            "text": "Ik heb de hele build nagelopen,, er zit niets fout in,, dat vertrouw ik niet."
-          },
-          {
-            "when": {
-              "min_tickets_done": 3
-            },
-            "text": "Ik heb een component gemaakt die niemand nodig heeft,, nog niet."
-          },
-          {
-            "text": "hiya,, ik zit nog in een ticket van vorige week,, ik kom er wel uit."
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "bastiaan",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "Kijk je straks even mee,, niet nu,, straks."
-          },
-          {
-            "when": {
-              "trait": [
-                "detail"
-              ]
-            },
-            "text": "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat ook hè."
-          },
-          {
-            "text": "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
-          }
-        ],
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "bastiaan",
-        "text": ",,",
-        "choices": [
-          {
-            "text": "Wat bouw je?",
-            "next": "component",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "bastiaan_component_gevraagd",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "bastiaan_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Kijk je mee straks?",
-            "next": "meekijken",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "bastiaan_komt_meekijken",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "bastiaan_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Oke.",
-            "next": "einde",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "bastiaan_bezocht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "einde": {
-        "speaker": ""
-      },
-      "component": {
-        "speaker": "bastiaan",
-        "text": "een accordion component,, maar dan eentje die echt goed werkt,, hij klapt uit en in,, niemand heeft hem gevraagd,, maar hij bestaat nu,,",
-        "next": "einde"
-      },
-      "meekijken": {
-        "speaker": "bastiaan",
-        "text": "ja,, wanneer,, zeg maar wanneer,, ik ben er,,",
-        "next": "einde"
-      }
-    }
-  },
-  "koen": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "koen",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "koen_bezocht",
-                "koen_verborgen_voor_jonathan"
-              ]
-            },
-            "text": "is jonathan al weg? psst. lekker ouwe."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "koen_bezocht",
-                "koen_piepelienies_uitgelegd"
-              ],
-              "min_tickets_done": 6
-            },
-            "text": "piepelienies lopen nog steeds. heb ze goed ingesteld haha."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "koen_bezocht"
-              ]
-            },
-            "text": "ah ben je er weer. ik zit in een andere rabbit hole. geen zorg haha."
-          },
-          {
-            "when": {
-              "min_tickets_done": 6
-            },
-            "text": "De logs zijn stil. Is weer een pareltje hoor haha."
-          },
-          {
-            "text": "Ik zal even kijken. Het duurt nog veertig minuten, vgm."
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "koen",
-        "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken.",
-        "next": "derde"
-      },
-      "derde": {
-        "speaker": "koen",
-        "variants": [
-          {
-            "when": {
-              "min_tickets_done": 6
-            },
-            "text": "De piepelienies lopen trouwens weer. Took a while haha."
-          },
-          {
-            "text": "Ik kijk straks nog even naar de piepelienies. Iets met een timeout, vgm."
-          }
-        ],
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "koen",
-        "text": "wat is er?",
-        "choices": [
-          {
-            "text": "Wat zijn piepelienies precies?",
-            "next": "uitleg",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "koen_piepelienies_uitgelegd",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "koen_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Jonathan zoekt je.",
-            "next": "verstop",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "koen_verborgen_voor_jonathan",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "koen_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Niets. Ga zo door.",
-            "next": "einde",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "koen_bezocht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "einde": {
-        "speaker": ""
-      },
-      "uitleg": {
-        "speaker": "koen",
-        "text": "piepelienies. ci/cd. build, test, deploy. maar dan lekker. en als ze kapot zijn duurt het veertig minuten, vgm.",
-        "next": "einde"
-      },
-      "verstop": {
-        "speaker": "koen",
-        "text": "ah nee. zeg maar dat ik in een call zit. lekker ouwe.",
-        "next": "einde"
-      }
-    }
-  },
   "klant": {
     "start": "start",
     "nodes": {
@@ -1468,6 +1181,293 @@
       "klant_terug": {
         "speaker": "willem",
         "text": "ah. dan ga ik vast staan. absoluta.",
+        "next": "einde"
+      }
+    }
+  },
+  "collega_bastiaan": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "bastiaan",
+        "variants": [
+          {
+            "when": {
+              "flags_all": [
+                "bastiaan_bezocht",
+                "bastiaan_component_gevraagd"
+              ],
+              "min_tickets_done": 5
+            },
+            "text": "hiya,, de accordion is klaar,, hij klapt perfect,, ik maak er nog een,,"
+          },
+          {
+            "when": {
+              "flags_all": [
+                "bastiaan_bezocht",
+                "bastiaan_komt_meekijken"
+              ]
+            },
+            "text": "hiya,, ik kom zo,, ik moet alleen nog even,, ik kom echt zo,,"
+          },
+          {
+            "when": {
+              "flags_all": [
+                "bastiaan_bezocht"
+              ],
+              "min_tickets_done": 7
+            },
+            "text": "hiya,, alles is groen,, ik vertrouw het niet,,"
+          },
+          {
+            "when": {
+              "flags_all": [
+                "bastiaan_bezocht"
+              ],
+              "min_tickets_done": 3
+            },
+            "text": "ah jij nog een keer,, ik ben dezelfde component nog aan het verbeteren,, hij is nu echt goed,,"
+          },
+          {
+            "when": {
+              "flags_all": [
+                "bastiaan_bezocht"
+              ]
+            },
+            "text": "hiya nog een keer,, ik ben er nog,,"
+          },
+          {
+            "when": {
+              "min_tickets_done": 7
+            },
+            "text": "Ik heb de hele build nagelopen,, er zit niets fout in,, dat vertrouw ik niet."
+          },
+          {
+            "when": {
+              "min_tickets_done": 3
+            },
+            "text": "Ik heb een component gemaakt die niemand nodig heeft,, nog niet."
+          },
+          {
+            "text": "hiya,, ik zit nog in een ticket van vorige week,, ik kom er wel uit."
+          }
+        ],
+        "next": "tweede"
+      },
+      "tweede": {
+        "speaker": "bastiaan",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Kijk je straks even mee,, niet nu,, straks."
+          },
+          {
+            "when": {
+              "trait": [
+                "detail"
+              ]
+            },
+            "text": "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat ook hè."
+          },
+          {
+            "text": "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
+          }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "bastiaan",
+        "text": ",,",
+        "choices": [
+          {
+            "text": "Wat bouw je?",
+            "next": "component",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "bastiaan_component_gevraagd",
+                "value": true
+              },
+              {
+                "op": "set_flag",
+                "flag": "bastiaan_bezocht",
+                "value": true
+              }
+            ]
+          },
+          {
+            "text": "Kijk je mee straks?",
+            "next": "meekijken",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "bastiaan_komt_meekijken",
+                "value": true
+              },
+              {
+                "op": "set_flag",
+                "flag": "bastiaan_bezocht",
+                "value": true
+              }
+            ]
+          },
+          {
+            "text": "Oke.",
+            "next": "einde",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "bastiaan_bezocht",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "einde": {
+        "speaker": ""
+      },
+      "component": {
+        "speaker": "bastiaan",
+        "text": "een accordion component,, maar dan eentje die echt goed werkt,, hij klapt uit en in,, niemand heeft hem gevraagd,, maar hij bestaat nu,,",
+        "next": "einde"
+      },
+      "meekijken": {
+        "speaker": "bastiaan",
+        "text": "ja,, wanneer,, zeg maar wanneer,, ik ben er,,",
+        "next": "einde"
+      }
+    }
+  },
+  "collega_koen": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "koen",
+        "variants": [
+          {
+            "when": {
+              "flags_all": [
+                "koen_bezocht",
+                "koen_verborgen_voor_jonathan"
+              ]
+            },
+            "text": "is jonathan al weg? psst. lekker ouwe."
+          },
+          {
+            "when": {
+              "flags_all": [
+                "koen_bezocht",
+                "koen_piepelienies_uitgelegd"
+              ],
+              "min_tickets_done": 6
+            },
+            "text": "piepelienies lopen nog steeds. heb ze goed ingesteld haha."
+          },
+          {
+            "when": {
+              "flags_all": [
+                "koen_bezocht"
+              ]
+            },
+            "text": "ah ben je er weer. ik zit in een andere rabbit hole. geen zorg haha."
+          },
+          {
+            "when": {
+              "min_tickets_done": 6
+            },
+            "text": "De logs zijn stil. Is weer een pareltje hoor haha."
+          },
+          {
+            "text": "Ik zal even kijken. Het duurt nog veertig minuten, vgm."
+          }
+        ],
+        "next": "tweede"
+      },
+      "tweede": {
+        "speaker": "koen",
+        "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken.",
+        "next": "derde"
+      },
+      "derde": {
+        "speaker": "koen",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 6
+            },
+            "text": "De piepelienies lopen trouwens weer. Took a while haha."
+          },
+          {
+            "text": "Ik kijk straks nog even naar de piepelienies. Iets met een timeout, vgm."
+          }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "koen",
+        "text": "wat is er?",
+        "choices": [
+          {
+            "text": "Wat zijn piepelienies precies?",
+            "next": "uitleg",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "koen_piepelienies_uitgelegd",
+                "value": true
+              },
+              {
+                "op": "set_flag",
+                "flag": "koen_bezocht",
+                "value": true
+              }
+            ]
+          },
+          {
+            "text": "Jonathan zoekt je.",
+            "next": "verstop",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "koen_verborgen_voor_jonathan",
+                "value": true
+              },
+              {
+                "op": "set_flag",
+                "flag": "koen_bezocht",
+                "value": true
+              }
+            ]
+          },
+          {
+            "text": "Niets. Ga zo door.",
+            "next": "einde",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "koen_bezocht",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "einde": {
+        "speaker": ""
+      },
+      "uitleg": {
+        "speaker": "koen",
+        "text": "piepelienies. ci/cd. build, test, deploy. maar dan lekker. en als ze kapot zijn duurt het veertig minuten, vgm.",
+        "next": "einde"
+      },
+      "verstop": {
+        "speaker": "koen",
+        "text": "ah nee. zeg maar dat ik in een call zit. lekker ouwe.",
         "next": "einde"
       }
     }

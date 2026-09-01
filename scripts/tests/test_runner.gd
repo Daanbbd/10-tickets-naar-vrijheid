@@ -51,7 +51,7 @@ func _rapport() -> void:
 func _test_data_laadt() -> void:
 	_kop("data laadt")
 	_ok(GameData.load_errors.is_empty(), "GameData meldt: %s" % ", ".join(GameData.load_errors))
-	_ok(GameData.character_ids().size() == 5, "verwacht 5 personages, kreeg %d" % GameData.character_ids().size())
+	_ok(GameData.character_ids().size() == 7, "verwacht 7 personages, kreeg %d" % GameData.character_ids().size())
 	_ok(GameData.ticket_ids().size() == 10, "verwacht 10 tickets, kreeg %d" % GameData.ticket_ids().size())
 	_ok(GameData.npcs.size() >= 6, "te weinig NPC's: %d" % GameData.npcs.size())
 	_ok(not GameData.floor_data.is_empty(), "floor.json is leeg")

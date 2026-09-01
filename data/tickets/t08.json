@@ -49,8 +49,8 @@
   "title": "De klant wil een AI-video",
   "summary": "Een paard dat gelukkig door een weiland rent terwijl het onze supplementen gebruikt. Meer briefing is er niet.",
   "anchor": "hokje_ipad",
-  "owner_character": "victor",
-  "owner_role": "Frontend developer",
+  "owner_character": "koen",
+  "owner_role": "Backend developer",
   "minigame_id": "mg_video",
   "zone": "z8_hokje",
   "zone_name": "Het Vergaderhokje"

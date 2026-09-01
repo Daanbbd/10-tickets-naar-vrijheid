@@ -51,7 +51,7 @@
     "pants": "#34384e"
   },
   {
-    "id": "bastiaan",
+    "id": "npc_bastiaan",
     "name": "Bastiaan",
     "role": "Frontend developer",
     "zone": "z9_vloer",
@@ -59,7 +59,7 @@
       12,
       18
     ],
-    "dialogue_id": "bastiaan",
+    "dialogue_id": "collega_bastiaan",
     "route": [
       [
         12,
@@ -91,10 +91,11 @@
       "outfit": "hoodie",
       "accessory": "pet"
     },
-    "pants": "#34384e"
+    "pants": "#34384e",
+    "is_playable_colleague": true
   },
   {
-    "id": "koen",
+    "id": "npc_koen",
     "name": "Koen",
     "role": "Backend developer",
     "zone": "z3_patchhok",
@@ -102,7 +103,7 @@
       7,
       6
     ],
-    "dialogue_id": "koen",
+    "dialogue_id": "collega_koen",
     "route": [
       [
         7,
@@ -142,7 +143,8 @@
       "outfit": "tshirt",
       "accessory": "bril"
     },
-    "pants": "#34384e"
+    "pants": "#34384e",
+    "is_playable_colleague": true
   },
   {
     "id": "klant",

@@ -42,8 +42,8 @@
   "title": "Er lopen paardenbugs door het kantoor",
   "summary": "Door alle wijzigingen zijn er letterlijk paarden in de build gekomen. Ze staan nu op de verdieping.",
   "anchor": "scrumbord_gang",
-  "owner_character": "jonathan",
-  "owner_role": "Backend developer",
+  "owner_character": "bastiaan",
+  "owner_role": "Frontend developer",
   "minigame_id": "mg_paarden",
   "zone": "z9_vloer",
   "zone_name": "De Vloer"

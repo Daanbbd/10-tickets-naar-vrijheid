@@ -33,7 +33,8 @@
       "outfit": "overhemd",
       "accessory": "lanyard"
     },
-    "pants": "#34384e"
+    "pants": "#34384e",
+    "stijl": "Twee tickets zelf. Jij bepaalt wat er wel en niet in zit."
   },
   {
     "id": "danny",
@@ -68,7 +69,8 @@
       "outfit": "polo",
       "accessory": ""
     },
-    "pants": "#34384e"
+    "pants": "#34384e",
+    "stijl": "Twee tickets zelf. Jij kijkt naar wat mensen echt doen."
   },
   {
     "id": "victor",
@@ -87,8 +89,7 @@
       "Browserproblemen"
     ],
     "owned_tickets": [
-      "t04",
-      "t08"
+      "t04"
     ],
     "finale_id": "frontend_build_failed",
     "color": "#3a3a40",
@@ -103,7 +104,8 @@
       "outfit": "tshirt",
       "accessory": "koptelefoon"
     },
-    "pants": "#34384e"
+    "pants": "#34384e",
+    "stijl": "Eén ticket zelf. Je zit veel aan je eigen bureau."
   },
   {
     "id": "jonathan",
@@ -123,8 +125,7 @@
       "Technische systemen"
     ],
     "owned_tickets": [
-      "t05",
-      "t09"
+      "t05"
     ],
     "finale_id": "production_database_connection_failed",
     "color": "#2f4750",
@@ -139,7 +140,8 @@
       "outfit": "trui",
       "accessory": "bril"
     },
-    "pants": "#34384e"
+    "pants": "#34384e",
+    "stijl": "Eén ticket zelf. Als het stuk is, komen ze bij jou."
   },
   {
     "id": "willem",
@@ -173,6 +175,77 @@
       "outfit": "blazer",
       "accessory": ""
     },
-    "pants": "#2f3242"
+    "pants": "#2f3242",
+    "stijl": "Eén ticket zelf. Je loopt de hele dag heen en weer. Dat is het punt."
+  },
+  {
+    "id": "bastiaan",
+    "name": "Bastiaan",
+    "role": "Frontend developer",
+    "tagline": "Vindt altijd nog één ding.",
+    "description": "Jij ziet wat er niet klopt voordat iemand het gebouwd heeft. Dat is handig. Het is ook vermoeiend.",
+    "traits": [
+      "technisch",
+      "detail"
+    ],
+    "specialisms": [
+      "Componenten",
+      "Frontend",
+      "Toegankelijkheid",
+      "Details"
+    ],
+    "owned_tickets": [
+      "t09"
+    ],
+    "finale_id": "visual_regression_detected",
+    "color": "#e8e4dc",
+    "skin": "#e9b89b",
+    "hair": "#4e3a2e",
+    "portrait": "res://assets/sprites/portraits/bastiaan.png",
+    "accent": "#e8c547",
+    "look": {
+      "body": "slank",
+      "hair": "stekels",
+      "facial": "",
+      "outfit": "hoodie",
+      "accessory": "pet"
+    },
+    "pants": "#34384e",
+    "stijl": "Eén ticket zelf. Jij ziet wat niemand anders ziet."
+  },
+  {
+    "id": "koen",
+    "name": "Koen",
+    "role": "Backend developer",
+    "tagline": "Heeft er waarschijnlijk al iets voor.",
+    "description": "Jij lost het op met iets wat vorige maand nog niet bestond. Meestal werkt het. Uitleggen doe je onderweg.",
+    "traits": [
+      "technisch",
+      "sociaal"
+    ],
+    "specialisms": [
+      "Backend",
+      "Integraties",
+      "AI",
+      "Automatisering"
+    ],
+    "owned_tickets": [
+      "t08"
+    ],
+    "finale_id": "ai_output_not_reviewed",
+    "color": "#6f8fd0",
+    "skin": "#eac09a",
+    "hair": "#a8834e",
+    "portrait": "res://assets/sprites/portraits/koen.png",
+    "accent": "#e56fa8",
+    "look": {
+      "body": "gemiddeld",
+      "hair": "knot",
+      "facial": "baard",
+      "outfit": "tshirt",
+      "accessory": "bril"
+    },
+    "pants": "#34384e",
+    "stijl": "Eén ticket zelf. Jij kent iemand of iets dat het kan."
   }
 ]
