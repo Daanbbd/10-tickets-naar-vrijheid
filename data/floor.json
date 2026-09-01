@@ -1,0 +1,476 @@
+{
+ "size": [
+  130,
+  26
+ ],
+ "tile_size": 16,
+ "spawn": [
+  2,
+  11
+ ],
+ "walk_speed_tiles_per_sec": 6.0,
+ "props": [
+  {
+   "prop": "balie_5x1",
+   "rect": [
+    9,
+    2,
+    13,
+    2
+   ]
+  },
+  {
+   "prop": "serverrack_2x4",
+   "rect": [
+    19,
+    2,
+    20,
+    5
+   ]
+  },
+  {
+   "prop": "tribune_10x2",
+   "rect": [
+    24,
+    2,
+    33,
+    3
+   ]
+  },
+  {
+   "prop": "keukenblok_5x1",
+   "rect": [
+    35,
+    2,
+    39,
+    2
+   ]
+  },
+  {
+   "prop": "monitorwand_4x1",
+   "rect": [
+    61,
+    1,
+    64,
+    1
+   ]
+  },
+  {
+   "prop": "tafel_lang_26x2",
+   "rect": [
+    47,
+    10,
+    72,
+    11
+   ]
+  },
+  {
+   "prop": "bureau_4x8",
+   "rect": [
+    5,
+    15,
+    8,
+    22
+   ]
+  },
+  {
+   "prop": "bureau_4x4",
+   "rect": [
+    24,
+    15,
+    27,
+    18
+   ]
+  },
+  {
+   "prop": "bureau_4x4",
+   "rect": [
+    38,
+    15,
+    41,
+    18
+   ]
+  },
+  {
+   "prop": "bureau_4x8",
+   "rect": [
+    60,
+    15,
+    63,
+    22
+   ]
+  },
+  {
+   "prop": "bureau_4x4",
+   "rect": [
+    76,
+    15,
+    79,
+    18
+   ]
+  },
+  {
+   "prop": "plantenkast_3x8",
+   "rect": [
+    15,
+    15,
+    17,
+    22
+   ]
+  },
+  {
+   "prop": "plantenkast_3x6",
+   "rect": [
+    50,
+    15,
+    52,
+    20
+   ]
+  }
+ ],
+ "grid": [
+  "##################################################################################################################################",
+  "##.....#EEEEEEEEE#....#CCCCCCCCCCCCCCCCCC##LxxxLLLLLLL#......____.......#LLLLLLLLmmmmLLLLLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "##u....#E_____EEE#.__.#C__________C_____C##LLLqqssqqLL#.bb...........bb.#LLLLLsssssssssssLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "##.....#EEEEEEEEE#.__.#C__________CCCCCCC##LLLqsttsqLL#.bb....rr.....bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "##u....#EEEEEEEPE#.__.#CCCCCCCCCCCCCCCCfC##LLLqsttsqLL#.......rr........#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbGGGG#",
+  "##....W#EEEEEEEPE#.__.#HCCCCCCCCCCCCCCCfC##LLLqqssqqLL#.bb...........bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbJJJG#",
+  "##.....#EEEEEEEEE#....#CCCCCCCCCCCCCCCCCC##LLLLLLLLLLL#.bb...........bb.#LLLLLLLLLLLLLLLLLLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "###D####.........##DD####DDD###############=====DD====#=======DD========#=========DD=========###=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "#mEEEEEEEEEEEEEEE.............lIIIIIII=.........................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "#EEEEEEEEEEEEEEEE.............lIIIIIII=......Y..................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "VEEEEEEEEEEEEEEEE.............####D####........__________________________.......................DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "VEEEEEEEEEEEEEEEE..............................__________________________.......................DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "VEEEEEEEEEEEEEEEE...............................................................................DGGGGGGttttttttGGGGGGGGGGGGGGGGGG#",
+  "#EEEEEEEEEEEEEEEE...............................................................................DGGGGGGttttttttGGGGGGGGGGGGGGGGGG#",
+  "#...............................................................................................DGGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
+  "#....____......___......____..........____........___.......____............____................DGGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
+  "#....____......___......____..........____........___.......____............____................=GGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
+  "#....____......___......____..........____........___.......____............____................=GGjjGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
+  "#....____......___......____..........____........___.......____............____................=GGjjGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
+  "#....____......___................................___.......____................................=GGjjGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
+  "#....____......___................................___.......____................................=GGjjGGGGGGGcccccGGGGGGGGGGGGGGooN",
+  "#....____......___..........................................____................................=GGjjGGGGGGGcccccGGGGGbbbbbbbGGooN",
+  "#....____......___..........................................____................................=GGjjGGGGGGGGGGGGGGGGGbbbbbbbGGoo#",
+  "#...............................................................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGoo#",
+  "#...............................................................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "####TTT####mmm#############TTT####################################################################################################"
+ ],
+ "legend": {
+  ".": {
+   "kind": "floor",
+   "solid": false
+  },
+  "D": {
+   "kind": "floor",
+   "solid": false,
+   "door": true
+  },
+  "#": {
+   "kind": "wall",
+   "solid": true
+  },
+  "=": {
+   "kind": "glass",
+   "solid": true
+  },
+  "V": {
+   "kind": "exit",
+   "solid": true,
+   "prop": "voordeur"
+  },
+  "N": {
+   "kind": "wall",
+   "solid": true,
+   "prop": "nooduitgang"
+  },
+  "B": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "balie"
+  },
+  "P": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "printer"
+  },
+  "T": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "ticketbord"
+  },
+  "b": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "bureau"
+  },
+  "t": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "tafel"
+  },
+  "c": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "bank"
+  },
+  "K": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "keukenblok"
+  },
+  "f": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "koelkast"
+  },
+  "x": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "whiteboard"
+  },
+  "S": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "serverrack"
+  },
+  "A": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "archiefkast"
+  },
+  "W": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "wc"
+  },
+  "m": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "monitor"
+  },
+  "p": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "plant"
+  },
+  "o": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "kast"
+  },
+  "H": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "prikbord"
+  },
+  "_": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "footprint"
+  },
+  "u": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "urinoir"
+  },
+  "R": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "tribune"
+  },
+  "n": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "plantenkast"
+  },
+  "l": {
+   "kind": "wall",
+   "solid": true,
+   "prop": "lamellen"
+  },
+  "j": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "gordijn"
+  },
+  "Y": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "blauwe_tijger"
+  },
+  "J": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "jungle"
+  },
+  "s": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "kuipstoel"
+  },
+  "r": {
+   "kind": "prop",
+   "solid": true,
+   "prop": "ronde_tafel"
+  },
+  "E": {
+   "kind": "floor",
+   "solid": false,
+   "accent": "bb_blue"
+  },
+  "O": {
+   "kind": "floor",
+   "solid": false,
+   "accent": "bb_orange"
+  },
+  "L": {
+   "kind": "floor",
+   "solid": false,
+   "accent": "bb_light_blue"
+  },
+  "G": {
+   "kind": "floor",
+   "solid": false,
+   "accent": "bb_green"
+  },
+  "I": {
+   "kind": "floor",
+   "solid": false,
+   "accent": "bb_pink"
+  },
+  "C": {
+   "kind": "floor",
+   "solid": false,
+   "accent": "teal"
+  },
+  "q": {
+   "kind": "floor",
+   "solid": false,
+   "accent": "schaakbord"
+  }
+ },
+ "zones": [
+  {
+   "id": "z2_toilet",
+   "name": "Toiletten",
+   "rect": [
+    2,
+    1,
+    6,
+    6
+   ],
+   "light": "klinisch"
+  },
+  {
+   "id": "z1_entree",
+   "name": "Entree",
+   "rect": [
+    1,
+    1,
+    16,
+    13
+   ],
+   "light": "warm"
+  },
+  {
+   "id": "z3_patchhok",
+   "name": "Het Patchhok",
+   "rect": [
+    18,
+    1,
+    21,
+    6
+   ],
+   "light": "koud"
+  },
+  {
+   "id": "z4_koffiecorner",
+   "name": "Koffiecorner",
+   "rect": [
+    23,
+    1,
+    40,
+    6
+   ],
+   "light": "warm"
+  },
+  {
+   "id": "z5_summit",
+   "name": "Summit",
+   "rect": [
+    43,
+    1,
+    53,
+    6
+   ],
+   "light": "koel"
+  },
+  {
+   "id": "z6_basecamp",
+   "name": "Basecamp",
+   "rect": [
+    55,
+    1,
+    71,
+    6
+   ],
+   "light": "neutraal"
+  },
+  {
+   "id": "z7_birdhouse",
+   "name": "Birdhouse",
+   "rect": [
+    73,
+    1,
+    92,
+    6
+   ],
+   "light": "koel"
+  },
+  {
+   "id": "z8_hokje",
+   "name": "Het Vergaderhokje",
+   "rect": [
+    30,
+    7,
+    38,
+    10
+   ],
+   "light": "dim"
+  },
+  {
+   "id": "z10_weekend",
+   "name": "Weekend",
+   "rect": [
+    97,
+    1,
+    128,
+    24
+   ],
+   "light": "jungle"
+  },
+  {
+   "id": "z9_vloer",
+   "name": "De Vloer",
+   "rect": [
+    1,
+    14,
+    95,
+    24
+   ],
+   "light": "neutraal"
+  },
+  {
+   "id": "z11_gang",
+   "name": "De Gang",
+   "rect": [
+    1,
+    7,
+    95,
+    13
+   ],
+   "light": "neutraal"
+  }
+ ]
+}

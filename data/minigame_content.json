@@ -1,0 +1,1066 @@
+{
+ "mg_user_story": {
+  "type": "slotboard",
+  "intro": "Op het whiteboard staat: 'webshop maken (paarden)'. Dennis noemt dat een user story. Bouw er een echte van, voordat iemand dit gaat schatten.",
+  "slots": [
+   {
+    "label": "Als ...",
+    "accepts": [
+     "als_paardenbezitter"
+    ]
+   },
+   {
+    "label": "wil ik ...",
+    "accepts": [
+     "wil_vergelijken"
+    ]
+   },
+   {
+    "label": "zodat ...",
+    "accepts": [
+     "zodat_juiste_product"
+    ]
+   }
+  ],
+  "cards": [
+   {
+    "id": "als_paardenbezitter",
+    "text": "Als paardenbezitter",
+    "tint": "goed"
+   },
+   {
+    "id": "wil_vergelijken",
+    "text": "wil ik supplementen kunnen vergelijken",
+    "tint": "goed"
+   },
+   {
+    "id": "zodat_juiste_product",
+    "text": "zodat ik het juiste product voor mijn paard kies",
+    "tint": "goed"
+   },
+   {
+    "id": "als_paard",
+    "text": "Als paard",
+    "tint": "fout"
+   },
+   {
+    "id": "wil_webshop",
+    "text": "wil ik een webshop bouwen",
+    "tint": "fout"
+   },
+   {
+    "id": "zodat_omzet",
+    "text": "zodat ik meer omzet genereer",
+    "tint": "neutraal"
+   },
+   {
+    "id": "zodat_klant_blij",
+    "text": "zodat de klant blij is",
+    "tint": "neutraal"
+   },
+   {
+    "id": "als_jira",
+    "text": "Als Jira-ticket",
+    "tint": "fout"
+   },
+   {
+    "id": "wil_iets_met_ai",
+    "text": "wil ik iets met AI",
+    "tint": "fout"
+   }
+  ],
+  "success": "Als paardenbezitter wil ik supplementen kunnen vergelijken zodat ik het juiste product voor mijn paard kies. Dennis leest het twee keer en zegt niets. Dat is een goed teken.",
+  "failure": "Dennis leest het hardop voor. Halverwege stopt hij. Niemand weet meer wie hier nou eigenlijk iets wil. Nog een keer.",
+  "max_fouten": 2
+ },
+ "mg_planning": {
+  "type": "slotboard",
+  "intro": "Dennis heeft de sprintplanning opnieuw gemaakt. Jij staat er drie keer op en op geen van die drie plekken werk je aan hetzelfde. Zet iedereen op een project.",
+  "slots": [
+   {
+    "label": "Paardensupplementen",
+    "accepts": [
+     "victor",
+     "jonathan"
+    ]
+   },
+   {
+    "label": "Ander project",
+    "accepts": [
+     "bastiaan",
+     "koen"
+    ]
+   },
+   {
+    "label": "Onderhoud",
+    "accepts": [
+     "stagiair"
+    ]
+   },
+   {
+    "label": "Iets met AI",
+    "accepts": [
+     "dennis",
+     "daan"
+    ]
+   }
+  ],
+  "cards": [
+   {
+    "id": "victor",
+    "text": "Victor, frontend. Beschikbaar, mits niemand iets vraagt.",
+    "tint": "goed"
+   },
+   {
+    "id": "jonathan",
+    "text": "Jonathan, backend. Zit in het Patchhok. Reageert op deurklopjes.",
+    "tint": "goed"
+   },
+   {
+    "id": "bastiaan",
+    "text": "Bastiaan, frontend. Zit al op dat andere project waar niemand de naam van weet.",
+    "tint": "goed"
+   },
+   {
+    "id": "koen",
+    "text": "Koen, backend. Draagt een koptelefoon zonder muziek erin.",
+    "tint": "goed"
+   },
+   {
+    "id": "stagiair",
+    "text": "De stagiair. Mag alles, weet niets, doet het toch.",
+    "tint": "goed"
+   },
+   {
+    "id": "dennis",
+    "text": "Dennis, scrum master. Heeft een artikel gelezen over AI.",
+    "tint": "goed"
+   },
+   {
+    "id": "daan",
+    "text": "Daan, product owner. Staat al op vier projecten, kent er drie.",
+    "tint": "goed"
+   },
+   {
+    "id": "danny",
+    "text": "Danny, CRO. Pas inplanbaar als er iets te meten valt.",
+    "tint": "neutraal"
+   },
+   {
+    "id": "willem",
+    "text": "Willem, client lead. Staat er al op. Sales staat nooit verkeerd ingepland.",
+    "tint": "neutraal"
+   }
+  ],
+  "success": "De planning klopt. Er staat zelfs iemand op onderhoud. Dennis maakt een screenshot voordat het verandert.",
+  "failure": "Je hebt iemand op twee projecten tegelijk gezet. Dat kan, zegt Dennis, maar dan wel voor 120 procent. Nog een keer.",
+  "max_fouten": 2
+ },
+ "mg_klantfeedback": {
+  "type": "choicescene",
+  "intro": "Mevrouw Van Zutphen zit in de entree met een uitgeprinte screenshot en elf punten. Drie ervan spreken elkaar tegen. Vertaal wat ze zegt naar iets dat je kunt bouwen.",
+  "rondes": [
+   {
+    "prompt": "'Het moet rustiger worden. Maar het moet ook meer opvallen.'",
+    "opties": [
+     {
+      "tekst": "Wat moet er precies opvallen? De knop, de foto, of de prijs?",
+      "punten": 3,
+      "reactie": "'De knop natuurlijk.' Genoteerd: één element krijgt nadruk, de rest wordt rustiger."
+     },
+     {
+      "tekst": "Zullen we minder kleuren gebruiken en één duidelijke knop houden?",
+      "punten": 2,
+      "reactie": "'Ja, precies dat.' Ze bedoelde iets anders, maar dit is bouwbaar."
+     },
+     {
+      "tekst": "Ik zet 'rustiger en opvallender' in het ticket.",
+      "punten": 1,
+      "reactie": "Victor gaat dit ticket zien. Victor gaat jou dan zien."
+     },
+     {
+      "tekst": "Ja hoor, doen we.",
+      "punten": 0,
+      "reactie": "Ze knikt tevreden. Jij hebt nu niets."
+     }
+    ]
+   },
+   {
+    "prompt": "'Mijn dochter zegt dat het niet werkt op haar telefoon. Ze heeft trouwens ook een paard.'",
+    "opties": [
+     {
+      "tekst": "Werkt iets niet, of ziet iets er raar uit? En weet u welke telefoon?",
+      "punten": 3,
+      "reactie": "'Ze kon niet afrekenen.' Dat is geen styling. Dat is de checkout. Genoteerd."
+     },
+     {
+      "tekst": "We testen de checkout op mobiel en sturen u een opname.",
+      "punten": 2,
+      "reactie": "'Prima.' Reproduceerbaar maken is het halve werk."
+     },
+     {
+      "tekst": "Mobiel is altijd lastig, dat komt goed.",
+      "punten": 1,
+      "reactie": "Dat komt niet goed. Dat komt alleen later."
+     },
+     {
+      "tekst": "Leuk, wat voor paard?",
+      "punten": 0,
+      "reactie": "Elf minuten later weet je alles over Sjaak. Niets over de bug."
+     }
+    ]
+   },
+   {
+    "prompt": "'Kunnen jullie er iets met AI in doen? En de knop moet rood. Of blauw. Doe maar goed.'",
+    "opties": [
+     {
+      "tekst": "Wat wilt u dat de klant er beter van wordt? Dan kiezen we het middel.",
+      "punten": 3,
+      "reactie": "'Dat mensen het juiste supplement kiezen.' Dat is een keuzehulp. Die kunnen we bouwen."
+     },
+     {
+      "tekst": "We testen rood tegen blauw en houden de winnaar.",
+      "punten": 2,
+      "reactie": "Danny hoort dit vanaf de andere kant van het kantoor en komt aanlopen."
+     },
+     {
+      "tekst": "Ik zet 'iets met AI' op de backlog voor fase 2.",
+      "punten": 1,
+      "reactie": "Fase 2 is waar dingen heen gaan om rustig te worden."
+     },
+     {
+      "tekst": "Rood. Definitief rood.",
+      "punten": 0,
+      "reactie": "'Doe toch maar blauw.' Definitief blauw."
+     }
+    ]
+   }
+  ],
+  "drempel": 6,
+  "success": "Elf punten zijn drie concrete requirements geworden. Mevrouw Van Zutphen voelt zich gehoord en jij hebt iets om te bouwen. Beide waar, tegelijk.",
+  "failure": "Het gesprek is heel gezellig geweest. Er is niets besloten. Willem kijkt je aan. Nog een keer."
+ },
+ "mg_frontend_fix": {
+  "type": "slotboard",
+  "intro": "Iemand heeft de stylesheet 'even opgeschoond'. Het paard staat boven de header, de bestelknop staat onder de footer. Zet de pagina terug in elkaar.",
+  "slots": [
+   {
+    "label": "Header",
+    "accepts": [
+     "logo",
+     "navigatie"
+    ]
+   },
+   {
+    "label": "Hero",
+    "accepts": [
+     "productfoto"
+    ]
+   },
+   {
+    "label": "Productinfo",
+    "accepts": [
+     "prijs"
+    ]
+   },
+   {
+    "label": "Call-to-action",
+    "accepts": [
+     "bestelknop"
+    ]
+   },
+   {
+    "label": "Footer",
+    "accepts": [
+     "kleine_lettertjes"
+    ]
+   }
+  ],
+  "cards": [
+   {
+    "id": "logo",
+    "text": "Logo (Manege De Vrije Teugel)",
+    "tint": "goed"
+   },
+   {
+    "id": "navigatie",
+    "text": "Navigatie",
+    "tint": "goed"
+   },
+   {
+    "id": "productfoto",
+    "text": "Productfoto (nu nog 4000 pixels breed)",
+    "tint": "goed"
+   },
+   {
+    "id": "prijs",
+    "text": "Prijs en inhoud",
+    "tint": "goed"
+   },
+   {
+    "id": "bestelknop",
+    "text": "Knop: Bestel nu",
+    "tint": "goed"
+   },
+   {
+    "id": "kleine_lettertjes",
+    "text": "Kleine lettertjes en contactgegevens",
+    "tint": "goed"
+   },
+   {
+    "id": "paard",
+    "text": "Een paard",
+    "tint": "fout"
+   },
+   {
+    "id": "cookiebanner",
+    "text": "Cookiebanner (bedekt 70% van het scherm)",
+    "tint": "fout"
+   },
+   {
+    "id": "nieuwsbriefpopup",
+    "text": "Nieuwsbriefpopup (verschijnt na 0,4 seconde)",
+    "tint": "fout"
+   }
+  ],
+  "success": "De pagina staat weer rechtop. Victor kijkt er drie seconden naar en zegt niets over de uitlijning. Dat is zijn hoogste vorm van waardering.",
+  "failure": "Het staat nu anders scheef. Victor ziet het meteen. Victor ziet het altijd. Nog een keer.",
+  "max_fouten": 2
+ },
+ "mg_backend_fix": {
+  "type": "cableboard",
+  "intro": "Product: undefined. Prijs: NaN. Voorraad: null. Ergens tussen de webshop en de database is de draad kwijt. Verbind de lagen weer met elkaar.",
+  "nodes": [
+   {
+    "id": "webshop",
+    "label": "Webshop",
+    "kolom": 0
+   },
+   {
+    "id": "api",
+    "label": "API",
+    "kolom": 1
+   },
+   {
+    "id": "legacy",
+    "label": "Legacy-import 2019",
+    "kolom": 1
+   },
+   {
+    "id": "productservice",
+    "label": "Productservice",
+    "kolom": 2
+   },
+   {
+    "id": "excel",
+    "label": "Excel van de klant (definitief_v4)",
+    "kolom": 2
+   },
+   {
+    "id": "database",
+    "label": "Database",
+    "kolom": 3
+   },
+   {
+    "id": "sheet",
+    "label": "Google Sheet van Willem",
+    "kolom": 3
+   }
+  ],
+  "verbindingen": [
+   [
+    "webshop",
+    "api"
+   ],
+   [
+    "api",
+    "productservice"
+   ],
+   [
+    "productservice",
+    "database"
+   ]
+  ],
+  "afleiders": [
+   [
+    "webshop",
+    "legacy"
+   ],
+   [
+    "api",
+    "excel"
+   ],
+   [
+    "legacy",
+    "excel"
+   ],
+   [
+    "excel",
+    "sheet"
+   ],
+   [
+    "productservice",
+    "sheet"
+   ],
+   [
+    "legacy",
+    "database"
+   ]
+  ],
+  "success": "De webshop praat weer met de database. Er staan echte prijzen op de pagina. Jonathan zegt dat het lokaal al werkte, en dat is ook waar.",
+  "failure": "Je hebt de webshop rechtstreeks aan de Excel van de klant geknoopt. Het werkt. Dat is precies het probleem. Haal die kabel weg en probeer opnieuw."
+ },
+ "mg_cro": {
+  "type": "slotboard",
+  "intro": "De webshop werkt. De conversie is 0,04 procent. Bouw de bovenkant van de pagina: drie posities.",
+  "slots": [
+   {
+    "label": "1. Boven de vouw, eerste blik",
+    "accepts": [
+     "productfoto"
+    ]
+   },
+   {
+    "label": "2. Boven de vouw, waarom dit product",
+    "accepts": [
+     "usps"
+    ]
+   },
+   {
+    "label": "3. Boven de vouw, de actie",
+    "accepts": [
+     "cta"
+    ]
+   }
+  ],
+  "cards": [
+   {
+    "id": "productfoto",
+    "text": "Productfoto",
+    "tint": "goed"
+   },
+   {
+    "id": "usps",
+    "text": "Drie USP's in één regel",
+    "tint": "goed"
+   },
+   {
+    "id": "cta",
+    "text": "Knop: In winkelwagen",
+    "tint": "goed"
+   },
+   {
+    "id": "nieuwsbriefpopup",
+    "text": "Nieuwsbriefpopup",
+    "tint": "fout"
+   },
+   {
+    "id": "autoplay_video",
+    "text": "Autoplay-video met geluid",
+    "tint": "fout"
+   },
+   {
+    "id": "slider_een",
+    "text": "Slider met vier sfeerbeelden",
+    "tint": "fout"
+   },
+   {
+    "id": "slider_drie",
+    "text": "Slider met de sliders erin",
+    "tint": "fout"
+   }
+  ],
+  "success": "De pagina laat eerst het product zien, dan waarom, dan de knop. Danny kijkt naar het scherm en zegt: dit is de eerste versie die iets zou kunnen doen. Van hem is dat lyrisch.",
+  "failure": "Je bezoeker heeft een popup weggeklikt, een video gedempt en drie sliders doorgeklikt. Het product heeft hij nog niet gezien. Nog een keer.",
+  "max_fouten": 2
+ },
+ "mg_muziek": {
+  "type": "tagpicker",
+  "intro": "Er moet een merksound komen. Niemand weet waarom. Het staat in Jira, dus het gebeurt. Kies drie tags en druk op genereren.",
+  "kies": 3,
+  "tags": [
+   {
+    "id": "episch",
+    "label": "episch",
+    "cat": "sfeer"
+   },
+   {
+    "id": "emotioneel",
+    "label": "emotioneel",
+    "cat": "sfeer"
+   },
+   {
+    "id": "vrolijk",
+    "label": "vrolijk",
+    "cat": "sfeer"
+   },
+   {
+    "id": "premium",
+    "label": "premium",
+    "cat": "sfeer"
+   },
+   {
+    "id": "paard",
+    "label": "paard",
+    "cat": "onderwerp"
+   },
+   {
+    "id": "corporate",
+    "label": "corporate",
+    "cat": "onderwerp"
+   },
+   {
+    "id": "reclame",
+    "label": "reclame",
+    "cat": "gebruik"
+   },
+   {
+    "id": "hardstyle",
+    "label": "hardstyle",
+    "cat": "genre"
+   },
+   {
+    "id": "middeleeuws",
+    "label": "middeleeuws",
+    "cat": "genre"
+   },
+   {
+    "id": "panfluit",
+    "label": "panfluit",
+    "cat": "instrument"
+   },
+   {
+    "id": "stadion",
+    "label": "stadion",
+    "cat": "gebruik"
+   },
+   {
+    "id": "lift",
+    "label": "lift",
+    "cat": "gebruik"
+   }
+  ],
+  "resultaten": [
+   {
+    "when_any": [
+     "hardstyle"
+    ],
+    "titel": "Stalgalop (Hardstyle Edit)",
+    "tekst": "150 beats per minuut, met hoefgeluiden op de kick. Danny vindt het geweldig. Dat is geen aanbeveling.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "panfluit"
+    ],
+    "titel": "Zeven minuten panfluit",
+    "tekst": "Het lijkt op een nummer dat je kent, maar net genoeg anders om geen rechtszaak te zijn. Net genoeg.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "middeleeuws"
+    ],
+    "titel": "Ballade van de Vrije Teugel",
+    "tekst": "Luit, tamboerijn en een man die 'paardensupplementen' zingt alsof het een veldslag is.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "stadion"
+    ],
+    "titel": "SUP-PLE-MENT (clap clap)",
+    "tekst": "Veertigduizend mensen scanderen de merknaam. De klant heeft één winkel in Vorden.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "lift"
+    ],
+    "titel": "Wachtmuziek, onbedoeld",
+    "tekst": "Perfect voor in de lift. Bluebird Day heeft geen lift. Niemand heeft ooit om dit nummer gevraagd.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "premium",
+     "emotioneel",
+     "paard",
+     "episch",
+     "corporate",
+     "vrolijk",
+     "reclame"
+    ],
+    "titel": "Merksound v1",
+    "tekst": "Twaalf seconden. Rustige piano, één zachte strijker, een hoefslag op de laatste tel. Het klinkt duur zonder dat iemand kan uitleggen waarom.",
+    "goed": true
+   }
+  ],
+  "eis": "Iets van twaalf seconden dat je zonder uitleg aan mevrouw Van Zutphen kunt laten horen.",
+  "success": "Twaalf seconden merksound. Willem speelt het af in de telefoon en de klant zegt 'oooh'. Dat is de hoogste score die bestaat.",
+  "failure": "Dit gaan we niet aan de klant laten horen. Gooi de tags weg en genereer opnieuw.",
+  "pogingen": 4
+ },
+ "mg_video": {
+  "type": "tagpicker",
+  "intro": "De briefing luidt: een paard dat gelukkig door een weiland rent terwijl het onze supplementen gebruikt. Meer is er niet. Kies drie tags en genereer.",
+  "kies": 3,
+  "tags": [
+   {
+    "id": "paard",
+    "label": "paard",
+    "cat": "onderwerp"
+   },
+   {
+    "id": "weiland",
+    "label": "weiland",
+    "cat": "locatie"
+   },
+   {
+    "id": "supplement",
+    "label": "supplement",
+    "cat": "onderwerp"
+   },
+   {
+    "id": "gelukkig",
+    "label": "gelukkig",
+    "cat": "sfeer"
+   },
+   {
+    "id": "slow_motion",
+    "label": "slow motion",
+    "cat": "camera"
+   },
+   {
+    "id": "rustig_tempo",
+    "label": "rustig tempo",
+    "cat": "camera"
+   },
+   {
+    "id": "zonsondergang",
+    "label": "zonsondergang",
+    "cat": "licht"
+   },
+   {
+    "id": "drone",
+    "label": "drone",
+    "cat": "camera"
+   },
+   {
+    "id": "close_up",
+    "label": "close-up",
+    "cat": "camera"
+   },
+   {
+    "id": "dramatisch",
+    "label": "dramatisch",
+    "cat": "sfeer"
+   },
+   {
+    "id": "mensenhanden",
+    "label": "mensenhanden",
+    "cat": "detail"
+   },
+   {
+    "id": "extra_benen",
+    "label": "extra benen",
+    "cat": "detail"
+   }
+  ],
+  "resultaten": [
+   {
+    "when_any": [
+     "extra_benen"
+    ],
+    "titel": "Paard met zes benen",
+    "tekst": "Het rent inderdaad gelukkig door het weiland. Met zes benen. Twee ervan lopen niet in de maat.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "mensenhanden"
+    ],
+    "titel": "Paard wordt halverwege een mens",
+    "tekst": "Seconde vier: een paard. Seconde vijf: een man in een bodywarmer. Seconde zes: weer een paard. Niemand in de kamer zegt iets.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "close_up"
+    ],
+    "titel": "Supplement met menselijke tanden",
+    "tekst": "Extreme close-up van de verpakking. De verpakking glimlacht. De verpakking heeft een gebit.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "drone"
+    ],
+    "titel": "Zwevend paard",
+    "tekst": "De drone stijgt op. Het paard ook. Het weiland blijft beneden. Het paard lijkt er vrede mee te hebben.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "dramatisch"
+    ],
+    "titel": "Paard op een ander paard",
+    "tekst": "Het onderste paard draagt het bovenste paard door het weiland. Dramatisch: ja. Bruikbaar: nee.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "zonsondergang"
+    ],
+    "titel": "Gigantisch supplement",
+    "tekst": "De zon blijkt het supplement te zijn. Het is veertig meter hoog en het komt op boven het weiland. Het paard kijkt ernaar zoals wij allemaal.",
+    "goed": false
+   },
+   {
+    "when_any": [
+     "paard",
+     "weiland",
+     "supplement",
+     "gelukkig",
+     "slow_motion",
+     "rustig_tempo"
+    ],
+    "titel": "Paard in weiland, take 1",
+    "tekst": "Acht seconden. Eén paard. Vier benen, geteld. Het rent door gras, de verpakking staat rustig in beeld, er gebeurt verder niets. Precies zoals gevraagd.",
+    "goed": true
+   }
+  ],
+  "eis": "Eén paard. Eén weiland. Vier benen. Geen handen. Meer vraagt de klant niet.",
+  "success": "Acht seconden bruikbare video. Iedereen telt nog één keer de benen. Het klopt. Renderen maar.",
+  "failure": "Dit kan niet naar de klant. Genereer opnieuw en laat deze keer de rare tags staan waar ze staan.",
+  "pogingen": 4
+ },
+ "mg_paarden": {
+  "type": "whack",
+  "intro": "Door alle wijzigingen zijn er letterlijk paarden in de build gekomen. Ze staan nu op de verdieping. Sla de bugpaarden weg. Let op: er loopt ook een klantpaard rond.",
+  "doel": 10,
+  "duur": 60,
+  "spawn_start": 1.3,
+  "spawn_min": 0.55,
+  "zichtbaar": 1.5,
+  "straf_tekst": "JE HEBT EEN KLANTPAARD GESLAGEN",
+  "bug_kans": 0.65,
+  "success": "Tien bugpaarden opgeruimd. De build is weer paardvrij, op de paarden na die er horen. Jonathan zet er een ticket voor uit dat dit nooit meer mag gebeuren.",
+  "failure": "De tijd is om en er lopen nog steeds paarden rond. Jonathan zegt dat dit lokaal niet gebeurt. Nog een keer."
+ },
+ "mg_deploy": {
+  "type": "deploy",
+  "intro": "Alles staat klaar. De deployconsole draait de checks. Er is nog precies één ding mis, en dat ding is jouw vakgebied.",
+  "checks": [
+   "Scope",
+   "Frontend",
+   "Backend",
+   "Database",
+   "Conversie",
+   "Content",
+   "Klantakkoord"
+  ],
+  "varianten": {
+   "daan": {
+    "foutcode": "SCOPE NOT APPROVED",
+    "uitleg": "De build bevat drie dingen die niemand heeft afgesproken. De console weigert te deployen tot duidelijk is wat er wel en niet in zit. Dat ben jij.",
+    "mechaniek": "slotboard",
+    "config": {
+     "type": "slotboard",
+     "intro": "Zeg één keer hardop wat er wel in deze release zit en wat niet.",
+     "slots": [
+      {
+       "label": "Wel in deze release",
+       "accepts": [
+        "keuzehulp",
+        "checkout"
+       ]
+      },
+      {
+       "label": "Niet in deze release",
+       "accepts": [
+        "merksound",
+        "video"
+       ]
+      },
+      {
+       "label": "Fase 2",
+       "accepts": [
+        "iets_met_ai"
+       ]
+      }
+     ],
+     "cards": [
+      {
+       "id": "keuzehulp",
+       "text": "Keuzehulp op de productpagina",
+       "tint": "goed"
+      },
+      {
+       "id": "checkout",
+       "text": "Werkende checkout",
+       "tint": "goed"
+      },
+      {
+       "id": "merksound",
+       "text": "Merksound van twaalf seconden",
+       "tint": "neutraal"
+      },
+      {
+       "id": "video",
+       "text": "AI-video met paard",
+       "tint": "neutraal"
+      },
+      {
+       "id": "iets_met_ai",
+       "text": "Iets met AI",
+       "tint": "fout"
+      },
+      {
+       "id": "tweede_webshop",
+       "text": "Een tweede webshop, voor pony's",
+       "tint": "fout"
+      }
+     ],
+     "success": "De scope staat op één A4. Er staat ook op wat er niet in zit. Dat is het belangrijkste deel.",
+     "failure": "De scope groeit terwijl je ernaar kijkt. Nog een keer.",
+     "max_fouten": 2
+    },
+    "success": "SCOPE APPROVED. Iedereen weet nu wat er live gaat. Voor het eerst dit kwartaal."
+   },
+   "victor": {
+    "foutcode": "FRONTEND BUILD FAILED",
+    "uitleg": "De buildpipeline vindt de bundel niet. Ergens tussen jouw code en de browser is een stap losgeraakt. Jij bent de enige die ziet welke.",
+    "mechaniek": "cableboard",
+    "config": {
+     "type": "cableboard",
+     "intro": "Sluit de buildketen weer aan. Drie kabels, meer heb je niet nodig.",
+     "nodes": [
+      {
+       "id": "broncode",
+       "label": "Broncode",
+       "kolom": 0
+      },
+      {
+       "id": "buildstap",
+       "label": "Buildstap",
+       "kolom": 1
+      },
+      {
+       "id": "oude_css",
+       "label": "styles_oud_NIET_GEBRUIKEN.css",
+       "kolom": 1
+      },
+      {
+       "id": "bundel",
+       "label": "Bundel",
+       "kolom": 2
+      },
+      {
+       "id": "node_modules",
+       "label": "node_modules uit 2021",
+       "kolom": 2
+      },
+      {
+       "id": "browser",
+       "label": "Browser",
+       "kolom": 3
+      }
+     ],
+     "verbindingen": [
+      [
+       "broncode",
+       "buildstap"
+      ],
+      [
+       "buildstap",
+       "bundel"
+      ],
+      [
+       "bundel",
+       "browser"
+      ]
+     ],
+     "afleiders": [
+      [
+       "broncode",
+       "oude_css"
+      ],
+      [
+       "oude_css",
+       "bundel"
+      ],
+      [
+       "node_modules",
+       "browser"
+      ]
+     ],
+     "success": "De build loopt door. Groen.",
+     "failure": "De build faalt op regel 1 van een bestand dat niemand heeft geschreven. Nog een keer."
+    },
+    "success": "FRONTEND BUILD PASSED. De pagina staat recht in elke browser. Ook in die ene."
+   },
+   "jonathan": {
+    "foutcode": "PRODUCTION DATABASE CONNECTION FAILED",
+    "uitleg": "De applicatie praat met een database. Alleen niet met die van productie. Dat werkt lokaal prima, en dat is exact het probleem.",
+    "mechaniek": "cableboard",
+    "config": {
+     "type": "cableboard",
+     "intro": "Verbind de applicatie met de echte productiedatabase. Drie kabels.",
+     "nodes": [
+      {
+       "id": "applicatie",
+       "label": "Applicatie",
+       "kolom": 0
+      },
+      {
+       "id": "connectie_prod",
+       "label": "Connectiestring PRODUCTIE",
+       "kolom": 1
+      },
+      {
+       "id": "connectie_local",
+       "label": "Connectiestring localhost",
+       "kolom": 1
+      },
+      {
+       "id": "dbserver",
+       "label": "Databaseserver",
+       "kolom": 2
+      },
+      {
+       "id": "laptop_koen",
+       "label": "De laptop van Koen",
+       "kolom": 2
+      },
+      {
+       "id": "productiedb",
+       "label": "Productiedatabase",
+       "kolom": 3
+      },
+      {
+       "id": "testdb",
+       "label": "Testdatabase (bevat 4 paarden)",
+       "kolom": 3
+      }
+     ],
+     "verbindingen": [
+      [
+       "applicatie",
+       "connectie_prod"
+      ],
+      [
+       "connectie_prod",
+       "dbserver"
+      ],
+      [
+       "dbserver",
+       "productiedb"
+      ]
+     ],
+     "afleiders": [
+      [
+       "applicatie",
+       "connectie_local"
+      ],
+      [
+       "connectie_local",
+       "laptop_koen"
+      ],
+      [
+       "dbserver",
+       "testdb"
+      ],
+      [
+       "laptop_koen",
+       "productiedb"
+      ]
+     ],
+     "success": "Verbinding staat. Echte producten, echte prijzen, echte voorraad.",
+     "failure": "Je hangt aan de testdatabase. De webshop verkoopt nu vier paarden. Nog een keer."
+    },
+    "success": "DATABASE CONNECTED. Het werkt niet alleen lokaal. Schrijf die dag op."
+   },
+   "danny": {
+    "foutcode": "CHECKOUT CONVERSION CRITICAL",
+    "uitleg": "De pagina mag live, maar in de laatste stap haakt bijna iedereen af. De console vraagt om één beslissing van iemand die naar gedrag kijkt in plaats van naar meningen.",
+    "mechaniek": "choicescene",
+    "config": {
+     "type": "choicescene",
+     "intro": "Van de honderd mensen die op bestellen klikken, ronden er drie af. Je hebt één ingreep voordat dit live gaat.",
+     "rondes": [
+      {
+       "prompt": "Wat doe je met de checkout, nu meteen?",
+       "opties": [
+        {
+         "tekst": "Verplicht account aanmaken eruit, afrekenen als gast erin.",
+         "punten": 3,
+         "reactie": "De grootste drempel in de trechter, in één keer weg. Dit is de ingreep."
+        },
+        {
+         "tekst": "Verzendkosten in stap 1 tonen in plaats van in stap 4.",
+         "punten": 2,
+         "reactie": "Ook goed. Niemand houdt van een verrassing van 6,95 op het laatste moment."
+        },
+        {
+         "tekst": "De knop groter en groener maken.",
+         "punten": 1,
+         "reactie": "Dat is geen ingreep, dat is een gevoel."
+        },
+        {
+         "tekst": "Een kortingspopup over de checkout heen.",
+         "punten": 0,
+         "reactie": "Je hebt een deur dichtgezet en er een bordje op geplakt."
+        }
+       ]
+      }
+     ],
+     "drempel": 2,
+     "success": "Eén ingreep, gebaseerd op waar mensen daadwerkelijk afhaken.",
+     "failure": "De trechter is nog steeds een trechter. Kies opnieuw."
+    },
+    "success": "CONVERSION OK. Nog niet goed, maar meetbaar en de goede kant op. Dat is wat je hebt."
+   },
+   "willem": {
+    "foutcode": "CLIENT APPROVAL REQUIRED",
+    "uitleg": "Technisch is alles klaar. Er ontbreekt één ja. Mevrouw Van Zutphen is aan de telefoon en heeft nog één vraag. Dit is jouw hokje.",
+    "mechaniek": "choicescene",
+    "config": {
+     "type": "choicescene",
+     "intro": "'Ik wil het wel eerst nog even ergens door laten kijken. Kan het maandag ook?' De deployconsole staat te wachten.",
+     "rondes": [
+      {
+       "prompt": "Wat zeg je?",
+       "opties": [
+        {
+         "tekst": "Dat kan. Dan zetten we hem nu live en houden we hem tot maandag alleen voor u zichtbaar.",
+         "punten": 3,
+         "reactie": "Ze krijgt haar controle, jij krijgt je deploy. Niemand levert iets in."
+        },
+        {
+         "tekst": "Wat wilt u precies laten checken? Dan doen we dat vandaag nog samen.",
+         "punten": 2,
+         "reactie": "'Nou, eigenlijk vooral of de prijzen kloppen.' Dat duurt vier minuten."
+        },
+        {
+         "tekst": "Maandag kan, maar dan schuift de rest ook een week op.",
+         "punten": 1,
+         "reactie": "Waar. Ook een beetje dreigend. Ze aarzelt."
+        },
+        {
+         "tekst": "Nee, het moet nu.",
+         "punten": 0,
+         "reactie": "Stilte aan de andere kant. Willem, dit is niet hoe jij praat."
+        }
+       ]
+      }
+     ],
+     "drempel": 2,
+     "success": "'Doe maar.' Twee woorden. Daar heb je het hele project op gewacht.",
+     "failure": "Ze wil er nog even over nadenken. Bel terug en probeer het anders."
+    },
+    "success": "CLIENT APPROVED. Er is een ja. Op schrift zelfs. Deploy maar."
+   }
+  }
+ }
+}

@@ -1,0 +1,58 @@
+{
+  "available_when": {
+    "tickets_done": [
+      "t01"
+    ]
+  },
+  "requirements": {},
+  "dialogue_ids": {
+    "offer": "t02_offer",
+    "fetch": "t02_fetch",
+    "recruit": "t02_recruit",
+    "complete": "t02_complete",
+    "fail": "t02_fail",
+    "done": "t02_done"
+  },
+  "minigame_config": {},
+  "reward_effects": [
+    {
+      "op": "add_item",
+      "item": "planning"
+    },
+    {
+      "op": "toast",
+      "text": "BBD-202 opgelost. Je staat op de planning. Op dit project."
+    },
+    {
+      "op": "cue",
+      "cue": "ticket_klaar"
+    }
+  ],
+  "unlocks": [
+    "t03"
+  ],
+  "world_changes": [
+    {
+      "op": "set_text",
+      "target": "scrumbord_gang",
+      "value": "SPRINT 14: Webshop paardensupplementen"
+    },
+    {
+      "op": "camera_focus",
+      "target": "scrumbord_gang",
+      "hold": 1.4
+    }
+  ],
+  "hint": "Het scrumbord hangt achter de bureaus, aan de zuidwand.",
+  "id": "t02",
+  "code": "BBD-202",
+  "order": 2,
+  "title": "Waarom sta ik hier eigenlijk?",
+  "summary": "Jij staat niet op de planning. Of je staat er drie keer op. Dennis weet het ook niet meer.",
+  "anchor": "scrumbord_gang",
+  "owner_character": "daan",
+  "owner_role": "Product Owner",
+  "minigame_id": "mg_planning",
+  "zone": "z9_vloer",
+  "zone_name": "De Vloer"
+}

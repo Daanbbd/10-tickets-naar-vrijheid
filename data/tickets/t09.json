@@ -1,0 +1,50 @@
+{
+  "available_when": {
+    "tickets_done": [
+      "t07",
+      "t08"
+    ]
+  },
+  "requirements": {},
+  "dialogue_ids": {
+    "offer": "t09_offer",
+    "fetch": "t09_fetch",
+    "recruit": "t09_recruit",
+    "complete": "t09_complete",
+    "fail": "t09_fail",
+    "done": "t09_done"
+  },
+  "minigame_config": {},
+  "reward_effects": [
+    {
+      "op": "toast",
+      "text": "BBD-209 opgelost. De paarden staan in de vergaderruimte."
+    },
+    {
+      "op": "cue",
+      "cue": "ticket_klaar"
+    }
+  ],
+  "unlocks": [
+    "t10"
+  ],
+  "world_changes": [
+    {
+      "op": "set_text",
+      "target": "vergadertafel",
+      "value": "Bezet: 8 pony's"
+    }
+  ],
+  "hint": "Ze zijn overal. Je vindt ze vanzelf.",
+  "id": "t09",
+  "code": "BBD-209",
+  "order": 9,
+  "title": "Er lopen paardenbugs door het kantoor",
+  "summary": "Door alle wijzigingen zijn er letterlijk paarden in de build gekomen. Ze staan nu op de verdieping.",
+  "anchor": "scrumbord_gang",
+  "owner_character": "jonathan",
+  "owner_role": "Backend developer",
+  "minigame_id": "mg_paarden",
+  "zone": "z9_vloer",
+  "zone_name": "De Vloer"
+}

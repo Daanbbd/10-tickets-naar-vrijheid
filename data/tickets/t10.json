@@ -1,0 +1,60 @@
+{
+  "available_when": {
+    "tickets_done": [
+      "t09"
+    ]
+  },
+  "requirements": {
+    "has_item": [
+      "deploysleutel"
+    ]
+  },
+  "dialogue_ids": {
+    "offer": "t10_offer",
+    "blocked": "t10_blocked",
+    "complete": "t10_complete",
+    "fail": "t10_fail",
+    "done": "t10_done"
+  },
+  "minigame_config": {},
+  "reward_effects": [
+    {
+      "op": "toast",
+      "text": "DEPLOYMENT SUCCESSFUL"
+    },
+    {
+      "op": "cue",
+      "cue": "deploy_ok"
+    }
+  ],
+  "unlocks": [],
+  "world_changes": [
+    {
+      "op": "set_text",
+      "target": "deploycomputer",
+      "value": "productie: live"
+    },
+    {
+      "op": "set_locked",
+      "target": "voordeur",
+      "value": false
+    },
+    {
+      "op": "camera_focus",
+      "target": "deploycomputer",
+      "hold": 1.4
+    }
+  ],
+  "hint": "De deploymentcomputer staat in Birdhouse. Je hebt de deploysleutel uit de plantenkast nodig.",
+  "id": "t10",
+  "code": "BBD-210",
+  "order": 10,
+  "title": "Naar productie",
+  "summary": "Alles staat klaar. Er is nog precies een ding mis, en dat ding is jouw vakgebied.",
+  "anchor": "deploycomputer",
+  "owner_character": "",
+  "owner_role": "",
+  "minigame_id": "mg_deploy",
+  "zone": "z7_birdhouse",
+  "zone_name": "Birdhouse"
+}

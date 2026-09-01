@@ -1,0 +1,143 @@
+[
+ {
+  "id": "daan",
+  "name": "Daan",
+  "role": "Product Owner",
+  "tagline": "Bewaakt de scope. Verliest de scope.",
+  "description": "Jij vertaalt wensen naar user stories. Iedereen denkt dat jij beslist. Jij denkt dat de klant beslist. De klant denkt dat jij het al gebouwd hebt.",
+  "traits": [
+   "proces",
+   "commercieel"
+  ],
+  "specialisms": [
+   "Requirements",
+   "User stories",
+   "Scope",
+   "Prioriteiten",
+   "Klantfeedback"
+  ],
+  "owned_tickets": [
+   "t01",
+   "t02"
+  ],
+  "finale_id": "scope_not_approved",
+  "color": "#2b2b30",
+  "skin": "#dcae86",
+  "hair": "#2a2320",
+  "sheet": "beard",
+  "portrait": "res://assets/sprites/portraits/daan.png",
+  "accent": "#f4a259"
+ },
+ {
+  "id": "danny",
+  "name": "Danny",
+  "role": "CRO-specialist",
+  "tagline": "Alles is een funnel. Ook de gang.",
+  "description": "Jij kijkt naar gedrag, niet naar meningen. Je hebt ooit een vergadering met een A/B-test gewonnen en dat is nooit meer goedgekomen.",
+  "traits": [
+   "data",
+   "commercieel"
+  ],
+  "specialisms": [
+   "Conversie",
+   "Klantgedrag",
+   "Optimalisatie",
+   "Analytics"
+  ],
+  "owned_tickets": [
+   "t06",
+   "t07"
+  ],
+  "finale_id": "checkout_conversion_critical",
+  "color": "#26262b",
+  "skin": "#eec39a",
+  "hair": "#c9a86a",
+  "sheet": "plain",
+  "portrait": "res://assets/sprites/portraits/danny.png",
+  "accent": "#43aa8b"
+ },
+ {
+  "id": "victor",
+  "name": "Victor",
+  "role": "Frontend developer",
+  "tagline": "Het staat scheef en hij ziet het altijd.",
+  "description": "Jij bouwt wat anderen bedenken. Je vraagt niet of iets kan, je vraagt of iemand het heeft nagedacht. Meestal niet.",
+  "traits": [
+   "technisch",
+   "detail"
+  ],
+  "specialisms": [
+   "Interface",
+   "Frontend",
+   "Styling",
+   "Browserproblemen"
+  ],
+  "owned_tickets": [
+   "t04",
+   "t08"
+  ],
+  "finale_id": "frontend_build_failed",
+  "color": "#3a3a40",
+  "skin": "#f0c49a",
+  "hair": "#cf8a48",
+  "sheet": "curly",
+  "portrait": "res://assets/sprites/portraits/victor.png",
+  "accent": "#5b8def"
+ },
+ {
+  "id": "jonathan",
+  "name": "Jonathan",
+  "role": "Backend developer",
+  "tagline": "Werkt lokaal. Dat is ook iets.",
+  "description": "Jij houdt de dingen overeind die niemand ziet. Als jouw werk opvalt, is er iets kapot.",
+  "traits": [
+   "technisch",
+   "data"
+  ],
+  "specialisms": [
+   "API",
+   "Database",
+   "Backend",
+   "Deployment",
+   "Technische systemen"
+  ],
+  "owned_tickets": [
+   "t05",
+   "t09"
+  ],
+  "finale_id": "production_database_connection_failed",
+  "color": "#2f4750",
+  "skin": "#d6a578",
+  "hair": "#1b1a1c",
+  "sheet": "glasses",
+  "portrait": "res://assets/sprites/portraits/jonathan.png",
+  "accent": "#9b5de5"
+ },
+ {
+  "id": "willem",
+  "name": "Willem",
+  "role": "Client Lead",
+  "tagline": "Regelt het. Vraag niet hoe.",
+  "description": "Jij praat met de klant zodat niemand anders dat hoeft. Je zegt zelden nee, maar je zegt het net zo lang ja tot het iets anders betekent.",
+  "traits": [
+   "commercieel",
+   "sociaal"
+  ],
+  "specialisms": [
+   "Klanten",
+   "Overtuigen",
+   "Communicatie",
+   "Commerciele problemen"
+  ],
+  "owned_tickets": [
+   "t03"
+  ],
+  "finale_id": "client_approval_required",
+  "color": "#ddd8cc",
+  "skin": "#f0cba8",
+  "hair": "#a07840",
+  "sheet": "buttons",
+  "portrait": "res://assets/sprites/portraits/willem.png",
+  "accent": "#e05263"
+ }
+]

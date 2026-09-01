@@ -1,0 +1,57 @@
+{
+  "available_when": {
+    "tickets_done": [
+      "t06"
+    ]
+  },
+  "requirements": {},
+  "dialogue_ids": {
+    "offer": "t08_offer",
+    "fetch": "t08_fetch",
+    "recruit": "t08_recruit",
+    "complete": "t08_complete",
+    "fail": "t08_fail",
+    "done": "t08_done"
+  },
+  "minigame_config": {},
+  "reward_effects": [
+    {
+      "op": "add_item",
+      "item": "videobestand"
+    },
+    {
+      "op": "toast",
+      "text": "BBD-208 opgelost. De video is bruikbaar. Grotendeels."
+    },
+    {
+      "op": "cue",
+      "cue": "ticket_klaar"
+    }
+  ],
+  "unlocks": [
+    "t09"
+  ],
+  "world_changes": [
+    {
+      "op": "set_text",
+      "target": "scherm_entree",
+      "value": "Nu te zien: paard in weiland (4 benen)"
+    },
+    {
+      "op": "spawn_npc",
+      "npc": "bezorger"
+    }
+  ],
+  "hint": "De iPad ligt in het vergaderhokje, midden in de gang.",
+  "id": "t08",
+  "code": "BBD-208",
+  "order": 8,
+  "title": "De klant wil een AI-video",
+  "summary": "Een paard dat gelukkig door een weiland rent terwijl het onze supplementen gebruikt. Meer briefing is er niet.",
+  "anchor": "hokje_ipad",
+  "owner_character": "victor",
+  "owner_role": "Frontend developer",
+  "minigame_id": "mg_video",
+  "zone": "z8_hokje",
+  "zone_name": "Het Vergaderhokje"
+}

@@ -1,0 +1,63 @@
+{
+  "available_when": {
+    "tickets_done": [
+      "t02"
+    ]
+  },
+  "requirements": {},
+  "dialogue_ids": {
+    "offer": "t03_offer",
+    "fetch": "t03_fetch",
+    "recruit": "t03_recruit",
+    "complete": "t03_complete",
+    "fail": "t03_fail",
+    "done": "t03_done"
+  },
+  "minigame_config": {},
+  "reward_effects": [
+    {
+      "op": "add_item",
+      "item": "klantfeedback"
+    },
+    {
+      "op": "toast",
+      "text": "BBD-203 opgelost. De feedback is vertaald naar iets uitvoerbaars."
+    },
+    {
+      "op": "cue",
+      "cue": "ticket_klaar"
+    }
+  ],
+  "unlocks": [
+    "t04",
+    "t05"
+  ],
+  "world_changes": [
+    {
+      "op": "set_text",
+      "target": "receptiebalie",
+      "value": "Bezoek: afgerond"
+    },
+    {
+      "op": "despawn_npc",
+      "npc": "klant"
+    },
+    {
+      "op": "camera_focus",
+      "target": "receptiebalie",
+      "hold": 1.4
+    }
+  ],
+  "hint": "De klant wacht bij de receptie.",
+  "id": "t03",
+  "code": "BBD-203",
+  "order": 3,
+  "title": "De klant heeft feedback",
+  "summary": "Mevrouw Van Zutphen zit in de entree. Ze heeft elf punten. Drie ervan spreken elkaar tegen.",
+  "anchor": "receptiebalie",
+  "owner_character": "willem",
+  "owner_role": "Client Lead",
+  "minigame_id": "mg_klantfeedback",
+  "zone": "z1_entree",
+  "zone_name": "Entree"
+}

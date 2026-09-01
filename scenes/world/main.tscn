@@ -1,0 +1,52 @@
+[gd_scene load_steps=9 format=3 uid="uid://cmain10t"]
+
+[ext_resource type="Script" path="res://scripts/world/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/entities/npc_layer.gd" id="2_npcs"]
+[ext_resource type="Script" path="res://scripts/world/game_camera.gd" id="3_cam"]
+[ext_resource type="Script" path="res://scripts/world/world_registry.gd" id="4_reg"]
+[ext_resource type="Script" path="res://scripts/world/world_mutator.gd" id="5_mut"]
+[ext_resource type="Script" path="res://scripts/world/ticket_controller.gd" id="6_tick"]
+[ext_resource type="Script" path="res://scripts/ui/dialogue_controller.gd" id="7_dlg"]
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="8_hud"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="World" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Ground" type="TileMapLayer" parent="World"]
+z_index = -10
+
+[node name="Solid" type="TileMapLayer" parent="World"]
+y_sort_enabled = true
+
+[node name="Objects" type="Node2D" parent="World"]
+y_sort_enabled = true
+
+[node name="Entities" type="Node2D" parent="World"]
+y_sort_enabled = true
+
+[node name="Npcs" type="Node2D" parent="World/Entities"]
+y_sort_enabled = true
+script = ExtResource("2_npcs")
+
+[node name="Licht" type="CanvasModulate" parent="."]
+
+[node name="GameCamera" type="Camera2D" parent="."]
+script = ExtResource("3_cam")
+
+[node name="WorldRegistry" type="Node" parent="."]
+script = ExtResource("4_reg")
+
+[node name="WorldMutator" type="Node" parent="."]
+script = ExtResource("5_mut")
+
+[node name="TicketController" type="Node" parent="."]
+script = ExtResource("6_tick")
+
+[node name="DialogueController" type="Node" parent="."]
+script = ExtResource("7_dlg")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("8_hud")

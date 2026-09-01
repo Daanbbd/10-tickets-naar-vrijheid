@@ -1,0 +1,2193 @@
+{
+  "t01_offer": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Op de vergadertafel ligt een A4. Er staat een zin op. Nergens een 'zodat'.",
+        "next": "reactie"
+      },
+      "reactie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Ik heb dit zelf opgeschreven. Tussen twee gesprekken door. Dat is te zien."
+          },
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Ik kan dit bouwen. Ik weet alleen niet wat 'dit' is."
+          },
+          {
+            "when": {
+              "trait": [
+                "data"
+              ]
+            },
+            "text": "Er staat geen doel in. Dan valt er straks niets te meten."
+          },
+          {
+            "text": "Dit is geen user story. Dit is een wens."
+          }
+        ],
+        "next": "duiding"
+      },
+      "duiding": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "speaker": "",
+            "text": "Niemand spreekt je tegen. Dat is het vervelende aan Product Owner zijn."
+          },
+          {
+            "speaker": "daan",
+            "text": "Het is een wens. Van de klant. Dus het is een risico."
+          }
+        ],
+        "next": "aanpak"
+      },
+      "aanpak": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Dan schrijf ik hem nu opnieuw. Met een 'zodat'."
+          },
+          {
+            "text": "Dan maken we er een zin van waar iemand iets aan heeft."
+          }
+        ]
+      }
+    }
+  },
+  "t01_fetch": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Het A4 ligt er nog. Eén zin. Jij mag hier eigenlijk niets van vinden.",
+        "next": "wie"
+      },
+      "wie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Ik kan het bouwen. Ik kan het niet bedenken. Daar is Daan voor."
+          },
+          {
+            "text": "Scope is van Daan. Ik ga hem halen."
+          }
+        ]
+      }
+    }
+  },
+  "t01_recruit": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "daan",
+        "text": "Wat ligt er?",
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "speaker": "speler",
+        "text": "Eén zin.",
+        "next": "oordeel"
+      },
+      "oordeel": {
+        "speaker": "daan",
+        "text": "Dan is het geen story. Ait. Ik loop mee."
+      }
+    }
+  },
+  "t01_complete": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Er staat nu een 'zodat' in. Dit is letterlijk waar ik voor word betaald."
+          },
+          {
+            "speaker": "daan",
+            "text": "Er staat nu een 'zodat' in. Dat is mijn hele vak, in vijf letters."
+          }
+        ],
+        "next": "gevolg"
+      },
+      "gevolg": {
+        "speaker": "",
+        "text": "Op het whiteboard staat één zin. Iedereen leest hem twee keer. Niemand vraagt iets.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Nu kan ik het bouwen."
+          },
+          {
+            "when": {
+              "trait": [
+                "commercieel"
+              ]
+            },
+            "text": "Nu kan ik het uitleggen aan de klant."
+          },
+          {
+            "text": "Dat is dan afgesproken."
+          }
+        ]
+      }
+    }
+  },
+  "t01_fail": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Er staan nu twee wensen in één zin. Dat heet een epic. Dat is erger."
+          },
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Dit is nog steeds niet te bouwen."
+          },
+          {
+            "speaker": "",
+            "text": "De zin is langer geworden. Duidelijker is hij niet."
+          }
+        ],
+        "next": "nog"
+      },
+      "nog": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "speaker": "",
+            "text": "Je pakt de stift terug."
+          },
+          {
+            "speaker": "daan",
+            "text": "Nog een keer. Korter."
+          }
+        ]
+      }
+    }
+  },
+  "t01_done": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Op het whiteboard staat een echte user story. Iemand heeft er een hartje bij getekend."
+      }
+    }
+  },
+  "t02_offer": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Op het scrumbord staat jouw naam drie keer. Twee keer bij een project dat vorig jaar is opgeleverd.",
+        "next": "reactie"
+      },
+      "reactie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Ik heb deze planning zelf gemaakt. Dat wil ik even benoemd hebben."
+          },
+          {
+            "when": {
+              "trait": [
+                "data"
+              ]
+            },
+            "text": "Drie keer ingepland, één persoon. Dat is driehonderd procent bezetting."
+          },
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Ik sta op een project dat niet meer bestaat."
+          },
+          {
+            "text": "Sta ik hier nou wel of niet?"
+          }
+        ],
+        "next": "dennis"
+      },
+      "dennis": {
+        "speaker": "dennis",
+        "text": "Dat is bewust. Dat heet flexibel plannen.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "text": "Ik wil op één project staan. Dit project."
+      }
+    }
+  },
+  "t02_fetch": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Het bord hangt scheef. Jouw naam staat er drie keer op.",
+        "next": "wie"
+      },
+      "wie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Ik ga geen kaartjes verplaatsen. Dat is van Daan."
+          },
+          {
+            "text": "De planning is van Daan. Zonder hem verschuif ik hier niets."
+          }
+        ]
+      }
+    }
+  },
+  "t02_recruit": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "daan",
+        "text": "Wat is er met de planning?",
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "speaker": "speler",
+        "text": "Ik sta er drie keer op.",
+        "next": "oordeel"
+      },
+      "oordeel": {
+        "speaker": "daan",
+        "text": "Dat is twee keer te veel of drie keer te weinig. Ait, ik loop mee."
+      }
+    }
+  },
+  "t02_complete": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Eén naam, één project, één sprint. Dit is mijn werk in drie woorden."
+          },
+          {
+            "speaker": "daan",
+            "text": "Eén naam, één project, één sprint. Meer is het niet."
+          }
+        ],
+        "next": "dennis"
+      },
+      "dennis": {
+        "speaker": "dennis",
+        "text": "Mooi. Ik zet hem ook in de tool. Daar staat hij dan anders.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "proces"
+              ]
+            },
+            "text": "Dan passen we de tool aan."
+          },
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Dan is de tool stuk."
+          },
+          {
+            "text": "Daar kijken we later naar."
+          }
+        ]
+      }
+    }
+  },
+  "t02_fail": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Ik sta nu op vier projecten. Dat is groei."
+          },
+          {
+            "when": {
+              "trait": [
+                "data"
+              ]
+            },
+            "speaker": "speler",
+            "text": "De bezetting staat nu op vierhonderd procent. Dat is meetbaar fout."
+          },
+          {
+            "speaker": "",
+            "text": "Je staat nu op vier projecten. Eén daarvan is de kerstborrel."
+          }
+        ],
+        "next": "dennis"
+      },
+      "dennis": {
+        "speaker": "dennis",
+        "text": "Zullen we opnieuw beginnen? Zonder oordeel."
+      }
+    }
+  },
+  "t02_done": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Op het bord staat SPRINT 14. Jouw naam staat er één keer op. Dat blijft wennen."
+      }
+    }
+  },
+  "t03_offer": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "klant",
+        "text": "Ik heb even wat puntjes opgeschreven. Het zijn er niet veel.",
+        "next": "telling"
+      },
+      "telling": {
+        "speaker": "",
+        "text": "Het zijn er elf.",
+        "next": "punten"
+      },
+      "punten": {
+        "speaker": "klant",
+        "text": "Het logo mag groter. Maar niet te groot. En het moet premium worden. Maar ook speels.",
+        "choices": [
+          {
+            "text": "Vragen welk punt het belangrijkst is.",
+            "next": "prioriteit",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "klant_prioriteit",
+                "value": true
+              }
+            ]
+          },
+          {
+            "text": "Vragen wat haar man ervan vindt.",
+            "next": "echtgenoot",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "klant_echtgenoot",
+                "value": true
+              }
+            ]
+          },
+          {
+            "text": "Niets zeggen. Alles opschrijven.",
+            "next": "stilte"
+          }
+        ]
+      },
+      "prioriteit": {
+        "speaker": "klant",
+        "text": "Ze zijn allemaal even belangrijk. Punt zeven is iets belangrijker.",
+        "next": "slot"
+      },
+      "echtgenoot": {
+        "speaker": "klant",
+        "text": "Mijn man vindt blauw mooier. Mijn man heeft een hoveniersbedrijf.",
+        "next": "slot"
+      },
+      "stilte": {
+        "speaker": "",
+        "text": "Je schrijft elf punten over. Mevrouw Van Zutphen vindt dat een prettige werkwijze.",
+        "next": "slot"
+      },
+      "slot": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Wij gaan hiermee aan de slag. In deze volgorde."
+          },
+          {
+            "speaker": "willem",
+            "text": "Wij gaan hiermee aan de slag. In een volgorde."
+          }
+        ]
+      }
+    }
+  },
+  "t03_fetch": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Mevrouw Van Zutphen kijkt op. Ze heeft een mapje bij zich.",
+        "next": "wie"
+      },
+      "wie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Ik ga hier niets zeggen. Ik haal Willem."
+          },
+          {
+            "text": "Klanten zijn van Willem. Ik ga hem halen."
+          }
+        ]
+      }
+    }
+  },
+  "t03_recruit": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "willem",
+        "text": "Zit ze er al?",
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "speaker": "speler",
+        "text": "Met een mapje.",
+        "next": "oordeel"
+      },
+      "oordeel": {
+        "speaker": "willem",
+        "text": "Dan zijn het elf punten. Absoluta. Ik kom eraan."
+      }
+    }
+  },
+  "t03_complete": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Elf punten, vier acties. Hier besta ik voor."
+          },
+          {
+            "speaker": "willem",
+            "text": "Elf punten, vier acties. De rest was twee keer hetzelfde punt."
+          }
+        ],
+        "next": "klantregel"
+      },
+      "klantregel": {
+        "speaker": "klant",
+        "text": "Fijn dat u zo goed luistert.",
+        "next": "slot"
+      },
+      "slot": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "speaker": "",
+            "text": "Je hebt niet alles beloofd. Voor jou is dat een goede dag."
+          },
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Ik ga terug naar iets dat gewoon een foutmelding geeft."
+          },
+          {
+            "speaker": "speler",
+            "text": "Ze heeft ja gezegd. Volgens mij."
+          }
+        ]
+      }
+    }
+  },
+  "t03_fail": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Ik heb punt vier en punt negen allebei toegezegd. Die sluiten elkaar uit."
+          },
+          {
+            "speaker": "",
+            "text": "Punt vier en punt negen zijn allebei doorgevoerd. Ze sluiten elkaar uit."
+          }
+        ],
+        "next": "klantregel"
+      },
+      "klantregel": {
+        "speaker": "klant",
+        "text": "Het logo is nu groter en kleiner. Dat is knap.",
+        "next": "nog"
+      },
+      "nog": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Ik doe het opnieuw. En nu kies ik."
+          },
+          {
+            "speaker": "willem",
+            "text": "Nog een keer. En nu kiezen we."
+          }
+        ]
+      }
+    }
+  },
+  "t03_done": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "De receptie is leeg. Het mapje ligt er nog. Niemand raakt het aan."
+      }
+    }
+  },
+  "t04_offer": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Op de wandmonitor staat de staging. Het paard staat boven de header.",
+        "next": "cta"
+      },
+      "cta": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "speaker": "speler",
+            "text": "En de CTA staat onder de footer. Dan is het geen CTA meer, maar een voetnoot."
+          },
+          {
+            "speaker": "victor",
+            "text": "En de CTA staat onder de footer. Dan is het geen CTA meer, maar een voetnoot."
+          }
+        ],
+        "next": "foto"
+      },
+      "foto": {
+        "speaker": "",
+        "text": "De productfoto is 4000 pixels breed. De pagina laadt in elf seconden.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Ik weet precies welke regel dit is. Ik weet ook wie hem heeft geschreven."
+          },
+          {
+            "when": {
+              "trait": [
+                "data"
+              ]
+            },
+            "text": "Elf seconden. Daar wacht niemand op."
+          },
+          {
+            "text": "Kom, we zetten het recht."
+          }
+        ]
+      }
+    }
+  },
+  "t04_fetch": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Het paard staat boven de header. Het kijkt je aan.",
+        "next": "wie"
+      },
+      "wie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Ik kan CSS lezen. Ik kan deze CSS niet lezen. Ik haal Victor."
+          },
+          {
+            "text": "Dit is frontend. Dus dit is Victor."
+          }
+        ]
+      }
+    }
+  },
+  "t04_recruit": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "victor",
+        "text": "Welke pagina?",
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "speaker": "speler",
+        "text": "De productpagina.",
+        "next": "oordeel"
+      },
+      "oordeel": {
+        "speaker": "victor",
+        "text": "Godver. Ik weet het al. Ff kijken, ik loop mee."
+      }
+    }
+  },
+  "t04_complete": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Header boven, CTA in beeld, foto van 900 pixels. Dit is mijn werk en nu is het stil."
+          },
+          {
+            "speaker": "victor",
+            "text": "Header boven, CTA in beeld, foto van 900 pixels. Zo hoort het."
+          }
+        ],
+        "next": "monitor"
+      },
+      "monitor": {
+        "speaker": "",
+        "text": "Op de wandmonitor staat: layout OK.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "data"
+              ]
+            },
+            "text": "Van elf seconden naar twee. Dat scheelt de mensen die anders weglopen."
+          },
+          {
+            "when": {
+              "trait": [
+                "proces"
+              ]
+            },
+            "text": "Dan kan dit naar de review."
+          },
+          {
+            "text": "Het staat recht."
+          }
+        ]
+      }
+    }
+  },
+  "t04_fail": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Nu staat het paard náást de header. Technisch gezien is dat vooruitgang."
+          },
+          {
+            "speaker": "",
+            "text": "Het paard staat nu naast de header. De footer is verdwenen."
+          }
+        ],
+        "next": "nog"
+      },
+      "nog": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "speaker": "",
+            "text": "Je opent het bestand opnieuw. Je zegt niets."
+          },
+          {
+            "speaker": "victor",
+            "text": "Terug. En nu één ding tegelijk."
+          }
+        ]
+      }
+    }
+  },
+  "t04_done": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "De pagina staat recht. Victor kijkt er nog steeds naar alsof dat tijdelijk is."
+      }
+    }
+  },
+  "t05_offer": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Op het schermpje van het rack: Product: undefined. Prijs: NaN. Voorraad: null.",
+        "next": "lokaal"
+      },
+      "lokaal": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Lokaal werkt het."
+          },
+          {
+            "speaker": "jonathan",
+            "text": "Lokaal werkt het."
+          }
+        ],
+        "next": "weerwoord"
+      },
+      "weerwoord": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "speaker": "",
+            "text": "Je hoort jezelf het zeggen. Het helpt niet."
+          },
+          {
+            "speaker": "speler",
+            "text": "De klant zit niet op jouw laptop."
+          }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Ik volg de datastroom terug. Dit is letterlijk mijn werk."
+          },
+          {
+            "when": {
+              "trait": [
+                "data"
+              ]
+            },
+            "speaker": "speler",
+            "text": "NaN is geen prijs. NaN is een excuus."
+          },
+          {
+            "speaker": "jonathan",
+            "text": "Geef me twee minuten en niemand die meekijkt."
+          }
+        ]
+      }
+    }
+  },
+  "t05_fetch": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Het rack zoemt. Op het schermpje staat NaN.",
+        "next": "wie"
+      },
+      "wie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Ik kom niet verder dan het zoemen. Jonathan wel."
+          },
+          {
+            "text": "Dit is backend. Dus dit is Jonathan."
+          }
+        ]
+      }
+    }
+  },
+  "t05_recruit": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "jonathan",
+        "text": "Wat staat er?",
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "speaker": "speler",
+        "text": "Undefined, NaN en null.",
+        "next": "oordeel"
+      },
+      "oordeel": {
+        "speaker": "jonathan",
+        "text": "Alle drie. Moet zeggen dat dat bijna netjes is. Ik ga er naartoe kijken."
+      }
+    }
+  },
+  "t05_complete": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Vier producten, echte prijzen, echte voorraad. Als mijn werk opvalt is er iets stuk."
+          },
+          {
+            "speaker": "jonathan",
+            "text": "Vier producten, echte prijzen, echte voorraad. Nu valt het weer niet op."
+          }
+        ],
+        "next": "rack"
+      },
+      "rack": {
+        "speaker": "",
+        "text": "Op het rack staat: productservice 200 OK.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "commercieel"
+              ]
+            },
+            "text": "Dan kunnen we het eindelijk verkopen."
+          },
+          {
+            "when": {
+              "trait": [
+                "detail"
+              ]
+            },
+            "text": "De prijzen kloppen tot achter de komma."
+          },
+          {
+            "text": "Er staat weer iets in de webshop."
+          }
+        ]
+      }
+    }
+  },
+  "t05_fail": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "De prijs staat nu op nul euro. Technisch gezien is het opgelost."
+          },
+          {
+            "speaker": "",
+            "text": "De prijs staat nu op nul euro. De voorraad op min drie."
+          }
+        ],
+        "next": "nog"
+      },
+      "nog": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "speaker": "",
+            "text": "Je rolt terug. Niemand heeft het gezien."
+          },
+          {
+            "speaker": "jonathan",
+            "text": "Rollback. En nu langzaam."
+          }
+        ]
+      }
+    }
+  },
+  "t05_done": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Productservice: 200 OK. Jonathan loopt er drie keer per dag langs om dat te controleren."
+      }
+    }
+  },
+  "t06_offer": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Op de dashboardmuur staat de conversie van deze week. Nul komma nul vier procent.",
+        "next": "oordeel"
+      },
+      "oordeel": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Dat is geen conversie. Dat is een ongeluk."
+          },
+          {
+            "speaker": "danny",
+            "text": "Dat is geen conversie. Dat is een ongeluk."
+          }
+        ],
+        "next": "cijfer"
+      },
+      "cijfer": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "speaker": "",
+            "text": "Vierduizend bezoekers, één bestelling. Vanaf een IP-adres binnen dit pand."
+          },
+          {
+            "speaker": "danny",
+            "text": "Vierduizend bezoekers, één bestelling. Vanaf een IP-adres binnen dit pand."
+          }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "We kijken waar ze afhaken. We vragen niet waarom."
+          },
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "De pagina doet het gewoon. Dat is dus niet genoeg."
+          },
+          {
+            "text": "Ergens tussen kijken en kopen gaat het mis."
+          }
+        ]
+      }
+    }
+  },
+  "t06_fetch": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Nul komma nul vier procent. Het staat er in grote cijfers bij.",
+        "next": "wie"
+      },
+      "wie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Ik lees liever logs dan mensen. Danny doet mensen."
+          },
+          {
+            "text": "Dit is conversie. Dus dit is Danny."
+          }
+        ]
+      }
+    }
+  },
+  "t06_recruit": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "danny",
+        "text": "Welk getal?",
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "speaker": "speler",
+        "text": "Nul komma nul vier.",
+        "next": "oordeel"
+      },
+      "oordeel": {
+        "speaker": "danny",
+        "text": "psies. dan is het de knop. het is altijd de knop. biem, ik loop mee"
+      }
+    }
+  },
+  "t06_complete": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Plus zeventien procent. Ik heb niets bedacht. Ik heb dingen weggehaald. Dat is het vak."
+          },
+          {
+            "speaker": "danny",
+            "text": "Plus zeventien procent. Ik heb niets bedacht. Ik heb dingen weggehaald."
+          }
+        ],
+        "next": "muur"
+      },
+      "muur": {
+        "speaker": "",
+        "text": "Op de muur springt het getal om. Iemand in de loungehoek kijkt op en gaat weer verder.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "proces"
+              ]
+            },
+            "text": "Dan zet ik die wijziging in de sprint."
+          },
+          {
+            "when": {
+              "trait": [
+                "detail"
+              ]
+            },
+            "text": "De knop staat nu ook recht."
+          },
+          {
+            "text": "Zeventien procent van bijna niets is nog steeds meer."
+          }
+        ]
+      }
+    }
+  },
+  "t06_fail": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "speaker": "speler",
+            "text": "De conversie staat nu op nul komma nul drie. Dat is ook een uitkomst."
+          },
+          {
+            "speaker": "",
+            "text": "De conversie staat nu op nul komma nul drie procent. Lager dan daarvoor."
+          }
+        ],
+        "next": "nog"
+      },
+      "nog": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "speaker": "",
+            "text": "Je zet het terug. Je vertelt niemand hoe laag het even stond."
+          },
+          {
+            "speaker": "danny",
+            "text": "Terugzetten. En dan één ding tegelijk testen."
+          }
+        ]
+      }
+    }
+  },
+  "t06_done": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Conversie plus zeventien procent. Danny heeft er al een presentatie over. Elf slides."
+      }
+    }
+  },
+  "t07_offer": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "In de koffiecorner hangt een speaker. In Jira staat: merksound. Er staat verder niets.",
+        "next": "herkomst"
+      },
+      "herkomst": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "Ik heb dit ticket zelf aangemaakt. In maart. Ik weet niet meer waarom."
+          },
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Er staat geen aanvrager bij. Er staat helemaal niets bij."
+          },
+          {
+            "text": "Niemand weet waar dit vandaan komt. Het staat in Jira, dus het gebeurt."
+          }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "speaker": "",
+            "text": "Je opent de generator. Elf seconden, niet langer."
+          },
+          {
+            "speaker": "danny",
+            "text": "Elf seconden. Niet langer. Anders wordt het een liedje."
+          }
+        ]
+      }
+    }
+  },
+  "t07_fetch": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "De speaker in de koffiecorner staat uit. Het ticket staat open.",
+        "next": "wie"
+      },
+      "wie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Ik kan geluid afspelen. Ik kan geen merk horen. Danny wel."
+          },
+          {
+            "text": "Merk is van Danny. Ik ga hem halen."
+          }
+        ]
+      }
+    }
+  },
+  "t07_recruit": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "danny",
+        "text": "De merksound.",
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "speaker": "speler",
+        "text": "Ja.",
+        "next": "oordeel"
+      },
+      "oordeel": {
+        "speaker": "danny",
+        "text": "ein-de-lijk. ik weet nog steeds niet waarom. biem"
+      }
+    }
+  },
+  "t07_complete": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Elf seconden. Herkenbaar en net niet vervelend. Dat was de hele opdracht."
+          },
+          {
+            "speaker": "danny",
+            "text": "Elf seconden. Herkenbaar en net niet vervelend."
+          }
+        ],
+        "next": "keuken"
+      },
+      "keuken": {
+        "speaker": "",
+        "text": "De speaker speelt het af. Twee mensen kijken op en gaan verder met hun brood.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "detail"
+              ]
+            },
+            "text": "Er zit een hoefslag in. Dat had niemand gevraagd."
+          },
+          {
+            "when": {
+              "trait": [
+                "commercieel"
+              ]
+            },
+            "text": "Dit kan ook onder de video."
+          },
+          {
+            "text": "Het staat erop."
+          }
+        ]
+      }
+    }
+  },
+  "t07_fail": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Zeventien seconden en een saxofoon. Dat is geen merk, dat is een sfeer."
+          },
+          {
+            "speaker": "",
+            "text": "Het duurt nu zeventien seconden en er zit een saxofoon in."
+          }
+        ],
+        "next": "nog"
+      },
+      "nog": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "speaker": "",
+            "text": "Je haalt de saxofoon eruit."
+          },
+          {
+            "speaker": "danny",
+            "text": "Saxofoon eruit. Opnieuw."
+          }
+        ]
+      }
+    }
+  },
+  "t07_done": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "De merksound speelt elke keer als de koffiemachine klaar is. Dat was niet de bedoeling."
+      }
+    }
+  },
+  "t08_offer": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "In het vergaderhokje ligt een iPad. Op het briefje ernaast: paard rent gelukkig door weiland.",
+        "next": "vraag"
+      },
+      "vraag": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Hoe zie je aan een paard dat het gelukkig is?"
+          },
+          {
+            "speaker": "victor",
+            "text": "Hoe zie je aan een paard dat het gelukkig is?"
+          }
+        ],
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "speaker": "",
+            "text": "Er staat verder niets op het briefje."
+          },
+          {
+            "speaker": "speler",
+            "text": "Dat staat er niet bij."
+          }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Dan tel ik de benen en noem ik het klaar."
+          },
+          {
+            "speaker": "victor",
+            "text": "Dan let ik op de benen. Vier. Dat is het criterium."
+          }
+        ]
+      }
+    }
+  },
+  "t08_fetch": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "De iPad ligt in het vergaderhokje. Iemand heeft er een geeltje op geplakt: AI-VIDEO.",
+        "next": "wie"
+      },
+      "wie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Ik doe servers, geen paarden. Victor kijkt er anders naar."
+          },
+          {
+            "text": "Beeld is van Victor. Hij ziet meteen wat er niet klopt."
+          }
+        ]
+      }
+    }
+  },
+  "t08_recruit": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "victor",
+        "text": "De paardenvideo.",
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "speaker": "speler",
+        "text": "Ja.",
+        "next": "oordeel"
+      },
+      "oordeel": {
+        "speaker": "victor",
+        "text": "manmanman. Ik ga mee. Iemand moet de benen tellen."
+      }
+    }
+  },
+  "t08_complete": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Vier benen, één staart, één paard. Ik heb er twee uur naar gekeken."
+          },
+          {
+            "speaker": "victor",
+            "text": "Vier benen, één staart, één paard. Drie keer beter dan de vorige."
+          }
+        ],
+        "next": "scherm"
+      },
+      "scherm": {
+        "speaker": "",
+        "text": "Op het scherm in de entree rent een paard door een weiland. Het is grotendeels overtuigend.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "commercieel"
+              ]
+            },
+            "text": "Dit gaat de klant prachtig vinden."
+          },
+          {
+            "when": {
+              "trait": [
+                "detail"
+              ]
+            },
+            "text": "In seconde zes doet het gras iets. Daar kijken we overheen."
+          },
+          {
+            "text": "Goed genoeg."
+          }
+        ]
+      }
+    }
+  },
+  "t08_fail": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Vijf benen. Ik zie het, en nu zie jij het ook."
+          },
+          {
+            "speaker": "",
+            "text": "Het paard heeft vijf benen. Eén ervan loopt uit de maat."
+          }
+        ],
+        "next": "nog"
+      },
+      "nog": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "speaker": "",
+            "text": "Je start de generatie opnieuw."
+          },
+          {
+            "speaker": "victor",
+            "text": "Opnieuw. En zet 'weiland' er nog een keer in."
+          }
+        ]
+      }
+    }
+  },
+  "t08_done": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "De video draait in de entree. Elke ronde tel je de benen. Elke keer weer vier."
+      }
+    }
+  },
+  "t09_offer": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Er staat een pony bij de printer. In de gang staat er nog een. Ze zijn er sinds de laatste release.",
+        "next": "herkomst"
+      },
+      "herkomst": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Dit komt uit mijn seed-data. Dat wordt een lange middag."
+          },
+          {
+            "speaker": "jonathan",
+            "text": "Dit komt uit de seed-data. En nee, dat is niet grappig."
+          }
+        ],
+        "next": "printer"
+      },
+      "printer": {
+        "speaker": "",
+        "text": "De pony bij de printer drukt met zijn neus op Kopiëren. Er komen elf pagina's uit.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "proces"
+              ]
+            },
+            "text": "We zetten ze in de vergaderruimte. Dan is het een bezetting en geen storing."
+          },
+          {
+            "when": {
+              "trait": [
+                "data"
+              ]
+            },
+            "text": "Acht stuks. Dat is precies de testset."
+          },
+          {
+            "text": "Kom, we drijven ze bij elkaar."
+          }
+        ]
+      }
+    }
+  },
+  "t09_fetch": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Een pony kijkt je aan vanuit de gang. Hij kauwt op een sprintplanning.",
+        "next": "wie"
+      },
+      "wie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "detail"
+              ]
+            },
+            "text": "Ze staan niet eens netjes uitgelijnd. Dit is voor Jonathan."
+          },
+          {
+            "text": "Dit komt uit de data. Dus dit is Jonathan."
+          }
+        ]
+      }
+    }
+  },
+  "t09_recruit": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "jonathan",
+        "text": "Hoeveel?",
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "speaker": "speler",
+        "text": "Acht. Denk ik.",
+        "next": "oordeel"
+      },
+      "oordeel": {
+        "speaker": "jonathan",
+        "text": "Dat is de testset. Ben benieuwd. Ik kom."
+      }
+    }
+  },
+  "t09_complete": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Acht pony's, één ruimte. In productie was dit niemand opgevallen."
+          },
+          {
+            "speaker": "jonathan",
+            "text": "Acht pony's, één ruimte. Nu staan ze waar ik ze kan zien."
+          }
+        ],
+        "next": "ruimte"
+      },
+      "ruimte": {
+        "speaker": "",
+        "text": "In de vergaderruimte staan acht pony's. Ze staan er rustiger bij dan de meeste vergaderingen.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "sociaal"
+              ]
+            },
+            "text": "Ik verplaats de vergadering wel naar het hokje."
+          },
+          {
+            "when": {
+              "trait": [
+                "proces"
+              ]
+            },
+            "text": "Ik zet de ruimte op bezet. Tot nader order."
+          },
+          {
+            "text": "Dat is dan geregeld."
+          }
+        ]
+      }
+    }
+  },
+  "t09_fail": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "speaker": "speler",
+            "text": "Er zijn er nu negen. Dat kan niet en toch is het zo."
+          },
+          {
+            "speaker": "",
+            "text": "Er lopen er nu negen. Niemand weet waar de negende vandaan komt."
+          }
+        ],
+        "next": "nog"
+      },
+      "nog": {
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "speaker": "",
+            "text": "Je begint opnieuw. Bij de printer."
+          },
+          {
+            "speaker": "jonathan",
+            "text": "Opnieuw. En doe de deur van de koffiecorner dicht."
+          }
+        ]
+      }
+    }
+  },
+  "t09_done": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Op de deur van de vergaderruimte hangt een blad: BEZET tot nader order. Er staat geen naam bij."
+      }
+    }
+  },
+  "t10_offer": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Op de deploymentcomputer staat één rode regel. De rest is groen.",
+        "next": "regel"
+      },
+      "regel": {
+        "speaker": "",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "BLOCKED: scope not approved."
+          },
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "WARNING: checkout conversion critical."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "ERROR: frontend build failed."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "FATAL: production database connection failed."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "HOLD: client approval required."
+          },
+          {
+            "text": "ERROR: deployment failed."
+          }
+        ],
+        "next": "reactie"
+      },
+      "reactie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Natuurlijk. Van alle regels die er konden staan, staat die van mij er."
+          },
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "Eén rode regel, en het is mijn getal."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Het is de build. Het is altijd de build."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "De verbinding. Dat los ik niet lokaal op."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Er ontbreekt een akkoord. Dat is precies mijn functie."
+          },
+          {
+            "text": "Eén ding. Er is altijd één ding."
+          }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "",
+        "text": "Achter je is het stil geworden. Iedereen staat te kijken."
+      }
+    }
+  },
+  "t10_blocked": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "De deploymentcomputer vraagt om de deploysleutel. Een echte sleutel. Van metaal.",
+        "next": "waar"
+      },
+      "waar": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Tweefactor, uitgevoerd in staal. Hij ligt in de plantenkast, onder het speelgoedpaard."
+          },
+          {
+            "when": {
+              "trait": [
+                "proces"
+              ]
+            },
+            "text": "Dat is ooit zo besloten. De sleutel ligt in de plantenkast, onder het speelgoedpaard."
+          },
+          {
+            "text": "Hij ligt in de plantenkast. Onder het speelgoedpaard."
+          }
+        ]
+      }
+    }
+  },
+  "t10_complete": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "De balk loopt vol. DEPLOYMENT SUCCESSFUL.",
+        "next": "reactie"
+      },
+      "reactie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "De scope is goedgekeurd. Door mij. Dat mag ook een keer."
+          },
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "Nu gaan we pas meten."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Hij staat recht. In productie. Op elk scherm."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Het werkt niet meer alleen lokaal."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Ik bel de klant. Nu het nog goed nieuws is."
+          },
+          {
+            "text": "Het staat live."
+          }
+        ],
+        "next": "kantoor"
+      },
+      "kantoor": {
+        "speaker": "",
+        "text": "Niemand juicht. Iemand zet koffie. Hier is dat hetzelfde.",
+        "next": "deur"
+      },
+      "deur": {
+        "speaker": "",
+        "text": "In de entree klikt de voordeur van het slot."
+      }
+    }
+  },
+  "t10_fail": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "De balk stopt op 94 procent. Daarna gaat hij terug naar nul.",
+        "next": "reactie"
+      },
+      "reactie": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Rollback. Dat is ook een besluit."
+          },
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "Vierennegentig procent. Bijna. Bijna is nul."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Ergens staat een puntkomma die er niet hoort."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Ik zie het al. Vier regels lager."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Ik zeg tegen de klant dat we in de laatste fase zitten."
+          },
+          {
+            "text": "Terug naar nul. Nog een keer."
+          }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "",
+        "text": "Achter je zegt niemand iets. Dat is hier een vorm van steun."
+      }
+    }
+  },
+  "t10_done": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "",
+        "text": "Productie staat live. Niemand durft de muis aan te raken."
+      }
+    }
+  }
+}

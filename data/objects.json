@@ -1,0 +1,429 @@
+[
+  {
+    "world_id": "voordeur",
+    "tile": [
+      1,
+      11
+    ],
+    "kind": "door",
+    "label": "Voordeur",
+    "dialogue": "voordeur"
+  },
+  {
+    "world_id": "receptiebalie",
+    "tile": [
+      11,
+      3
+    ],
+    "kind": "ticket",
+    "label": "Receptiebalie",
+    "ticket": "t03",
+    "visible_when": {
+      "tickets_done": [
+        "t02"
+      ]
+    }
+  },
+  {
+    "world_id": "printer",
+    "tile": [
+      14,
+      4
+    ],
+    "kind": "examine",
+    "label": "Printer",
+    "dialogue": "printer"
+  },
+  {
+    "world_id": "scherm_entree",
+    "tile": [
+      1,
+      9
+    ],
+    "kind": "examine",
+    "label": "Scherm",
+    "dialogue": "scherm_entree"
+  },
+  {
+    "world_id": "jas_kapstok",
+    "tile": [
+      3,
+      9
+    ],
+    "kind": "examine",
+    "label": "Kapstok",
+    "dialogue": "kapstok"
+  },
+  {
+    "world_id": "prijzenkast",
+    "tile": [
+      9,
+      5
+    ],
+    "kind": "examine",
+    "label": "Prijzenkast",
+    "dialogue": "prijzenkast"
+  },
+  {
+    "world_id": "urinoirs",
+    "tile": [
+      3,
+      3
+    ],
+    "kind": "examine",
+    "label": "Urinoirs",
+    "dialogue": "urinoirs"
+  },
+  {
+    "world_id": "wastafel",
+    "tile": [
+      5,
+      5
+    ],
+    "kind": "examine",
+    "label": "Wastafel",
+    "dialogue": "wastafel"
+  },
+  {
+    "world_id": "wc_poster",
+    "tile": [
+      4,
+      2
+    ],
+    "kind": "examine",
+    "label": "Poster",
+    "dialogue": "wc_poster"
+  },
+  {
+    "world_id": "serverrack_a",
+    "tile": [
+      18,
+      3
+    ],
+    "kind": "ticket",
+    "label": "Serverrack",
+    "ticket": "t05"
+  },
+  {
+    "world_id": "serverrack_b",
+    "tile": [
+      21,
+      4
+    ],
+    "kind": "examine",
+    "label": "Serverrack",
+    "dialogue": "serverrack_b"
+  },
+  {
+    "world_id": "badgelezer",
+    "tile": [
+      19,
+      6
+    ],
+    "kind": "examine",
+    "label": "Badgelezer",
+    "dialogue": "badgelezer"
+  },
+  {
+    "world_id": "speaker_koffiecorner",
+    "tile": [
+      34,
+      4
+    ],
+    "kind": "ticket",
+    "label": "Speaker",
+    "ticket": "t07"
+  },
+  {
+    "world_id": "koffiemachine",
+    "tile": [
+      36,
+      3
+    ],
+    "kind": "examine",
+    "label": "Koffiemachine",
+    "dialogue": "koffiemachine"
+  },
+  {
+    "world_id": "koelkast",
+    "tile": [
+      38,
+      4
+    ],
+    "kind": "examine",
+    "label": "Koelkast",
+    "dialogue": "koelkast"
+  },
+  {
+    "world_id": "lunchtafel",
+    "tile": [
+      30,
+      5
+    ],
+    "kind": "examine",
+    "label": "Lunchtafel",
+    "dialogue": "lunchtafel"
+  },
+  {
+    "world_id": "prikbord",
+    "tile": [
+      24,
+      5
+    ],
+    "kind": "examine",
+    "label": "Prikbord",
+    "dialogue": "prikbord"
+  },
+  {
+    "world_id": "tribune",
+    "tile": [
+      28,
+      4
+    ],
+    "kind": "examine",
+    "label": "Tribune",
+    "dialogue": "tribune"
+  },
+  {
+    "world_id": "sprintbord_vloer",
+    "tile": [
+      25,
+      1
+    ],
+    "kind": "use",
+    "label": "Sprintbord",
+    "dialogue": "ticketbord",
+    "action": "board"
+  },
+  {
+    "world_id": "vergadertafel",
+    "tile": [
+      50,
+      5
+    ],
+    "kind": "ticket",
+    "label": "Vergadertafel",
+    "ticket": "t01"
+  },
+  {
+    "world_id": "whiteboard_vergader",
+    "tile": [
+      45,
+      2
+    ],
+    "kind": "examine",
+    "label": "Whiteboard",
+    "dialogue": "whiteboard"
+  },
+  {
+    "world_id": "beamer",
+    "tile": [
+      52,
+      4
+    ],
+    "kind": "examine",
+    "label": "Beamer",
+    "dialogue": "beamer"
+  },
+  {
+    "world_id": "dashboardmuur",
+    "tile": [
+      62,
+      2
+    ],
+    "kind": "ticket",
+    "label": "Dashboardmuur",
+    "ticket": "t06"
+  },
+  {
+    "world_id": "bureau_danny",
+    "tile": [
+      59,
+      4
+    ],
+    "kind": "examine",
+    "label": "Werkplek",
+    "dialogue": "bureau_danny"
+  },
+  {
+    "world_id": "loungehoek",
+    "tile": [
+      66,
+      5
+    ],
+    "kind": "examine",
+    "label": "Loungehoek",
+    "dialogue": "loungehoek"
+  },
+  {
+    "world_id": "deploycomputer",
+    "tile": [
+      80,
+      1
+    ],
+    "kind": "ticket",
+    "label": "Deploymentcomputer",
+    "ticket": "t10"
+  },
+  {
+    "world_id": "hokje_ipad",
+    "tile": [
+      33,
+      9
+    ],
+    "kind": "ticket",
+    "label": "iPad",
+    "ticket": "t08"
+  },
+  {
+    "world_id": "hokje_telefoon",
+    "tile": [
+      36,
+      8
+    ],
+    "kind": "examine",
+    "label": "Telefoon",
+    "dialogue": "hokje_telefoon"
+  },
+  {
+    "world_id": "samen_bingo_poster",
+    "tile": [
+      31,
+      8
+    ],
+    "kind": "examine",
+    "label": "Poster",
+    "dialogue": "samen_bingo_poster"
+  },
+  {
+    "world_id": "blauwe_tijger",
+    "tile": [
+      46,
+      9
+    ],
+    "kind": "examine",
+    "label": "Blauwe tijger",
+    "dialogue": "blauwe_tijger"
+  },
+  {
+    "world_id": "gang_lichtstrip",
+    "tile": [
+      20,
+      12
+    ],
+    "kind": "examine",
+    "label": "Plant",
+    "dialogue": "gang_plant"
+  },
+  {
+    "world_id": "plant_nw",
+    "tile": [
+      15,
+      10
+    ],
+    "kind": "examine",
+    "label": "Muurschildering",
+    "dialogue": "muurschildering"
+  },
+  {
+    "world_id": "ticketbord",
+    "tile": [
+      5,
+      24
+    ],
+    "kind": "use",
+    "label": "Ticketbord",
+    "dialogue": "ticketbord",
+    "action": "board"
+  },
+  {
+    "world_id": "scrumbord_gang",
+    "tile": [
+      28,
+      24
+    ],
+    "kind": "ticket",
+    "label": "Scrumbord",
+    "ticket": "t02"
+  },
+  {
+    "world_id": "wandmonitor_vloer",
+    "tile": [
+      12,
+      24
+    ],
+    "kind": "ticket",
+    "label": "Wandmonitor",
+    "ticket": "t04"
+  },
+  {
+    "world_id": "bureau_bastiaan",
+    "tile": [
+      10,
+      18
+    ],
+    "kind": "examine",
+    "label": "Werkplek",
+    "dialogue": "bureau_bastiaan"
+  },
+  {
+    "world_id": "bureau_victor",
+    "tile": [
+      45,
+      18
+    ],
+    "kind": "examine",
+    "label": "Werkplek",
+    "dialogue": "bureau_victor"
+  },
+  {
+    "world_id": "plantenkast",
+    "tile": [
+      23,
+      14
+    ],
+    "kind": "examine",
+    "label": "Plantenkast",
+    "dialogue": "plantenkast"
+  },
+  {
+    "world_id": "paardenkostuum",
+    "tile": [
+      56,
+      23
+    ],
+    "kind": "examine",
+    "label": "Paardenkostuum",
+    "dialogue": "paardenkostuum"
+  },
+  {
+    "world_id": "tafelvoetbal",
+    "tile": [
+      106,
+      16
+    ],
+    "kind": "examine",
+    "label": "Tafelvoetbal",
+    "dialogue": "tafelvoetbal"
+  },
+  {
+    "world_id": "plotter",
+    "tile": [
+      120,
+      10
+    ],
+    "kind": "examine",
+    "label": "Plotter",
+    "dialogue": "plotter"
+  },
+  {
+    "world_id": "nooduitgang",
+    "tile": [
+      127,
+      19
+    ],
+    "kind": "door",
+    "label": "Nooduitgang",
+    "dialogue": "nooduitgang"
+  }
+]

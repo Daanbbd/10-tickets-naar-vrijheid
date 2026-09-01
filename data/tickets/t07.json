@@ -1,0 +1,62 @@
+{
+  "available_when": {
+    "tickets_done": [
+      "t06"
+    ]
+  },
+  "requirements": {},
+  "dialogue_ids": {
+    "offer": "t07_offer",
+    "fetch": "t07_fetch",
+    "recruit": "t07_recruit",
+    "complete": "t07_complete",
+    "fail": "t07_fail",
+    "done": "t07_done"
+  },
+  "minigame_config": {},
+  "reward_effects": [
+    {
+      "op": "add_item",
+      "item": "audiobestand"
+    },
+    {
+      "op": "toast",
+      "text": "BBD-207 opgelost. De merksound staat aan."
+    },
+    {
+      "op": "cue",
+      "cue": "ticket_klaar"
+    }
+  ],
+  "unlocks": [
+    "t09"
+  ],
+  "world_changes": [
+    {
+      "op": "set_text",
+      "target": "speaker_koffiecorner",
+      "value": "merksound: aan"
+    },
+    {
+      "op": "set_ambience",
+      "value": "merksound"
+    },
+    {
+      "op": "camera_focus",
+      "target": "speaker_koffiecorner",
+      "hold": 1.4
+    }
+  ],
+  "hint": "De speaker staat in de koffiecorner, bij de tribune.",
+  "id": "t07",
+  "code": "BBD-207",
+  "order": 7,
+  "title": "We hebben muziek nodig",
+  "summary": "Er moet een merksound komen. Niemand weet waarom. Het staat in Jira, dus het gebeurt.",
+  "anchor": "speaker_koffiecorner",
+  "owner_character": "danny",
+  "owner_role": "CRO-specialist",
+  "minigame_id": "mg_muziek",
+  "zone": "z4_koffiecorner",
+  "zone_name": "Koffiecorner"
+}

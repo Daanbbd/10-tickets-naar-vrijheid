@@ -1,0 +1,554 @@
+{
+  "dennis": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "dennis",
+        "text": "Alles staat op het bord. Heb ik vanmorgen alvast bijgewerkt.",
+        "next": "vraag"
+      },
+      "vraag": {
+        "speaker": "dennis",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 8
+            },
+            "text": "Nog twee. Is maar weekje later."
+          },
+          {
+            "when": {
+              "min_tickets_done": 4
+            },
+            "text": "De helft. Ik heb de rest alvast nagelopen en grof geschat."
+          },
+          {
+            "text": "Ik heb de issues alvast nagelopen. Verder heb ik niks nodig."
+          }
+        ],
+        "choices": [
+          {
+            "text": "Het gaat goed.",
+            "next": "goed"
+          },
+          {
+            "text": "Het is een puinhoop.",
+            "next": "puinhoop",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "dennis_weet_het",
+                "value": true
+              }
+            ]
+          },
+          {
+            "text": "Ik heb even geen tijd.",
+            "next": "weg"
+          }
+        ]
+      },
+      "goed": {
+        "speaker": "dennis",
+        "text": "oke.",
+        "next": "slot",
+        "outcome": "geen_blokkades"
+      },
+      "puinhoop": {
+        "speaker": "dennis",
+        "text": "-_- ik deploy het wel.",
+        "next": "slot",
+        "outcome": "gemeld"
+      },
+      "weg": {
+        "speaker": "dennis",
+        "text": "oke. andere mogelijkheid is er niet.",
+        "next": "slot",
+        "outcome": "afgehouden"
+      },
+      "slot": {
+        "speaker": "dennis",
+        "variants": [
+          {
+            "when": {
+              "flags_all": [
+                "dennis_weet_het"
+              ]
+            },
+            "text": "Ik heb het al aangepast. Zei ik niks over."
+          },
+          {
+            "text": "cool. thanks is gedaan."
+          }
+        ]
+      }
+    }
+  },
+  "bastiaan": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "bastiaan",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 7
+            },
+            "text": "Ik heb de hele build nagelopen,, er zit niets fout in,, dat vertrouw ik niet."
+          },
+          {
+            "when": {
+              "min_tickets_done": 3
+            },
+            "text": "Ik heb een component gemaakt die niemand nodig heeft,, nog niet."
+          },
+          {
+            "text": "hiya,, ik zit nog in een ticket van vorige week,, ik kom er wel uit."
+          }
+        ],
+        "next": "tweede"
+      },
+      "tweede": {
+        "speaker": "bastiaan",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Kijk je straks even mee,, niet nu,, straks."
+          },
+          {
+            "when": {
+              "trait": [
+                "detail"
+              ]
+            },
+            "text": "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat ook hè."
+          },
+          {
+            "text": "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
+          }
+        ]
+      }
+    }
+  },
+  "koen": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "koen",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 6
+            },
+            "text": "De logs zijn stil. Is weer een pareltje hoor haha."
+          },
+          {
+            "text": "Ik zal even kijken. Het duurt nog veertig minuten, vgm."
+          }
+        ],
+        "next": "tweede"
+      },
+      "tweede": {
+        "speaker": "koen",
+        "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken."
+      }
+    }
+  },
+  "klant": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "klant",
+        "variants": [
+          {
+            "when": {
+              "tickets_done": [
+                "t03"
+              ]
+            },
+            "text": "Ik wacht op de taxi. Uw koffie is trouwens erg sterk."
+          },
+          {
+            "text": "Ik ben iets te vroeg. Dat doe ik altijd."
+          }
+        ],
+        "next": "tweede"
+      },
+      "tweede": {
+        "speaker": "klant",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "U bent zeker de computerman. Mijn kleinzoon doet ook iets met computers."
+          },
+          {
+            "when": {
+              "trait": [
+                "commercieel"
+              ]
+            },
+            "text": "U bent van het praten, zie ik. Prettig, dan hoef ik het niet zelf uit te leggen."
+          },
+          {
+            "text": "Ik heb elf paarden en één website. Met de paarden gaat het beter."
+          }
+        ],
+        "next": "derde"
+      },
+      "derde": {
+        "speaker": "klant",
+        "text": "Mijn man vindt blauw mooier. Hij is hovenier, maar hij heeft er wel oog voor."
+      }
+    }
+  },
+  "stagiair": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "stagiair",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 8
+            },
+            "text": "Ik heb alles genoteerd. Ik snap er inmiddels ongeveer een derde van."
+          },
+          {
+            "when": {
+              "min_tickets_done": 4
+            },
+            "text": "Ik heb gevraagd wat een sprint is. Ik heb vier antwoorden gekregen."
+          },
+          {
+            "text": "Ik loop mee. Dat mag. Ik moet alleen niets aanraken."
+          }
+        ],
+        "next": "vraag"
+      },
+      "vraag": {
+        "speaker": "stagiair",
+        "text": "Mag ik iets vragen? Waarom heet het een stand-up als iedereen zit?",
+        "next": "antwoord"
+      },
+      "antwoord": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "proces"
+              ]
+            },
+            "text": "Goede vraag. Bewaar hem voor de retro."
+          },
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Omdat het anders een uur duurt."
+          },
+          {
+            "text": "Dat weet niemand meer."
+          }
+        ]
+      }
+    }
+  },
+  "bezorger": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "bezorger",
+        "text": "Bestelling voor Bluebird Day. Van Manege De Vrije Teugel.",
+        "next": "doos"
+      },
+      "doos": {
+        "speaker": "",
+        "text": "Hij zet een doos neer. Er zit stro in en twaalf potten supplement.",
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "bezorger",
+        "variants": [
+          {
+            "when": {
+              "tickets_done": [
+                "t09"
+              ]
+            },
+            "text": "Mevrouw vroeg of de paarden goed zijn aangekomen. Ik heb gezegd van wel."
+          },
+          {
+            "text": "Ze zei: geef maar aan degene die de website doet. Dus veel succes met uitzoeken."
+          }
+        ]
+      }
+    }
+  },
+  "collega_daan": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "daan",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 8
+            },
+            "text": "Bijna. Ik durf het bijna hardop te zeggen."
+          },
+          {
+            "when": {
+              "min_tickets_done": 5
+            },
+            "text": "De helft staat. De helft die overblijft is altijd de lastigste helft."
+          },
+          {
+            "when": {
+              "min_tickets_done": 2
+            },
+            "text": "We hebben scope. Dat is wellicht nieuw voor ons."
+          },
+          {
+            "text": "Ik heb de tickets op volgorde gezet. Wilde het mezelf zo makkelijk mogelijk maken."
+          }
+        ],
+        "next": "tweede"
+      },
+      "tweede": {
+        "speaker": "daan",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Kom je iets tegen dat niet in het ticket staat? Puur uit interesse: waar kwam dat dan vandaan."
+          },
+          {
+            "when": {
+              "trait": [
+                "commercieel"
+              ]
+            },
+            "text": "Als de klant belt: doorverbinden. Naar Willem. Altijd naar Willem."
+          },
+          {
+            "text": "Zeg het als iets niet klopt. Liever nu dan bij de oplevering."
+          }
+        ]
+      }
+    }
+  },
+  "collega_danny": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "danny",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 8
+            },
+            "text": "joejoe. de cijfers lopen op. ik beloof nog niets"
+          },
+          {
+            "when": {
+              "min_tickets_done": 4
+            },
+            "text": "ik heb een test lopen. vraag me over drie dagen wat eruit komt"
+          },
+          {
+            "text": "ik kijk naar wat mensen doen, niet naar wat ze zeggen. dat scheelt veel"
+          }
+        ],
+        "next": "tweede"
+      },
+      "tweede": {
+        "speaker": "danny",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "data"
+              ]
+            },
+            "text": "psies. meningen zijn ruis. gedrag is data"
+          },
+          {
+            "when": {
+              "trait": [
+                "detail"
+              ]
+            },
+            "text": "de knop staat twee pixels scheef. kost ons niets, maar ik zeg het toch"
+          },
+          {
+            "text": "alles is een funnel. de gang ook. mensen lopen linksom, altijd"
+          }
+        ]
+      }
+    }
+  },
+  "collega_victor": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "victor",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 8
+            },
+            "text": "De build is groen. Done."
+          },
+          {
+            "when": {
+              "min_tickets_done": 4
+            },
+            "text": "manmanman. Ik heb vandaag drie dingen rechtgezet die niemand scheef zag staan."
+          },
+          {
+            "text": "Ik bouw wat anderen bedenken. Ik vraag alleen of iemand het heeft nagedacht."
+          }
+        ],
+        "next": "tweede"
+      },
+      "tweede": {
+        "speaker": "victor",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "detail"
+              ]
+            },
+            "text": "Kijk eens naar de tweede rij. Nee? Precies. Dat is het probleem."
+          },
+          {
+            "when": {
+              "trait": [
+                "proces"
+              ]
+            },
+            "text": "Zet het in een ticket. Anders bestaat het niet en doe ik het toch. hahaha"
+          },
+          {
+            "text": "Als je iets scheef ziet staan, zeg het. Dan zie ik het ook en slaap ik slechter."
+          }
+        ]
+      }
+    }
+  },
+  "collega_jonathan": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "jonathan",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 8
+            },
+            "text": "De verbinding staat. Ben benieuwd hoe lang."
+          },
+          {
+            "when": {
+              "min_tickets_done": 4
+            },
+            "text": "Ik heb iets gerepareerd dat niemand kapot heeft zien gaan. Dat is het werk."
+          },
+          {
+            "text": "Als je mijn werk ziet, is er iets stuk. Dus je ziet me het liefst niet."
+          }
+        ],
+        "next": "tweede"
+      },
+      "tweede": {
+        "speaker": "jonathan",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Zie je iets in de logs met een hoofdletter E: dat ben ik niet. Ik ga er wel naartoe kijken."
+          },
+          {
+            "when": {
+              "trait": [
+                "commercieel"
+              ]
+            },
+            "text": "Beloof niets over snelheid. Ik weet niet waar die vandaan moet komen."
+          },
+          {
+            "text": "Het werkt lokaal. Moet zeggen dat dat ook iets is."
+          }
+        ]
+      }
+    }
+  },
+  "collega_willem": {
+    "start": "start",
+    "nodes": {
+      "start": {
+        "speaker": "willem",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 8
+            },
+            "text": "Ik heb de klant gesproken. Ze is heeeel enthousiast, en dat is nu nog terecht."
+          },
+          {
+            "when": {
+              "min_tickets_done": 4
+            },
+            "text": "Ik heb drie dingen toegezegd. Twee daarvan kunnen ook echt. Absoluta."
+          },
+          {
+            "text": "Ik hou de klant bij je vandaan. Dat is geen grap, dat is de functieomschrijving."
+          }
+        ],
+        "next": "tweede"
+      },
+      "tweede": {
+        "speaker": "willem",
+        "variants": [
+          {
+            "when": {
+              "trait": [
+                "technisch"
+              ]
+            },
+            "text": "Zeg tegen mij dat iets niet kan. Ik vertaal het wel naar iets vriendelijkers."
+          },
+          {
+            "when": {
+              "trait": [
+                "sociaal"
+              ]
+            },
+            "text": "Jij begrijpt het. Nee zeggen kost een uur. Ja zeggen kost een kwartaal."
+          },
+          {
+            "text": "Als ze belt, ben ik in het hokje. Ook als ik daar niet ben."
+          }
+        ]
+      }
+    }
+  }
+}

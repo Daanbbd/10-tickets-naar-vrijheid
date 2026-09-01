@@ -1,0 +1,67 @@
+{
+  "available_when": {
+    "tickets_done": [
+      "t03"
+    ]
+  },
+  "requirements": {},
+  "dialogue_ids": {
+    "offer": "t05_offer",
+    "fetch": "t05_fetch",
+    "recruit": "t05_recruit",
+    "complete": "t05_complete",
+    "fail": "t05_fail",
+    "done": "t05_done"
+  },
+  "minigame_config": {},
+  "reward_effects": [
+    {
+      "op": "add_item",
+      "item": "productdata"
+    },
+    {
+      "op": "set_flag",
+      "flag": "backend_ok"
+    },
+    {
+      "op": "toast",
+      "text": "BBD-205 opgelost. Er staan echte producten in de webshop."
+    },
+    {
+      "op": "cue",
+      "cue": "ticket_klaar"
+    }
+  ],
+  "unlocks": [
+    "t06"
+  ],
+  "world_changes": [
+    {
+      "op": "set_text",
+      "target": "serverrack_a",
+      "value": "productservice: 200 OK"
+    },
+    {
+      "op": "set_modulate",
+      "target": "serverrack_a",
+      "value": "#c9f5d8"
+    },
+    {
+      "op": "camera_focus",
+      "target": "serverrack_a",
+      "hold": 1.4
+    }
+  ],
+  "hint": "Het Patchhok zit naast de toiletten, achter de badgelezer.",
+  "id": "t05",
+  "code": "BBD-205",
+  "order": 5,
+  "title": "De backend is stuk",
+  "summary": "Product: undefined. Prijs: NaN. Voorraad: null. De webshop verkoopt op dit moment niets aan niemand.",
+  "anchor": "serverrack_a",
+  "owner_character": "jonathan",
+  "owner_role": "Backend developer",
+  "minigame_id": "mg_backend_fix",
+  "zone": "z3_patchhok",
+  "zone_name": "Het Patchhok"
+}

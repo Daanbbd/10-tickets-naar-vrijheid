@@ -1,0 +1,12 @@
+{
+ "mg_user_story":    {"scene": "res://scenes/minigames/mg_slotboard.tscn",   "title": "User Story Builder"},
+ "mg_planning":      {"scene": "res://scenes/minigames/mg_slotboard.tscn",   "title": "Sprintplanning"},
+ "mg_klantfeedback": {"scene": "res://scenes/minigames/mg_choicescene.tscn", "title": "Klantfeedback vertalen"},
+ "mg_frontend_fix":  {"scene": "res://scenes/minigames/mg_slotboard.tscn",   "title": "Layout herstellen"},
+ "mg_backend_fix":   {"scene": "res://scenes/minigames/mg_cableboard.tscn",  "title": "Datastroom herstellen"},
+ "mg_cro":           {"scene": "res://scenes/minigames/mg_slotboard.tscn",   "title": "Productpagina optimaliseren"},
+ "mg_muziek":        {"scene": "res://scenes/minigames/mg_tagpicker.tscn",   "title": "Merksound genereren"},
+ "mg_video":         {"scene": "res://scenes/minigames/mg_tagpicker.tscn",   "title": "AI-video genereren"},
+ "mg_paarden":       {"scene": "res://scenes/minigames/mg_whack.tscn",       "title": "Paardenbugs opruimen"},
+ "mg_deploy":        {"scene": "res://scenes/minigames/mg_deploy.tscn",      "title": "Productiedeployment"}
+}

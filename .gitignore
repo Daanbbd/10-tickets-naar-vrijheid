@@ -1,0 +1,16 @@
+# Godot
+.godot/
+export_presets.cfg
+*.translation
+
+# QA-artefacten (gegenereerde frames en logs)
+qa/
+
+# Python-toolchain voor de assetgeneratoren
+tools/.venv/
+
+# macOS
+.DS_Store
+
+# Gevendorde skills-bundel met eigen .git — geen onderdeel van dit project
+GD-Agentic-Skills/

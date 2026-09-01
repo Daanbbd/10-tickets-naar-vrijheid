@@ -1,0 +1,227 @@
+[
+  {
+    "id": "dennis",
+    "name": "Dennis",
+    "role": "Scrum Master",
+    "zone": "z9_vloer",
+    "home_tile": [
+      61,
+      23
+    ],
+    "dialogue_id": "dennis",
+    "route": [],
+    "route_pause": 2.5,
+    "can_follow": true,
+    "color": "#4a6d99",
+    "skin": "#e8bd94",
+    "hair": "#b99a63",
+    "sheet": "plain",
+    "portrait": "res://assets/sprites/portraits/dennis.png"
+  },
+  {
+    "id": "bastiaan",
+    "name": "Bastiaan",
+    "role": "Frontend developer",
+    "zone": "z9_vloer",
+    "home_tile": [
+      12,
+      18
+    ],
+    "dialogue_id": "bastiaan",
+    "route": [],
+    "route_pause": 6.0,
+    "can_follow": true,
+    "color": "#e8e4dc",
+    "skin": "#e9b89b",
+    "hair": "#4e3a2e",
+    "sheet": "hoodie",
+    "portrait": "res://assets/sprites/portraits/bastiaan.png"
+  },
+  {
+    "id": "koen",
+    "name": "Koen",
+    "role": "Backend developer",
+    "zone": "z3_patchhok",
+    "home_tile": [
+      21,
+      2
+    ],
+    "dialogue_id": "koen",
+    "route": [],
+    "route_pause": 5.0,
+    "can_follow": true,
+    "color": "#6f8fd0",
+    "skin": "#eac09a",
+    "hair": "#a8834e",
+    "sheet": "plain",
+    "portrait": "res://assets/sprites/portraits/koen.png"
+  },
+  {
+    "id": "klant",
+    "name": "Mevrouw Van Zutphen",
+    "role": "Klant, Manege De Vrije Teugel",
+    "zone": "z1_entree",
+    "home_tile": [
+      9,
+      9
+    ],
+    "dialogue_id": "klant",
+    "route": [],
+    "route_pause": 0.0,
+    "can_follow": false,
+    "color": "#d98cb3",
+    "skin": "#f2d3b3",
+    "hair": "#8d8d8d",
+    "sheet": "long"
+  },
+  {
+    "id": "stagiair",
+    "name": "De stagiair",
+    "role": "Stagiair",
+    "zone": "z11_gang",
+    "home_tile": [
+      16,
+      10
+    ],
+    "dialogue_id": "stagiair",
+    "route": [
+      [
+        16,
+        10
+      ],
+      [
+        18,
+        11
+      ]
+    ],
+    "route_pause": 1.0,
+    "can_follow": false,
+    "color": "#f5d76e",
+    "skin": "#e8c39e",
+    "hair": "#c98a3a",
+    "sheet": "plain"
+  },
+  {
+    "id": "bezorger",
+    "name": "De bezorger",
+    "role": "Bezorger, Manege De Vrije Teugel",
+    "zone": "z1_entree",
+    "home_tile": [
+      3,
+      12
+    ],
+    "dialogue_id": "bezorger",
+    "route": [],
+    "route_pause": 0.0,
+    "can_follow": false,
+    "spawn_when": {
+      "tickets_done": [
+        "t08"
+      ]
+    },
+    "color": "#8d9aae",
+    "skin": "#c98d63",
+    "hair": "#2f2a24",
+    "sheet": "plain"
+  },
+  {
+    "id": "npc_daan",
+    "name": "Daan",
+    "role": "Product Owner",
+    "zone": "z5_summit",
+    "home_tile": [
+      48,
+      6
+    ],
+    "dialogue_id": "collega_daan",
+    "route": [],
+    "route_pause": 5.0,
+    "can_follow": true,
+    "is_playable_colleague": true,
+    "color": "#2b2b30",
+    "skin": "#dcae86",
+    "hair": "#2a2320",
+    "sheet": "beard",
+    "portrait": "res://assets/sprites/portraits/daan.png"
+  },
+  {
+    "id": "npc_danny",
+    "name": "Danny",
+    "role": "CRO-specialist",
+    "zone": "z6_basecamp",
+    "home_tile": [
+      60,
+      4
+    ],
+    "dialogue_id": "collega_danny",
+    "route": [],
+    "route_pause": 5.0,
+    "can_follow": true,
+    "is_playable_colleague": true,
+    "color": "#26262b",
+    "skin": "#eec39a",
+    "hair": "#c9a86a",
+    "sheet": "plain",
+    "portrait": "res://assets/sprites/portraits/danny.png"
+  },
+  {
+    "id": "npc_victor",
+    "name": "Victor",
+    "role": "Frontend developer",
+    "zone": "z9_vloer",
+    "home_tile": [
+      34,
+      22
+    ],
+    "dialogue_id": "collega_victor",
+    "route": [],
+    "route_pause": 5.0,
+    "can_follow": true,
+    "is_playable_colleague": true,
+    "color": "#3a3a40",
+    "skin": "#f0c49a",
+    "hair": "#cf8a48",
+    "sheet": "curly",
+    "portrait": "res://assets/sprites/portraits/victor.png"
+  },
+  {
+    "id": "npc_jonathan",
+    "name": "Jonathan",
+    "role": "Backend developer",
+    "zone": "z3_patchhok",
+    "home_tile": [
+      18,
+      5
+    ],
+    "dialogue_id": "collega_jonathan",
+    "route": [],
+    "route_pause": 6.0,
+    "can_follow": true,
+    "is_playable_colleague": true,
+    "color": "#2f4750",
+    "skin": "#d6a578",
+    "hair": "#1b1a1c",
+    "sheet": "glasses",
+    "portrait": "res://assets/sprites/portraits/jonathan.png"
+  },
+  {
+    "id": "npc_willem",
+    "name": "Willem",
+    "role": "Client Lead",
+    "zone": "z1_entree",
+    "home_tile": [
+      11,
+      9
+    ],
+    "dialogue_id": "collega_willem",
+    "route": [],
+    "route_pause": 4.0,
+    "can_follow": true,
+    "is_playable_colleague": true,
+    "color": "#ddd8cc",
+    "skin": "#f0cba8",
+    "hair": "#a07840",
+    "sheet": "buttons",
+    "portrait": "res://assets/sprites/portraits/willem.png"
+  }
+]

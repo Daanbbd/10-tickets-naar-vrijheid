@@ -1,0 +1,54 @@
+{
+  "available_when": {},
+  "requirements": {},
+  "dialogue_ids": {
+    "offer": "t01_offer",
+    "fetch": "t01_fetch",
+    "recruit": "t01_recruit",
+    "complete": "t01_complete",
+    "fail": "t01_fail",
+    "done": "t01_done"
+  },
+  "minigame_config": {},
+  "reward_effects": [
+    {
+      "op": "add_item",
+      "item": "user_story"
+    },
+    {
+      "op": "toast",
+      "text": "BBD-201 opgelost. Er staat nu op papier wat we bouwen."
+    },
+    {
+      "op": "cue",
+      "cue": "ticket_klaar"
+    }
+  ],
+  "unlocks": [
+    "t02"
+  ],
+  "world_changes": [
+    {
+      "op": "set_text",
+      "target": "whiteboard_vergader",
+      "value": "Als paardenbezitter wil ik supplementen vergelijken zodat ik het juiste product kies."
+    },
+    {
+      "op": "camera_focus",
+      "target": "whiteboard_vergader",
+      "hold": 1.4
+    }
+  ],
+  "hint": "De user story staat op de vergadertafel in Summit.",
+  "id": "t01",
+  "code": "BBD-201",
+  "order": 1,
+  "title": "Wat moeten we eigenlijk bouwen?",
+  "summary": "Er ligt een user story die geen user story is. Niemand weet wat er precies opgeleverd moet worden.",
+  "anchor": "vergadertafel",
+  "owner_character": "daan",
+  "owner_role": "Product Owner",
+  "minigame_id": "mg_user_story",
+  "zone": "z5_summit",
+  "zone_name": "Summit"
+}
