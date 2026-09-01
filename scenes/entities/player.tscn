@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://cplayer10t"]
+[gd_scene load_steps=5 format=3 uid="uid://cplayer10t"]
 
 [ext_resource type="Script" path="res://scripts/entities/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/entities/interaction_probe.gd" id="2_probe"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/schaduw_karakter.png" id="9_schaduw"]
 
 [sub_resource type="CapsuleShape2D" id="body_shape"]
 radius = 4.0
@@ -15,6 +16,10 @@ collision_layer = 2
 collision_mask = 1
 motion_mode = 1
 script = ExtResource("1_player")
+
+[node name="Schaduw" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("9_schaduw")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 offset = Vector2(0, -16)

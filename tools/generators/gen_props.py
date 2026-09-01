@@ -268,10 +268,22 @@ def monitorwand(tw, th=1):
     return img
 
 
+def schaduw_karakter():
+    """Contactschaduw onder een personage. Zonder dit zweeft elke sprite los
+    boven de vloer. Hard begrensd met een half-transparante rand: een echte
+    gradient valt op deze schaal uit elkaar in banden."""
+    img = Image.new("RGBA", (14, 6), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse([0, 0, 13, 5], fill=(0, 0, 0, 40))
+    d.ellipse([2, 1, 11, 4], fill=(0, 0, 0, 72))
+    return img
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     items = {"paard_bug.png": horse(True), "paard_klant.png": horse(False),
-             "gat.png": hole(), "vogel.png": logo()}
+             "gat.png": hole(), "vogel.png": logo(),
+             "schaduw_karakter.png": schaduw_karakter()}
     # meubelcomposieten: naam moet exact matchen met PROPS uit gen_floor.py
     # gedraaide eilanden: 4 tegels breed, hoogte bepaalt het aantal werkplekken
     for th in (4, 8):

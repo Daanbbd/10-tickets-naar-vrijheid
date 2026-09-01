@@ -354,6 +354,11 @@ func _test_wereld() -> void:
 		var n: NpcDef = GameData.npc(StringName(nid))
 		_ok(not _solide(grid, legend, n.home_tile.x, n.home_tile.y),
 			"NPC '%s' staat op een solide tegel %s" % [n.id, n.home_tile])
+		# Ook elk waypoint: nearest_walkable() snapt een fout punt stil weg,
+		# waardoor een route ongemerkt ergens anders gaat lopen dan bedoeld.
+		for wp: Vector2i in n.route:
+			_ok(not _solide(grid, legend, wp.x, wp.y),
+				"NPC '%s' heeft een waypoint op een solide tegel %s" % [n.id, wp])
 
 
 func _test_questketen_alle_personages() -> void:

@@ -9,7 +9,32 @@
       23
     ],
     "dialogue_id": "dennis",
-    "route": [],
+    "route": [
+      [
+        61,
+        23
+      ],
+      [
+        53,
+        20
+      ],
+      [
+        40,
+        12
+      ],
+      [
+        26,
+        12
+      ],
+      [
+        40,
+        12
+      ],
+      [
+        53,
+        20
+      ]
+    ],
     "route_pause": 2.5,
     "can_follow": true,
     "color": "#4a6d99",
@@ -35,7 +60,24 @@
       18
     ],
     "dialogue_id": "bastiaan",
-    "route": [],
+    "route": [
+      [
+        12,
+        18
+      ],
+      [
+        12,
+        22
+      ],
+      [
+        9,
+        22
+      ],
+      [
+        9,
+        18
+      ]
+    ],
     "route_pause": 6.0,
     "can_follow": true,
     "color": "#e8e4dc",
@@ -61,7 +103,20 @@
       2
     ],
     "dialogue_id": "koen",
-    "route": [],
+    "route": [
+      [
+        21,
+        2
+      ],
+      [
+        18,
+        4
+      ],
+      [
+        21,
+        5
+      ]
+    ],
     "route_pause": 5.0,
     "can_follow": true,
     "color": "#6f8fd0",
@@ -87,8 +142,21 @@
       9
     ],
     "dialogue_id": "klant",
-    "route": [],
-    "route_pause": 0.0,
+    "route": [
+      [
+        9,
+        9
+      ],
+      [
+        11,
+        9
+      ],
+      [
+        9,
+        11
+      ]
+    ],
+    "route_pause": 4.0,
     "can_follow": false,
     "color": "#d98cb3",
     "skin": "#f2d3b3",
@@ -146,8 +214,17 @@
       12
     ],
     "dialogue_id": "bezorger",
-    "route": [],
-    "route_pause": 0.0,
+    "route": [
+      [
+        3,
+        12
+      ],
+      [
+        5,
+        12
+      ]
+    ],
+    "route_pause": 3.0,
     "can_follow": false,
     "spawn_when": {
       "tickets_done": [
@@ -176,7 +253,20 @@
       6
     ],
     "dialogue_id": "collega_daan",
-    "route": [],
+    "route": [
+      [
+        48,
+        6
+      ],
+      [
+        47,
+        5
+      ],
+      [
+        50,
+        5
+      ]
+    ],
     "route_pause": 5.0,
     "can_follow": true,
     "is_playable_colleague": true,
@@ -203,7 +293,20 @@
       4
     ],
     "dialogue_id": "collega_danny",
-    "route": [],
+    "route": [
+      [
+        60,
+        4
+      ],
+      [
+        57,
+        4
+      ],
+      [
+        60,
+        2
+      ]
+    ],
     "route_pause": 5.0,
     "can_follow": true,
     "is_playable_colleague": true,
@@ -230,7 +333,24 @@
       22
     ],
     "dialogue_id": "collega_victor",
-    "route": [],
+    "route": [
+      [
+        34,
+        22
+      ],
+      [
+        34,
+        18
+      ],
+      [
+        30,
+        18
+      ],
+      [
+        30,
+        22
+      ]
+    ],
     "route_pause": 5.0,
     "can_follow": true,
     "is_playable_colleague": true,
@@ -257,7 +377,16 @@
       5
     ],
     "dialogue_id": "collega_jonathan",
-    "route": [],
+    "route": [
+      [
+        18,
+        5
+      ],
+      [
+        18,
+        3
+      ]
+    ],
     "route_pause": 6.0,
     "can_follow": true,
     "is_playable_colleague": true,
@@ -284,7 +413,24 @@
       9
     ],
     "dialogue_id": "collega_willem",
-    "route": [],
+    "route": [
+      [
+        11,
+        9
+      ],
+      [
+        14,
+        9
+      ],
+      [
+        14,
+        12
+      ],
+      [
+        11,
+        12
+      ]
+    ],
     "route_pause": 4.0,
     "can_follow": true,
     "is_playable_colleague": true,
