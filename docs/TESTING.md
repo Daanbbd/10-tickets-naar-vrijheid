@@ -106,11 +106,44 @@ browser `instantiateStreaming`; daarom zet `serve_web.py` de mimetypes en de
 COOP/COEP-headers zelf.
 
 De Web-preset staat op `variant/thread_support=false`, want mét threads eist de
-browser die COOP/COEP-headers ook van elke hostende partij. `build/` is
-genegeerd; `export_presets.cfg` ook, dus de preset staat niet in een verse
-clone.
+browser die COOP/COEP-headers ook van elke hostende partij.
+
+`build/` is genegeerd, en `export_presets.cfg` ook. Die preset staat dus niet in
+een verse clone, en daarom staan de drie waarden die niet vanzelf goed gaan
+hier:
+
+| optie | waarde | waarom |
+|---|---|---|
+| `vram_texture_compression/for_mobile` | `false` | op `true` weigert de export met "configuration errors" zolang `import_etc2_astc` uitstaat — en blokcompressie smeert pixel-art uit, wat botst met `default_texture_filter=0` |
+| `vram_texture_compression/for_desktop` | `false` | idem |
+| `html/head_include` | `<meta name="apple-mobile-web-app-capable" content="yes">` | zonder dit opent "Zet op beginscherm" op iOS een Safari-tab met adresbalk, en test je de portretlayout met minder hoogte dan het echt is |
+
+De exportfout hierboven meldt "due to configuration errors" en zet er dan niets
+achter, ook niet met `--verbose`. De oorzaak is vrijwel altijd de
+texturecompressie.
 
 Dit werkt pas zodra de export templates geïnstalleerd zijn — zie hieronder.
+
+## Wat een webexport níet test
+
+De export dekt de duimbesturing: `Invoer.touch()` accepteert ook
+`DisplayServer.is_touchscreen_available()`, en die is waar in een mobiele
+browser.
+
+Twee dingen dekt hij niet.
+
+De **veilige zone** niet. `UiKit.veilige_insets()` leunt op
+`DisplayServer.get_display_safe_area()`, en het webplatform vult die niet: in
+`godot.js` staat geen enkele verwijzing naar `env(safe-area-inset-*)`, dus de
+engine kan de insets niet weten en geeft de hele ruit terug. De notch is alleen
+op een echte iOS- of Android-build te controleren.
+
+De **app-pauze** vermoedelijk niet. `NOTIFICATION_APPLICATION_PAUSED` is een
+iOS/Android-notificatie; op web komt alleen focus in/uit, en `Shell` laat die
+route alleen door als `OS.has_feature("mobile")` waar is. Of die vlag op een
+web-export waar is, is niet vastgesteld. Te meten door het toestel te
+vergrendelen en terug te komen: als het spel gepauzeerd stond en het geluid uit
+was, liep de route.
 
 ## Bekende beperkingen
 
