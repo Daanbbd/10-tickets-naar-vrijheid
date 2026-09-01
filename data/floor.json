@@ -11,20 +11,11 @@
  "walk_speed_tiles_per_sec": 6.0,
  "props": [
   {
-   "prop": "balie_5x1",
-   "rect": [
-    9,
-    2,
-    13,
-    2
-   ]
-  },
-  {
    "prop": "serverrack_2x4",
    "rect": [
-    19,
+    7,
     2,
-    20,
+    8,
     5
    ]
   },
@@ -40,9 +31,9 @@
   {
    "prop": "keukenblok_5x1",
    "rect": [
-    35,
+    18,
     2,
-    39,
+    22,
     2
    ]
   },
@@ -56,11 +47,11 @@
    ]
   },
   {
-   "prop": "tafel_lang_26x2",
+   "prop": "tafel_lang_38x2",
    "rect": [
-    47,
+    55,
     10,
-    72,
+    92,
     11
    ]
   },
@@ -130,18 +121,18 @@
  ],
  "grid": [
   "##################################################################################################################################",
-  "##.....#EEEEEEEEE#....#CCCCCCCCCCCCCCCCCC##LxxxLLLLLLL#......____.......#LLLLLLLLmmmmLLLLLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "##u....#E_____EEE#.__.#C__________C_____C##LLLqqssqqLL#.bb...........bb.#LLLLLsssssssssssLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "##.....#EEEEEEEEE#.__.#C__________CCCCCCC##LLLqsttsqLL#.bb....rr.....bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "##u....#EEEEEEEPE#.__.#CCCCCCCCCCCCCCCCfC##LLLqsttsqLL#.......rr........#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbGGGG#",
-  "##....W#EEEEEEEPE#.__.#HCCCCCCCCCCCCCCCfC##LLLqqssqqLL#.bb...........bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbJJJG#",
-  "##.....#EEEEEEEEE#....#CCCCCCCCCCCCCCCCCC##LLLLLLLLLLL#.bb...........bb.#LLLLLLLLLLLLLLLLLLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "###D####.........##DD####DDD###############=====DD====#=======DD========#=========DD=========###=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "#mEEEEEEEEEEEEEEE.............lIIIIIII=.........................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "#EEEEEEEEEEEEEEEE.............lIIIIIII=......Y..................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "VEEEEEEEEEEEEEEEE.............####D####........__________________________.......................DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "VEEEEEEEEEEEEEEEE..............................__________________________.......................DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "VEEEEEEEEEEEEEEEE...............................................................................DGGGGGGttttttttGGGGGGGGGGGGGGGGGG#",
+  "#XXXX#....#.....#......CCCCCCCCCCCC##CCCC##LxxxLLLLLLL#......____.......#LLLLLLLLmmmmLLLLLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "#XXXX#.__.#.u...#H_____C__________C##CCCC##LLLqqssqqLL#.bb...........bb.#LLLLLsssssssssssLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "#XXXX#.__.#.....#......C__________C##CCCC##LLLqsttsqLL#.bb....rr.....bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "#XXXX#.__.#.u...#......CCCCCCCCCCCC##CYCC##LLLqsttsqLL#.......rr........#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbGGGG#",
+  "#XXXX#.__.#....W#......CCCCCCCCCCfC##CCCC##LLLqqssqqLL#.bb...........bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbJJJG#",
+  "#XXXX#...P#.....#......CCCCCCCCCCCC##CCCC##LLLLLLLLLLL#.bb...........bb.#LLLLLLLLLLLLLLLLLLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "##NN###DD####D######DDD###############DD###=====DD====#=======DD========#=========DD=========###=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "#mEEEEEEEEccEEEEE..............IIIIIII..........................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "#EEEEEEEEEEEEEEEE..............IIIIIII......###D###.............................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "VEEEEEEEEEEEEEEEE...........................l.....=....______________________________________...DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "VEEEEEEEEEEEEEEEE...........................l.....=....______________________________________...DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "VEEEEEEEEEEEEEEEE...........................#######.............................................DGGGGGGttttttttGGGGGGGGGGGGGGGGGG#",
   "#EEEEEEEEEEEEEEEE...............................................................................DGGGGGGttttttttGGGGGGGGGGGGGGGGGG#",
   "#...............................................................................................DGGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
   "#....____......___......____..........____........___.......____............____................DGGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
@@ -183,6 +174,11 @@
    "kind": "wall",
    "solid": true,
    "prop": "nooduitgang"
+  },
+  "X": {
+   "kind": "wall",
+   "solid": true,
+   "prop": "trappenhuis"
   },
   "B": {
    "kind": "prop",
@@ -355,40 +351,40 @@
    "id": "z2_toilet",
    "name": "Toiletten",
    "rect": [
-    2,
+    11,
     1,
-    6,
+    15,
     6
    ],
    "light": "klinisch"
+  },
+  {
+   "id": "z3_patchhok",
+   "name": "Het Patchhok",
+   "rect": [
+    6,
+    1,
+    9,
+    6
+   ],
+   "light": "koud"
   },
   {
    "id": "z1_entree",
    "name": "Entree",
    "rect": [
     1,
-    1,
+    7,
     16,
     13
    ],
    "light": "warm"
   },
   {
-   "id": "z3_patchhok",
-   "name": "Het Patchhok",
-   "rect": [
-    18,
-    1,
-    21,
-    6
-   ],
-   "light": "koud"
-  },
-  {
    "id": "z4_koffiecorner",
    "name": "Koffiecorner",
    "rect": [
-    23,
+    17,
     1,
     40,
     6
@@ -432,10 +428,10 @@
    "id": "z8_hokje",
    "name": "Het Vergaderhokje",
    "rect": [
-    30,
-    7,
-    38,
-    10
+    44,
+    9,
+    50,
+    12
    ],
    "light": "dim"
   },

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dxqnmp6yxkmut"
-path="res://.godot/imported/tafel_lang_26x2.png-ffdd37fc404867c4e5d3913f91fc226f.ctex"
+uid="uid://dajjlbmtb5yhm"
+path="res://.godot/imported/tafel_lang_38x2.png-74df1b65ab63d6545677d1c41b595c6a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/props/tafel_lang_26x2.png"
-dest_files=["res://.godot/imported/tafel_lang_26x2.png-ffdd37fc404867c4e5d3913f91fc226f.ctex"]
+source_file="res://assets/sprites/props/tafel_lang_38x2.png"
+dest_files=["res://.godot/imported/tafel_lang_38x2.png-74df1b65ab63d6545677d1c41b595c6a.ctex"]
 
 [params]
 

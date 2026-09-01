@@ -99,25 +99,37 @@
     "role": "Backend developer",
     "zone": "z3_patchhok",
     "home_tile": [
-      21,
-      2
+      7,
+      6
     ],
     "dialogue_id": "koen",
     "route": [
       [
-        21,
-        2
+        7,
+        6
       ],
       [
-        18,
+        8,
+        9
+      ],
+      [
+        21,
+        9
+      ],
+      [
+        21,
         4
       ],
       [
         21,
-        5
+        9
+      ],
+      [
+        8,
+        9
       ]
     ],
-    "route_pause": 5.0,
+    "route_pause": 3.0,
     "can_follow": true,
     "color": "#6f8fd0",
     "skin": "#eac09a",
@@ -373,18 +385,18 @@
     "role": "Backend developer",
     "zone": "z3_patchhok",
     "home_tile": [
-      18,
-      5
+      9,
+      3
     ],
     "dialogue_id": "collega_jonathan",
     "route": [
       [
-        18,
-        5
+        9,
+        3
       ],
       [
-        18,
-        3
+        9,
+        5
       ]
     ],
     "route_pause": 6.0,

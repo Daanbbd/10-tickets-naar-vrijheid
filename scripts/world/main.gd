@@ -388,6 +388,32 @@ func _on_player_tile(t: Vector2i) -> void:
 		_zone_id = zid
 		_tint_zone(String(z.get("light", "neutraal")))
 		Bus.zone_entered.emit(zid, String(z.get("name", "")))
+	if zid == &"z10_weekend":
+		_weekend_duwt_terug()
+
+
+## Weekend is van het designbureau waar we de vloer mee delen. Je mag er komen,
+## maar niets houdt je er. Geen onzichtbare muur: een reeks opmerkingen die
+## steeds ongeduldiger worden, zodat teruglopen jouw idee lijkt.
+const WEEKEND_DUW := [
+	"Er gebeuren hier rare dingen. Ga terug.",
+	"Dit is te veel geluid. AAA.",
+	"Iemand vraagt of je van de podcast bent. Je bent niet van de podcast.",
+	"Er staat een plant die je aankijkt.",
+	"Dit is hun vloer. Dat is duidelijk.",
+]
+const WEEKEND_PAUZE := 4.5
+
+var _weekend_t: float = 0.0
+var _weekend_i: int = 0
+
+
+func _weekend_duwt_terug() -> void:
+	if _weekend_t > 0.0:
+		return
+	_weekend_t = WEEKEND_PAUZE
+	Bus.toast_requested.emit(WEEKEND_DUW[_weekend_i % WEEKEND_DUW.size()], &"weekend")
+	_weekend_i += 1
 
 
 func _tint_zone(mood: String) -> void:
@@ -415,3 +441,8 @@ func _verlaat_kantoor() -> void:
 	await get_tree().create_timer(1.2).timeout
 	Bus.game_finished.emit(true)
 	Shell.goto_ending()
+
+
+func _process(delta: float) -> void:
+	if _weekend_t > 0.0:
+		_weekend_t = maxf(0.0, _weekend_t - delta)

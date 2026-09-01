@@ -13,7 +13,7 @@ T = 16
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # volgorde bepaalt de atlas-kolom
-CHARS = (list(".D#=VNBPTbtcKfxSAWmpo") + list("EOLGI") + list("H")
+CHARS = (list(".D#=VNBPTbtcKfxSAWmpo") + list("EOLGI") + list("H") + list("X")
          + list("uRnljYJqsr") + list("C") + list("_"))
 
 
@@ -78,6 +78,13 @@ def build(ch):
         d.rectangle([2, 2, T - 3, T - 2], fill=rgba("bluebird_donker"))
         d.rectangle([3, 4, T - 4, 10], fill=rgba("glas", 150))
         d.point((T - 5, 12), fill=rgba("geel"))
+    elif ch == "X":  # trappenhuis, op slot en niet te betreden
+        draw_wall(d)
+        d.rectangle([2, 2, T - 3, T - 2], fill=rgba("schaduw"))
+        for i in range(4):                    # treden van bovenaf
+            y = 3 + i * 3
+            d.line([(3, y), (T - 4, y)], fill=rgba("lichtgrijs"))
+            d.line([(3, y + 1), (T - 4, y + 1)], fill=rgba("inkt", 120))
     elif ch == "N":  # nooduitgang, op slot
         draw_wall(d)
         d.rectangle([2, 3, T - 3, T - 2], fill=rgba("groen_donker"))

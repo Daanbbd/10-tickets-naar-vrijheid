@@ -69,10 +69,15 @@ def rect(x0, y0, x1, y1, ch):
 # alles binnen de buitenwanden is eerst vloer; muren komen er daarna weer in
 rect(1, 1, W - 2, H - 2, '.')
 
+# Volgorde van west naar oost, afgelezen van de geannoteerde ontruimings-
+# plattegrond: trappenhuis, serverhok, toilet, en dan pas de open kantoorvloer.
+# Het serverhok zat eerder midden op de vloer (x18-21); dat klopte niet met de
+# plattegrond en ook niet met de hint van t05 ("het Patchhok zit naast de
+# toiletten"). De ingang ligt voorbij het trappenhuis, dat op slot zit.
 NOORD = [   # (x0, x1, deur-x0, deur-x1, glas?)
-    (2, 6, 3, 3, False),       # Toilet — 5 tegels = 6,4 m2, deur naast de ingang
-    (18, 21, 19, 20, False),   # Het Patchhok
-    (23, 40, 25, 27, False),   # Koffiecorner — brede doorgang, het is een corner
+    (6, 9, 7, 8, False),       # Het Patchhok, het echte serverhok — 4x6 = 5,1 m2
+    (11, 15, 13, 13, False),   # Toilet — 5x6 = 6,4 m2
+    (17, 34, 20, 22, False),   # Koffiecorner — brede doorgang, het is een corner
     # docs/LEVEL.md beschrijft ze als merkbaar verschillend: Summit klein en
     # leeg, Birdhouse de grote zaal. Nu ook in tegels, via tiles(meters).
     (43, 53, 48, 49, True),    # Summit    11x6 = 14,1 m2
@@ -87,13 +92,19 @@ for (x0, x1, d0, d1, glas) in NOORD:
     rect(d0, 7, d1, 7, 'D')
 
 # tussenwanden van de noordband
-for x in (1, 7, 17, 22, 41, 42, 54, 72):
+for x in (5, 10, 16, 42, 54, 72):
     rect(x, 1, x, 6, '#')
+rect(35, 1, 36, 6, '#')       # smalle schacht naast de koffiecorner
+rect(41, 1, 42, 6, '#')       # en naast Summit; ertussen de tijgernis
+rect(37, 7, 40, 7, '#')
+rect(38, 7, 39, 7, 'D')       # opening naar de tijgernis
 
-# ---- Lobby: de ruimte die vrijkomt naast het verkleinde toilet ----
-# Open naar de gang, zodat de entree een echte hal is in plaats van een stuk
-# gang. Precies waar de schets de ingangspijl zet.
-rect(8, 7, 16, 7, '.')
+# ---- Trappenhuis: op slot, dus geen speelruimte ----
+# Je komt de verdieping binnen voorbij de trap; de trap zelf is niet te
+# bereiken. Als massief blok getekend, anders meldt de bereikbaarheidscheck
+# terecht dat er vloer is waar niemand kan komen.
+rect(1, 1, 4, 6, 'X')
+rect(2, 7, 3, 7, 'N')         # deur op slot, zichtbaar vanuit de gang
 # de strook tussen Birdhouse en Weekend is dicht: schacht, geen ruimte
 rect(93, 1, 95, 6, '#')
 
@@ -101,36 +112,35 @@ rect(93, 1, 95, 6, '#')
 rect(96, 1, 96, 24, '=')
 rect(96, 10, 96, 15, 'D')
 
-# ---- Vergaderhokje: vrijstaand, hangt aan de scheidingslijn in de gang ----
-rect(30, 7, 38, 10, '#')
-rect(31, 8, 37, 9, '.')
-rect(34, 10, 34, 10, 'D')
-rect(30, 8, 30, 9, 'l')       # houten lamellenzijde met de "Samen Bingo"-poster
-rect(38, 8, 38, 9, '=')
+# ---- Vergaderhokje: vrijstaand blok in de gang, onder Summit ----
+rect(44, 9, 50, 12, '#')
+rect(45, 10, 49, 11, '.')
+rect(47, 9, 47, 9, 'D')       # deur naar de gang, aan de Summit-kant
+rect(44, 10, 44, 11, 'l')     # houten lamellenzijde met de "Samen Bingo"-poster
+rect(50, 10, 50, 11, '=')
 
 # ---- Voordeur op de westwand: de wincondititie ----
 rect(0, 10, 0, 12, 'V')
 
-# ---- Entree: balie, printer en het scherm bij de deur ----
-# De receptie staat in de lobby, niet in de gang. x3,y8 blijft vrij: dat is de
-# enige toegang tot de toiletdeur op x3,y7.
-prop("balie", 9, 2, 13, 2)
-rect(15, 4, 15, 5, 'P')
+# ---- Entree: geen balie. De receptie zit op een andere verdieping; deze
+# verdieping is puur kantoor. Alleen een scherm en de printer bij de deur.
 rect(1, 8, 1, 8, 'm')          # scherm_entree, tegen de westwand
+rect(10, 8, 11, 8, 'c')        # wachtbank: hier zit de klant
+rect(9, 6, 9, 6, 'P')          # printer, in het serverhok
 
 # ---- Toiletgag letterlijk: 2 urinoirs en 1 pot, alles achter één deur ----
-rect(2, 2, 2, 2, 'u')
-rect(2, 4, 2, 4, 'u')
-rect(6, 5, 6, 5, 'W')
+rect(12, 2, 12, 2, 'u')
+rect(12, 4, 12, 4, 'u')
+rect(15, 5, 15, 5, 'W')
 
-# ---- Patchhok: krappe warme techniekkast ----
-prop("serverrack", 19, 2, 20, 5)
+# ---- Patchhok: krappe warme techniekkast, naast de toiletten ----
+prop("serverrack", 7, 2, 8, 5)
 
 # ---- Koffiecorner: tribune-trap, Jura en de DIA-awards ----
 prop("tribune", 24, 2, 33, 3)
-prop("keukenblok", 35, 2, 39, 2)
-rect(39, 4, 39, 5, 'f')
-rect(23, 5, 23, 5, 'H')        # prikbord met de losse mini-tickets
+prop("keukenblok", 18, 2, 22, 2)
+rect(33, 5, 33, 5, 'f')
+rect(17, 2, 17, 2, 'H')        # prikbord met de losse mini-tickets
 
 # ---- Summit: kleine tafel, 4 witte stoelen, schaakbordkleed ----
 rect(44, 1, 46, 1, 'x')        # whiteboard_vergader: hier landt de user story
@@ -157,8 +167,12 @@ rect(89, 3, 89, 5, 's')
 rect(81, 1, 84, 1, 'm')       # deploycomputer aan de noordwand
 
 # ---- De Gang: de blauwe tijger en de grote tafel met planten ----
-rect(45, 9, 45, 9, 'Y')
-prop("tafel_lang", 47, 10, 72, 11)
+# De tijger staat in de opening tussen de koffiecorner en Summit: het eerste
+# wat je ziet als je de gang in kijkt.
+rect(38, 4, 38, 4, 'Y')
+# De grote tafel begint rechts van het vergaderhokje en loopt door tot het
+# einde van Birdhouse. Tussen hokje en tafel blijft ruimte om door te lopen.
+prop("tafel_lang", 55, 10, 92, 11)
 
 # ---- De Vloer (raamzijde): bureau-eilanden en plantenkasten ----
 # Een kwartslag gedraaid t.o.v. de eerste opzet: elk eiland is een blok dat de
@@ -203,6 +217,7 @@ LEGEND = {
     "=": {"kind": "glass", "solid": True},
     "V": {"kind": "exit",  "solid": True,  "prop": "voordeur"},
     "N": {"kind": "wall",  "solid": True,  "prop": "nooduitgang"},
+    "X": {"kind": "wall",  "solid": True,  "prop": "trappenhuis"},
     "B": {"kind": "prop",  "solid": True,  "prop": "balie"},
     "P": {"kind": "prop",  "solid": True,  "prop": "printer"},
     "T": {"kind": "prop",  "solid": True,  "prop": "ticketbord"},
@@ -243,7 +258,6 @@ LEGEND = {
 # ---- accentvloeren: één accent per ruimte, de rest blijft neutraal beton ----
 ACCENT_ROOMS = [
     (1, 8, 16, 13, 'E'),      # entree/gang — bb-blue, hero-moment
-    (8, 1, 16, 6, 'E'),       # de lobby erboven
     (23, 1, 40, 6, 'C'),      # koffiecorner — teal, de tribune-kleur
     (43, 1, 53, 6, 'L'),      # Summit — bb-light-blue
     (73, 1, 92, 6, 'L'),      # Birdhouse — bb-light-blue
@@ -258,14 +272,14 @@ for (x0, y0, x1, y1, ch) in ACCENT_ROOMS:
 
 # ZONES: specifiek vóór algemeen — world_builder.zone_at() geeft de eerste match
 ZONES = [
-    {"id": "z2_toilet",       "name": "Toiletten",        "rect": [2, 1, 6, 6],      "light": "klinisch"},
-    {"id": "z1_entree",       "name": "Entree",           "rect": [1, 1, 16, 13],    "light": "warm"},
-    {"id": "z3_patchhok",     "name": "Het Patchhok",     "rect": [18, 1, 21, 6],    "light": "koud"},
-    {"id": "z4_koffiecorner", "name": "Koffiecorner",     "rect": [23, 1, 40, 6],    "light": "warm"},
+    {"id": "z2_toilet",       "name": "Toiletten",        "rect": [11, 1, 15, 6],    "light": "klinisch"},
+    {"id": "z3_patchhok",     "name": "Het Patchhok",     "rect": [6, 1, 9, 6],      "light": "koud"},
+    {"id": "z1_entree",       "name": "Entree",           "rect": [1, 7, 16, 13],    "light": "warm"},
+    {"id": "z4_koffiecorner", "name": "Koffiecorner",     "rect": [17, 1, 40, 6],    "light": "warm"},
     {"id": "z5_summit",       "name": "Summit",           "rect": [43, 1, 53, 6],    "light": "koel"},
     {"id": "z6_basecamp",     "name": "Basecamp",         "rect": [55, 1, 71, 6],    "light": "neutraal"},
     {"id": "z7_birdhouse",    "name": "Birdhouse",        "rect": [73, 1, 92, 6],    "light": "koel"},
-    {"id": "z8_hokje",        "name": "Het Vergaderhokje","rect": [30, 7, 38, 10],   "light": "dim"},
+    {"id": "z8_hokje",        "name": "Het Vergaderhokje","rect": [44, 9, 50, 12],   "light": "dim"},
     {"id": "z10_weekend",     "name": "Weekend",          "rect": [97, 1, 128, 24],  "light": "jungle"},
     {"id": "z9_vloer",        "name": "De Vloer",         "rect": [1, 14, 95, 24],   "light": "neutraal"},
     {"id": "z11_gang",        "name": "De Gang",          "rect": [1, 7, 95, 13],    "light": "neutraal"},

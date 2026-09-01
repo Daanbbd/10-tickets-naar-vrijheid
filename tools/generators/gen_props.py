@@ -290,7 +290,7 @@ def main():
         items["bureau_4x%d.png" % th] = bureau_eiland_v(th)
     for th in (6, 8):
         items["plantenkast_3x%d.png" % th] = plantenkast_v(th)
-    items["tafel_lang_26x2.png"] = tafel_lang(26)
+    items["tafel_lang_38x2.png"] = tafel_lang(38)
     items["monitorwand_4x1.png"] = monitorwand(4)
     items["tribune_10x2.png"] = tribune(10)
     items["keukenblok_5x1.png"] = keukenblok(5)

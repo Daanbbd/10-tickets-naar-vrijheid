@@ -27,7 +27,7 @@ zijn idempotent en worden bij het laden opnieuw afgespeeld.
 |---|---|
 | BBD-201 | `set_text` op `whiteboard_vergader`; `camera_focus` op `whiteboard_vergader` |
 | BBD-202 | `set_text` op `scrumbord_gang` |
-| BBD-203 | `set_text` op `receptiebalie`; `despawn_npc` |
+| BBD-203 | `set_text` op `wachtbank`; `despawn_npc` |
 | BBD-204 | `set_text` op `wandmonitor_vloer`; `camera_focus` op `wandmonitor_vloer` |
 | BBD-205 | `set_text` op `serverrack_a`; `set_modulate` op `serverrack_a` |
 | BBD-206 | `set_text` op `dashboardmuur`; `set_modulate` op `dashboardmuur` |
@@ -45,7 +45,7 @@ permanente doelregel in de HUD.
 |---|---|
 | BBD-201 | De user story staat op de vergadertafel in Summit. |
 | BBD-202 | Het scrumbord hangt achter de bureaus, aan de zuidwand. |
-| BBD-203 | De klant wacht bij de receptie. |
+| BBD-203 | De klant zit op de bank in de entree. |
 | BBD-204 | De wandmonitor achter de bureaus laat de staging zien. |
 | BBD-205 | Het Patchhok zit naast de toiletten, achter de badgelezer. |
 | BBD-206 | De dashboardmuur hangt in Basecamp, boven de ronde tafel. |

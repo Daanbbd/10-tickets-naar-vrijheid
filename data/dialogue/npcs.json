@@ -4,7 +4,19 @@
     "nodes": {
       "start": {
         "speaker": "dennis",
-        "text": "Alles staat op het bord. Heb ik vanmorgen alvast bijgewerkt.",
+        "variants": [
+          {
+            "when": {
+              "flags_all": [
+                "dennis_bezocht"
+              ]
+            },
+            "text": "oh jij nog een keer. bord staat nog goed."
+          },
+          {
+            "text": "Alles staat op het bord. Heb ik vanmorgen alvast bijgewerkt."
+          }
+        ],
         "next": "vraag"
       },
       "vraag": {
@@ -29,7 +41,14 @@
         "choices": [
           {
             "text": "Het gaat goed.",
-            "next": "goed"
+            "next": "goed",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "dennis_bezocht",
+                "value": true
+              }
+            ]
           },
           {
             "text": "Het is een puinhoop.",
@@ -39,12 +58,24 @@
                 "op": "set_flag",
                 "flag": "dennis_weet_het",
                 "value": true
+              },
+              {
+                "op": "set_flag",
+                "flag": "dennis_bezocht",
+                "value": true
               }
             ]
           },
           {
             "text": "Ik heb even geen tijd.",
-            "next": "weg"
+            "next": "weg",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "dennis_bezocht",
+                "value": true
+              }
+            ]
           }
         ]
       },
@@ -92,6 +123,32 @@
         "variants": [
           {
             "when": {
+              "flags_all": [
+                "bastiaan_bezocht"
+              ],
+              "min_tickets_done": 7
+            },
+            "text": "hiya,, alles is groen,, ik vertrouw het niet,,"
+          },
+          {
+            "when": {
+              "flags_all": [
+                "bastiaan_bezocht"
+              ],
+              "min_tickets_done": 3
+            },
+            "text": "ah jij nog een keer,, ik ben dezelfde component nog aan het verbeteren,, hij is nu echt goed,,"
+          },
+          {
+            "when": {
+              "flags_all": [
+                "bastiaan_bezocht"
+              ]
+            },
+            "text": "hiya nog een keer,, ik ben er nog,,"
+          },
+          {
+            "when": {
               "min_tickets_done": 7
             },
             "text": "Ik heb de hele build nagelopen,, er zit niets fout in,, dat vertrouw ik niet."
@@ -130,7 +187,28 @@
           {
             "text": "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
           }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "bastiaan",
+        "text": ",,",
+        "choices": [
+          {
+            "text": "Oke.",
+            "next": "einde",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "bastiaan_bezocht",
+                "value": true
+              }
+            ]
+          }
         ]
+      },
+      "einde": {
+        "speaker": ""
       }
     }
   },
@@ -140,6 +218,23 @@
       "start": {
         "speaker": "koen",
         "variants": [
+          {
+            "when": {
+              "flags_all": [
+                "koen_bezocht"
+              ],
+              "min_tickets_done": 6
+            },
+            "text": "nog steeds stil, lekker ouwe. ben ik bijna nerveus van."
+          },
+          {
+            "when": {
+              "flags_all": [
+                "koen_bezocht"
+              ]
+            },
+            "text": "ah ben je er weer. ik zit in een andere rabbit hole. geen zorg haha."
+          },
           {
             "when": {
               "min_tickets_done": 6
@@ -154,7 +249,43 @@
       },
       "tweede": {
         "speaker": "koen",
-        "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken."
+        "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken.",
+        "next": "derde"
+      },
+      "derde": {
+        "speaker": "koen",
+        "variants": [
+          {
+            "when": {
+              "min_tickets_done": 6
+            },
+            "text": "De piepelienies lopen trouwens weer. Took a while haha."
+          },
+          {
+            "text": "Ik kijk straks nog even naar de piepelienies. Iets met een timeout, vgm."
+          }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "koen",
+        "text": ".",
+        "choices": [
+          {
+            "text": "Oke.",
+            "next": "einde",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "koen_bezocht",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "einde": {
+        "speaker": ""
       }
     }
   },
@@ -303,6 +434,32 @@
         "variants": [
           {
             "when": {
+              "flags_all": [
+                "daan_bezocht"
+              ],
+              "min_tickets_done": 8
+            },
+            "text": "Ik wil zeggen: bijna. Dan zeg ik het maar gewoon. Bijna."
+          },
+          {
+            "when": {
+              "flags_all": [
+                "daan_bezocht"
+              ],
+              "min_tickets_done": 4
+            },
+            "text": "Voortgang. Als het zo doorgaat wordt het nog wat."
+          },
+          {
+            "when": {
+              "flags_all": [
+                "daan_bezocht"
+              ]
+            },
+            "text": "Al iets gevonden?"
+          },
+          {
+            "when": {
               "min_tickets_done": 8
             },
             "text": "Bijna. Ik durf het bijna hardop te zeggen."
@@ -347,7 +504,28 @@
           {
             "text": "Zeg het als iets niet klopt. Liever nu dan bij de oplevering."
           }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "daan",
+        "text": ".",
+        "choices": [
+          {
+            "text": "Oke.",
+            "next": "einde",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "daan_bezocht",
+                "value": true
+              }
+            ]
+          }
         ]
+      },
+      "einde": {
+        "speaker": ""
       }
     }
   },
@@ -357,6 +535,23 @@
       "start": {
         "speaker": "danny",
         "variants": [
+          {
+            "when": {
+              "flags_all": [
+                "danny_bezocht"
+              ],
+              "min_tickets_done": 8
+            },
+            "text": "de curve gaat omhoog. nu niet verpesten."
+          },
+          {
+            "when": {
+              "flags_all": [
+                "danny_bezocht"
+              ]
+            },
+            "text": "ah jij nog. psies. ik ben een test aan het analyseren."
+          },
           {
             "when": {
               "min_tickets_done": 8
@@ -397,7 +592,28 @@
           {
             "text": "alles is een funnel. de gang ook. mensen lopen linksom, altijd"
           }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "danny",
+        "text": ".",
+        "choices": [
+          {
+            "text": "Oke.",
+            "next": "einde",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "danny_bezocht",
+                "value": true
+              }
+            ]
+          }
         ]
+      },
+      "einde": {
+        "speaker": ""
       }
     }
   },
@@ -407,6 +623,23 @@
       "start": {
         "speaker": "victor",
         "variants": [
+          {
+            "when": {
+              "flags_all": [
+                "victor_bezocht"
+              ],
+              "min_tickets_done": 8
+            },
+            "text": "Build is groen. Heb hem drie keer gecheckt. Heb hem nogmaals gecheckt."
+          },
+          {
+            "when": {
+              "flags_all": [
+                "victor_bezocht"
+              ]
+            },
+            "text": "Oh. Is er iets scheef?"
+          },
           {
             "when": {
               "min_tickets_done": 8
@@ -447,7 +680,28 @@
           {
             "text": "Als je iets scheef ziet staan, zeg het. Dan zie ik het ook en slaap ik slechter."
           }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "victor",
+        "text": ".",
+        "choices": [
+          {
+            "text": "Oke.",
+            "next": "einde",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "victor_bezocht",
+                "value": true
+              }
+            ]
+          }
         ]
+      },
+      "einde": {
+        "speaker": ""
       }
     }
   },
@@ -457,6 +711,23 @@
       "start": {
         "speaker": "jonathan",
         "variants": [
+          {
+            "when": {
+              "flags_all": [
+                "jonathan_bezocht"
+              ],
+              "min_tickets_done": 8
+            },
+            "text": "Nog een keer. De verbinding staat nog."
+          },
+          {
+            "when": {
+              "flags_all": [
+                "jonathan_bezocht"
+              ]
+            },
+            "text": "Ik ga er naartoe kijken, voor je het vraagt."
+          },
           {
             "when": {
               "min_tickets_done": 8
@@ -497,7 +768,28 @@
           {
             "text": "Het werkt lokaal. Moet zeggen dat dat ook iets is."
           }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "jonathan",
+        "text": ".",
+        "choices": [
+          {
+            "text": "Oke.",
+            "next": "einde",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "jonathan_bezocht",
+                "value": true
+              }
+            ]
+          }
         ]
+      },
+      "einde": {
+        "speaker": ""
       }
     }
   },
@@ -507,6 +799,23 @@
       "start": {
         "speaker": "willem",
         "variants": [
+          {
+            "when": {
+              "flags_all": [
+                "willem_bezocht"
+              ],
+              "min_tickets_done": 8
+            },
+            "text": "Ze heeft net gebeld. Positief. Dat is nu ook terecht, zei ze zelf."
+          },
+          {
+            "when": {
+              "flags_all": [
+                "willem_bezocht"
+              ]
+            },
+            "text": "Ben net terug. Ze is rustig. Voorlopig."
+          },
           {
             "when": {
               "min_tickets_done": 8
@@ -547,7 +856,28 @@
           {
             "text": "Als ze belt, ben ik in het hokje. Ook als ik daar niet ben."
           }
+        ],
+        "next": "slot"
+      },
+      "slot": {
+        "speaker": "willem",
+        "text": ".",
+        "choices": [
+          {
+            "text": "Oke.",
+            "next": "einde",
+            "effects": [
+              {
+                "op": "set_flag",
+                "flag": "willem_bezocht",
+                "value": true
+              }
+            ]
+          }
         ]
+      },
+      "einde": {
+        "speaker": ""
       }
     }
   }

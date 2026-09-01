@@ -653,7 +653,7 @@
     "nodes": {
       "start": {
         "speaker": "",
-        "text": "De receptie is leeg. Het mapje ligt er nog. Niemand raakt het aan."
+        "text": "De bank is leeg. Het mapje ligt er nog. Niemand raakt het aan."
       }
     }
   },
@@ -1799,7 +1799,7 @@
       },
       "oordeel": {
         "speaker": "jonathan",
-        "text": "Dat is de testset. Ben benieuwd. Ik kom."
+        "text": "Dat is precies de testset. Ik ga er naartoe kijken."
       }
     }
   },

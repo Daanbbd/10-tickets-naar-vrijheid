@@ -10,13 +10,13 @@
     "dialogue": "voordeur"
   },
   {
-    "world_id": "receptiebalie",
+    "world_id": "wachtbank",
     "tile": [
-      11,
-      3
+      10,
+      9
     ],
     "kind": "ticket",
-    "label": "Receptiebalie",
+    "label": "Wachtbank",
     "ticket": "t03",
     "visible_when": {
       "tickets_done": [
@@ -27,8 +27,8 @@
   {
     "world_id": "printer",
     "tile": [
-      14,
-      4
+      4,
+      9
     ],
     "kind": "examine",
     "label": "Printer",
@@ -57,7 +57,7 @@
   {
     "world_id": "prijzenkast",
     "tile": [
-      9,
+      17,
       5
     ],
     "kind": "examine",
@@ -67,7 +67,7 @@
   {
     "world_id": "urinoirs",
     "tile": [
-      3,
+      12,
       3
     ],
     "kind": "examine",
@@ -77,7 +77,7 @@
   {
     "world_id": "wastafel",
     "tile": [
-      5,
+      14,
       5
     ],
     "kind": "examine",
@@ -87,8 +87,8 @@
   {
     "world_id": "wc_poster",
     "tile": [
-      4,
-      2
+      13,
+      1
     ],
     "kind": "examine",
     "label": "Poster",
@@ -97,8 +97,8 @@
   {
     "world_id": "serverrack_a",
     "tile": [
-      18,
-      3
+      6,
+      2
     ],
     "kind": "ticket",
     "label": "Serverrack",
@@ -107,7 +107,7 @@
   {
     "world_id": "serverrack_b",
     "tile": [
-      21,
+      9,
       4
     ],
     "kind": "examine",
@@ -117,7 +117,7 @@
   {
     "world_id": "badgelezer",
     "tile": [
-      19,
+      6,
       6
     ],
     "kind": "examine",
@@ -137,8 +137,8 @@
   {
     "world_id": "koffiemachine",
     "tile": [
-      36,
-      3
+      23,
+      4
     ],
     "kind": "examine",
     "label": "Koffiemachine",
@@ -147,7 +147,7 @@
   {
     "world_id": "koelkast",
     "tile": [
-      38,
+      33,
       4
     ],
     "kind": "examine",
@@ -298,8 +298,8 @@
   {
     "world_id": "blauwe_tijger",
     "tile": [
-      46,
-      9
+      38,
+      5
     ],
     "kind": "examine",
     "label": "Blauwe tijger",
