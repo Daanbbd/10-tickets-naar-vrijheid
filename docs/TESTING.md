@@ -101,25 +101,50 @@ kortste weg — geen kabel, geen developer-account, geen installatie.
 python3 tools/serve_web.py            # standaard poort 8060, met TLS
 ```
 
-Het script print het LAN-adres dat je op de telefoon opent. Safari waarschuwt
-over het certificaat: **Toon details → deze website bezoeken**. Daarna is de
-origin `https` en start het spel.
+Het script print twee adressen: eerst een eenmalige certificaat-installatie,
+daarna de game. Volg die volgorde — stap 2 werkt niet zonder stap 1, of alleen
+door een waarschuwing heen te klikken.
 
 Die TLS is geen luxe. Godot 4.7 weigert te starten buiten een secure context:
 `getMissingFeatures()` in de shell checkt `window.isSecureContext` en meldt
 anders alleen `Secure Context - Check web server configuration (use HTTPS)`.
 Localhost is secure, een LAN-IP over http niet — dus een build die op je Mac via
-`127.0.0.1` prima draait, komt op je telefoon niet voorbij het laadscherm. Dat
-is de makkelijkste manier om een uur te verliezen.
+`127.0.0.1` prima draait komt op je telefoon niet voorbij het laadscherm. Dat is
+de makkelijkste manier om een uur te verliezen.
 
-`serve_web.py` maakt daarom zelf een zelfgetekend certificaat in `build/cert/`
-(genegeerd, want daar staat een privésleutel). Het IP moet in de
-`subjectAltName` staan: iOS negeert sinds versie 13 de CN volledig, en zonder
-IP in de SAN weigert Safari ook ná het doorklikken.
+Het script maakt daarom een eigen mini-CA plus servercertificaat in
+`build/cert/` (genegeerd, want daar staan privésleutels). Vier dingen daaraan
+mogen niet weg, want Apple weigert sinds iOS 13 een certificaat dat er niet aan
+voldoet **zonder doorklik-optie** — je krijgt dan geen waarschuwing maar een
+blokkade:
+
+| eis | waarom |
+|---|---|
+| `subjectAltName` met het IP | iOS negeert de CN volledig |
+| `extendedKeyUsage=serverAuth` | ontbreekt deze, dan faalt het stil |
+| SHA-256, RSA ≥ 2048 | zwakkere combinaties worden geweigerd |
+| geldigheid ≤ 398 dagen | langer levende certificaten worden geweigerd |
+
+En de CA moet écht een CA zijn (`basicConstraints=critical,CA:TRUE`): iOS toont
+alleen root-certificaten onder Certificaatvertrouwen. Een los self-signed
+servercertificaat laat zich wel installeren, maar is daar niet aan te zetten —
+dan lijkt het gelukt en werkt het alsnog niet.
+
+De CA wordt over gewoon http aangeboden, want anders heb je het certificaat
+nodig om het certificaat te kunnen ophalen. Controleer de keten desgewenst met:
+
+```bash
+openssl verify -CAfile build/cert/ca.pem build/cert/<ip>.pem
+curl --cacert build/cert/ca.pem https://<ip>:8060/index.html   # zonder -k
+```
 
 Python's `http.server` kent `.wasm` niet op macOS, en zonder die mimetype
 weigert de browser `instantiateStreaming`; daarom zet het script de mimetypes en
 de COOP/COEP-headers ook zelf.
+
+Ruim na de test het profiel op de telefoon op (Instellingen → Algemeen → VPN en
+apparaatbeheer) en `rm -rf build/cert` op de Mac. Een vertrouwde CA op een
+persoonlijk toestel laat je niet slingeren.
 
 Wil je de certificaatwaarschuwing helemaal kwijt, dan is een tunnel met een echt
 certificaat (cloudflared, ngrok) de weg — maar dat zet de build op het open
