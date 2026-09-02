@@ -20,6 +20,7 @@ func _ready() -> void:
 	print("\n=== 10 TICKETS NAAR VRIJHEID — testsuite ===\n")
 	_test_data_laadt()
 	_test_verwijzingen()
+	_test_look_lagen_bestaan()
 	_test_dialoog()
 	_test_geen_dode_data()
 	_test_minigame_inhoud()
@@ -413,6 +414,46 @@ func _test_verwijzingen() -> void:
 		for tid: StringName in c.owned_tickets:
 			_ok(GameData.ticket(tid) != null, "%s bezit onbekend ticket '%s'" % [c.name, tid])
 		_ok(c.finale_id != &"", "%s heeft geen finale_id" % c.name)
+
+
+## Elke look-waarde in de data moet een laag-sheet op schijf hebben.
+##
+## Dit is de enige controle op het uiterlijk van de cast, en hij bestaat omdat
+## de gevolgen van een fout hier onzichtbaar zijn. `CharacterSprites._laag()`
+## doet bij een variant die niet bestaat niets meer dan een `push_warning` en
+## onthoudt `null`; `_composiet()` slaat die laag daarna over. Een typfout in
+## `characters.json` levert dus geen foutmelding op maar een collega zonder
+## haar, zonder bril of zonder shirt -- en in een headless run leest niemand
+## die waarschuwing.
+##
+## De cast is lang tegen niets gevalideerd en dat was te zien: Koen droeg een
+## bril die hij niet heeft en Victor een koptelefoon die hij nooit draagt.
+## Dit vangt de typfouten; of de waarde ook klopt met de foto in
+## `assets/personen/` blijft mensenwerk.
+func _test_look_lagen_bestaan() -> void:
+	_kop("look-lagen bestaan")
+	var iedereen: Dictionary = {}       # naam -> look
+	for cid: StringName in GameData.character_ids():
+		var c: CharacterDef = GameData.character(cid)
+		iedereen[c.name] = c.look
+	for nid: StringName in GameData.npcs:
+		var n: NpcDef = GameData.npcs[nid]
+		iedereen["NPC %s" % nid] = n.look
+
+	for naam: String in iedereen:
+		var look: Dictionary = iedereen[naam]
+		for slot: StringName in CharacterSprites.VOLGORDE:
+			# hair_back is geen eigen veld: hij volgt het kapsel, en alleen de
+			# kapsels met een achterkant hebben er een sheet voor.
+			var sleutel := &"hair" if slot == &"hair_back" else slot
+			var variant := StringName(look.get(sleutel, &""))
+			if variant == &"":
+				continue
+			if slot == &"hair_back" and not (variant in CharacterSprites.MET_ACHTERHAAR):
+				continue
+			var pad: String = CharacterSprites.LAAG_PAD % [slot, variant]
+			_ok(ResourceLoader.exists(pad),
+				"%s: look.%s = '%s' bestaat niet (%s)" % [naam, sleutel, variant, pad])
 
 
 func _test_dialoog() -> void:
