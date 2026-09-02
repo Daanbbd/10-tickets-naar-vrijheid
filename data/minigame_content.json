@@ -815,62 +815,25 @@
  },
  "mg_urenstaat": {
   "type": "slotboard",
-  "blok_min": 60,
-  "capaciteit": 4,
   "titel": "Urenstaat",
-  "intro": "Acht uur verwacht het systeem. Verdeel ze.",
-  "uitleg": "Tik een uur, dan een regel.",
-  "knop": "Uren indienen",
+  "intro": "Dirk wil weten waar de acht uur heen gingen. Kies wat er het dichtst bij in de buurt komt.",
   "success": "Ingediend. Dirk heeft het gezien.",
-  "slots": [
+  "opties": [
    {
-    "id": "overleg",
-    "label": "Intern overleg"
+    "id": "tickets",
+    "tekst": "Vooral op de tickets zelf",
+    "reactie": "Bijna alles gaat op het werk dat je vandaag echt deed."
    },
    {
-    "id": "kennis",
-    "label": "Kennisdeling"
+    "id": "eerlijk",
+    "tekst": "Een eerlijke spreiding",
+    "reactie": "Een beetje overleg, een beetje kennisdeling, de rest op de tickets."
    },
    {
     "id": "overig",
-    "label": "BBD-000 Overig"
+    "tekst": "Veel op overig",
+    "reactie": "Het grootste deel gaat gewoon op 'overig'."
    }
-  ],
-  "cards": [
-   {
-    "id": "u1",
-    "text": "1u"
-   },
-   {
-    "id": "u2",
-    "text": "1u"
-   },
-   {
-    "id": "u3",
-    "text": "1u"
-   },
-   {
-    "id": "u4",
-    "text": "1u"
-   },
-   {
-    "id": "u5",
-    "text": "1u"
-   },
-   {
-    "id": "u6",
-    "text": "1u"
-   },
-   {
-    "id": "u7",
-    "text": "1u"
-   },
-   {
-    "id": "u8",
-    "text": "1u"
-   }
-  ],
-  "kaart_breedte": 36,
-  "kaart_hoogte": 16
+  ]
  }
 }
