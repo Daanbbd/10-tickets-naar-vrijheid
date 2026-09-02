@@ -635,8 +635,9 @@
  },
  "mg_deploy": {
   "type": "oplevering",
-  "intro": "Vrijdag, laat. De pijplijn staat groen. Je hebt acht handelingen voordat je op deployen drukt.",
+  "intro": "Vrijdag, laat. De pijplijn staat groen. Je hebt acht handelingen voordat je op deployen drukt. De klok loopt mee.",
   "acties": 8,
+  "klok_seconden": 75,
   "start": {
    "bugs": 3,
    "vertrouwen": 5,
@@ -732,31 +733,32 @@
    },
    {
     "na": 6,
-    "tekst": "Staging valt om. Hij komt terug. Niemand weet waarom hij omviel.",
+    "tekst": "Staging valt om. Hij komt na een minuut vanzelf terug. Niemand weet waarom hij omviel.",
     "effect": {
      "bugs": 1
-    }
+    },
+    "storing": true
    }
   ],
   "uitkomsten": [
    {
     "min": 10,
-    "titel": "OPGELEVERD",
+    "titel": "OPGELEVERD — VLEKKELOOS",
     "tekst": "Het staat live en het werkt. Zij stuurt een paardje. Alleen een paardje."
    },
    {
     "min": 7,
-    "titel": "OPGELEVERD",
+    "titel": "OPGELEVERD — MET EEN SMETJE",
     "tekst": "Het staat live. Er zit een dingetje in dat maandag opvalt, en dat weet je."
    },
    {
     "min": 4,
-    "titel": "OPGELEVERD",
+    "titel": "OPGELEVERD — KRAP",
     "tekst": "Het staat live. Je hebt het zelf niet meer aangeklikt."
    },
    {
     "min": 0,
-    "titel": "OPGELEVERD",
+    "titel": "OPGELEVERD, EINDELIJK",
     "tekst": "Het staat live. Dat is het enige wat je er nu over kunt zeggen."
    }
   ],

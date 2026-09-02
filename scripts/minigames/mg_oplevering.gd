@@ -1,8 +1,10 @@
 extends MinigameBase
 ## BBD-210 — de oplevering. De finale, en de enige minigame die niet over goed
-## of fout gaat: elke uitkomst heet OPGELEVERD. Wat verschilt is wat je er
-## achteraf over kunt zeggen. Falen mag hier nooit voortgang blokkeren, dus
-## finish_with_banner() gaat altijd met ok = true de deur uit.
+## of fout gaat: elke uitkomst is een oplevering, nooit een faalscherm. De
+## titel begint altijd met OPGELEVERD en beweegt daarna mee met de score; wat
+## echt verschilt is wat je er achteraf over kunt zeggen. Falen mag hier nooit
+## voortgang blokkeren, dus finish_with_banner() gaat altijd met ok = true de
+## deur uit.
 ##
 ## Het werkwoord is beperkte handelingen met echte gevolgen. Acht handelingen,
 ## vier waarden, en een aantal bugs dat je niet kent tot je gaat kijken —
@@ -21,18 +23,27 @@ const METER_NAAM := {
 ## Handelingen in fase 3: genoeg om te reageren, te weinig om het op te lossen.
 const HERSTEL_ACTIES := 2
 
-## De pijplijn die op groen loopt voordat hij op jouw vakgebied omvalt. Deze
-## namen zitten niet in de data omdat ze voor elk personage hetzelfde zijn: het
-## verschil is de regel waarop hij faalt, niet de weg ernaartoe.
-const CHECKS: Array[String] = [
-	"afhankelijkheden", "build", "tests", "migraties",
-	"assets", "cache", "healthcheck",
-]
+## De pijplijn die op groen loopt voordat hij op jouw vakgebied omvalt. Drie
+## regels, niet zeven: een nep-console met zeven controles voor een uitkomst
+## die toch altijd slaagt, was het meest overgeëngineerde scherm van het spel.
+## Deze namen zitten niet in de data omdat ze voor elk personage hetzelfde zijn:
+## het verschil is de regel waarop hij faalt, niet de weg ernaartoe.
+const CHECKS: Array[String] = ["build", "tests", "healthcheck"]
 const CHECKS_LIVE: Array[String] = ["opnieuw bouwen", "uitrollen", "live"]
 
-const TIK_CHECK := 0.3
+## Trager dan met zeven regels: met nog maar drie moet elke regel zijn gewicht
+## dragen, anders is de console leeg voordat je hem gelezen hebt.
+const TIK_CHECK := 0.55
 const TIK_REGEL := 0.55
 const TIK_GEBEURTENIS := 1.5
+
+## Hoe lang fase 1 duurt zonder een `klok_seconden` in de content. Een minuut
+## en een kwart is genoeg om acht handelingen te overwegen, niet genoeg om ze
+## op je gemak uit te rekenen.
+const KLOK_STANDAARD := 75.0
+## Vanaf hier kleurt de klok rood: een laatste visuele waarschuwing voordat hij
+## voor je beslist.
+const KLOK_ALARM := 15.0
 
 
 var _fase: Fase = Fase.VOORBEREIDEN
@@ -50,6 +61,11 @@ var _eenmalig_op: Dictionary = {}
 var _gebeurtenis: int = 0
 var _foutcode: String = ""
 var _foutregel: String = ""
+## Resterende seconden in fase 1. Loopt door tijdens het lezen van een keuze,
+## niet alleen tussen keuzes: dat is precies het verschil tussen een klok en
+## een teller.
+var _klok_resterend: float = 0.0
+var _klok_gestart: bool = false
 ## Waar staat tijdens een handeling die zich nog aan het afspelen is; zonder dit
 ## kan een snelle tikker twee keuzes over elkaar heen zetten.
 var _bezig: bool = false
@@ -65,6 +81,7 @@ var _foutbalk: PanelContainer = null
 var _foutbalk_label: Label = null
 var _console_paneel: PanelContainer = null
 var _console: VBoxContainer = null
+var _klok_label: Label = null
 
 
 func _on_setup() -> void:
@@ -92,6 +109,11 @@ func _on_setup() -> void:
 	_bouw(c)
 	_refresh()
 	_status_regel()
+
+	_klok_resterend = maxf(1.0, float(c.get("klok_seconden", KLOK_STANDAARD)))
+	_refresh_klok()
+	_klok_gestart = true
+	_klok_loop()
 
 
 ## De foutcode hoort bij het vakgebied van de speler; dat is de hele pointe van
@@ -165,6 +187,16 @@ func _bouw_dashboard() -> void:
 	_pips.add_theme_constant_override("separation", 2)
 	_pips.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	kop.add_child(_pips)
+
+	# De klok hangt rechts uitgelijnd op dezelfde regel: hij hoort bij de
+	# handelingen, niet bij de meters eronder. Een losse rij zou suggereren
+	# dat hij een vijfde waarde is; dat is hij niet, hij is een deadline.
+	var vulling := Control.new()
+	vulling.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	kop.add_child(vulling)
+	_klok_label = _vast("", UiKit.FS_SMALL, UiKit.ORANJE)
+	_klok_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	kop.add_child(_klok_label)
 
 	var grid := GridContainer.new()
 	grid.columns = 2
@@ -297,6 +329,11 @@ func _kies(o: Dictionary) -> void:
 ## Gebeurtenissen overkomen je; je kiest ze niet. Ze vuren op verbruikte
 ## handelingen, en de laatste zet er een bug bíj — wie zijn handelingen tot op
 ## nul uitrekent komt daar precies bedrogen mee uit.
+##
+## Een gebeurtenis met `storing: true` krijgt een echte onderbreking: een korte
+## overname van het scherm in plaats van dezelfde stille `_zeg()`-regel als de
+## andere twee. Het effect verwerkt zich altijd eerst, dus het dashboard flitst
+## er al onderdoor terwijl de overname nog in beeld staat.
 func _gebeurtenissen() -> void:
 	var lijst: Array = content().get("gebeurtenissen", [])
 	while _gebeurtenis < lijst.size():
@@ -305,12 +342,56 @@ func _gebeurtenissen() -> void:
 			return
 		_gebeurtenis += 1
 		var effect := g.get("effect", {}) as Dictionary
+		var tekst := String(g.get("tekst", ""))
 		_pas_effect(effect)
-		_zeg(String(g.get("tekst", "")), UiKit.ORANJE)
-		if not effect.is_empty():
-			AudioDirector.play_ui(&"fout")
-		_bouw_keuzes()
-		await _pauze(TIK_GEBEURTENIS)
+		if bool(g.get("storing", false)):
+			_bouw_keuzes()
+			await _toon_storing(tekst)
+		else:
+			_zeg(tekst, UiKit.ORANJE)
+			if not effect.is_empty():
+				AudioDirector.play_ui(&"fout")
+			_bouw_keuzes()
+			await _pauze(TIK_GEBEURTENIS)
+
+
+## Neemt het scherm heel even helemaal over: een storing landt in je dag, niet
+## in een regel onderaan. `finish_with_banner()` blijft ongemoeid — dit is
+## opvoering, geen nieuwe uitkomst.
+func _toon_storing(tekst: String) -> void:
+	var overlay := PanelContainer.new()
+	overlay.add_theme_stylebox_override("panel", UiKit.panel(UiKit.INK, UiKit.ROOD, 3))
+	UiKit.full_rect(overlay)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.modulate = Color(1, 1, 1, 0)
+	add_child(overlay)
+
+	var v := VBoxContainer.new()
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_theme_constant_override("separation", 6)
+	UiKit.full_rect(v)
+	overlay.add_child(v)
+
+	var kop := UiKit.label("OPGELET", UiKit.FS_HEAD, UiKit.ROOD)
+	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(kop)
+
+	var regel := UiKit.label(tekst, UiKit.FS_SMALL, UiKit.WIT)
+	regel.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(regel)
+
+	AudioDirector.play_ui(&"fout")
+	var in_tw := create_tween()
+	in_tw.tween_property(overlay, "modulate:a", 1.0, 0.1)
+	await in_tw.finished
+	await _pauze(TIK_GEBEURTENIS + 0.6)
+	if not is_instance_valid(overlay):
+		return
+	var uit_tw := create_tween()
+	uit_tw.tween_property(overlay, "modulate:a", 0.0, 0.15)
+	await uit_tw.finished
+	if is_instance_valid(overlay):
+		overlay.queue_free()
 
 
 func _pas_effect(effect: Dictionary) -> void:
@@ -358,6 +439,10 @@ func _deployen() -> void:
 	_bezig = true
 	if chrome_intro() != null:
 		chrome_intro().visible = false
+	# De klok hoort bij fase 1. Zodra je deployt is de deadline gehaald of
+	# geforceerd, en een bevroren tijd op het scherm zou allebei ontkennen.
+	if _klok_label != null:
+		_klok_label.text = ""
 	set_status("deployen")
 	_open_console()
 	AudioDirector.play_ui(&"genereren")
@@ -597,6 +682,47 @@ func _status_regel() -> void:
 		0: set_status("handelingen op")
 		1: set_status("nog 1 handeling")
 		_: set_status("nog %d handelingen" % _acties)
+
+
+## Tikt fase 1 weg in echte seconden, niet in handelingen: hij loopt ook door
+## terwijl je een keuze aan het lezen bent. Op nul forceert hij `_op_deploy()`
+## met wat er dan ligt — geen nieuwe mechaniek, alleen een grens aan hoe lang
+## je over de acht handelingen mag nadenken.
+func _klok_loop() -> void:
+	while _fase == Fase.VOORBEREIDEN and _klok_resterend > 0.0:
+		await _pauze(1.0)
+		# De minigame kan tussentijds afgesloten zijn (bv. een vroege abort);
+		# zonder deze wacht raakt deze achtergrondlus een vrijgegeven object.
+		if not is_inside_tree() or _fase != Fase.VOORBEREIDEN:
+			return
+		_klok_resterend = maxf(0.0, _klok_resterend - 1.0)
+		_refresh_klok()
+	if not is_inside_tree() or _fase != Fase.VOORBEREIDEN:
+		return
+
+	# Tijd op, maar niet midden in een handeling grijpen: een gebeurtenis die
+	# nog moet landen mag dat eerst doen.
+	while _fase == Fase.VOORBEREIDEN and _bezig:
+		await _pauze(0.1)
+		if not is_inside_tree():
+			return
+	if _fase != Fase.VOORBEREIDEN:
+		return
+	_zeg("De tijd is om. Je gaat nu live met wat er ligt.", UiKit.ORANJE)
+	AudioDirector.play_ui(&"fout")
+	await _pauze(TIK_REGEL)
+	if not is_inside_tree():
+		return
+	await _op_deploy()
+
+
+func _refresh_klok() -> void:
+	if _klok_label == null or not _klok_gestart:
+		return
+	var s := int(ceil(_klok_resterend))
+	_klok_label.text = "%d:%02d" % [s / 60, s % 60]
+	_klok_label.add_theme_color_override("font_color",
+		UiKit.ROOD if _klok_resterend <= KLOK_ALARM else UiKit.ORANJE)
 
 
 ## De wereld staat gepauzeerd, dus een gewone timer loopt hier nooit af.
