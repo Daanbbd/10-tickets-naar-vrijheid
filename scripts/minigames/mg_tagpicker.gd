@@ -1,6 +1,6 @@
 extends MinigameBase
 ## Kies N tags, de combinatie bepaalt de uitkomst. Een Suno/AI-generator-parodie.
-## Gedeeld door BBD-207 (merksound) en BBD-208 (AI-video).
+## Draagt BBD-207 (merksound); BBD-208 heeft zijn eigen renderpijplijn.
 
 var _picked: Array[String] = []
 var _buttons: Dictionary = {}     ## tag_id -> Button

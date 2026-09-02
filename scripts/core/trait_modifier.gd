@@ -28,7 +28,6 @@ extends RefCounted
 ## te zien krijgt. Een voordeel dat je niet opmerkt bestaat niet, dus elke
 ## regel noemt wat er concreet anders is en niet dat er iets anders is.
 const VOORDEEL := {
-	"slotboard":   "Jouw vakgebied. Minder afleiders.",
 	"cableboard":  "Jouw vakgebied. Minder losse draden.",
 	"tagpicker":   "Jouw vakgebied. Een poging extra.",
 	"whack":       "Jouw vakgebied. Wat meer tijd.",
@@ -46,6 +45,9 @@ const GEEN_VOORDEEL := {
 	"oplevering": "de finale begint met de dag die je gehad hebt (Gevolgen.finale_start); "
 		+ "een korting daarbovenop zou het gevolgensysteem uithollen, en elk personage "
 		+ "heeft daar al zijn eigen foutcode",
+	"slotboard": "de urenstaat kent geen goed antwoord, dus er valt niets makkelijker te "
+		+ "maken; hij hangt bovendien aan Dirk en niet aan een ticket, dus pas_toe() "
+		+ "krijgt hem nooit te zien",
 }
 
 ## Hoeveel afleiders er maximaal verdwijnen bij eigen vakgebied.
@@ -88,7 +90,6 @@ static func pas_toe(t: TicketDef) -> Dictionary:
 		return {}
 
 	match soort:
-		"slotboard":   _slotboard(config)
 		"cableboard":  _cableboard(config)
 		"tagpicker":   _tagpicker(config)
 		"whack":       _whack(config)
@@ -118,26 +119,6 @@ static func soort_van(t: TicketDef) -> String:
 
 
 # --- per mechaniek ---------------------------------------------------------
-
-## Haalt afleiderkaarten weg: kaarten die in geen enkel vak passen.
-static func _slotboard(c: Dictionary) -> void:
-	var goed := {}
-	for raw: Variant in (c.get("slots", []) as Array):
-		for id: Variant in ((raw as Dictionary).get("accepts", []) as Array):
-			goed[String(id)] = true
-
-	var kaarten: Array = c.get("cards", []) as Array
-	var over: Array = []
-	var weg := 0
-	for raw: Variant in kaarten:
-		var kaart := raw as Dictionary
-		if weg < MINDER_AFLEIDERS and not goed.has(String(kaart.get("id", ""))):
-			weg += 1
-			continue
-		over.append(kaart)
-	c["cards"] = over
-	c["max_fouten"] = int(c.get("max_fouten", 2)) + 1
-
 
 static func _cableboard(c: Dictionary) -> void:
 	var afleiders: Array = c.get("afleiders", []) as Array

@@ -13,6 +13,7 @@ func _ready() -> void:
 	_test_data_laadt()
 	_test_verwijzingen()
 	_test_dialoog()
+	_test_geen_dode_data()
 	_test_minigame_inhoud()
 	_test_nederlands()
 	_test_wereld()
@@ -351,6 +352,99 @@ func _test_dialoog() -> void:
 			_ok(bad2.is_empty(), "dialoog '%s': onbekende effect-op %s" % [key, bad2])
 
 
+## Data die niets doet is erger dan ontbrekende data: hij liegt.
+##
+## Een item in `items.json` dat door geen enkel `add_item`-effect wordt
+## uitgedeeld maakt van elke `has_item`-conditie een tak die nooit valt — de
+## toegangspas hing er zo jarenlang bij, compleet met een regel dialoog die
+## niemand ooit las. En een vlag die een keuze zet maar die niemand leest belooft
+## een gevolg dat er niet is: de speler weegt af, en het weegt niets.
+##
+## Vandaar dat dit de bronbestanden leest en niet de geparste modellen. De fout
+## zit niet in een functie maar in het ontbreken van een tweede plek waar iets
+## genoemd wordt.
+func _test_geen_dode_data() -> void:
+	_kop("geen dode data")
+
+	var vondst := {"items": {}, "keuzevlaggen": {}, "gelezen": {}}
+	for pad: String in _databestanden():
+		_oogst(JSON.parse_string(FileAccess.get_file_as_string(pad)), false, pad, vondst)
+
+	var uitgedeeld: Dictionary = vondst["items"]
+	var keuzevlaggen: Dictionary = vondst["keuzevlaggen"]
+	var gelezen: Dictionary = vondst["gelezen"]
+
+	# Vangnet: een test die per ongeluk niets vindt keurt alles goed.
+	_ok(not uitgedeeld.is_empty(), "geen enkel add_item-effect gevonden; leest deze test de data wel?")
+	_ok(not keuzevlaggen.is_empty(), "geen enkele keuzevlag gevonden; leest deze test de dialogen wel?")
+	_ok(not gelezen.is_empty(), "geen enkele vlagconditie gevonden; leest deze test de dialogen wel?")
+
+	for id: Variant in GameData.items.keys():
+		_ok(uitgedeeld.has(String(id)),
+			"item '%s' staat in items.json maar wordt door geen enkel add_item-effect uitgedeeld" % id)
+
+	# En andersom: een effect dat een niet-bestaand item uitdeelt vult stilletjes
+	# de inventaris met een id zonder naam en zonder omschrijving.
+	for id: Variant in uitgedeeld.keys():
+		_ok(GameData.item(StringName(id)) != null,
+			"%s deelt item '%s' uit, en dat staat niet in items.json" % [uitgedeeld[id], id])
+
+	for f: Variant in keuzevlaggen.keys():
+		_ok(gelezen.has(String(f)) or StringName(f) in Gevolgen.VLAGGEN,
+			"vlag '%s' wordt door een keuze gezet (%s) maar door geen enkele conditie of Gevolgen-regel gelezen" % [
+				f, keuzevlaggen[f]])
+
+
+## Alle gedragsdata. `floor.json` blijft erbuiten: dat is een plattegrond zonder
+## effecten of condities, en hij wordt nooit met de hand aangeraakt.
+func _databestanden() -> Array[String]:
+	var out: Array[String] = []
+	for dir_path: String in ["res://data", "res://data/dialogue", "res://data/tickets"]:
+		var dir := DirAccess.open(dir_path)
+		if dir == null:
+			continue
+		for f: String in dir.get_files():
+			# Godot hernoemt geïmporteerde bestanden in exports naar .remap
+			var clean := f.trim_suffix(".remap")
+			if clean.ends_with(".json") and clean != "floor.json":
+				out.append("%s/%s" % [dir_path, clean])
+	out.sort()
+	return out
+
+
+## Loopt één JSON-boom af en noteert wie wat uitdeelt, zet en leest. `in_keuze`
+## erft naar beneden door: een `set_flag` diep in een `choices`-tak is nog steeds
+## een gevolg van een keuze van de speler.
+func _oogst(v: Variant, in_keuze: bool, pad: String, uit: Dictionary) -> void:
+	if v is Array:
+		for e: Variant in (v as Array):
+			_oogst(e, in_keuze, pad, uit)
+		return
+	if not (v is Dictionary):
+		return
+	var d := v as Dictionary
+
+	match String(d.get("op", "")):
+		"add_item":
+			(uit["items"] as Dictionary)[String(d.get("item", ""))] = pad
+		"set_flag":
+			if in_keuze:
+				(uit["keuzevlaggen"] as Dictionary)[String(d.get("flag", ""))] = pad
+
+	# Zelfde soepelheid als Conditions._names(): een enkele naam mag ook zonder
+	# lijst, en die telt hier net zo goed als lezer.
+	for sleutel: String in ["flags_all", "flags_none"]:
+		var rv: Variant = d.get(sleutel, [])
+		if rv is Array:
+			for f: Variant in (rv as Array):
+				(uit["gelezen"] as Dictionary)[String(f)] = pad
+		elif rv != null and String(rv) != "":
+			(uit["gelezen"] as Dictionary)[String(rv)] = pad
+
+	for k: Variant in d.keys():
+		_oogst(d[k], in_keuze or String(k) == "choices", pad, uit)
+
+
 func _test_minigame_inhoud() -> void:
 	_kop("minigame-inhoud")
 	for id: Variant in GameData.minigames.keys():
@@ -362,31 +456,17 @@ func _test_minigame_inhoud() -> void:
 		var t := String(c.get("type", ""))
 		match t:
 			"slotboard":
-				var card_ids: Array[String] = []
-				for raw: Variant in c.get("cards", []):
-					card_ids.append(String((raw as Dictionary).get("id", "")))
-				# De vrije modus (de urenstaat) heeft bewust geen goed antwoord:
-				# elk vak neemt elke kaart, en er zijn juist meer uren dan
-				# regels. De eisen hieronder gelden daar dus niet.
-				if bool(c.get("vrij", false)):
-					_ok(int(c.get("capaciteit", 1)) > 1,
-						"%s: vrije modus zonder capaciteit; dan past er een uur per regel" % mid)
-					_ok(int(c.get("blok_min", 0)) > 0,
-						"%s: vrije modus zonder blok_min; een uurblok is dan nul minuten waard" % mid)
-					var uren := (c.get("cards", []) as Array).size() * int(c.get("blok_min", 0))
-					_ok(uren == Urenstaat.BUDGET_MIN,
-						"%s: de blokken tellen op tot %d minuten, en het budget is %d" % [
-							mid, uren, Urenstaat.BUDGET_MIN])
-					continue
-				for raw: Variant in c.get("slots", []):
-					var sl := raw as Dictionary
-					var acc: Array = sl.get("accepts", [])
-					_ok(not acc.is_empty(), "%s: slot '%s' accepteert niets" % [mid, sl.get("label", "")])
-					for a: Variant in acc:
-						_ok(String(a) in card_ids,
-							"%s: slot accepteert onbekende kaart '%s'" % [mid, a])
-				_ok((c.get("cards", []) as Array).size() > (c.get("slots", []) as Array).size(),
-					"%s: niet meer kaarten dan vakken" % mid)
+				# Het slotboard draagt nog maar een minigame: de urenstaat, en die
+				# heeft bewust geen goed antwoord. Elke regel neemt elk uurblok, en
+				# er zijn juist meer uren dan regels.
+				_ok(int(c.get("capaciteit", 1)) > 1,
+					"%s: geen capaciteit; dan past er maar een uur per regel" % mid)
+				_ok(int(c.get("blok_min", 0)) > 0,
+					"%s: geen blok_min; een uurblok is dan nul minuten waard" % mid)
+				var uren := (c.get("cards", []) as Array).size() * int(c.get("blok_min", 0))
+				_ok(uren == Urenstaat.BUDGET_MIN,
+					"%s: de blokken tellen op tot %d minuten, en het budget is %d" % [
+						mid, uren, Urenstaat.BUDGET_MIN])
 			"tagpicker":
 				var tag_ids: Array[String] = []
 				for raw: Variant in c.get("tags", []):
@@ -894,17 +974,6 @@ func _test_traits() -> void:
 				"%s/%s: de tijd mag niet korter worden" % [cid, t.code])
 			_ok(int(na.get("drempel", 0)) <= int(basis.get("drempel", 99)),
 				"%s/%s: de drempel mag niet omhoog" % [cid, t.code])
-			# het slotboard moet oplosbaar blijven: elk vak houdt een kaart
-			if String(na.get("type", "")) == "slotboard":
-				var ids := {}
-				for raw: Variant in (na.get("cards", []) as Array):
-					ids[String((raw as Dictionary).get("id", ""))] = true
-				for raw2: Variant in (na.get("slots", []) as Array):
-					var kan := false
-					for a: Variant in ((raw2 as Dictionary).get("accepts", []) as Array):
-						if ids.has(String(a)):
-							kan = true
-					_ok(kan, "%s/%s: een vak heeft geen passende kaart meer" % [cid, t.code])
 			# Vijf mechanieken kregen hun voordeel in eigen getallen; die mogen
 			# geen kant op die de opgave strenger maakt.
 			_ok(int(na.get("capaciteit", 0)) >= int(basis.get("capaciteit", 0)),

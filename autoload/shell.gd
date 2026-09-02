@@ -12,7 +12,6 @@ const FADE_TIME := 0.35
 
 @onready var _minigame_layer: CanvasLayer = $MinigameLayer
 @onready var _fade: ColorRect = $TransitionLayer/Fade
-@onready var _debug_layer: CanvasLayer = $DebugLayer
 
 var _active: MinigameBase = null
 var _busy: bool = false
@@ -240,9 +239,3 @@ func run_minigame(minigame_id: StringName, config: Dictionary) -> MinigameResult
 
 func minigame_active() -> bool:
 	return _active != null
-
-
-# --- Debug ----------------------------------------------------------------
-
-func debug_layer() -> CanvasLayer:
-	return _debug_layer

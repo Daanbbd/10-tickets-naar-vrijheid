@@ -39,7 +39,6 @@ signal minigame_started(minigame_id: StringName)
 signal minigame_finished(minigame_id: StringName, result: MinigameResult)
 
 # --- Wereld ---
-signal effects_requested(effects: Array)
 signal world_changes_requested(changes: Array)
 signal camera_focus_requested(world_id: StringName, hold_sec: float)
 signal world_change_applied(target_id: StringName)

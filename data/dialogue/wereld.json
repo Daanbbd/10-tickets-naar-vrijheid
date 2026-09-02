@@ -598,14 +598,6 @@
         "speaker": "",
         "variants": [
           {
-            "when": {
-              "has_item": [
-                "toegangspas"
-              ]
-            },
-            "text": "Je pas werkt. Dat is hier geen gegeven."
-          },
-          {
             "text": "Eronder hangt een briefje: twee keer piepen is ook goed."
           }
         ]

@@ -1,14 +1,8 @@
 [
- {"id": "laptop",        "name": "Laptop",              "description": "Van de zaak. 14 tabbladen open, allemaal Jira.", "icon": "laptop"},
- {"id": "koffiebeker",   "name": "Koffiebeker",         "description": "Halfvol. Sinds vanochtend.", "icon": "beker"},
- {"id": "toegangspas",   "name": "Toegangspas",         "description": "Werkt op de serverruimte. Meestal.", "icon": "pas"},
  {"id": "user_story",    "name": "Aangescherpte user story", "description": "Eindelijk een zin met een 'zodat'.", "icon": "kaart"},
  {"id": "planning",      "name": "Sprintplanning",      "description": "Een planning waar jij ook op staat.", "icon": "kaart"},
  {"id": "klantfeedback", "name": "Klantfeedback",       "description": "Elf punten. Drie spreken elkaar tegen. Twee zijn hetzelfde punt.", "icon": "kaart"},
- {"id": "figma_link",    "name": "Figma-link",          "description": "Versie 'FINAL_v4_echt_definitief_2'.", "icon": "kaart"},
  {"id": "productdata",   "name": "Productdata",         "description": "Vier supplementen. Met echte prijzen. Een klein wonder.", "icon": "kaart"},
- {"id": "hdmi",          "name": "HDMI-adapter",        "description": "De laatste van de verdieping. Bewaak hem met je leven.", "icon": "kabel"},
- {"id": "usb_stick",     "name": "USB-stick",           "description": "Iemand heeft er met watervaste stift 'NIET WISSEN' op geschreven.", "icon": "usb"},
  {"id": "audiobestand",  "name": "Audiobestand",        "description": "De merksound. Duurt elf seconden. Voelt langer.", "icon": "noot"},
  {"id": "videobestand",  "name": "AI-video",            "description": "Een paard rent door een weiland. Grotendeels correct.", "icon": "film"},
  {"id": "deploysleutel", "name": "Deploysleutel",       "description": "Geeft toegang tot de productiedeploy. Geen druk.", "icon": "sleutel"}
