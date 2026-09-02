@@ -12,7 +12,13 @@ daaronder, en biedt de CA over gewoon http aan zodat je telefoon hem kan
 ophalen en vertrouwen. Daarna is er geen waarschuwing meer.
 
     python3 tools/serve_web.py [poort]
-    python3 tools/serve_web.py --http    # zonder TLS, alleen voor 127.0.0.1
+    python3 tools/serve_web.py --http    # zonder TLS
+
+`--http` heeft twee toepassingen: een snelle controle op 127.0.0.1 (dat geldt
+als secure context), en draaien achter een proxy die zelf TLS termineert met
+een echt certificaat — `tailscale serve` of een tunnel. In dat tweede geval is
+de origin https en dus secure, en is het zelfgetekende spoor hierboven niet
+nodig.
 """
 
 import http.server
@@ -158,8 +164,17 @@ def main() -> None:
         lambda *a, **kw: Handler(*a, directory=str(WORTEL), **kw))
 
     if not tls:
-        print(f"\nZonder TLS. Godot start alleen op "
-              f"http://127.0.0.1:{poort}/index.html\n", flush=True)
+        print(f"""
+Zonder TLS op poort {poort}.
+
+Godot eist een secure context, dus dit werkt op http://127.0.0.1:{poort}/index.html
+of achter een proxy die zelf TLS termineert. Voor die tweede route:
+
+    tailscale serve --bg {poort}
+    tailscale serve status        # geeft je de https-URL
+
+Een LAN-IP over http komt niet voorbij het laadscherm.
+""", flush=True)
         server.serve_forever()
         return
 
