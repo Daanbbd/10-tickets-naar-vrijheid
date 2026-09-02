@@ -137,13 +137,44 @@ normaal doen over een absurde situatie — niet uit grappen per regel.
   zone, of jij het zelf kunt, en een hint. Een briefje aantikken maakt het je
   doel; eronder staat hoeveel er nog ergens op de vloer liggen.
 - **Doelregel**: je keuze, of hoeveel je kunt kiezen, of "loop rond" als je nog
-  niets gevonden hebt.
+  niets gevonden hebt. De ruimte staat er één keer in: noemt de opdracht de plek
+  al ("Haal Victor uit De Vloer"), dan zegt de regel hem niet nóg een keer.
+- **Kompasstrip**, direct onder de doelregel: de hele verdieping op één regel,
+  één pixel per tegel, met jouw plek en je doel erop. Zie Navigatie.
+- **Doelwijzer** in de wereld: een driehoekje boven je doel, en zodra dat doel
+  buiten beeld ligt een pijl tegen de schermrand met de ruimtenaam en de afstand
+  erbij.
 - **Hint** (? op de knoppenbalk, sneltoets Q): je gekozen ticket, of de ruimte waar nog werk ligt.
 - **Zonenaam** verschijnt kort bij binnenkomst in een nieuwe ruimte.
 - **Wereldveranderingen**: elk opgelost ticket verandert iets zichtbaars of
   hoorbaars (zie QUESTS.md).
 - **Klok** rechtsboven, naast de ticketteller. Na een opgelost ticket rolt hij
   zichtbaar vooruit — zie De urenstaat.
+
+## Navigatie
+
+De verdieping is 130 tegels lang en de camera toont er twaalf. Je kijkt dus naar
+9% van het gebouw, en de andere 91% is waar je doel meestal staat. Twee dingen
+lossen dat op, en ze zeggen allebei hetzelfde in een andere taal.
+
+**De doelwijzer klemt tegen de schermrand.** Staat het doel in beeld, dan hangt
+het driehoekje erboven zoals altijd. Staat het buiten beeld — bijna altijd — dan
+schuift het naar de rand, wijst het die kant op, en zet het er de ruimtenaam en
+de afstand bij: "Birdhouse 36 m". Alleen horizontaal, want de vloer is precies
+even hoog als het scherm en verticaal valt er nooit iets buiten beeld. Hij klemt
+zich onder de HUD-balken, niet erachter.
+
+**De kompasstrip** staat in de HUD onder de doelregel: één pixel per tegel, met
+streepjes op de kamergrenzen, jouw plek in wit en je doel in oranje. Het aantal
+tegels komt uit `floor.json`, dus een herontworpen vloer levert vanzelf een
+andere strip op.
+
+De afstand in meters komt uit `WorldBuilder.KORTE_AS_M` — de ankermaat uit
+LEVEL.md, niet een tweede kopie van de schaal.
+
+Wat de strip **niet** doet is het doel bepalen. Dat blijft
+`QuestEngine.next_hint_ticket()`, precies zoals de doelregel en de hintknop; de
+strip krijgt een positie doorgegeven en tekent hem.
 
 ## De urenstaat
 
@@ -170,9 +201,21 @@ herbalancering van ticket-eigendom hem stilletjes zou slopen.
 ## Bewust niet gebouwd
 
 Combat, multiplayer, crafting, meerdere verdiepingen, dag/nachtcyclus, economie,
-minimap, een tweede inventarisscherm voor voorwerpen (die staan als regel onder
-het ticketbord). Geen daarvan dient de kernervaring. Een minimap van een strook is
-bovendien een plaatje van een lijn: de doelregel en de doelwijzer doen dat werk.
+een tweede inventarisscherm voor voorwerpen (die staan als regel onder het
+ticketbord). Geen daarvan dient de kernervaring.
+
+Hier stond **minimap** ook in, met als reden: "een minimap van een strook is een
+plaatje van een lijn". Dat klopte, en het was het verkeerde antwoord. Deze vloer
+*ís* een lijn — 130 bij 26, waarvan de camera 12 breed toont — dus een plaatje
+van een lijn is hier geen versimpeling maar de plattegrond op ware schaal, en
+hij past op één regel van 130 pixels. Wat het argument in werkelijkheid afwees
+is een tweede scherm met een tweede wereldweergave, en dat is de kompasstrip
+niet: hij is de doelregel met een afstand erbij. Zie Navigatie.
+
+De doelregel en de doelwijzer zouden dit werk doen, zei die zin er nog bij. De
+doelregel noemt een ruimtenaam die je alleen kunt plaatsen als je het kantoor al
+kent, en de doelwijzer stond in een wereld waarvan 91% buiten beeld ligt: die
+zag je één keer, op het moment dat je er al voor stond.
 
 De urenstaat is de uitzondering die de regel bevestigt: het is geen economie,
 want je kunt er niets mee kopen en het kan je niets kosten. Het is een getal dat

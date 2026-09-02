@@ -103,12 +103,12 @@ func build_chrome(title: String, intro: String) -> VBoxContainer:
 	var t := UiKit.label(title, UiKit.FS_SUB, UiKit.INK)
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(t)
-	_status = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
+	_status = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(_status)
 
 	if intro != "":
-		_intro = UiKit.label(intro, UiKit.FS_SMALL, UiKit.GRIJS)
+		_intro = UiKit.label(intro, UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 		_intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		col.add_child(_intro)
 

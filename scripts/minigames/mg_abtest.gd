@@ -140,7 +140,7 @@ func _bouw_meter() -> PanelContainer:
 		var vak := PanelContainer.new()
 		vak.add_theme_stylebox_override("panel", UiKit.panel_krap(UiKit.NEUTRAAL_TINT, UiKit.LINE))
 		vak.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var t := UiKit.label("·", UiKit.FS_SMALL, UiKit.GRIJS)
+		var t := UiKit.label("·", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vak.add_child(t)
 		rij.add_child(vak)

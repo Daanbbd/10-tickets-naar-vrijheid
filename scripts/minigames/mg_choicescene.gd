@@ -20,7 +20,7 @@ func _on_setup() -> void:
 	var body := build_chrome(String(c.get("titel", default_title())), String(c.get("intro", "")))
 
 	var pp := PanelContainer.new()
-	pp.add_theme_stylebox_override("panel", UiKit.panel(Color("#e9e4d6"), UiKit.LINE))
+	pp.add_theme_stylebox_override("panel", UiKit.panel(UiKit.PAPIER, UiKit.LINE))
 	body.add_child(pp)
 	_prompt = UiKit.label("", UiKit.FS_BODY, UiKit.INK)
 	_prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

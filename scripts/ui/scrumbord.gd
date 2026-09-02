@@ -44,7 +44,7 @@ func bouw() -> void:
 
 	_titel = UiKit.label("JOUW TICKETS", UiKit.FS_SUB, UiKit.INK)
 	v.add_child(_titel)
-	_onder = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
+	_onder = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	v.add_child(_onder)
 
 	# de markerstreep onder de kop: het is een whiteboard, geen dialoogvenster
@@ -57,7 +57,7 @@ func bouw() -> void:
 	koppen.add_theme_constant_override("separation", 2)
 	v.add_child(koppen)
 	for naam: String in KOLOMMEN:
-		var k := UiKit.label(naam, UiKit.FS_SMALL, UiKit.GRIJS)
+		var k := UiKit.label(naam, UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 		k.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		k.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		koppen.add_child(k)
@@ -134,7 +134,7 @@ func vul() -> void:
 	elif Session.all_done():
 		_detail.text = "[color=#%s]Alles opgelost. Ga naar de voordeur.[/color]" % UiKit.GROEN.to_html(false)
 	else:
-		_detail.text = "[color=#%s]Je hebt nog niets gevonden. Elk ticket ligt in de ruimte waar het hoort.[/color]" % UiKit.GRIJS.to_html(false)
+		_detail.text = "[color=#%s]Je hebt nog niets gevonden. Elk ticket ligt in de ruimte waar het hoort.[/color]" % UiKit.GRIJS_OP_LICHT.to_html(false)
 
 
 ## Hoeveel er nog liggen, en in de close-up ook waar je staat. Dit is de reden
@@ -263,7 +263,7 @@ func toon_detail(t: TicketDef) -> void:
 		regels += "[color=#%s]Opgelost.[/color]" % UiKit.GROEN.to_html(false)
 	else:
 		regels += "[color=#%s]%s  ·  %s[/color]" % [
-			UiKit.GRIJS.to_html(false), t.zone_name, _volledige_eigenaar(t)]
+			UiKit.GRIJS_OP_LICHT.to_html(false), t.zone_name, _volledige_eigenaar(t)]
 	_detail.text = regels
 
 

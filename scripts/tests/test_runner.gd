@@ -30,6 +30,8 @@ func _ready() -> void:
 	_test_ticket_eigenaarschap()
 	_test_omz_en_absoluta()
 	_test_balkmaat()
+	_test_leesbaarheid()
+	_test_navigatie()
 	_test_briefings()
 	_test_intro()
 	_test_save_ronde()
@@ -1587,6 +1589,119 @@ func _test_balkmaat() -> void:
 			Hud.DUIMZONE, Besturing.BALK_RUIMTE])
 
 	houder.queue_free()
+
+
+## De secundaire tekst haalt WCAG AA, en blijft dat halen.
+##
+## `UiKit.GRIJS` (#8a8a8a) stond jarenlang op elke uitleg-, status- en
+## bijschriftregel in het spel: 3,1:1 op een licht paneel, 3,9:1 op een donker
+## paneel, 2,7:1 op papier. Alle drie onder de 4,5:1 die AA vraagt, en dat is
+## geen formaliteit — dit is een spel dat op een telefoon gespeeld wordt, vaak
+## niet binnen, en elke minigame legt zichzelf uit in precies die kleur.
+##
+## Twee dingen worden hier bewaakt. Ten eerste dat het vervangende paar de norm
+## haalt op élke ondergrond waar het op staat — het paar bestaat juist omdat één
+## grijs dat niet kan. Ten tweede, en dat is de belangrijkere: dat niemand per
+## ongeluk terugvalt op `GRIJS`. Een label in de verkeerde grijstint is geen
+## parse-fout en geen zichtbare bug in de editor; het is gewoon weer een regel
+## die buiten wegvalt, en dat merk je pas op een terras.
+func _test_leesbaarheid() -> void:
+	_kop("leesbaarheid van de secundaire tekst")
+
+	const AA := 4.5
+	var op_licht := {
+		"PANEL": UiKit.PANEL,
+		"WIT": UiKit.WIT,
+		"PAPIER": UiKit.PAPIER,
+		"POSTIT_LEEG": UiKit.POSTIT_LEEG,
+		"NEUTRAAL_TINT": UiKit.NEUTRAAL_TINT,
+	}
+	for naam: String in op_licht:
+		var v := _contrast(UiKit.GRIJS_OP_LICHT, op_licht[naam] as Color)
+		_ok(v >= AA, "GRIJS_OP_LICHT haalt op %s maar %.2f:1, AA vraagt %.1f" % [naam, v, AA])
+
+	# `INK.lightened(0.14)` is de opgelichte rij van de karakterselectie: het
+	# lichtste donkere vlak in het spel en dus de krapste van de twee kanten.
+	var op_donker := {
+		"PANEL_DARK": UiKit.PANEL_DARK,
+		"INK": UiKit.INK,
+		"SCHERM_NACHT": UiKit.SCHERM_NACHT,
+		"SCHERM_DIEP": UiKit.SCHERM_DIEP,
+		"selectierij": UiKit.INK.lightened(0.14),
+	}
+	for naam: String in op_donker:
+		var v := _contrast(UiKit.GRIJS_OP_DONKER, op_donker[naam] as Color)
+		_ok(v >= AA, "GRIJS_OP_DONKER haalt op %s maar %.2f:1, AA vraagt %.1f" % [naam, v, AA])
+
+	for pad: String in _gd_bestanden("res://scripts"):
+		var nr := 0
+		for regel: String in FileAccess.get_file_as_string(pad).split("\n"):
+			nr += 1
+			var kaal := regel.replace("UiKit.GRIJS_OP_LICHT", "") \
+				.replace("UiKit.GRIJS_OP_DONKER", "")
+			if not kaal.contains("UiKit.GRIJS"):
+				continue
+			# Randen, balkvullingen en uitgeschakelde knoppen mogen GRIJS wel:
+			# een uitgeschakeld element valt buiten WCAG 1.4.3, en een streep is
+			# geen tekst. Alleen wat een letterkleur wordt is hier fout.
+			_ok(not (kaal.contains("UiKit.label(") or kaal.contains("\"font_color\"")),
+				"%s:%d zet UiKit.GRIJS als tekstkleur — gebruik GRIJS_OP_LICHT of GRIJS_OP_DONKER"
+					% [pad, nr])
+
+
+## Relatieve luminantie volgens WCAG 2.x. Godot's `Color` bewaart sRGB-waarden,
+## dus de gammastap hoort er hier bij; `srgb_to_linear()` zou hem overslaan.
+static func _luminantie(c: Color) -> float:
+	var kanaal := func(v: float) -> float:
+		return v / 12.92 if v <= 0.04045 else pow((v + 0.055) / 1.055, 2.4)
+	return 0.2126 * float(kanaal.call(c.r)) \
+		+ 0.7152 * float(kanaal.call(c.g)) \
+		+ 0.0722 * float(kanaal.call(c.b))
+
+
+static func _contrast(a: Color, b: Color) -> float:
+	var la := _luminantie(a)
+	var lb := _luminantie(b)
+	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)
+
+
+## De navigatie: de kompasstrip leest de vloer uit, en de doelregel zegt de
+## ruimte één keer.
+##
+## De strip tekent één pixel per tegel, dus zijn breedte ís de plattegrond. Komt
+## dat getal ooit uit een constante in de HUD in plaats van uit `floor.json`,
+## dan wijst hij na de eerstvolgende herindeling van de vloer stelselmatig naar
+## de verkeerde kant — zonder fout, want een strip die te breed rekent tekent
+## nog steeds een keurig streepje.
+func _test_navigatie() -> void:
+	_kop("navigatie: kompasstrip en doelregel")
+
+	var maat: Variant = GameData.floor_data.get("size", null)
+	_ok(maat is Array and (maat as Array).size() == 2, "floor.json heeft geen bruikbare `size`")
+	if maat is Array and (maat as Array).size() == 2:
+		var breed := int((maat as Array)[0])
+		_ok(Hud.Kompas.vloerbreedte() == breed,
+			"de kompasstrip rekent met %d tegels, floor.json zegt %d" % [
+				Hud.Kompas.vloerbreedte(), breed])
+		for z: Variant in (GameData.floor_data.get("zones", []) as Array):
+			var d := z as Dictionary
+			var r: Array = d.get("rect", [])
+			_ok(r.size() == 4 and int(r[2]) < breed,
+				"zone '%s' loopt voorbij de vloerbreedte en valt buiten de kompasstrip"
+					% d.get("id", "?"))
+
+	# De doelregel noemt de ruimte niet twee keer. Dit was
+	# "Nu: BBD-204 · De Vloer · Haal Victor uit De Vloer" — twee keer dezelfde
+	# plek in een regel van 184 px breed, die daardoor over twee regels viel.
+	QuestEngine.start_run(&"daan")
+	for tid: StringName in GameData.ticket_ids():
+		var t: TicketDef = GameData.ticket(tid)
+		if t.zone_name == "":
+			continue
+		var regel := "Nu:  %s%s" % [t.code, Hud._waarheen(t)]
+		_ok(regel.count(t.zone_name) <= 1,
+			"de doelregel van %s noemt '%s' meer dan eens: %s" % [
+				t.code, t.zone_name, regel])
 
 
 ## De uitleg staat sinds kort op een eigen scherm vóór character select

@@ -94,7 +94,7 @@ func _bouw() -> void:
 	weg.pressed.connect(_op_verlaten)
 	v.add_child(weg)
 
-	var uitleg := UiKit.label("Je dag wordt bewaard.", UiKit.FS_SMALL, UiKit.GRIJS)
+	var uitleg := UiKit.label("Je dag wordt bewaard.", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	uitleg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(uitleg)
 

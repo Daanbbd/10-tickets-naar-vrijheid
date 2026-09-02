@@ -148,7 +148,7 @@ func _bouw() -> void:
 	# EXPAND_FILL en knijpt deze anders tot een paar pixels, waarna de autowrap
 	# uit UiKit.label() de tijd per teken afbreekt: een kolom van "1 1 : 2 0"
 	# die de kopbalk ook nog vijf regels hoog maakt.
-	_tijd = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
+	_tijd = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	_tijd.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_tijd.custom_minimum_size = Vector2(28, 0)
 	_tijd.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -176,10 +176,10 @@ func _bouw() -> void:
 
 	# De typing-indicator knippert ook als ze niets stuurt. Dat is geen
 	# animatiefoutje maar het punt: er komt altijd nog iets.
-	_puntjes = UiKit.label("...", UiKit.FS_BODY, UiKit.GRIJS)
+	_puntjes = UiKit.label("...", UiKit.FS_BODY, UiKit.GRIJS_OP_DONKER)
 	kolom.add_child(_puntjes)
 
-	var voet := UiKit.label("tik om weg te leggen", UiKit.FS_SMALL, UiKit.GRIJS)
+	var voet := UiKit.label("tik om weg te leggen", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	voet.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	kolom.add_child(voet)
 

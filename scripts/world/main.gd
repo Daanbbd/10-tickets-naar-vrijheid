@@ -41,6 +41,9 @@ var player: Player = null
 var _pauzemenu: Pauzemenu = null
 
 var _zone_id: StringName = &""
+## Waar de doelwijzer nu aan hangt. Ook de bron van de kompasstrip, zodat die
+## twee nooit uit elkaar kunnen lopen.
+var _doelwit: Node2D = null
 ## Alleen voor de speelbeurt-harnas: hoeveel meldingen van De Klant er gevallen zijn.
 var _klant_meldingen: int = 0
 
@@ -117,6 +120,7 @@ func _ready() -> void:
 	AudioDirector.set_base(&"kantoor")
 	_qa_bord()
 	_qa_kaart()
+	_qa_hint()
 	_qa_briefing()
 
 	if Autopilot.gevraagd():
@@ -144,18 +148,22 @@ func _ready() -> void:
 func _refresh_marker() -> void:
 	for m: Node in get_tree().get_nodes_in_group(&"objective_marker"):
 		m.queue_free()
+	_doelwit = null
 
 	var t: TicketDef = QuestEngine.next_hint_ticket()
 	if t == null:
 		_mark_object(&"voordeur")
+		_kompas_bijwerken()
 		return
 
 	if not QuestEngine.is_own_expertise(t.id) and not Session.get_flag(QuestEngine.helper_flag(t.id)):
 		var helper := npc_layer.find_npc(QuestEngine.required_helper(t.id))
 		if helper != null and not helper.is_following():
 			_mark_node(helper)
+			_kompas_bijwerken()
 			return
 	_mark_object(t.anchor)
+	_kompas_bijwerken()
 
 
 func _mark_object(world_id: StringName) -> void:
@@ -165,7 +173,30 @@ func _mark_object(world_id: StringName) -> void:
 
 
 func _mark_node(n: Node2D) -> void:
-	n.add_child(ObjectiveMarker.new())
+	var m := ObjectiveMarker.new()
+	# De wijzer meet zijn afstand vanaf de speler en zegt in welke ruimte het
+	# doel staat. Beide weet hij zelf niet: hij hangt aan het doel en kent alleen
+	# zijn ouder. Dus krijgt hij ze hier mee, van de enige plek die de speler,
+	# de vloer en het doel tegelijk in handen heeft.
+	m.speler = player
+	m.plek = String(builder.zone_at(builder.world_to_tile(n.global_position)).get("name", ""))
+	m.meter_per_px = builder.meters_per_pixel()
+	n.add_child(m)
+	_doelwit = n
+
+
+## De kompasstrip in de HUD: waar sta jij, waar staat je doel, op ware schaal.
+##
+## Het doel komt uit dezelfde `_refresh_marker()` die de wijzer plaatst, dus de
+## strip en het driehoekje kunnen elkaar niet tegenspreken. `QuestEngine`
+## bepaalt wélk ticket dat is; hier wordt alleen een positie doorgegeven.
+func _kompas_bijwerken() -> void:
+	if hud == null or player == null:
+		return
+	var doel := -1
+	if is_instance_valid(_doelwit):
+		doel = builder.world_to_tile(_doelwit.global_position).x
+	hud.zet_kompas(builder.world_to_tile(player.global_position).x, doel)
 
 
 ## De uitleg (aantal, spreiding, bord, collega ophalen) staat sinds kort vóór
@@ -509,6 +540,20 @@ func _qa_briefing() -> void:
 	await tickets.briefing(t)
 
 
+## QA: `--hint` vraagt meteen een hint aan, zodat het briefje in beeld staat.
+##
+## Zonder deze vlag is het alleen te zien door de hintknop in te drukken of door
+## vijfenveertig seconden niets te doen, en geen van beide past in een `--shot`.
+## Dat is precies het verkeerde ding om ongezien te laten: de hint blijft nu
+## staan tot je hem wegtikt, dus als hij ergens overheen valt blijft dat ook
+## staan. Het langste exemplaar (BBD-210) is 184 tekens.
+func _qa_hint() -> void:
+	if "--hint" not in OS.get_cmdline_user_args():
+		return
+	await get_tree().create_timer(0.6).timeout
+	Bus.hint_requested.emit()
+
+
 ## QA: `--kaart` zet de besturingskaart in beeld en laat hem staan.
 ##
 ## Zonder deze vlag was de kaart alleen te zien door de intro uit te spelen of
@@ -523,6 +568,9 @@ func _qa_kaart() -> void:
 
 
 func _on_player_tile(t: Vector2i) -> void:
+	# Eén pixel per tegel, dus per tegel bijwerken is precies de resolutie van de
+	# strip. Vaker zou niets veranderen en wel elke frame een redraw kosten.
+	_kompas_bijwerken()
 	var z := builder.zone_at(t)
 	var zid := StringName(z.get("id", ""))
 	if zid != _zone_id and zid != &"":
