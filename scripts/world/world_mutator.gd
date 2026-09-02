@@ -59,7 +59,7 @@ func apply(changes: Array, animated: bool) -> void:
 				_despawn_npc(StringName(c.get("npc", "")))
 			"set_ambience":
 				if animated:
-					AudioDirector.play_music(StringName(c.get("value", "")))
+					AudioDirector.set_base(StringName(c.get("value", "")))
 			"cue":
 				if animated:
 					Bus.audio_cue_requested.emit(StringName(c.get("cue", "")))

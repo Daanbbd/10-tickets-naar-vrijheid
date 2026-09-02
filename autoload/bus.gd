@@ -10,6 +10,10 @@ signal game_finished(escaped: bool)
 # --- Tickets ---
 signal ticket_state_changed(ticket_id: StringName, state: GameEnums.TicketState)
 signal ticket_activated(ticket_id: StringName)
+## Je bent een ticket tegengekomen: het staat nu in je inventaris.
+signal ticket_discovered(ticket_id: StringName)
+## Je hebt zelf gekozen waar je aan werkt. Leeg = keuze losgelaten.
+signal ticket_pinned(ticket_id: StringName)
 signal ticket_completed(ticket_id: StringName, result: MinigameResult)
 signal all_tickets_done()
 
@@ -17,6 +21,14 @@ signal all_tickets_done()
 signal flag_changed(flag: StringName, value: bool)
 signal item_added(item_id: StringName, new_count: int)
 signal item_removed(item_id: StringName, new_count: int)
+## Er zijn minuten op de dag van vandaag geboekt. De HUD rolt hierop de klok
+## vooruit; `total` is het nieuwe totaal, zodat een luisteraar niets hoeft op
+## te tellen.
+signal time_booked(minutes: int, reason: StringName, total: int)
+
+## De Klant meldt zich. Ze is nooit een sprite en staat nooit in het kantoor:
+## ze bestaat als telefoonscherm, en dit is het enige signaal dat haar oproept.
+signal klant_bericht(bericht_id: StringName)
 
 # --- Dialoog ---
 signal dialogue_started(dialogue_id: StringName, speaker_id: StringName)

@@ -57,13 +57,10 @@ func verb() -> String:
 
 
 ## Het openstaande ticket op dit object, of null. De HUD gebruikt dit om de
-## eigenaar aan de prompt te hangen.
+## eigenaar aan de prompt te hangen. Draagt het object er twee, dan wint je pin
+## — zo noemt de prompt hetzelfde ticket als wat je bij een E-druk krijgt.
 func ticket_here() -> TicketDef:
-	for id: StringName in GameData.ticket_ids():
-		var t: TicketDef = GameData.ticket(id)
-		if t != null and t.anchor == world_id and Session.is_available(id):
-			return t
-	return null
+	return QuestEngine.preferred_at_anchor(world_id)
 
 
 func trigger(who: Node) -> void:

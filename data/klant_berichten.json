@@ -1,0 +1,65 @@
+{
+ "afzender": "Manege De Vrije Teugel",
+ "berichten": {
+  "k1": {
+   "tijd": "11:20",
+   "variants": [
+    {
+     "when": {"flags_all": ["gevolg_paard_beloofd"]},
+     "text": "Wat leuk dat het paard erin komt! Kunnen jullie hem trouwens iets meer naar links?"
+    },
+    {
+     "text": "Hoi! Ik zag dat er al aan gewerkt wordt. Kunnen jullie dat paard trouwens iets meer naar links?"
+    }
+   ]
+  },
+  "k2": {
+   "tijd": "14:05",
+   "variants": [
+    {
+     "when": {"flags_all": ["gevolg_comicsans_beloofd"]},
+     "text": "Mijn schoonzus heeft even gekeken. Zij vindt het lettertype heel vriendelijk. Ik stuur straks nog wat punten door, even snel tussendoor."
+    },
+    {
+     "when": {"flags_all": ["gevolg_geen_webshop"]},
+     "text": "Mijn schoonzus heeft even gekeken. Zij vroeg waar je de potjes naast elkaar kunt leggen. Ik wist het ook niet, dus ik zeg maar even niks."
+    },
+    {
+     "text": "Mijn schoonzus heeft even gekeken. Zij had nog wel wat punten. Ik zet ze op een rijtje en stuur ze door, even snel tussendoor."
+    }
+   ]
+  },
+  "k3": {
+   "tijd": "16:40",
+   "variants": [
+    {
+     "when": {"flags_all": ["gevolg_scope_te_groot"]},
+     "text": "Even over de app en dat puntensysteem: mijn neef zei dat dat in een weekend kan. Budget is verder even een dingetje, maar dat komt goed."
+    },
+    {
+     "when": {"flags_all": ["gevolg_cro_gehaald"]},
+     "text": "Ik zie dat er al besteld wordt! Dan kunnen we er nu ook nog twaalf dingen bij doen, toch? Budget is even een dingetje."
+    },
+    {
+     "text": "Ik heb er nog een paar dingen bij bedacht. We zeiden toch MVP? Dus dit hoort er gewoon in. Budget is verder even een dingetje."
+    }
+   ]
+  },
+  "k4": {
+   "tijd": "20:15",
+   "variants": [
+    {
+     "when": {"flags_all": ["gevolg_geen_webshop"]},
+     "text": "Morgen live, wat spannend! Even checken: mensen kunnen dan wel iets kopen he? Dat had ik wel zo begrepen."
+    },
+    {
+     "when": {"flags_all": ["gevolg_jonathan_gemist"]},
+     "text": "Morgen live! Ik heb tegen iedereen gezegd dat het morgen live gaat. Ook tegen de leverancier. Ook tegen de dierenarts."
+    },
+    {
+     "text": "Morgen live, wat leuk! Ik heb het al aan iedereen doorgestuurd. En de app komt er later bij he? Dat zei ik ook tegen mijn neef."
+    }
+   ]
+  }
+ }
+}

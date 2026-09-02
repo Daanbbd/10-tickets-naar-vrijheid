@@ -11,6 +11,16 @@ const FOLLOW_SPEED := 104.0
 const FOLLOW_DISTANCE := 26.0
 const ARRIVE_EPS := 3.0
 
+## Na hoeveel seconden stilstaan iemand één keer zijn eigen bezigheid doet.
+## Op het selectiescherm is dat 1,2 s, want daar kijk je iemand aan; hier loop
+## je langs, en dan wordt elke twee seconden een tic in plaats van karakter.
+##
+## Elke NPC krijgt daar een eigen willekeurige voorsprong op. Zonder die spreiding
+## staan zeven collega's op dezelfde frame te huilen, te bieren en te padellen,
+## en dat leest als een bug in plaats van als een kantoor.
+const BEZIG_NA := 6.5
+const BEZIG_SPREIDING := 5.0
+
 @onready var sprite: AnimatedSprite2D = $Sprite
 @onready var interactable: Interactable = $Interactable
 
@@ -24,6 +34,10 @@ var _following: Node2D = null
 var _home: Vector2 = Vector2.ZERO
 var _returning: bool = false
 var _facing: Vector2 = Vector2.DOWN
+var _stil: float = 0.0
+var _bezig_bij: float = 0.0
+var _bezig: bool = false
+var _praat: bool = false
 
 
 func setup(d: NpcDef, builder: WorldBuilder) -> void:
@@ -47,6 +61,34 @@ func setup(d: NpcDef, builder: WorldBuilder) -> void:
 	interactable.kind = Interactable.Kind.TALK
 	interactable.label = d.name
 	interactable.dialogue_id = d.dialogue_id
+
+	_bezig_bij = BEZIG_NA + randf() * BEZIG_SPREIDING
+	sprite.animation_finished.connect(_op_animatie_klaar)
+	Bus.dialogue_started.connect(_op_dialoog_start)
+	Bus.dialogue_finished.connect(_op_dialoog_eind)
+
+
+## Wie er praat, zodat de juiste collega zijn mond beweegt en de andere zes
+## niet. De dialoog noemt sprekers zonder `npc_`-voorvoegsel ("victor"), de
+## NPC's heten `npc_victor`; het dialoog-id is de tweede ingang, want bij een
+## wervingsgesprek staat de spreker per node en niet op de boom.
+func _op_dialoog_start(dialogue_id: StringName, speaker: StringName) -> void:
+	_praat = dialogue_id == def.dialogue_id \
+		or (speaker != &"" and speaker == StringName(String(npc_id).trim_prefix("npc_")))
+	if _praat:
+		_bezig = false
+
+
+func _op_dialoog_eind(_dialogue_id: StringName, _outcome: StringName) -> void:
+	_praat = false
+
+
+## `bezig_down` loopt niet, dus na één keer terug naar stilstaan.
+func _op_animatie_klaar() -> void:
+	if sprite.animation == &"bezig_down":
+		_bezig = false
+		_stil = 0.0
+		_bezig_bij = BEZIG_NA + randf() * BEZIG_SPREIDING
 
 
 func _physics_process(delta: float) -> void:
@@ -103,12 +145,46 @@ func _move_towards(target: Vector2, speed: float) -> void:
 	velocity = dir * speed
 
 
+## Vier toestanden, in deze volgorde van voorrang: lopen, praten, bezig, stil.
+##
+## Praten en bezig zijn allebei animaties die al in de spritesheets zaten maar
+## nergens gespeeld werden — `talk_<dir>` helemaal niet, en `bezig_down` alleen
+## op het selectiescherm. Dat is zeven keer handwerk dat maar op één scherm te
+## zien was; de bezigheden staan in `data/characters.json` onder `look`:
+##
+##   Daan huilt · Danny bier · Victor hobbyhorse · Jonathan gamen
+##   Willem padel · Bastiaan zoekglas · Koen peuk
+##
+## Praten is feedback: je hoort te zien wie er aan het woord is zonder de naam
+## te lezen. Bezig is karakter: je loopt langs een bureau en iemand doet iets
+## dat alleen bij hem past. Geen van beide is beweging om de beweging.
 func _animate() -> void:
 	var moving := velocity.length() > 6.0
-	var anim := ("walk_" if moving else "idle_") + Player._dir_name(_facing)
-	if sprite.sprite_frames != null and sprite.sprite_frames.has_animation(anim):
-		if sprite.animation != anim:
-			sprite.play(anim)
+	if moving:
+		_stil = 0.0
+		_bezig = false
+	else:
+		_stil += get_physics_process_delta_time()
+
+	if sprite.sprite_frames == null:
+		return
+
+	# De bezigheidsframes staan alleen in de `down`-rij, dus dit werkt enkel
+	# voor iemand die naar de speler toe gekeerd staat. Dat is precies de
+	# geposteerde collega waar je voor komt te staan.
+	if not _bezig and not moving and not _praat and _stil >= _bezig_bij \
+			and Player._dir_name(_facing) == "down" \
+			and sprite.sprite_frames.has_animation(&"bezig_down"):
+		_bezig = true
+		sprite.play(&"bezig_down")
+		return
+	if _bezig:
+		return
+
+	var voorvoegsel := "walk_" if moving else ("talk_" if _praat else "idle_")
+	var anim := StringName(voorvoegsel + Player._dir_name(_facing))
+	if sprite.sprite_frames.has_animation(anim) and sprite.animation != anim:
+		sprite.play(anim)
 
 
 # --- Volgen ---------------------------------------------------------------
@@ -118,6 +194,7 @@ func start_following(who: Node2D) -> void:
 		return
 	_following = who
 	_returning = false
+	Session.add_follower(npc_id)
 	Bus.follower_joined.emit(npc_id)
 
 
@@ -126,8 +203,15 @@ func stop_following(go_home: bool = true) -> void:
 		return
 	_following = null
 	_returning = go_home
+	Session.remove_follower(npc_id)
 	Bus.follower_released.emit(npc_id)
 
 
 func is_following() -> bool:
 	return _following != null
+
+
+## WorldMutator.despawn_npc() doet queue_free() zonder los te laten. Zonder deze
+## opruiming zou Session een collega blijven melden die niet meer bestaat.
+func _exit_tree() -> void:
+	Session.remove_follower(npc_id)

@@ -7,6 +7,7 @@ extends RefCounted
 const KEYS: Array[String] = [
 	"character", "trait", "flags_all", "flags_none",
 	"tickets_done", "tickets_not_done", "has_item", "min_tickets_done",
+	"overwerk",
 ]
 
 static func check(c: Dictionary) -> bool:
@@ -50,6 +51,14 @@ static func check(c: Dictionary) -> bool:
 
 	if Session.done_count() < int(c.get("min_tickets_done", 0)):
 		return false
+
+	# Bewust met has() eromheen, anders dan min_tickets_done hierboven: een bool
+	# met default false zou elke lege conditie "het is geen overwerk" laten
+	# beweren, en dat klapt na 17:00 elke fallbackvariant in de game om. Ook
+	# niet via _names(), want dat maakt van een bool de StringName &"true".
+	if c.has("overwerk"):
+		if bool(c["overwerk"]) != Urenstaat.is_overwerk():
+			return false
 
 	return true
 
