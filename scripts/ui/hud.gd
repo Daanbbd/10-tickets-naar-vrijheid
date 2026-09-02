@@ -406,13 +406,24 @@ func _build_card(root: Control) -> void:
 ## linkerhelft opkomt, en dat ver uitduwen rennen is. De toetsen staan op één
 ## regel onderaan omdat ze precies dat zijn — een snellere weg naar dezelfde
 ## knoppen, niet een tweede besturing.
+##
+## Die toetsenregel verwijst naar een toetsenbord dat lang niet elk apparaat
+## heeft — op een telefoon (ook een webbuild in een mobiele browser, waar
+## `OS.has_feature("mobile")` niets zegt) is hij pure ruis over een sneltoets
+## die je toch nooit kunt indrukken. `Invoer` heeft bewust geen "is dit een
+## telefoon"-vraag meer voor de INDELING (zie invoer.gd), maar dit is geen
+## indeling — het is één regel tekst over een feature die op dit apparaat
+## simpelweg niet bestaat. Dezelfde aanraakscherm-detectie als
+## `Invoer.muis_als_vinger()` bepaalt dus alleen of deze ene regel meedoet.
 func _kaartregels() -> Array[String]:
-	return [
+	var regels: Array[String] = [
 		"Duim links      lopen",
 		"Ver uitduwen    rennen",
 		"▤ ticketbord    ? hint",
-		"Toetsen  WASD Shift E Tab Q",
 	]
+	if not DisplayServer.is_touchscreen_available():
+		regels.append("Toetsen  WASD Shift E Tab Q")
+	return regels
 
 
 ## Laat de kaart even zien en fade hem daarna weg. F1 haalt hem terug.
@@ -494,14 +505,21 @@ func _refresh_klok() -> void:
 
 ## De boeking is de trigger van de rol, niet het opgeloste ticket: anders staat
 ## de nieuwe tijd er al voordat de animatie begint.
-func _on_time_booked(minuten: int, _reden: StringName, totaal: int) -> void:
+##
+## Sinds `Klok` (F3-d) elke ~2,5s zelf een minuut boekt met reden `&"verloop"`,
+## vuurt dit signaal continu tijdens gewoon rondlopen — niet alleen bij een
+## opgelost ticket of een opgehaalde collega. Het "klik"-geluid en de "+1 min"
+## popup zijn bedoeld voor die laatste, echte sprongen; op de ambient tik
+## klinken ze non-stop zolang de speler beweegt. Vandaar de uitzondering.
+func _on_time_booked(minuten: int, reden: StringName, totaal: int) -> void:
 	if Autopilot.gevraagd():
 		_klok_min = totaal
 		_refresh_klok()
 		_meld_overwerk(totaal)
 		return
-	_toon_plus(minuten)
-	AudioDirector.play_ui(&"klik")
+	if reden != &"verloop":
+		_toon_plus(minuten)
+		AudioDirector.play_ui(&"klik")
 	_rol_naar(totaal)
 	_meld_overwerk(totaal)
 
