@@ -65,7 +65,10 @@ func _on_setup() -> void:
 	_volgende_knop = _bouw_volgende()
 	chrome_footer().add_child(_volgende_knop)
 
-	_vraag = UiKit.label("", UiKit.FS_BODY, UiKit.INK)
+	# De vraag en Danny's uitslag staan op de chrome zelf, niet op de witte
+	# meterkaart erboven: WIT en BLUEBIRD_BRIGHT, want INK en bb-blue verdwijnen
+	# allebei in het donkere oppervlak.
+	_vraag = UiKit.label("", UiKit.FS_BODY, UiKit.WIT)
 	body.add_child(_vraag)
 
 	_varianten = VBoxContainer.new()
@@ -74,7 +77,7 @@ func _on_setup() -> void:
 
 	# Danny leest de uitslag voor. Pas als de meting stilstaat, want anders
 	# vertelt hij de uitkomst terwijl de balk nog beweegt.
-	_regel = UiKit.label("", UiKit.FS_SMALL, UiKit.BLUEBIRD_INK)
+	_regel = UiKit.label("", UiKit.FS_SMALL, UiKit.BLUEBIRD_BRIGHT)
 	_regel.visible = false
 	body.add_child(_regel)
 

@@ -24,7 +24,9 @@ func _on_setup() -> void:
 	var body := build_chrome(String(c.get("titel", default_title())), String(c.get("intro", "")))
 
 	if String(c.get("eis", "")) != "":
-		var eis := UiKit.label("Briefing: %s" % c["eis"], UiKit.FS_SMALL, UiKit.BLUEBIRD_INK)
+		# Op de chrome zelf, dus de heldere variant: bb-blue is op het donkere
+		# oppervlak niet te lezen.
+		var eis := UiKit.label("Briefing: %s" % c["eis"], UiKit.FS_SMALL, UiKit.BLUEBIRD_BRIGHT)
 		eis.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		body.add_child(eis)
 
@@ -57,9 +59,13 @@ func _on_setup() -> void:
 	_result_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rv.add_child(_result_text)
 
+	# In de vaste voetstrook en niet in de scroll: twaalf tags plus de briefing
+	# lopen op een portretcanvas voorbij de onderrand, en dan staat de enige
+	# bevestigende knop onder de vouw van een lijst die er precies zo uitziet als
+	# een lijst die al af is. Zie `chrome_footer()`.
 	_generate = UiKit.knop_primair("Genereren", UiKit.FS_BODY)
 	_generate.pressed.connect(_generate_pressed)
-	body.add_child(_generate)
+	chrome_footer().add_child(_generate)
 
 	_update_status()
 

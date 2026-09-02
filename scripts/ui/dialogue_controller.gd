@@ -94,23 +94,34 @@ func play(dialogue_id: StringName, fallback_label: String = "") -> StringName:
 
 ## Losse regel zonder dialoogbestand, voor korte onderzoeksteksten.
 ##
-## `speaker_id` is optioneel en alleen voor de animatie: `npc.gd` luistert op
-## `dialogue_started` om de mond van de juiste collega te laten bewegen, en
-## vergelijkt daar op id ("jonathan") en niet op weergavenaam ("Jonathan").
-## Zonder dit staat er bij een briefing wel een naam boven de tekst, maar
-## beweegt er niemand.
-func say(speaker: String, text: String, speaker_id: StringName = &"") -> void:
-	await _play_single(speaker, text, speaker_id)
+## `speaker_id` is optioneel en doet twee dingen. Ten eerste de animatie:
+## `npc.gd` luistert op `dialogue_started` om de mond van de juiste collega te
+## laten bewegen, en vergelijkt daar op id ("jonathan") en niet op weergavenaam
+## ("Jonathan"). Zonder dit staat er bij een briefing wel een naam boven de
+## tekst, maar beweegt er niemand.
+##
+## Ten tweede het portret. Een dialoogboom liet altijd het gezicht van de
+## spreker zien -- `play()` roept `_portrait_for()` aan -- maar de losse regel
+## niet, en juist de briefing van de eigenaar loopt via deze route. Dat is het
+## enige moment vóór een minigame waarop een persoon iets over zijn eigen ticket
+## zegt, en daar stond dus een naam zonder gezicht bij terwijl `DialogueBox` het
+## portret al kon tonen. `portret` overschrijft de afleiding uit `speaker_id`
+## voor een aanroeper die zelf al weet welk gezicht erbij hoort.
+func say(speaker: String, text: String, speaker_id: StringName = &"",
+		portret: Texture2D = null) -> void:
+	await _play_single(speaker, text, speaker_id, portret)
 
 
 ## Ook een losse regel is een gesprek. Het signaal gaat er daarom net zo goed
 ## uit als bij een hele dialoogboom -- de AudioDirector zet de muziek erop terug
 ## en zonder deze emit blijft het kantoor gewoon doorspelen onder de tekst.
-func _play_single(speaker: String, text: String, speaker_id: StringName = &"") -> void:
+func _play_single(speaker: String, text: String, speaker_id: StringName = &"",
+		portret: Texture2D = null) -> void:
 	_active = true
 	Session.lock_input()
 	Bus.dialogue_started.emit(&"", speaker_id if speaker_id != &"" else StringName(speaker))
-	await _show_and_wait(speaker, text)
+	await _show_and_wait(speaker, text,
+		portret if portret != null else _portrait_for(String(speaker_id)))
 	_box.close()
 	_active = false
 	await get_tree().process_frame

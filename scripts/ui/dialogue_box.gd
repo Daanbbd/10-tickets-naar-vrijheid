@@ -10,9 +10,18 @@ const CHARS_PER_SEC := 55.0
 
 ## Het paneel groeit omhoog mee met de tekst. Met een vaste hoogte van 70px viel
 ## langere dialoog onderuit beeld: RichTextLabel scrollt niet en klipt gewoon.
+##
+## HOOGTE_MAX stond op 156, en dat was precies de hoogte van de langste regel
+## *zonder* portret. Een portret kost 32 px breedte plus 5 px tussenruimte van
+## een tekstkolom van 156, dus een kwart minder tekens per regel en ruwweg een
+## kwart meer regels — en dan viel dezelfde regel er onderuit. Dat gold al voor
+## de langere nodes van een dialoogboom (die tonen altijd een gezicht); sinds de
+## briefing van de eigenaar er ook een heeft, geldt het voor de langste tekst
+## die het spel kent. 210 is de hoogte die BBD-208 met portret nodig heeft, en
+## dat is nog altijd de helft van het canvas — de andere helft blijft kantoor.
 const MARGE_ONDER := 8.0
 const HOOGTE_MIN := 70.0
-const HOOGTE_MAX := 156.0
+const HOOGTE_MAX := 210.0
 
 var _panel: PanelContainer
 var _name: Label

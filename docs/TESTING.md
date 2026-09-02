@@ -44,6 +44,12 @@ Ruim **16.000 controles**, exitcode 1 bij fouten. Dekt:
   paneel, 3,9:1 op een donker, 2,7:1 op papier — en stond tot voor kort op elke
   uitleg- en statusregel in het spel. Terugvallen erop is geen parse-fout en in
   de editor niet te zien; het is alleen buiten niet te lezen
+- **de chrome van de minigames**: hoogstens één `UiKit.knop_primair()` per
+  minigamescript, en `build_chrome()` bouwt nog steeds een donker oppervlak.
+  Twee gevulde knoppen op één scherm wijzen allebei nergens heen, en een chrome
+  die terugvalt op de crème standaard van `UiKit.panel()` maakt de minigames
+  weer het enige lichte scherm van het spel — met tien secundaire regels in een
+  grijstint die daar de norm niet haalt
 - **navigatie**: de kompasstrip rekent met de vloerbreedte uit `floor.json` en
   niet met een constante, elke zone past binnen die breedte, en de doelregel
   noemt de ruimte hoogstens één keer

@@ -203,6 +203,9 @@ func _briefing(t: TicketDef) -> void:
 	var d: NpcDef = GameData.npc(QuestEngine.required_helper(t.id))
 	if d == null:
 		return
+	# `owner_character` is hier het derde argument en niet zomaar een extraatje:
+	# `say()` leidt daar zowel de pratende mond als het portret uit af. Dit is het
+	# gezicht dat vlak voor de minigame in beeld komt.
 	await _dialogue.say(d.name, tekst, t.owner_character)
 
 

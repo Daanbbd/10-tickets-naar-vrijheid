@@ -42,7 +42,10 @@ class CableLines extends Control:
 				continue
 			var pa := a.get_global_rect().get_center() - global_position
 			var pb := b.get_global_rect().get_center() - global_position
-			draw_line(pa, pb, UiKit.BLUEBIRD_INK, 2.0, true)
+			# De kabel loopt over het donkere oppervlak van de chrome; bb-blue is
+			# daar nauwelijks van de ondergrond te onderscheiden. De stippen aan de
+			# uiteinden liggen wél op een licht knooppunt en blijven dus INK.
+			draw_line(pa, pb, UiKit.BLUEBIRD_BRIGHT, 2.0, true)
 			draw_circle(pa, 2.5, UiKit.INK)
 			draw_circle(pb, 2.5, UiKit.INK)
 

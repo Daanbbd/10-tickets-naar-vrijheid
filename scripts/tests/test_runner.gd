@@ -31,6 +31,7 @@ func _ready() -> void:
 	_test_omz_en_absoluta()
 	_test_balkmaat()
 	_test_leesbaarheid()
+	_test_minigame_chrome()
 	_test_navigatie()
 	_test_briefings()
 	_test_intro()
@@ -1647,6 +1648,42 @@ func _test_leesbaarheid() -> void:
 			_ok(not (kaal.contains("UiKit.label(") or kaal.contains("\"font_color\"")),
 				"%s:%d zet UiKit.GRIJS als tekstkleur — gebruik GRIJS_OP_LICHT of GRIJS_OP_DONKER"
 					% [pad, nr])
+
+
+## Eén blauwe knop per minigamescherm, en een chrome die donker blijft.
+##
+## `UiKit.knop_primair()` werkt alleen zolang hij zeldzaam is: twee gevulde
+## knoppen naast elkaar wijzen allebei nergens heen, en dan is de vorm terug bij
+## waar hij vandaan kwam — een scherm waarop elke knop er hetzelfde uitziet.
+## Twee minigames hebben er bewust nul (`mg_whack` is arcade, `mg_choicescene`
+## is een keuzelijst waarin de keuze zelf de handeling is); de rest heeft er
+## precies één. Dit telt dus een bovengrens en geen exact aantal.
+##
+## De tweede helft bewaakt het donkere oppervlak. `build_chrome()` bouwde een
+## crème paneel terwijl de hele shell eromheen donker is; valt dat terug op de
+## standaard van `UiKit.panel()`, dan is elke minigame weer het enige lichte
+## scherm van het spel — en staan de secundaire regels van tien minigames in een
+## grijstint die daar de norm niet haalt.
+func _test_minigame_chrome() -> void:
+	_kop("de chrome van de minigames")
+
+	for pad: String in _gd_bestanden("res://scripts/minigames"):
+		var n := 0
+		for regel: String in FileAccess.get_file_as_string(pad).split("\n"):
+			# Commentaar telt niet mee: `mg_oplevering.gd` legt in proza uit dat
+			# zijn DEPLOYEN-knop deze stijl draagt.
+			if regel.strip_edges().begins_with("#"):
+				continue
+			if regel.contains("UiKit.knop_primair("):
+				n += 1
+		_ok(n <= 1, "%s heeft %d primaire knoppen; er hoort er hoogstens één per scherm te zijn"
+			% [pad, n])
+
+	var bron := FileAccess.get_file_as_string("res://scripts/minigames/minigame_base.gd")
+	_ok(bron.contains("UiKit.panel(UiKit.SCHERM_NACHT"),
+		"build_chrome() bouwt geen donker oppervlak meer — de minigames vallen terug op crème")
+	_ok(not bron.contains("UiKit.GRIJS_OP_LICHT"),
+		"minigame_base.gd zet nog GRIJS_OP_LICHT op een donkere ondergrond")
 
 
 ## Relatieve luminantie volgens WCAG 2.x. Godot's `Color` bewaart sRGB-waarden,
