@@ -158,33 +158,54 @@ func _ready() -> void:
 
 
 
-## Zet het wijzertje op het huidige doel: eerst de collega die nog opgehaald moet
-## worden, daarna het object. Er leeft er altijd maximaal één.
+## Zet het wijzertje op het huidige doel. Er leeft er altijd maximaal één.
+##
+## Bouwt alleen opnieuw op als het doel echt veranderd is. Deze functie hangt
+## aan het ongefilterde `Bus.flag_changed`, dus hij liep bij élke vlagwijziging
+## in het spel — een gevuurde storing, een gevolg-vlag, een opgehaalde collega —
+## en sloopte dan een `ObjectiveMarker` met een PanelContainer en een Label erin
+## om er een identieke voor terug te zetten. Omdat `queue_free()` uitgesteld is
+## en `new()` niet, leefden er tot het eind van die frame twee markers naast
+## elkaar, tegen de belofte van `objective_marker.gd` in; en de deining begon
+## elke keer opnieuw bij nul, wat je als een tik in beeld zag.
 func _refresh_marker() -> void:
+	var doel := _doel_node()
+	if doel == _doelwit and is_instance_valid(_doelwit):
+		return
+
 	for m: Node in get_tree().get_nodes_in_group(&"objective_marker"):
 		m.queue_free()
 	_doelwit = null
+	if doel != null:
+		_mark_node(doel)
+	_kompas_bijwerken()
 
+
+## Waar de wijzer naar hoort te wijzen: eerst de collega die je moet ophalen,
+## dan het spul dat je nog nodig hebt, dan het object zelf. Zonder zijeffecten,
+## zodat `_refresh_marker()` kan vergelijken vóór hij iets afbreekt.
+func _doel_node() -> Node2D:
 	var t: TicketDef = QuestEngine.next_hint_ticket()
 	if t == null:
-		_mark_object(&"voordeur")
-		_kompas_bijwerken()
-		return
+		return registry.get_by_id(&"voordeur")
 
 	if not QuestEngine.is_own_expertise(t.id) and not Session.get_flag(QuestEngine.helper_flag(t.id)):
 		var helper := npc_layer.find_npc(QuestEngine.required_helper(t.id))
 		if helper != null and not helper.is_following():
-			_mark_node(helper)
-			_kompas_bijwerken()
-			return
-	_mark_object(t.anchor)
-	_kompas_bijwerken()
+			return helper
 
+	# Mist er nog iets dat ergens in het gebouw ligt? Dan wijst hij daar eerst
+	# naartoe. Zonder deze hop stuurde hij je bij 9/10 naar de deploycomputer in
+	# Birdhouse, die om de deploysleutel vraagt — terwijl die zestig tegels
+	# westelijker in de plantenkast op De Vloer ligt, en de enige aanwijzing
+	# daarvoor de hinttekst was die je pas ná de weigering leest.
+	var mist: ItemDef = QuestEngine.ontbrekend_item(t.id)
+	if mist != null and mist.vindplaats != &"":
+		var waar := registry.get_by_id(mist.vindplaats)
+		if waar != null:
+			return waar
 
-func _mark_object(world_id: StringName) -> void:
-	var wo := registry.get_by_id(world_id)
-	if wo != null:
-		_mark_node(wo)
+	return registry.get_by_id(t.anchor)
 
 
 func _mark_node(n: Node2D) -> void:

@@ -47,6 +47,8 @@ func _ready() -> void:
 	_test_vinden()
 	_test_startroutes()
 	_test_ankers_bereikbaar()
+	_test_zonevolgorde()
+	_test_item_vindplaats()
 	_test_ticket_eigenaarschap()
 	_test_omz_en_absoluta()
 	_test_balkmaat()
@@ -3438,3 +3440,99 @@ func _test_keten_is_bereikbaar_en_afgeleid() -> void:
 		_ok(Session.is_done(id) or Session.is_available(id),
 			"%s bleef LOCKED na het herbouwen uit done_order — de keten is niet afgeleid"
 				% GameData.ticket(id).code)
+
+
+## De zone-rects in floor.json overlappen: z1_entree ligt volledig binnen
+## z9_vloer, en z4/z5/z6/z7/z8 liggen binnen z11_gang. `WorldBuilder.zone_at()`
+## geeft de EERSTE rect die past, dus in welke ruimte je staat hangt af van de
+## volgorde waarin ze in het bestand staan. Die volgorde was nergens vastgelegd
+## en niets testte hem.
+##
+## Wat er stukgaat als iemand `zones` herordent: `discover_in_zone()` vergelijkt
+## op zone-id, dus een ticket waarvan het anker ineens "De Gang" oplevert wordt
+## nooit meer gevonden door er binnen te lopen. Geen crash, geen melding — je
+## loopt langs werk dat niet in je inventaris komt.
+func _test_zonevolgorde() -> void:
+	_kop("zonevolgorde")
+	var b := WorldBuilder.new()
+	b.zones = GameData.floor_data.get("zones", []) as Array
+	_ok(not b.zones.is_empty(), "floor.json bevat geen zones; leest deze test de plattegrond wel?")
+
+	# Vangnet: zonder overlappende rects bewijst deze test niets.
+	var overlap := 0
+	for i: int in range(b.zones.size()):
+		for j: int in range(i + 1, b.zones.size()):
+			var r1: Array = (b.zones[i] as Dictionary).get("rect", [])
+			var r2: Array = (b.zones[j] as Dictionary).get("rect", [])
+			if r1.size() == 4 and r2.size() == 4 \
+					and int(r1[0]) <= int(r2[2]) and int(r2[0]) <= int(r1[2]) \
+					and int(r1[1]) <= int(r2[3]) and int(r2[1]) <= int(r1[3]):
+				overlap += 1
+	_ok(overlap > 0,
+		"geen enkele zone-rect overlapt nog; dan is de volgorde niet meer betekenisvol en kan deze test weg")
+
+	var tegels := _object_tiles()
+	for id: StringName in GameData.ticket_ids():
+		var t: TicketDef = GameData.ticket(id)
+		if t == null or t.anchor == &"":
+			continue
+		_ok(tegels.has(t.anchor),
+			"%s hangt aan '%s' en dat object staat niet in objects.json" % [t.code, t.anchor])
+		if not tegels.has(t.anchor):
+			continue
+		var gevonden := StringName(b.zone_at(tegels[t.anchor] as Vector2i).get("id", ""))
+		_ok(gevonden == t.zone,
+			"%s zegt zone '%s', maar zijn anker '%s' ligt volgens zone_at() in '%s' — is de volgorde van `zones` in floor.json veranderd?" % [
+				t.code, t.zone, t.anchor, gevonden])
+
+
+## Een item met een `vindplaats` is wat de wijzer aanwijst zolang je het nog niet
+## hebt (zie `QuestEngine.ontbrekend_item()` en `Main._doel_node()`). Dat zijn
+## twee velden die uit elkaar kunnen lopen: het object waar het ligt, en de
+## ruimte die de doelregel noemt. `GameData` leest `objects.json` niet in, dus
+## niets anders bewaakt dat die twee bij elkaar horen — en een verkeerde `zone`
+## stuurt de speler met een kloppende pijl naar de verkeerde ruimtenaam.
+func _test_item_vindplaats() -> void:
+	_kop("item-vindplaats")
+	var b := WorldBuilder.new()
+	b.zones = GameData.floor_data.get("zones", []) as Array
+	var tegels := _object_tiles()
+
+	var met_vindplaats := 0
+	for k: Variant in GameData.items.keys():
+		var it: ItemDef = GameData.item(StringName(k))
+		if it == null or it.vindplaats == &"":
+			continue
+		met_vindplaats += 1
+
+		_ok(GameData.has_world_id(it.vindplaats),
+			"item '%s' ligt bij '%s' en dat staat niet in world_ids.json" % [it.id, it.vindplaats])
+		_ok(tegels.has(it.vindplaats),
+			"item '%s' ligt bij '%s' en dat object staat niet in objects.json" % [it.id, it.vindplaats])
+		if tegels.has(it.vindplaats):
+			var zid := StringName(b.zone_at(tegels[it.vindplaats] as Vector2i).get("id", ""))
+			_ok(zid == it.zone,
+				"item '%s' zegt zone '%s', maar '%s' staat in '%s'" % [it.id, it.zone, it.vindplaats, zid])
+
+		# Een vindplaats zonder vrager wijst nooit iets aan.
+		var gevraagd := false
+		for tid: StringName in GameData.ticket_ids():
+			var t: TicketDef = GameData.ticket(tid)
+			if t != null and StringName(it.id) in Conditions.namen(t.requirements.get("has_item", [])):
+				gevraagd = true
+		_ok(gevraagd,
+			"item '%s' heeft een vindplaats maar geen enkel ticket vraagt erom" % it.id)
+
+	_ok(met_vindplaats > 0,
+		"geen enkel item heeft een vindplaats; dan kan de wijzer nooit naar ontbrekend spul wijzen")
+
+
+## world_id -> tegel, uit objects.json.
+func _object_tiles() -> Dictionary:
+	var out := {}
+	for d: Dictionary in _objects():
+		var wid := StringName(d.get("world_id", ""))
+		var tile: Array = d.get("tile", [])
+		if wid != &"" and tile.size() == 2:
+			out[wid] = Vector2i(int(tile[0]), int(tile[1]))
+	return out

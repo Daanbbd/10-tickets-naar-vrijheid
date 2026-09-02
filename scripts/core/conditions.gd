@@ -70,6 +70,15 @@ static func unknown_keys(c: Dictionary) -> Array[String]:
 			bad.append(String(k))
 	return bad
 
+## Dezelfde soepelheid als de grammatica zelf (één naam mag ook zonder lijst),
+## voor code die een conditie moet *uitlezen* in plaats van evalueren. De wijzer
+## in de wereld doet dat: die wil weten wélk item nog ontbreekt, niet of het
+## ontbreekt. Publiek zodat die tolerantie op één plek staat — een tweede,
+## eigen lus over `has_item` zou er stil van af kunnen wijken.
+static func namen(v: Variant) -> Array[StringName]:
+	return _names(v)
+
+
 static func _names(v: Variant) -> Array[StringName]:
 	var out: Array[StringName] = []
 	if v is Array:

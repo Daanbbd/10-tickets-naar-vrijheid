@@ -18,7 +18,7 @@
   {
     "id": "storing_backend_crash",
     "soort": "iets_gaat_stuk",
-    "trigger": { "min_tickets_done": 6 },
+    "trigger": { "min_tickets_done": 6, "wachttijd_min": 45 },
     "when": { "tickets_done": ["t05"] },
     "dialogue": "Het serverrack piept weer. De backend ligt er opnieuw uit.",
     "effects": [

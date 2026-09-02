@@ -60,6 +60,15 @@ func _notification(what: int) -> void:
 		NOTIFICATION_WM_WINDOW_FOCUS_IN:
 			if OS.has_feature("mobile"):
 				_naar_voorgrond()
+		NOTIFICATION_WM_CLOSE_REQUEST:
+			# Het kruisje op de desktop. Zonder dit gaat alles verloren sinds het
+			# laatst opgeloste ticket: `QuestEngine.complete()` is de enige plek
+			# die zelf opslaat, dus je vondsten, je gekozen ticket, de collega's
+			# die je al had opgehaald (`helper_bij_*`), je gewerkte minuten en de
+			# storingen die al gevuurd waren stonden nergens. `discover()` is de
+			# enige mutatie van de collectielus zonder eigen save-pad, en juist
+			# rondlopen en vinden is wat je tussen twee tickets doet.
+			_bewaar_lopende_dag()
 
 
 func _naar_achtergrond() -> void:
@@ -70,15 +79,22 @@ func _naar_achtergrond() -> void:
 	# Eerst opslaan, dan pas pauzeren: Android mag dit proces hierna zonder
 	# waarschuwing killen. `WM_CLOSE_REQUEST` komt daar niet, dus dit is het
 	# enige moment waarop de sessie nog veilig weggeschreven kan worden.
-	# Alleen als er een speelbeurt loopt: wegdrukken op het titelscherm zou
-	# anders een lege sessie over een bestaande save heen schrijven.
-	if Session.character_id != &"":
-		Session.save_to_disk()
+	_bewaar_lopende_dag()
 
 	_pauze_voor_achtergrond = get_tree().paused
 	get_tree().paused = true
 	Engine.max_fps = 1
 	AudioServer.set_bus_mute(0, true)
+
+
+## Schrijft de lopende speelbeurt weg, als er één is.
+##
+## Alleen met een personage: wegdrukken of afsluiten op het titelscherm zou
+## anders een lege sessie over een bestaande save heen schrijven, en dan biedt
+## "Doorgaan" een dag aan zonder personage.
+func _bewaar_lopende_dag() -> void:
+	if Session.character_id != &"":
+		Session.save_to_disk()
 
 
 func _naar_voorgrond() -> void:

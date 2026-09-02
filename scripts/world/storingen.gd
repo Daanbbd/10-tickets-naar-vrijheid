@@ -43,7 +43,9 @@ const STORINGEN_JSON := "res://data/storingen.json"
 const SOORTEN: Array[String] = [
 	"npc_komt_langs", "iets_gaat_stuk", "ticket_wijzigt", "afleiding",
 ]
-const TRIGGER_KEYS: Array[String] = ["min_tickets_done", "na_minuten", "zone"]
+const TRIGGER_KEYS: Array[String] = [
+	"min_tickets_done", "na_minuten", "zone", "wachttijd_min",
+]
 
 ## F5-b: frequentie is een ontwerpknop, geen technische. Een onderbreking die
 ## je een oplossing kost is chaos; twee die je een oplossing kosten zijn een
@@ -73,6 +75,10 @@ var _mg_onderbroken: bool = false
 var _mg_actief: bool = false
 var _mg_gestart_op: float = 0.0
 
+## Staat er al een evaluatie klaar voor het einde van deze frame? Zie
+## `_plan_evaluatie()`.
+var _gepland: bool = false
+
 
 func setup(npc_layer: NpcLayer, mutator: WorldMutator, speler: Node2D) -> void:
 	_npc_layer = npc_layer
@@ -80,12 +86,14 @@ func setup(npc_layer: NpcLayer, mutator: WorldMutator, speler: Node2D) -> void:
 	_speler = speler
 	_defs = laad()
 
-	Bus.ticket_completed.connect(func(_a: StringName, _b: MinigameResult) -> void: _evalueer())
-	Bus.time_booked.connect(func(_a: int, _b: StringName, _c: int) -> void: _evalueer())
-	Bus.flag_changed.connect(func(_a: StringName, _b: bool) -> void: _evalueer())
+	# Alle vier uitgesteld, en met opzet niet met CONNECT_DEFERRED: `zone_entered`
+	# moet `_laatste_zone` wél meteen vastleggen, alleen de evaluatie mag wachten.
+	Bus.ticket_completed.connect(func(_a: StringName, _b: MinigameResult) -> void: _plan_evaluatie())
+	Bus.time_booked.connect(func(_a: int, _b: StringName, _c: int) -> void: _plan_evaluatie())
+	Bus.flag_changed.connect(func(_a: StringName, _b: bool) -> void: _plan_evaluatie())
 	Bus.zone_entered.connect(func(zid: StringName, _naam: String) -> void:
 		_laatste_zone = zid
-		_evalueer())
+		_plan_evaluatie())
 	Bus.minigame_started.connect(_op_minigame_gestart)
 	Bus.minigame_finished.connect(_op_minigame_klaar)
 
@@ -158,7 +166,35 @@ static func laad() -> Array[Dictionary]:
 	return out
 
 
+## Zet een evaluatie klaar voor het einde van de frame in plaats van hem midden
+## in de gebeurtenis te draaien die hem uitlokte.
+##
+## **Waarom uitgesteld.** `QuestEngine.complete()` stuurt onderweg drie
+## signalen uit waar deze node aan hangt: `flag_changed` (uit `run_effects()`,
+## voor de drie tickets met een `set_flag`-beloning), `time_booked` (uit de
+## urenboeking) en `ticket_completed` aan het eind. Een storing die op zo'n
+## signaal afvuurt draait dus *binnen* een afronding die nog niet klaar is.
+## `storing_backend_crash` deed precies dat: hij riep `QuestEngine.reopen()`
+## aan terwijl `complete()` halverwege stond, dus `Bus.ticket_completed` ging
+## uit voor een ticket dat op dat moment alweer AVAILABLE was, en
+## `save_to_disk()` schreef het als open weg. Een doorloop eindigde daardoor
+## op elf opleveringen voor een dag van tien tickets.
+##
+## **Waarom gecoalesceerd.** Die drie signalen vallen bij één afronding
+## gegarandeerd in dezelfde frame, en dan hoeft de lijst niet drie keer
+## langsgelopen te worden. De bool gaat weer open aan het begin van
+## `_evalueer()` en niet aan het eind: een storing die zelf een signaal
+## veroorzaakt (een `set_flag`, een `kost_tijd`) hoort nog een volgende ronde
+## te krijgen.
+func _plan_evaluatie() -> void:
+	if _gepland:
+		return
+	_gepland = true
+	_evalueer.call_deferred()
+
+
 func _evalueer() -> void:
+	_gepland = false
 	for d: Dictionary in _defs:
 		var trigger := d.get("trigger", {}) as Dictionary
 		if String(d.get("soort", "")) == "npc_komt_langs":
@@ -174,6 +210,8 @@ func _evalueer() -> void:
 			continue
 		if not Conditions.check(d.get("when", {}) as Dictionary):
 			continue
+		if not _wachttijd_verstreken(id, trigger):
+			continue
 		_vuur_eenmalig(d)
 
 
@@ -187,6 +225,42 @@ func _trigger_klopt(t: Dictionary) -> bool:
 	if t.has("zone") and _laatste_zone != StringName(String(t["zone"])):
 		return false
 	return true
+
+
+## Een storing die pas "later die dag" hoort te vallen. `wachttijd_min` telt in
+## geboekte minuten vanaf het moment dat `trigger` en `when` voor het eerst
+## allebei klopten — niet vanaf het begin van de dag.
+##
+## **Waarom niet gewoon `na_minuten`.** Dat is een absoluut tijdstip op de dag,
+## en dat geeft geen enkele scheiding zodra de eigenlijke voorwaarde later valt
+## dan dat tijdstip. `storing_backend_crash` botste daarop: zijn `when` (t05 is
+## opgelost) wordt waar op precies het moment dat zijn `min_tickets_done` al
+## lang klopt, want zeven tickets zijn oplosbaar zonder t05. Los je t05 als
+## zevende of later op, dan is elke absolute drempel al gepasseerd en valt
+## "BBD-205 staat weer open" over de regel "BBD-205 opgelost" heen. Met een
+## wachttijd vanaf het moment van in aanmerking komen is die afstand er altijd,
+## ongeacht in welke volgorde de speler zijn dag doet.
+##
+## Het ijkpunt gaat in `Session.counters` en dus mee de save in: een storing die
+## op zijn wachttijd staat hoort niet opnieuw te beginnen met aftellen omdat de
+## speler het spel afsloot. Geteld in geboekte minuten en niet op de wandklok,
+## om dezelfde reden als de rest van de urenstaat: dan is het headless testbaar
+## en kost rondlopen geen tijd.
+func _wachttijd_verstreken(id: String, t: Dictionary) -> bool:
+	var wacht := int(t.get("wachttijd_min", 0))
+	if wacht <= 0:
+		return true
+	var sleutel := wacht_teller(id)
+	# Rechtstreeks in `counters` en niet via `add_counter()`: dit is een ijkpunt
+	# dat één keer gezet wordt, geen teller die oploopt.
+	if not Session.counters.has(sleutel):
+		Session.counters[sleutel] = Session.worked_minutes
+		return false
+	return Session.worked_minutes - Session.get_counter(sleutel) >= wacht
+
+
+static func wacht_teller(id: String) -> StringName:
+	return StringName("storing_wacht_%s" % id)
 
 
 ## F5-b: blijft buiten `storing()` om, met opzet. `npc_komt_langs` is geen

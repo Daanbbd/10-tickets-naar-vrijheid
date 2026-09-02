@@ -580,6 +580,19 @@ func _fill_board() -> void:
 ## ruimte waar hij staat, want de werkelijke kosten van ophalen zijn zoektijd.
 static func _wie(t: TicketDef) -> String:
 	var stand := QuestEngine.helper_stand(t.id)
+	# Wat je nog moet oprapen gaat vóór "je kunt dit zelf". Bij 9/10 vraagt de
+	# deploycomputer om de deploysleutel, en die ligt in de plantenkast aan de
+	# andere kant van de vloer: zonder deze regel zei de doelregel "Jij kunt dit
+	# zelf" terwijl de wijzer naar De Vloer wees. Twee aanwijzingen die elkaar
+	# tegenspreken, op het enige moment in de dag dat het erop aankomt.
+	#
+	# Zelfde zinsvorm als bij een collega hieronder ("Haal Victor uit De
+	# Vloer"), dus de naam van het item gaat er onbewerkt in: een lidwoord
+	# erbij verzinnen gaat mis op het eerste onzijdige item.
+	var mist: ItemDef = QuestEngine.ontbrekend_item(t.id)
+	if mist != null:
+		var plek := _zone_naam(mist.zone)
+		return "Haal %s%s" % [mist.name, "" if plek == "" else " uit %s" % plek]
 	if stand == GameEnums.HelperStand.EIGEN:
 		return "Jij kunt dit zelf"
 	var d: NpcDef = GameData.npc(QuestEngine.required_helper(t.id))

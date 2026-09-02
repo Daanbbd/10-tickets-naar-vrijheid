@@ -362,6 +362,28 @@ static func locked_count() -> int:
 	return n
 
 
+## Het eerste vereiste item dat je nog niet hebt, of null. Voor de gidslaag: de
+## wijzer in de wereld en de doelregel moeten kunnen zeggen wát je nog moet
+## ophalen, niet alleen dát er iets ontbreekt.
+##
+## Hoort hier en niet in de HUD, om dezelfde reden als `helper_stand()`: de
+## wijzer en de doelregel lezen er beide uit, en twee eigen lusjes over
+## `requirements` zouden stil van elkaar gaan afwijken. Leest de conditie via
+## `Conditions.namen()`, zodat "één naam mag ook zonder lijst" hier hetzelfde
+## betekent als bij de evaluatie zelf.
+##
+## Alleen `has_item`: dat is de enige requirement-soort die naar een plek in de
+## wereld verwijst. Een ontbrekende vlag of trait kun je niet gaan halen.
+static func ontbrekend_item(id: StringName) -> ItemDef:
+	var t: TicketDef = GameData.ticket(id)
+	if t == null:
+		return null
+	for iid: StringName in Conditions.namen(t.requirements.get("has_item", [])):
+		if not Session.has_item(iid):
+			return GameData.item(iid)
+	return null
+
+
 static func _set_state(id: StringName, st: GameEnums.TicketState) -> void:
 	if Session.ticket_states.get(id, -1) == st:
 		return

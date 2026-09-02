@@ -5,5 +5,5 @@
  {"id": "productdata",   "name": "Productdata",         "description": "Vier supplementen. Met echte prijzen. Een klein wonder.", "icon": "kaart"},
  {"id": "audiobestand",  "name": "Audiobestand",        "description": "De merksound. Duurt elf seconden. Voelt langer.", "icon": "noot"},
  {"id": "videobestand",  "name": "AI-video",            "description": "Een paard rent door een weiland. Grotendeels correct.", "icon": "film"},
- {"id": "deploysleutel", "name": "Deploysleutel",       "description": "Geeft toegang tot de productiedeploy. Geen druk.", "icon": "sleutel"}
+ {"id": "deploysleutel", "name": "Deploysleutel",       "description": "Geeft toegang tot de productiedeploy. Geen druk.", "icon": "sleutel", "vindplaats": "plantenkast", "zone": "z9_vloer"}
 ]
