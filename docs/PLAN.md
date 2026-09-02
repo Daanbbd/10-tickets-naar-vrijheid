@@ -2,9 +2,9 @@
 
 ## Status (bijgewerkt 2 september 2026)
 
-**F0 t/m F3 zijn klaar en gemerged in `main`.** Testsuite staat op
-**17.215 controles, 0 fout, ALLES GOED** (baseline bij de start van dit plan
-was 16.658). F4 t/m F6 zijn nog niet begonnen.
+**F0 t/m F4 zijn klaar en gemerged in `main`.** Testsuite staat op
+**17.463 controles, 0 fout, ALLES GOED** (baseline bij de start van dit plan
+was 16.658). F5 en F6 zijn nog niet begonnen.
 
 | Fase | Status | Noot |
 |---|---|---|
@@ -24,7 +24,10 @@ was 16.658). F4 t/m F6 zijn nog niet begonnen.
 | F3-b De klant kan ontsporen | ✅ Klaar | 4 → 6 beats, `Gevolgen.DREMPELS` uitgebreid, effects op klantberichten |
 | F3-c Storingen | ✅ Klaar | Dirk gegeneraliseerd naar `data/storingen.json`; nieuw `QuestEngine.reopen()` |
 | F3-d De klok gaat lopen | ✅ Klaar | Geen ticket-herbalancering nodig, zie "Afwijkingen" |
-| F4 Tien tickets, zes schermen | ⬜ Nog te doen | — |
+| F4-a Zes minigames herzien | ✅ Klaar | `mg_scope`/`mg_standup`/`mg_uitlijnen`/`mg_abtest`/`mg_pijplijn` + `mg_urenstaat`-vervanging |
+| F4-b Vier wereldhandelingen | ✅ Klaar | BBD-203/205/207/209 lossen op zonder wereld-pauze, geen minigame-scherm meer |
+| F4-c Druk op de finale | ✅ Klaar | Klok, echte onderbreking, titel beweegt mee met score, fase 2 van 7 naar 3 regels |
+| F4-d Elk gevolg landt | ✅ Klaar | Alle 9 niet-finale tickets wegen nu mee in `finale_start()` (eis was ≥8) |
 | F5 Wereld van pause af | ⬜ Nog te doen | — |
 | F6 Verificatie en docs | ⬜ Nog te doen | — |
 
@@ -88,6 +91,34 @@ F1-a al bouwde. **Beide zijn nu doorgevoerd**, details in `docs/LEVEL.md`:
 - Nieuw op `QuestEngine`: `reopen(id)` + effect-op `reopen_ticket`, nodig om
   "iets gaat stuk" (F3-c) een DONE-ticket terug naar AVAILABLE te zetten
   zonder ooit naar LOCKED terug te vallen.
+
+### Afwijkingen t.o.v. de oorspronkelijke briefing (F4)
+
+- **BBD-203 werd geen letterlijk telefoongesprek.** De fictie (`t03_offer`)
+  beschrijft de klant fysiek op de wachtbank met een mapje, niet aan de lijn —
+  een telefoonscherm zou tegen de bestaande scène ingaan. Opgelost met
+  hetzelfde bouwblok (`DialogueController.ask_choice()`) zonder de aparte
+  `Telefoon`-laag erbij te halen.
+- **`mg_uitlijnen`'s "slepen primair"** bleek al zo te werken — `_op_sleep()`
+  snapte al continu naar het raster. Alleen de documentatie beschreef de
+  dpad-knoppen nog als hoofdroute; de echte bug zat uitsluitend in de
+  `afwijking`-data (zie F1-c-achtige bijvangst hierboven).
+- **`mg_pijplijn`'s halvering**: de Review-stage (kostte nooit credits, voegde
+  alleen een derde tik toe) en het losse voortgangstellertje zijn geschrapt.
+  Het knelpunt blijft de Render-stage; Prompt → Render → Publish.
+- **`mg_abtest`'s trait omgedraaid naar "spreiding"** (een bandbreedte i.p.v.
+  het exacte effectgetal), niet naar "extra ronde" — de contentdata had geen
+  ruimte voor een extra ronde zonder nieuwe leveldata.
+- **`mg_urenstaat` werd een dialoogkeuze** (drie voorgestelde verdelingen),
+  niet een schuifform — hergebruikt het bestaande keuzepatroon uit
+  `mg_choicescene.gd`/`UiKit.keuzeknop()`.
+- **F4-c's onderbreking bij 6 bestede handelingen** kreeg een eigen
+  "OPGELET"-presentatie (rode rand, geluid, fade) in plaats van volledige
+  koppeling met het generieke storingen-systeem — die koppeling hoort bij F5,
+  waar de wereld sowieso niet meer pauzeert tijdens een minigame.
+- De vier oude minigame-scenes (`mg_choicescene`, `mg_cableboard`,
+  `mg_tagpicker`, `mg_whack`) zijn **niet verwijderd**, alleen niet meer
+  aangeroepen voor hun tickets — opruimen was expliciet buiten scope.
 
 ---
 
@@ -774,7 +805,8 @@ nog oplosbaar is en de voordeur nog opengaat.
 
 # F4 · Tien tickets, zes puzzelschermen
 
-**Status: ⬜ Nog niet gestart.**
+**Status: ✅ Klaar. Alle vier substappen gemerged, testsuite groen (17.463
+controles, 0 fout).**
 
 **Het principe:** `docs/MINIGAMES.md` koos bewust elf mechanieken voor elf
 tickets, om te ontsnappen aan vier tickets die dezelfde `SlotBoard` deelden.
@@ -1002,9 +1034,9 @@ bovenstaande sectie als briefing, plus de codemap-feiten die erbij horen.
 | F2-a t/m F2-e | 3 agents | 3 waves: (F2-a+F2-b samen), (F2-c+F2-d samen), F2-e apart, telkens 1 agent | ✅ Alle vijf gemerged |
 | F3-a, F3-b | 1 agent (data + telefoon) | 1 agent, parallel met F3-c/d | ✅ Gemerged |
 | F3-c, F3-d | 1 agent (storingen + klok) | 1 agent, parallel met F3-a/b | ✅ Gemerged (1 conflict in `main.gd`, handmatig) |
-| F4-a | 1 agent per minigame, max 3 tegelijk | nog te doen | ⬜ |
-| F4-b | 1 agent (vier wereldhandelingen) | nog te doen | ⬜ |
-| F4-c, F4-d | 1 agent | nog te doen | ⬜ |
+| F4-a | 1 agent per minigame, max 3 tegelijk | 2 golven van 3, parallel met F4-b in golf 1 | ✅ Gemerged (6 minigames) |
+| F4-b | 1 agent (vier wereldhandelingen) | 1 agent, parallel met golf 1 van F4-a | ✅ Gemerged |
+| F4-c, F4-d | 1 agent | 1 agent, ná alle F4-a/F4-b-merges | ✅ Gemerged |
 | F5 | 1 agent, seriëel — dit raakt Shell | nog te doen | ⬜ |
 | F6 | 1 agent + ik lees de shots | nog te doen | ⬜ |
 
