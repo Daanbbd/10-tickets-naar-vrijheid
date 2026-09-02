@@ -83,16 +83,23 @@ class WensRij extends PanelContainer:
 		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		rij.add_child(t)
-		rij.add_child(_cijfer(punten))
-		rij.add_child(_cijfer(blij))
+		rij.add_child(_cijfer(punten, "pt"))
+		rij.add_child(_cijfer(blij, "bl"))
 		zet_sprint(false)
 
-	static func _cijfer(n: int) -> Label:
-		var l := UiKit.label(str(n), UiKit.FS_SMALL, UiKit.INK)
+	## Elk cijfer draagt nu zijn eigen eenheid ("5pt", "3bl") in plaats van kaal
+	## op het briefje te staan. Die eenheid stond eerder alleen als legenda
+	## boven de lijst (de oude `_bouw_kop()`), en dat is precies het stukje
+	## tekst dat de scrollbar afkapte zodra de lijst niet meer paste — en zelfs
+	## zonder dat defect moest je terugscrollen naar de kop om te weten wat je
+	## las. Negen kaarten met twee onbenoemde getallen was het echte probleem;
+	## een kop erboven hoefde dat niet op te lossen.
+	static func _cijfer(n: int, eenheid: String) -> Label:
+		var l := UiKit.label("%d%s" % [n, eenheid], UiKit.FS_SMALL, UiKit.INK)
 		l.autowrap_mode = TextServer.AUTOWRAP_OFF
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		l.custom_minimum_size = Vector2(13, 0)
+		l.custom_minimum_size = Vector2(20, 0)
 		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		return l
 
@@ -209,20 +216,18 @@ func _bouw_voet(_body: VBoxContainer) -> void:
 	chrome_footer().add_child(voet)
 
 
-## Kop met rechts de legenda voor de twee kolommen cijfers in elke regel.
+## Kop boven een van de twee lijsten. Droeg vroeger ook de legenda "pnt blij"
+## voor de twee kolommen cijfers rechts in elke regel, rechts uitgelijnd tot
+## tegen de rand van de ScrollContainer — precies waar Godots scrollbar zich
+## overheen tekent zodra de lijst niet meer past. De cijfers noemen hun
+## eenheid nu zelf, in de kaart (zie WensRij._cijfer()), dus de kop hoeft
+## alleen nog de naam van de lijst te dragen en heeft niets meer dat kan
+## afkappen.
 func _bouw_kop(body: VBoxContainer, tekst: String) -> Label:
-	var rij := HBoxContainer.new()
-	rij.add_theme_constant_override("separation", 2)
-	body.add_child(rij)
-	# De koppen en de legenda staan op de chrome en niet op een briefje, dus op
-	# het donkere oppervlak.
+	# De kop staat op de chrome en niet op een briefje, dus op het donkere
+	# oppervlak.
 	var l := UiKit.label(tekst, UiKit.FS_SMALL, UiKit.WIT)
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rij.add_child(l)
-	var legenda := UiKit.label("pnt blij", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
-	legenda.autowrap_mode = TextServer.AUTOWRAP_OFF
-	legenda.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	rij.add_child(legenda)
+	body.add_child(l)
 	return l
 
 
