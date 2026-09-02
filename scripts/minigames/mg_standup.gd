@@ -1,12 +1,16 @@
 extends MinigameBase
-## BBD-202 — De stand-up. Zeven collega's praten na elkaar, samen langer dan het
-## tijdsbudget, en je mag drie keer iemand afkappen.
+## BBD-202 — De stand-up. Zeven collega's praten na elkaar, samen ruim langer
+## dan het tijdsbudget, en je mag drie keer iemand afkappen — één afkapping
+## redt je nooit: zelfs de langste spreker alleen eraf halen is niet genoeg.
 ##
 ## De klok loopt terwijl je luistert, dus de vraag is niet "wie kap ik af" maar
-## "hoe lang durf ik te wachten voordat ik het weet". Twee sprekers melden iets
-## wat later nog terugkomt; wie dat zijn staat nergens en moet uit hun regels
-## blijken. Afkappen kost je die informatie, maar nooit de opdracht: het verlies
-## belandt in de payload en niet in de uitslag.
+## "hoe lang durf ik te wachten voordat ik het weet", en dat meerdere keren op
+## rij. Twee sprekers melden iets wat later nog terugkomt; wie dat zijn staat
+## nergens en moet uit hun regels blijken. De briefing wijst er één aan op rol,
+## nooit op naam — Danny, de tweede, krijgt geen aanwijzing en dat is bewust de
+## enige verborgen informatie in het spel. Afkappen kost je die informatie,
+## maar nooit de opdracht: het verlies belandt in de payload en niet in de
+## uitslag.
 
 # Kort genoeg om als tik te voelen, lang genoeg om te zien dat er iemand
 # wegvalt. Twee keer FADE gaat van de klok af, dus dit is ook een prijs.
@@ -84,7 +88,13 @@ func _on_setup() -> void:
 	for s: Dictionary in _sprekers:
 		_langste = maxf(_langste, float(s.get("duur", 5.0)))
 
-	var body := build_chrome(default_title(), String(c.get("intro", "")))
+	# De intro noemt hoeveel keer je mag afkappen, en dat getal mag nooit
+	# afwijken van de statusregel eronder: die las eerder een vast "drie keer"
+	# in de proza terwijl `_ingrepen` (met traitvoordeel erbovenop) al 4 was.
+	# Vullen uit dezelfde `_ingrepen` die de knop en de statusregel gebruiken
+	# maakt de twee onmogelijk tegen te spreken.
+	var intro := String(c.get("intro", "")).replace("{ingrepen}", str(_ingrepen))
+	var body := build_chrome(default_title(), intro)
 	_bouw_vast(body)
 	_bouw_kaart(body)
 

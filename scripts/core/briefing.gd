@@ -54,7 +54,7 @@ static func _feiten(c: Dictionary) -> Dictionary:
 		"standup":
 			f["tijd"] = int(round(float(c.get("tijd", 0.0))))
 			f["ingrepen"] = int(c.get("ingrepen", 0))
-			f["belangrijk"] = _eerste_belangrijke(c)
+			f["belangrijk"] = _belangrijke_aanwijzing(c)
 		"choicescene":
 			f["drempel"] = int(c.get("drempel", 0))
 			f["rondes"] = (c.get("rondes", []) as Array).size()
@@ -98,14 +98,20 @@ static func _zware_wensen(c: Dictionary) -> int:
 	return n
 
 
-## De eerste spreker die echt iets te melden heeft. Bewust één en niet alle:
-## wie ze allemaal kent hoeft niet meer af te wegen, en dan is de stand-up geen
-## opgave meer maar een lijstje.
-static func _eerste_belangrijke(c: Dictionary) -> String:
+## Een categorie-aanwijzing over de eerste spreker die echt iets te melden
+## heeft — nooit zijn naam. Bewust één en niet alle: wie ze allemaal kent
+## hoeft niet meer af te wegen, en dan is de stand-up geen opgave meer maar een
+## lijstje.
+##
+## De naam zelf zou de speler het antwoord in de mond leggen: "kap iedereen
+## behalve Jonathan af" is geen afweging meer. `aanwijzing` beschrijft zijn rol
+## in plaats van zijn naam, en de tweede belangrijke spreker (Danny) krijgt
+## bewust geen aanwijzing — dat is de enige verborgen informatie in het spel.
+static func _belangrijke_aanwijzing(c: Dictionary) -> String:
 	for raw: Variant in (c.get("sprekers", []) as Array):
 		var sp := raw as Dictionary
 		if bool(sp.get("belangrijk", false)):
-			return String(sp.get("naam", ""))
+			return String(sp.get("aanwijzing", ""))
 	return ""
 
 
