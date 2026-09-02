@@ -155,6 +155,8 @@ func _load_items(path: String) -> void:
 		it.name = String(d.get("name", ""))
 		it.description = String(d.get("description", ""))
 		it.icon = StringName(d.get("icon", ""))
+		it.vindplaats = StringName(d.get("vindplaats", ""))
+		it.zone = StringName(d.get("zone", ""))
 		items[it.id] = it
 
 
@@ -203,6 +205,14 @@ func _load_ticket(path: String) -> void:
 	t.wereldhandeling = bool(d.get("wereldhandeling", false))
 	if t.id == &"":
 		load_errors.append("ticket zonder id: %s" % path)
+		return
+	# Het eerste bestand wint, en het tweede meldt zich. Dit was een stille
+	# overschrijving: twee bestanden met hetzelfde id lieten `total_tickets()`
+	# op negen uitkomen, waarmee `all_done()` één ticket te vroeg waar wordt en
+	# er een anker op de vloer staat dat naar een ticket wijst dat niet meer
+	# bestaat. `WorldRegistry.build()` doet dit voor world_id's al wel.
+	if tickets.has(t.id):
+		load_errors.append("dubbel ticket-id '%s' in %s" % [t.id, path])
 		return
 	tickets[t.id] = t
 
