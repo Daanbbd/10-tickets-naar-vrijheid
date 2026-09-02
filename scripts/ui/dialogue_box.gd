@@ -78,7 +78,7 @@ func _ready() -> void:
 	# Eén regel, want tikken werkt overal: een muisklik gaat door voor een
 	# vingertik zolang er geen aanraakscherm is (`Invoer.muis_als_vinger()`).
 	# E doet hetzelfde en staat op de besturingskaart.
-	_hint = UiKit.label("tik  verder", UiKit.FS_SMALL, UiKit.GRIJS)
+	_hint = UiKit.label("tik  verder", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v.add_child(_hint)
 

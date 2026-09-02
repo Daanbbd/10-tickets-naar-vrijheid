@@ -199,12 +199,12 @@ func _bouw_wachtrij(kol: VBoxContainer) -> void:
 	kol.add_child(_kop)
 	# De optelsom die de speler zelf zou moeten maken: dit getal naast de klok
 	# rechtsboven is de hele beslissing.
-	_rest = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
+	_rest = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	_rest.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_kop.add_child(_rest)
 	# Zonder afbreken uit valt "+2" in een HBox naast een uitrekkend label uiteen
 	# in een "+" en een "2" op de regel eronder, en dan is de kop dubbel hoog.
-	_meer = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
+	_meer = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	_meer.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_meer.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_kop.add_child(_meer)
@@ -221,7 +221,7 @@ func _bouw_wachtrij(kol: VBoxContainer) -> void:
 
 		# Afbreken uit en clippen aan: een naam die op twee regels valt maakt
 		# deze rij hoger dan de andere drie.
-		var nm := UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
+		var nm := UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 		nm.autowrap_mode = TextServer.AUTOWRAP_OFF
 		nm.clip_text = true
 		nm.custom_minimum_size = Vector2(NAAM_BREED, 0)
@@ -254,7 +254,7 @@ func _bouw_wachtrij(kol: VBoxContainer) -> void:
 	# drie regels vullen de kaart tot de rand — en de melding gaat juist over de
 	# rij die eronder verspringt. Hij is korter dan de rij, dus hij kan de kaart
 	# nooit over de rand duwen, en de knop staat buiten de scroll en beweegt niet.
-	_flits = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
+	_flits = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	_flits.visible = false
 	kol.add_child(_flits)
 
@@ -333,7 +333,7 @@ func _op_afkappen() -> void:
 	_afgekapt.append(id)
 
 	var melding := String(content().get("kap_regel", ""))
-	var kleur := UiKit.GRIJS
+	var kleur := UiKit.GRIJS_OP_LICHT
 	if bool(sp.get("belangrijk", false)):
 		# Geen straf, geen tijdverlies: wat je kwijt bent is wat hij nog ging
 		# zeggen. Dat merk je later, dus hier hoort niet meer dan een hint.

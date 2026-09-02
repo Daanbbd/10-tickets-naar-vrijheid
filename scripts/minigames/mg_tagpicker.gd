@@ -44,7 +44,7 @@ func _on_setup() -> void:
 		_buttons[id] = b
 
 	_result_panel = PanelContainer.new()
-	_result_panel.add_theme_stylebox_override("panel", UiKit.panel(Color("#e9e4d6"), UiKit.LINE))
+	_result_panel.add_theme_stylebox_override("panel", UiKit.panel(UiKit.PAPIER, UiKit.LINE))
 	_result_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_result_panel.visible = false
 	body.add_child(_result_panel)
@@ -53,7 +53,7 @@ func _on_setup() -> void:
 	_result_panel.add_child(rv)
 	_result_title = UiKit.label("", UiKit.FS_BODY, UiKit.INK)
 	rv.add_child(_result_title)
-	_result_text = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
+	_result_text = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	_result_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rv.add_child(_result_text)
 

@@ -122,7 +122,7 @@ func _bouw(c: Dictionary) -> void:
 	_bouw_foutbalk()
 
 	_regel = UiKit.label("Hoeveel bugs erin zitten weet je niet. Testen vertelt het je.",
-		UiKit.FS_SMALL, UiKit.GRIJS)
+		UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	# Twee regels reserveren: de reactie op een handeling verschijnt hier, en een
 	# lijst keuzes die bij elke tik een paar pixels opschuift is niet te raken.
 	_regel.custom_minimum_size = Vector2(0, 26)
@@ -158,7 +158,7 @@ func _bouw_dashboard() -> void:
 	var kop := HBoxContainer.new()
 	kop.add_theme_constant_override("separation", 4)
 	v.add_child(kop)
-	kop.add_child(_vast("HANDELINGEN", UiKit.FS_SMALL, UiKit.GRIJS))
+	kop.add_child(_vast("HANDELINGEN", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT))
 	_pips = HBoxContainer.new()
 	_pips.add_theme_constant_override("separation", 2)
 	_pips.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -174,7 +174,7 @@ func _bouw_dashboard() -> void:
 		cel.add_theme_constant_override("separation", 2)
 		cel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(cel)
-		var naam := _vast(String(METER_NAAM[m]), UiKit.FS_SMALL, UiKit.GRIJS)
+		var naam := _vast(String(METER_NAAM[m]), UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 		naam.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cel.add_child(naam)
 		var w := _vast("0", UiKit.FS_BODY, UiKit.INK)
@@ -525,7 +525,7 @@ func _refresh() -> void:
 			# Je weet niet hoe erg het is tot je kijkt. Een 3 die er vanaf het
 			# begin staat haalt de hele keuze om te testen weg.
 			l.text = "?"
-			l.add_theme_color_override("font_color", UiKit.GRIJS)
+			l.add_theme_color_override("font_color", UiKit.GRIJS_OP_LICHT)
 	_refresh_pips()
 
 
@@ -556,7 +556,7 @@ func _meter_kleur(m: StringName) -> Color:
 		&"vertrouwen":
 			return UiKit.GROEN if v >= 5 else (UiKit.ORANJE if v >= 3 else UiKit.ROOD)
 		&"getest":
-			return UiKit.BLUEBIRD_INK if v > 0 else UiKit.GRIJS
+			return UiKit.BLUEBIRD_INK if v > 0 else UiKit.GRIJS_OP_LICHT
 	return UiKit.INK
 
 
@@ -572,7 +572,7 @@ func _flits(m: StringName, beter: bool) -> void:
 		oud.kill()
 
 	var vanaf := UiKit.GROEN if beter else UiKit.ROOD
-	var doel := _meter_kleur(m) if l.text != "?" else UiKit.GRIJS
+	var doel := _meter_kleur(m) if l.text != "?" else UiKit.GRIJS_OP_LICHT
 	l.pivot_offset = l.size * 0.5
 	l.scale = Vector2(1.5, 1.5)
 	var tw := create_tween().set_parallel(true)

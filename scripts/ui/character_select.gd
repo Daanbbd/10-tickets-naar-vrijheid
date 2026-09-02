@@ -73,7 +73,7 @@ func _ready() -> void:
 
 	# De balk is anders ongelabeld: tien blokjes die niemand als "de tickets van
 	# vandaag" herkent zonder een kop erboven.
-	var balkkop := UiKit.label("DE TIEN TICKETS VAN VANDAAG", UiKit.FS_SMALL, UiKit.GRIJS)
+	var balkkop := UiKit.label("DE TIEN TICKETS VAN VANDAAG", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	balkkop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	balkkop.autowrap_mode = TextServer.AUTOWRAP_OFF
 	balkkop.clip_text = true
@@ -81,7 +81,7 @@ func _ready() -> void:
 
 	root.add_child(_bouw_ticketbalk())
 
-	_stijl = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
+	_stijl = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	root.add_child(_stijl)
 
 	_scroll = ScrollContainer.new()
@@ -126,7 +126,7 @@ func _bouw_podium() -> Control:
 	_podium.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	var muur := ColorRect.new()
-	muur.color = Color("#484e60")
+	muur.color = UiKit.MUUR
 	muur.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	muur.offset_bottom = PODIUM_H * 0.62
 	_podium.add_child(muur)
@@ -235,7 +235,7 @@ func _bouw_rij(c: CharacterDef, index: int) -> PanelContainer:
 	var naam := UiKit.label(c.name, UiKit.FS_BODY, UiKit.WIT)
 	naam.autowrap_mode = TextServer.AUTOWRAP_OFF
 	v.add_child(naam)
-	var rol := UiKit.label(c.role, UiKit.FS_SMALL, UiKit.GRIJS)
+	var rol := UiKit.label(c.role, UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	rol.autowrap_mode = TextServer.AUTOWRAP_OFF
 	rol.clip_text = true
 	v.add_child(rol)
@@ -279,7 +279,7 @@ func _kies(index: int, met_animatie: bool) -> void:
 		eigen[t] = true
 	var ids: Array[StringName] = GameData.ticket_ids()
 	for i: int in _blokjes.size():
-		_blokjes[i].color = c.accent if eigen.has(ids[i]) else Color("#2b3144")
+		_blokjes[i].color = c.accent if eigen.has(ids[i]) else UiKit.VAK_LEEG
 
 	# Zeven rijen passen niet allemaal tegelijk; de gekozene hoort altijd in
 	# beeld te staan, ook als je met het toetsenbord door de lijst loopt.

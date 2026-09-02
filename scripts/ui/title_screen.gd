@@ -4,7 +4,7 @@ extends Control
 func _ready() -> void:
 	UiKit.full_rect(self)
 	var bg := ColorRect.new()
-	bg.color = Color("#141824")
+	bg.color = UiKit.SCHERM_NACHT
 	UiKit.full_rect(bg)
 	add_child(bg)
 
@@ -26,7 +26,7 @@ func _ready() -> void:
 	t2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t2)
 
-	var sub := UiKit.label("Een werkdag bij Bluebird Day", UiKit.FS_SMALL, UiKit.GRIJS)
+	var sub := UiKit.label("Een werkdag bij Bluebird Day", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(sub)
 

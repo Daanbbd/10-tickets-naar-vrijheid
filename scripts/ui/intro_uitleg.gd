@@ -25,7 +25,7 @@ const LESSEN: Array[String] = [
 func _ready() -> void:
 	UiKit.full_rect(self)
 	var bg := ColorRect.new()
-	bg.color = Color("#141824")
+	bg.color = UiKit.SCHERM_NACHT
 	UiKit.full_rect(bg)
 	add_child(bg)
 

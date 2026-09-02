@@ -8,6 +8,15 @@ const ATLAS_PNG := "res://assets/tilesets/office_atlas.png"
 const ATLAS_JSON := "res://assets/tilesets/office_atlas.json"
 const PHYSICS_LAYER := 0
 
+## De korte as van de verdieping is 12 meter breed. Dat is de ankermaat uit
+## docs/LEVEL.md, opgemeten op de ontruimingsplattegrond, en dezelfde waarde
+## waar `tools/generators/gen_floor.py` zijn `M_PER_TILE` uit rekent.
+##
+## Alleen die ene maat staat hier; de rest volgt. Zo overleeft een afstand in
+## meters een herontworpen vloer: wordt de plattegrond hoger of lager getekend,
+## dan verandert de tegelmaat mee en de kamer niet.
+const KORTE_AS_M := 12.0
+
 var tile_size: int = 16
 var grid: PackedStringArray = []
 var legend: Dictionary = {}
@@ -108,6 +117,16 @@ func populate(ground: TileMapLayer, solid: TileMapLayer) -> void:
 
 func world_rect() -> Rect2:
 	return Rect2(Vector2.ZERO, Vector2(size) * float(tile_size))
+
+
+## Meters per tegel, afgeleid uit `KORTE_AS_M`. Zie daar.
+func meters_per_tegel() -> float:
+	return KORTE_AS_M / float(maxi(1, size.y))
+
+
+## Meters per wereldpixel. Voor alles wat een afstand in het beeld toont.
+func meters_per_pixel() -> float:
+	return meters_per_tegel() / float(maxi(1, tile_size))
 
 
 func tile_to_world(t: Vector2i) -> Vector2:

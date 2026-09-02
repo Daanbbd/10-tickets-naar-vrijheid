@@ -218,6 +218,25 @@ arrangementen en worden bij het genereren meegeprint.
   screenshot niet te zien. Vandaar dat `Besturing.KNOP_HOOGTE` een **gemeten**
   getal is, dat `_test_balkmaat()` in de testsuite vastzet, en dat de balk naar
   `GROW_DIRECTION_BEGIN` groeit.
+- **De HUD stapelt in VBoxen, hij verankert geen losse panelen op y-waarden.**
+  Dat deed hij wel, en alle drie de rijen boven elkaar vielen mis: de doelbalk
+  op `MARGE + 18` (y22) lag over de tellerbalk die tot y30 doorloopt, de toasts
+  op y46 lagen over een doelregel die bij twee regels tot y76 komt, en de prompt
+  van 18 px hoog groeide door zijn `GROW_DIRECTION_END` acht pixels naar
+  beneden, over de zonenaam. Elk van die getallen klopte voor precies één
+  tekstlengte, en op een canvas van 184 px breed is "één tekstlengte" geen
+  aanname die je mag maken. Twee VBoxen — één die van boven naar beneden groeit,
+  één die van de onderrand naar boven groeit — tellen de hoogtes op in plaats
+  van ze te raden. De tussenruimte van de bovenste staat op 0: met twee pixels
+  ertussen kijk je door de HUD heen op de bovenste rij van het kantoor, en dan
+  loopt er een reepje collega tussen de teller en de doelregel door.
+- **Wat aan een schermrand klemt moet weten waar de HUD ophoudt.** De doelwijzer
+  (`objective_marker.gd`) klemt zich tegen de rand zodra het doel buiten beeld
+  ligt. De hele noordelijke strook van het kantoor ligt op schermhoogte van de
+  ticketteller, dus zonder correctie staat die pijl precies achter de HUD: hij
+  is er wel en je ziet hem niet. Hij vraagt daarom `Hud.vrije_band()` op, en die
+  is **gemeten** en niet geteld — de doelregel is één of twee regels hoog en er
+  kunnen toasts onder hangen.
 - **Eén besturing, geen platformvertakking.** Er was een `Invoer.touch()` en zes
   plekken die daar hun eigen indeling uit haalden (HUD, besturingskaart,
   ticketbord, dialoogbox, prompt, elke minigame). Dat leverde twee spellen met

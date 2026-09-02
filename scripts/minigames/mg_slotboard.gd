@@ -87,7 +87,7 @@ class DropSlot extends PanelContainer:
 		var h := HBoxContainer.new()
 		h.add_theme_constant_override("separation", 2)
 		add_child(h)
-		var rl := UiKit.label(lbl, UiKit.FS_SMALL, UiKit.GRIJS)
+		var rl := UiKit.label(lbl, UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 		rl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		rl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		h.add_child(rl)
@@ -162,7 +162,7 @@ func _on_setup() -> void:
 
 	body.add_child(UiKit.label(
 		String(c.get("uitleg", "Tik een uur aan en tik dan de regel waar het op moet.")),
-		UiKit.FS_SMALL, UiKit.GRIJS))
+		UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT))
 
 	_pool = HFlowContainer.new()
 	_pool.add_theme_constant_override("h_separation", 3)

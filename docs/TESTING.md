@@ -8,7 +8,7 @@ Drie lagen, allemaal zonder handmatig spelen.
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --scene res://tests/test_runner.tscn
 ```
 
-Ruim **14.000 controles**, exitcode 1 bij fouten. Dekt:
+Ruim **16.000 controles**, exitcode 1 bij fouten. Dekt:
 
 - alle JSON laadt zonder fouten
 - geen dode verwijzingen: ticket→anker, ticket→minigame, dialoog→node,
@@ -38,6 +38,15 @@ Ruim **14.000 controles**, exitcode 1 bij fouten. Dekt:
   die op `speaker: "speler"` staan en daardoor eerder buiten elke controle vielen
 - **de inside jokes**: Willem, Danny, Daan en Victor zeggen nooit kaal "omzet",
   en "Absoluta" staat bij Willem nooit zonder de correctie "Looff"
+- **leesbaarheid**: `GRIJS_OP_LICHT` en `GRIJS_OP_DONKER` halen 4,5:1 (WCAG AA)
+  op elke ondergrond waar ze op staan, en geen enkel script zet `UiKit.GRIJS`
+  nog als tekstkleur. Die kleur haalt de norm nergens — 3,1:1 op een licht
+  paneel, 3,9:1 op een donker, 2,7:1 op papier — en stond tot voor kort op elke
+  uitleg- en statusregel in het spel. Terugvallen erop is geen parse-fout en in
+  de editor niet te zien; het is alleen buiten niet te lezen
+- **navigatie**: de kompasstrip rekent met de vloerbreedte uit `floor.json` en
+  niet met een constante, elke zone past binnen die breedte, en de doelregel
+  noemt de ruimte hoogstens één keer
 
 Met `-- --print-briefings` erachter schrijft de suite bovendien alle negen
 briefings van de eigenaars uit, gevuld met de echte getallen uit
@@ -131,6 +140,7 @@ Alles achter `--` en alleen voor testen:
 | `--quit-when-done` | sluit af met exitcode 0/1 |
 | `--bord` | opent het sprintbord meteen |
 | `--kaart` | zet de besturingskaart in beeld en laat hem staan |
+| `--hint` | vraagt meteen een hint aan, zodat het hintbriefje in beeld staat |
 | `--briefing=<ticket>` | speelt de briefing van de eigenaar van dat ticket meteen af |
 | `--shot=<pad.png>` | schrijft één frame weg en stopt (niet met `--headless`) |
 | `--shot-na=<sec>` | wanneer die shot valt, standaard 2,5 s |

@@ -37,12 +37,32 @@ P = {
     # 8-10px hebben andere contrasteisen dan pixel-art props/tegels.
     "ui_panel_donker":    (46, 46, 46),    # #2e2e2e — neutrale derivaat, INK/PANEL-grijsfamilie
     "ui_line":            (74, 74, 74),    # #4a4a4a — neutrale derivaat
-    "ui_grijs":           (138, 138, 138), # #8a8a8a — neutrale derivaat
+    "ui_grijs":           (138, 138, 138), # #8a8a8a — neutrale derivaat. GEEN tekstkleur:
+                                           # 3,1:1 op bb_day, 3,9:1 op ui_panel_donker, 2,7:1 op
+                                           # ui_papier — alle drie onder de 4,5:1 van WCAG AA.
+                                           # Alleen nog voor niet-tekst: balkvullingen, randen en
+                                           # uitgeschakelde knoppen (die vallen buiten 1.4.3).
+    # Secundaire tekst. Eén grijs kon dit niet doen: de HUD, de telefoon en de
+    # startschermen zijn donker en de minigames zijn licht, dus wat op de een
+    # leest verdwijnt op de ander. Vandaar een paar, met de ondergrond in de
+    # naam zodat de aanroeper de keuze niet kan overslaan.
+    "ui_grijs_op_licht":  (90, 90, 90),    # #5a5a5a — 6,2:1 op bb_day, 5,7:1 op wit,
+                                           # 5,7:1 op ui_papier, 4,9:1 op postit_leeg
+    # De donkere tegenhanger is `lichtgrijs` hieronder: 6,6:1 op ui_panel_donker,
+    # 7,5:1 op bb_night en 4,8:1 op de opgelichte rij van de karakterselectie.
+    # Geen nieuwe key, want die kleur bestond al en is precies goed.
     "ui_bluebird_bright": (58, 134, 255),  # #3a86ff — derivaat voor donkere ondergrond (bb_blue is daar te donker om te lezen)
     "ui_groen":           (63, 174, 110),  # #3fae6e — verzadigd derivaat van bb_green, leesbaar op 8-10px
     "ui_rood":            (224, 82, 99),   # #e05263 — game-only utility, BBD heeft geen foutkleur
     "ui_oranje":          (244, 162, 89),  # #f4a259 — verzadigd derivaat van bb_orange, leesbaar op 8-10px
     "ui_neutraal_tint":   (228, 228, 228), # #e4e4e4 — letterlijk --color-line, voor niet-accent states (bv. LOCKED)
+    # Schermvlakken die geen paneel zijn. Deze stonden als losse hex-literals in
+    # zes GDScript-bestanden, en een kleur die maar op één plek bestaat is geen
+    # kleur maar een typefout die nog niet is opgevallen.
+    "ui_scherm_nacht":    (20, 24, 36),    # #141824 — ondergrond van titel- en uitlegscherm
+    "ui_scherm_diep":     (11, 13, 20),    # #0b0d14 — de aftiteling, één tint dieper: de dag is voorbij
+    "ui_papier":          (233, 228, 214), # #e9e4d6 — een papieren vlak in een minigame (briefing, promptkaart)
+    "ui_vak_leeg":        (43, 49, 68),    # #2b3144 — een ticketvakje dat niet van jou is
     # post-its — tickets zijn briefjes op het scrumbord, geen tabelrijen.
     # De randkleur is een donkerder versie van het papier zelf: een zwarte lijn
     # op 10 px maakt er een formulierveld van.

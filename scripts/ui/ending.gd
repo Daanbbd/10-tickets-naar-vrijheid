@@ -24,7 +24,7 @@ var _ping: VBoxContainer
 func _ready() -> void:
 	UiKit.full_rect(self)
 	var bg := ColorRect.new()
-	bg.color = Color("#0b0d14")
+	bg.color = UiKit.SCHERM_DIEP
 	UiKit.full_rect(bg)
 	add_child(bg)
 
