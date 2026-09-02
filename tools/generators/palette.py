@@ -13,8 +13,13 @@ P = {
     "tapijt_licht": (166, 157, 143),
     "tapijt_donker":(130, 122, 111),
     "beton":        (188, 186, 180),
+    # Een muur is geen streep maar een blok: een donkere kap bovenop, een
+    # zichtbare face eronder en een lichtere voet waar het vloerlicht hem raakt.
+    # Zonder die drie banden leest een gesloten ruimte als een lijn.
     "muur":         (72, 78, 96),
+    "muur_kap":     (40, 44, 58),
     "muur_top":     (96, 103, 124),
+    "muur_voet":    (110, 118, 141),
     "plint":        (54, 59, 74),
     # hout / meubels
     "hout":        (150, 103, 66),
@@ -92,6 +97,11 @@ P = {
     "beton_vloer":   (174, 174, 171),
     "beton_licht":   (186, 186, 183),
     "beton_donker":  (156, 157, 156),
+    # Raamlicht op de zuidband: de twee tegels naast de raamzijde vangen het
+    # daglicht. Twee stops, want één sprong van vloer naar wit leest als een
+    # verfstreep in plaats van als licht.
+    "beton_raam":    (206, 205, 199),
+    "beton_raam_zacht": (190, 190, 186),
     "teal":          (94, 158, 163),   # tribune-trap koffiecorner
     "teal_licht":    (122, 184, 188),
     "marine":        (34, 48, 80),     # donkerblauwe kastenwand

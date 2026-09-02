@@ -91,7 +91,27 @@ func build_tileset() -> TileSet:
 	return ts
 
 
-## Vult de twee lagen. Ground ligt overal onder; Solid draagt muren, glas en meubels.
+## Drie korrelvarianten van dezelfde betonvloer. Ze staan bewust niet in het
+## grid: het is geen plattegrondinformatie maar textuur, en drie extra tekens
+## door 2400 gridtegels strooien maakt `floor.json` onleesbaar voor de enige
+## lezer die telt — een mens die de plattegrond nakijkt. De keuze is
+## deterministisch per tegel, dus twee runs geven dezelfde vloer.
+const VLOER_VARIANTEN: PackedStringArray = [".", ",", ";"]
+
+
+func _vloer_variant(x: int, y: int) -> Vector2i:
+	var h: int = absi((x * 73856093) ^ (y * 19349663))
+	return _coord_for(VLOER_VARIANTEN[h % VLOER_VARIANTEN.size()])
+
+
+## Vult de twee lagen. Ground draagt alles wat vloer is; Solid draagt muren,
+## glas en meubels.
+##
+## Vloer hoort op Ground en niet op Solid, ook als het een accent- of
+## raamlichttegel is. `Solid` heeft `y_sort_enabled`, dus een vloertegel dáár
+## sorteert tegen de propsprites en kan een schaduw of een meubelrand afdekken
+## zodra hij een hogere y heeft. Op Ground (z_index -10) kan dat per definitie
+## niet.
 func populate(ground: TileMapLayer, solid: TileMapLayer) -> void:
 	var ts := build_tileset()
 	ground.tile_set = ts
@@ -99,7 +119,6 @@ func populate(ground: TileMapLayer, solid: TileMapLayer) -> void:
 	ground.clear()
 	solid.clear()
 
-	var floor_coord := _coord_for(".")
 	for y: int in size.y:
 		var row := grid[y]
 		for x: int in size.x:
@@ -108,11 +127,17 @@ func populate(ground: TileMapLayer, solid: TileMapLayer) -> void:
 			var kind := String(info.get("kind", "floor"))
 			var cell := Vector2i(x, y)
 
-			if kind != "wall" and kind != "exit":
-				ground.set_cell(cell, 0, floor_coord)
-
-			if ch != ".":
+			if kind == "wall" or kind == "exit":
 				solid.set_cell(cell, 0, _coord_for(ch))
+				continue
+
+			if kind == "floor":
+				ground.set_cell(cell, 0,
+					_vloer_variant(x, y) if ch == "." else _coord_for(ch))
+				continue
+
+			ground.set_cell(cell, 0, _vloer_variant(x, y))
+			solid.set_cell(cell, 0, _coord_for(ch))
 
 
 func world_rect() -> Rect2:

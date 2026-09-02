@@ -137,6 +137,7 @@ func _ready() -> void:
 				bid, Session.done_count()]))
 		_qa_playthrough()
 	else:
+		_qa_kijk()
 		_qa_auto()
 		_intro_beat()
 
@@ -207,7 +208,8 @@ func _intro_beat() -> void:
 	if Session.done_count() > 0:
 		return
 	for a: String in OS.get_cmdline_user_args():
-		if a.begins_with("--auto=") or a == "--autoplay" or a == "--playthrough":
+		if a.begins_with("--auto=") or a.begins_with("--kijk=") \
+				or a == "--autoplay" or a == "--playthrough":
 			return
 
 	_intro_loopt = true
@@ -225,6 +227,28 @@ func _intro_beat() -> void:
 	Session.unlock_input()
 
 	hud.show_controls_card()
+
+
+## QA: `-- --speler=x --kijk=<x>,<y>` zet de speler op die tegel en kijkt verder
+## nergens naar. `--auto=` kan dit niet vervangen: die triggert de interactie en
+## zet dus een dialoogvenster over de onderste derde van het beeld — precies waar
+## de slagschaduwen en de raamband staan die je met een `--shot` wilt zien. En
+## niet elke plek waar de vloer gecontroleerd moet worden heeft een object.
+func _qa_kijk() -> void:
+	var arg := ""
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--kijk="):
+			arg = a.trim_prefix("--kijk=")
+	if arg == "":
+		return
+	var d := arg.split(",")
+	if d.size() != 2:
+		push_error("QA: --kijk verwacht <x>,<y>, kreeg '%s'" % arg)
+		return
+	var t := Vector2i(int(d[0]), int(d[1]))
+	player.global_position = builder.tile_to_world(builder.nearest_walkable(t))
+	camera.global_position = player.global_position
+	camera.reset_smoothing()
 
 
 ## QA: `-- --speler=x --auto=<world_id>` zet de speler bij een object en
@@ -412,6 +436,11 @@ func _interact_with(it: Interactable) -> void:
 ## in plaats van als zestien keer dezelfde tegel.
 const PROPS_DIR := "res://assets/sprites/props/"
 
+## Boven de y-sortering uit: een bordje hangt aan het plafond, dus het hoort
+## altijd vóór de speler. Ruim boven de vloerlagen (Ground staat op -10) en
+## onder alles wat op een CanvasLayer leeft.
+const Z_HANGEND := 20
+
 
 func _spawn_props() -> void:
 	for raw: Variant in builder.props:
@@ -428,13 +457,35 @@ func _spawn_props() -> void:
 		s.centered = false
 		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		# De sprite mag groter zijn dan de footprint — stoelen horen buiten het
-		# blok, op beloopbare vloer. Daarom centreren op de footprint in plaats
-		# van uitlijnen op de linkerbovenhoek.
+		# blok, op beloopbare vloer, en de slagschaduw valt eronder uit. Daarom
+		# centreren op de footprint in plaats van uitlijnen op de linkerbovenhoek.
 		var half := Vector2(builder.tile_size, builder.tile_size) * 0.5
 		var lb := builder.tile_to_world(Vector2i(int(r[0]), int(r[1]))) - half
 		var voetprint := Vector2(
 			float(int(r[2]) - int(r[0]) + 1), float(int(r[3]) - int(r[1]) + 1)) * builder.tile_size
-		s.position = lb + (voetprint - s.texture.get_size()) * 0.5
+		var tex := s.texture.get_size()
+
+		# --- y-sortering op de voet, niet op de bovenrand ---------------------
+		# `objects_layer` is y-gesorteerd en Node2D heeft geen `y_sort_origin`
+		# zoals TileData: de sorteersleutel is gewoon `position.y`. Met
+		# `centered = false` was dat de bovenrand van de sprite, en die ligt bij
+		# een eiland van acht tegels 128 px boven zijn voet. Een speler die er
+		# noordelijk langs liep sorteerde daardoor vóór het hele blok, en een
+		# speler die er zuidelijk van stond kon erachter verdwijnen.
+		#
+		# De node staat nu op de onderrand van de footprint — dezelfde
+		# conventie als `TileData.y_sort_origin = half` in world_builder, en
+		# dezelfde als de speler, die zijn oorsprong in zijn voeten heeft. De
+		# `offset` zet het beeld daarna terug op zijn plek, dus er verschuift
+		# niets zichtbaars: alleen de sleutel klopt.
+		if bool(p.get("hangend", false)):
+			# Een hangend bordje raakt de vloer nooit: die doet niet mee aan de
+			# sortering maar hangt er met een expliciete z_index bovenop.
+			s.position = lb + (voetprint - tex) * 0.5
+			s.z_index = Z_HANGEND
+		else:
+			s.position = Vector2(lb.x + (voetprint.x - tex.x) * 0.5, lb.y + voetprint.y)
+			s.offset = Vector2(0.0, -(voetprint.y + tex.y) * 0.5)
 		objects_layer.add_child(s)
 
 

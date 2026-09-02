@@ -18,6 +18,8 @@ Ruim **16.000 controles**, exitcode 1 bij fouten. Dekt:
 - **geen placeholdertekst** (TODO, FIXME, lorem ipsum) in spelerzichtbare strings
 - grid klopt met `size`, geen tekens buiten de legenda
 - spawnpunt, objecten en NPC-standplaatsen staan niet in een muur
+- elk samengesteld meubel heeft zijn PNG, de maat in de naam klopt met de
+  footprint, en een hangend ruimtebordje hangt niet boven een solide tegel
 - minigame-inhoud: slots accepteren bestaande kaarten, elke tagpicker heeft een
   haalbaar goed resultaat, elke choicescene-drempel is haalbaar, mg_deploy heeft
   een variant per personage
@@ -120,6 +122,19 @@ Godot kan frames als PNG wegschrijven:
   --quit-after 200 -- --speler=victor --auto=koffiemachine
 ```
 
+Voor de vloer zelf is `--kijk=<x>,<y>` de vlag: die zet de speler op een tegel
+en doet verder niets. `--auto=` kan dat niet vervangen — die triggert de
+interactie en legt een dialoogvenster over de onderste derde van het beeld,
+precies waar de slagschaduwen en de raamband staan.
+
+> **Wat een shot van de vloer niet laat zien.** De camera klemt verticaal
+> volledig vast: 26 tegels is precies de viewporthoogte, dus elke shot toont de
+> hele hoogte en `--kijk` verschuift alleen in x. De HUD dekt daarbij de
+> bovenste vier tegelrijen af en de knoppenbalk de onderste ~2,5. Alles op y0–y3
+> en y24–y25 staat er dus wel, maar zie je nooit. Dat is de reden dat het
+> raamlicht drie rijen beslaat en dat het toiletbordje op y6 hangt en niet naast
+> zijn deur op y3.
+
 ## QA-vlaggen
 
 Alles achter `--` en alleen voor testen:
@@ -134,6 +149,7 @@ Alles achter `--` en alleen voor testen:
 | `--doorgaan` | drukt "Doorgaan" op het titelscherm in, dus hervat de bewaarde run (combineer met `--scherm=titel`) |
 | `--klant=<1-4>` | legt die melding van De Klant klaar zonder er tickets voor op te lossen |
 | `--auto=<world_id>` | zet de speler bij dat object en interacteert |
+| `--kijk=<x>,<y>` | zet de speler op die tegel en doet verder niets |
 | `--autoplay` | drukt zelf op de interactietoets en lost minigames op |
 | `--playthrough` | speelt alle tien de tickets af |
 | `--geen-pin` | speelbeurt zonder een ticket te kiezen, zodat de keuzevraag op een gedeeld object echt afgaat |

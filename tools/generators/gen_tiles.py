@@ -14,7 +14,15 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # volgorde bepaalt de atlas-kolom
 CHARS = (list(".D#=VNBPTbtcKfxSAWmpo") + list("EOLGI") + list("H")
-         + list("uRnljYJqsr") + list("C") + list("kwz") + list("_"))
+         + list("uRnljYJqsr") + list("C") + list("kwz") + list("_")
+         + list("F") + list("123") + list(",;"))
+
+# Vloervarianten. Ze staan niet in de legenda en dus niet in het grid: het is
+# geen plattegrondinformatie maar korrel, en drie extra tekens door 2400
+# gridtegels strooien maakt floor.json onleesbaar voor de enige lezer die telt —
+# een mens die de plattegrond nakijkt. `world_builder` kiest ze deterministisch
+# per tegel bij het vullen van de Ground-laag.
+FLOOR_VARIANTEN = ".,;"
 
 
 def tile():
@@ -26,19 +34,63 @@ def noise(d, col, pts):
         d.point((x, y), fill=col)
 
 
-def draw_floor(d, light=False):
+# Drie korrelpatronen. Eén vast patroon over de hele vloer geeft een zichtbaar
+# raster zodra je twee tegels naast elkaar ziet — precies wat een betonvloer
+# niet doet.
+KORREL = [
+    ([(2, 3), (9, 1), (13, 6), (5, 11), (11, 13), (1, 8), (7, 7)],
+     [(4, 5), (12, 2), (6, 14), (14, 10)]),
+    ([(6, 2), (1, 5), (10, 4), (14, 9), (3, 13), (8, 10), (12, 15)],
+     [(2, 9), (7, 4), (11, 8), (5, 1)]),
+    ([(4, 1), (12, 5), (2, 12), (7, 14), (15, 3), (9, 9), (6, 6)],
+     [(1, 2), (9, 12), (13, 13), (3, 7)]),
+]
+
+
+def draw_floor(d, light=False, variant=0):
     """Gepolijst beton. Koel grijs met een fijne korrel — zie de referentiefoto's;
     het warme tapijt van de verzonnen vloer bestaat in dit kantoor niet."""
     base = "beton_licht" if light else "beton_vloer"
     d.rectangle([0, 0, T - 1, T - 1], fill=rgba(base))
-    noise(d, rgba("beton_donker"), [(2, 3), (9, 1), (13, 6), (5, 11), (11, 13), (1, 8), (7, 7)])
-    noise(d, rgba("beton_licht" if not light else "wit"), [(4, 5), (12, 2), (6, 14), (14, 10)])
+    donker, licht = KORREL[variant % len(KORREL)]
+    noise(d, rgba("beton_donker"), donker)
+    noise(d, rgba("beton_licht" if not light else "wit"), licht)
 
 
-def draw_wall(d):
+def draw_raamlicht(d, stap):
+    """De zuidband vangt daglicht: drie stops die naar het noorden uitdoven.
+
+    De helderheid zit in de hele tegel en de overgang in een dithering langs de
+    bovenrand. Een echte gradient bínnen een tegel van 16 px leest niet als
+    licht maar als een streep dwars door de vloer.
+    """
+    draw_floor(d, variant=stap)
+    if stap == 2:
+        # de uitdoving: alleen nog gestrooide lichtpixels, geen vlak
+        for y in range(2, T, 2):
+            for x in range((y // 2) % 3, T, 3):
+                d.point((x, y), fill=rgba("beton_raam_zacht"))
+        return
+    kleur = rgba("beton_raam") if stap == 0 else rgba("beton_raam_zacht")
+    d.rectangle([0, 2, T - 1, T - 1], fill=kleur)
+    for x in range(0, T, 2):          # dithering langs de bovenrand
+        d.point((x, 1), fill=kleur)
+    for x in range(1, T, 4):
+        d.point((x, 0), fill=kleur)
+    if stap == 0:
+        noise(d, rgba("wit", 110), [(3, 12), (11, 9), (14, 14), (6, 5)])
+
+
+def draw_wall(d, face=False):
+    """Een muur is drie banden: een donkere kap, de bovenkant, en — waar er
+    vloer onder ligt — de face met een lichtere voet. Zonder die voet is een
+    gesloten ruimte een streep in plaats van een ruimte."""
     d.rectangle([0, 0, T - 1, T - 1], fill=rgba("muur"))
-    d.rectangle([0, 0, T - 1, 4], fill=rgba("muur_top"))
-    d.line([(0, 5), (T - 1, 5)], fill=rgba("plint"))
+    d.rectangle([0, 0, T - 1, 2], fill=rgba("muur_kap"))
+    d.rectangle([0, 3, T - 1, 5], fill=rgba("muur_top"))
+    d.line([(0, 6), (T - 1, 6)], fill=rgba("plint"))
+    if face:
+        d.rectangle([0, T - 3, T - 1, T - 2], fill=rgba("muur_voet"))
     d.line([(0, T - 1), (T - 1, T - 1)], fill=rgba("plint"))
 
 
@@ -71,6 +123,12 @@ def build(ch):
         d.line([(T - 1, 0), (T - 1, T - 1)], fill=rgba("plint", 120))
     elif ch == "#":
         draw_wall(d)
+    elif ch == "F":  # muur met vloer eronder: je kijkt tegen de face aan
+        draw_wall(d, face=True)
+    elif ch in "123":  # raamlicht: 1 tegen de raamzijde, 3 de uitdoving
+        draw_raamlicht(d, int(ch) - 1)
+    elif ch in ",;":  # vloervarianten, alleen voor de Ground-laag
+        draw_floor(d, variant=FLOOR_VARIANTEN.index(ch))
     elif ch == "=":
         draw_glass(d)
     elif ch == "V":  # voordeur
