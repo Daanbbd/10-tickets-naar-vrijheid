@@ -58,6 +58,7 @@ func _ready() -> void:
 	_test_uitlijnen_perfect()
 	_test_wereldhandelingen()
 	_test_urenstaat_scherm()
+	_test_werving_begint_met_de_vraag()
 	_test_klant_is_een_persoon()
 	await _test_dialoogvenster_past()
 	_rapport()
@@ -1769,9 +1770,25 @@ func _test_ticket_eigenaarschap() -> void:
 						"%s (%s) — %s/%s: '%s' spreekt in het ticket van iemand anders"
 							% [t.code, t.owner_character, did, nid, sp])
 					for c: Variant in ((r[2] as Dictionary).get("character", []) as Array):
-						_ok(StringName(String(c)) == t.owner_character,
-							"%s — %s/%s: variant gegate op '%s', maar de eigenaar is '%s'"
-								% [t.code, did, nid, c, t.owner_character])
+						var gate := StringName(String(c))
+						if String(sleutel) == "recruit":
+							# De werving is de enige boom die de eigenaar per
+							# definitie nooit speelt: je haalt hem juist op omdat
+							# het níét jouw vakgebied is (`required_helper()`
+							# geeft leeg terug bij eigen werk). Een gate op de
+							# eigenaar is hier dus een dode variant, en een gate
+							# op ieder ander is precies de bedoeling — daar zegt
+							# de speler in zijn eigen stem waarvoor hij vastloopt.
+							_ok(gate != t.owner_character,
+								"%s — %s/%s: variant gegate op eigenaar '%s', maar die haalt zichzelf nooit op"
+									% [t.code, did, nid, gate])
+							_ok(gate in speelbaar,
+								"%s — %s/%s: variant gegate op '%s', dat is geen speelbaar personage"
+									% [t.code, did, nid, gate])
+						else:
+							_ok(gate == t.owner_character,
+								"%s — %s/%s: variant gegate op '%s', maar de eigenaar is '%s'"
+									% [t.code, did, nid, c, t.owner_character])
 					# De naam in de tekst: dit vangt de fetch-regels die de twee
 					# asserts hierboven structureel niet kunnen zien.
 					for cid: StringName in speelbaar:
@@ -3010,6 +3027,57 @@ func _test_dialoogvenster_past() -> void:
 			paneel.size.y, DialogueBox.HOOGTE_MIN])
 
 	box.queue_free()
+
+
+## Een wervingsgesprek begint met de hulpvraag, en met het ticketnummer erin.
+##
+## Alle negen bomen openden op een wedervraag van de collega — "Welke pagina?",
+## "Wat staat er?", "hoeveel,," — alsof hij al wist waarvoor je kwam. De speler
+## zei nooit waar hij voor vastliep, en het ticket werd niet genoemd. Dat is de
+## meest herhaalde scène van het spel (voor bijna elk ticket haal je iemand op)
+## en juist daar ontbrak het waarom.
+##
+## Twee eisen. De openingsnode is van de speler en noemt de ticketcode, en elk
+## personage dat deze werving kán spelen heeft er zijn eigen regel — een
+## gedeelde fallback op de meest herhaalde scène is precies de vlakheid die
+## hier weg moest.
+func _test_werving_begint_met_de_vraag() -> void:
+	_kop("een werving begint met de hulpvraag")
+	var speelbaar := GameData.character_ids()
+
+	for id: StringName in GameData.ticket_ids():
+		var t: TicketDef = GameData.ticket(id)
+		if t.owner_character == &"" or not t.dialogue_ids.has(&"recruit"):
+			continue
+		var did := StringName(t.dialogue_ids[&"recruit"])
+		var def: DialogueDef = GameData.dialogue(did)
+		if def == null:
+			continue
+
+		var open_node := def.node(def.start_node)
+		_ok(String(open_node.get("speaker", "")) == "speler",
+			"%s — %s opent op '%s' en niet op de speler; dan vraagt niemand om hulp"
+				% [t.code, did, open_node.get("speaker", "")])
+
+		var varianten := open_node.get("variants", []) as Array
+		_ok(not varianten.is_empty(), "%s — %s: openingsnode zonder varianten" % [t.code, did])
+
+		var gedekt: Array[StringName] = []
+		for raw: Variant in varianten:
+			var v := raw as Dictionary
+			var tekst := String(v.get("text", ""))
+			_ok(tekst.contains(t.code),
+				"%s — %s: openingsregel noemt het ticket niet: \"%s\"" % [t.code, did, tekst])
+			for c: Variant in ((v.get("when", {}) as Dictionary).get("character", []) as Array):
+				gedekt.append(StringName(String(c)))
+
+		# Iedereen behalve de eigenaar; die haalt zichzelf nooit op.
+		for cid: StringName in speelbaar:
+			if cid == t.owner_character:
+				continue
+			_ok(cid in gedekt,
+				"%s — %s: %s heeft geen eigen hulpvraag en valt terug op de algemene regel"
+					% [t.code, did, cid])
 
 
 ## De Klant is één persoon, over twee kanalen.

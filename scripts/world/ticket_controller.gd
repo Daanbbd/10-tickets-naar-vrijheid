@@ -446,7 +446,11 @@ func handle_npc_talk(source: Interactable) -> void:
 		if d != &"":
 			await _dialogue.play(d)
 		else:
-			await _line("%s: \"Kom, ik loop wel even mee kijken.\"" % npc.def.name)
+			# Vangnet voor een ticket zonder wervingsboom. Ook hier eerst de
+			# hulpvraag: waarom je iemand ophaalt hoort in de eerste regel te
+			# staan, niet in de aanname dat de collega het al weet.
+			await _line("Je legt %s uit. %s: \"Kom, ik loop even mee.\"" % [
+				wanted.code, npc.def.name])
 		npc.start_following(get_parent().get("player") as Node2D)
 		# De bestemming erbij: de toast is vluchtig, dus hij moet iets zeggen wat
 		# nergens anders staat. Wie er meeloopt staat vanaf nu permanent op de

@@ -103,9 +103,66 @@
     }
   },
   "t01_recruit": {
-    "start": "start",
+    "start": "vraag",
     "nodes": {
-      "start": {
+      "vraag": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "daan, BBD-201. er ligt een story van één zin. ik ga daar geen funnel op bouwen."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Daan, BBD-201. Er staat één zin in. Ik ga daar geen scherm van bouwen."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Daan, ik loop vast op BBD-201. Er staat een wens, geen criterium. Ben benieuwd wat jij ervan maakt."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Heeee Daan. BBD-201. Ik kan de klant niet vertellen wat we bouwen zolang het er niet staat."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "daan,, BBD-201,, ik weet niet wat ik moet bouwen,, er staat één zin,,"
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Daan, ik check BBD-201 even met je. Eén zin, geen story. Dat wil ik niet gokken."
+          },
+          {
+            "text": "Daan, ik loop vast op BBD-201. Er ligt een user story die geen user story is, en ik ga niet zelf verzinnen wat er bedoeld wordt."
+          }
+        ],
+        "next": "reactie"
+      },
+      "reactie": {
         "speaker": "daan",
         "text": "Wat ligt er?",
         "next": "antwoord"
@@ -310,9 +367,66 @@
     }
   },
   "t02_recruit": {
-    "start": "start",
+    "start": "vraag",
     "nodes": {
-      "start": {
+      "vraag": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "daan, BBD-202. ik sta drie keer op de planning. dat is geen planning, dat is ruis."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Daan, BBD-202. Ik sta er drie keer op. Manmanman."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Daan, BBD-202. Ik sta drie keer op dezelfde planning. Niet deze sprint een probleem, maar wel structureel."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Heeee Daan, BBD-202. Ik weet niet aan wie ik vandaag toebehoor. Dat is lastig plannen."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "daan,, BBD-202,, ik sta er drie keer op,, of nul keer,, het ligt eraan waar je kijkt,,"
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Daan, BBD-202. Ik check de planning even met je, want ik sta er drie keer op."
+          },
+          {
+            "text": "Daan, ik loop vast op BBD-202. Ik sta drie keer op de planning, of helemaal niet. Dennis weet het ook niet meer."
+          }
+        ],
+        "next": "reactie"
+      },
+      "reactie": {
         "speaker": "daan",
         "text": "Wat is er met de planning?",
         "next": "antwoord"
@@ -517,9 +631,66 @@
     }
   },
   "t03_recruit": {
-    "start": "start",
+    "start": "vraag",
     "nodes": {
-      "start": {
+      "vraag": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Willem, BBD-203. Ze zit in de entree met elf punten. Sorry wat moet ik daarmee."
+          },
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "willem, BBD-203. elf punten, drie spreken elkaar tegen. dat is jouw taal, niet de mijne."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Willem, BBD-203. Ze zit er. Elf punten. Godver."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Willem, BBD-203. Ze heeft elf punten en drie ervan sluiten elkaar uit. Ik ga daar niets over zeggen."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "willem,, BBD-203,, ze zit in de entree,, met een mapje,, ik durf niet,,"
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Willem, BBD-203. Elf punten van de klant, drie kloppen niet samen. Ik weet niet zeker wat ik mag beloven."
+          },
+          {
+            "text": "Willem, ik loop vast op BBD-203. De klant zit in de entree met elf punten, en drie ervan spreken elkaar tegen."
+          }
+        ],
+        "next": "reactie"
+      },
+      "reactie": {
         "speaker": "willem",
         "text": "Zit ze er al?",
         "next": "antwoord"
@@ -739,9 +910,66 @@
     }
   },
   "t04_recruit": {
-    "start": "start",
+    "start": "vraag",
     "nodes": {
-      "start": {
+      "vraag": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Victor, BBD-204. Het paard staat boven de header. En ja, ik weet wat ik altijd roep. Nu even niet."
+          },
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "victor, BBD-204. de cta staat onder de footer. dan converteert hij nul. psies."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Victor, BBD-204. De productfoto is 4000 pixels breed. Niet mijn laag, maar het valt wel op."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Heeee Victor. BBD-204. Ik kan dit zo niet in een deck laten zien."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "victor,, BBD-204,, het paard staat boven de header,, dat is jouw ding,, niet het mijne,,"
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Victor, BBD-204. De frontend ligt eruit en ik weet niet welke regel het is. Jij vgm wel."
+          },
+          {
+            "text": "Victor, ik loop vast op BBD-204. Het paard staat boven de header, de CTA onder de footer, en de productfoto is 4000 pixels breed."
+          }
+        ],
+        "next": "reactie"
+      },
+      "reactie": {
         "speaker": "victor",
         "text": "Welke pagina?",
         "next": "antwoord"
@@ -957,9 +1185,66 @@
     }
   },
   "t05_recruit": {
-    "start": "start",
+    "start": "vraag",
     "nodes": {
-      "start": {
+      "vraag": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Jonathan, BBD-205. De webshop verkoopt niets aan niemand. Sorry wat."
+          },
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "jonathan, BBD-205. prijs is NaN. dan meet ik niks meer. biem."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Jonathan, BBD-205. Undefined, NaN en null. Godver, Janny."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Heeee Jonathan. BBD-205. De webshop verkoopt op dit moment niets. Dat is wel top, maar dan andersom."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "jonathan,, BBD-205,, de prijs is NaN,, daar kan ik geen euroteken voor zetten,,"
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Jonathan, BBD-205. Product undefined, prijs NaN, voorraad null. Verder check ik niet, dat is jouw laag."
+          },
+          {
+            "text": "Jonathan, ik loop vast op BBD-205. Product undefined, prijs NaN, voorraad null. De webshop verkoopt op dit moment niets aan niemand."
+          }
+        ],
+        "next": "reactie"
+      },
+      "reactie": {
         "speaker": "jonathan",
         "text": "Wat staat er?",
         "next": "antwoord"
@@ -1173,9 +1458,66 @@
     }
   },
   "t06_recruit": {
-    "start": "start",
+    "start": "vraag",
     "nodes": {
-      "start": {
+      "vraag": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Danny, BBD-206. De conversie staat op nul komma nul vier. Ik werd helemaal waus."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Danny, BBD-206. Nul komma nul vier procent. Manmanman."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Danny, BBD-206. De webshop werkt technisch, dus dit is niet mijn laag. Ben benieuwd wat jij ziet."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Heeee Danny. BBD-206. De conversie is nul komma nul vier. Dat ga ik zo niet vertellen."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "danny,, BBD-206,, de shop werkt gewoon,, en toch koopt niemand iets,,"
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Danny, BBD-206. Alles staat live en werkt, en de conversie is 0,04 procent. Het gedrag check ik niet, dat doe jij."
+          },
+          {
+            "text": "Danny, ik loop vast op BBD-206. De webshop werkt, en de conversie is nul komma nul vier procent. Dat is statistisch gezien niemand."
+          }
+        ],
+        "next": "reactie"
+      },
+      "reactie": {
         "speaker": "danny",
         "text": "Welk getal?",
         "next": "antwoord"
@@ -1371,9 +1713,66 @@
     }
   },
   "t07_recruit": {
-    "start": "start",
+    "start": "vraag",
     "nodes": {
-      "start": {
+      "vraag": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Danny, BBD-207. Er moet een merksound komen. Niemand weet waarom. Sorry wat."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Danny, BBD-207. Een merksound. Ik ga daar niks van vinden."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Danny, BBD-207. Er moet geluid komen. Nogmaals, niet mijn laag, maar het staat wel in Jira."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Heeee Danny. BBD-207. De klant wil een geluidje en ik heb ja gezegd. Dat is wel top, toch?"
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "danny,, BBD-207,, er moet een merksound komen,, vraag me niet waarom,,"
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Danny, BBD-207. Er moet een merksound komen. Het staat in Jira, dus het gebeurt. Alleen het waarom check ik niet."
+          },
+          {
+            "text": "Danny, ik loop vast op BBD-207. Er moet een merksound komen, niemand weet waarom, en het staat in Jira, dus het gebeurt."
+          }
+        ],
+        "next": "reactie"
+      },
+      "reactie": {
         "speaker": "danny",
         "text": "De merksound.",
         "next": "antwoord"
@@ -1580,9 +1979,66 @@
     }
   },
   "t08_recruit": {
-    "start": "start",
+    "start": "vraag",
     "nodes": {
-      "start": {
+      "vraag": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Koen, BBD-208. Een gelukkig paard in een weiland, met onze supplementen. Meer briefing is er niet."
+          },
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "koen, BBD-208. de klant wil een ai-video van een paard. aanzetten en kijken."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Koen, BBD-208. Een AI-paard. Manmanman."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Koen, BBD-208. Er moet een AI-video komen en ik weet niet waar dat draait. Ben benieuwd."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Heeee Koen. BBD-208. Een paard dat gelukkig door een weiland rent. Dat is de hele briefing."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "koen,, BBD-208,, de klant wil een ai-video,, van een paard,, met supplementen,,"
+          },
+          {
+            "text": "Koen, ik loop vast op BBD-208. Een paard dat gelukkig door een weiland rent terwijl het onze supplementen gebruikt. Meer briefing is er niet."
+          }
+        ],
+        "next": "reactie"
+      },
+      "reactie": {
         "speaker": "koen",
         "text": "Ah. De paardenvideo.",
         "next": "antwoord"
@@ -1791,9 +2247,66 @@
     }
   },
   "t09_recruit": {
-    "start": "start",
+    "start": "vraag",
     "nodes": {
-      "start": {
+      "vraag": {
+        "speaker": "speler",
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "daan"
+              ]
+            },
+            "text": "Bastiaan, BBD-209. Er lopen paarden door het kantoor. Sorry wat."
+          },
+          {
+            "when": {
+              "character": [
+                "danny"
+              ]
+            },
+            "text": "bastiaan, BBD-209. er staan paarden in de build. op de verdieping. biem."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Bastiaan, BBD-209. Er lopen paarden. In de build. Godver."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Bastiaan, BBD-209. Er zitten paarden in de build. Niet deze sprint, maar wel structureel."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Heeee Bastiaan. BBD-209. Er lopen paarden door het kantoor. Daar ga ik geen screenshot van maken."
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Bastiaan, BBD-209. Er lopen paardenbugs rond en ik weet niet hoeveel. Jij telt beter dan ik."
+          },
+          {
+            "text": "Bastiaan, ik loop vast op BBD-209. Door alle wijzigingen zijn er letterlijk paarden in de build gekomen. Ze staan nu op de verdieping."
+          }
+        ],
+        "next": "reactie"
+      },
+      "reactie": {
         "speaker": "bastiaan",
         "text": "hoeveel,,",
         "next": "antwoord"

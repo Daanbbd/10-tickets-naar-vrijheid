@@ -330,7 +330,10 @@ Willem: "Heeft ze al gebeld?"
 
 ## Ticket-dialogen (`data/dialogue/tickets.json`)
 
-Per ticket: 6 fases. `offer` = aanbieding, `fetch` = tussenstand, `recruit` = collega ophalen, `complete` = succes, `fail` = mislukking, `done` = al opgelost.
+Per ticket: 6 fases. `offer` = aanbieding, `fetch` = tussenstand, `recruit` = collega ophalen
+(begint altijd bij de **speler**, die het ticketnummer noemt en zegt waar hij vastloopt --
+elk personage dat die werving kan spelen heeft daar zijn eigen regel; de eigenaar niet,
+die haalt zichzelf nooit op), `complete` = succes, `fail` = mislukking, `done` = al opgelost.
 
 > Varianten staan gemarkeerd met `[character]` of `[trait]`. Default variant = geen condition.
 
@@ -368,6 +371,14 @@ Speler [default]: "Scope is van Daan. Ik ga hem halen."
 ### t01_recruit
 
 ```
+Speler [Danny]: "daan, BBD-201. er ligt een story van één zin. ik ga daar geen funnel op bouwen."
+Speler [Victor]: "Daan, BBD-201. Er staat één zin in. Ik ga daar geen scherm van bouwen."
+Speler [Jonathan]: "Daan, ik loop vast op BBD-201. Er staat een wens, geen criterium. Ben benieuwd wat jij ervan maakt."
+Speler [Willem]: "Heeee Daan. BBD-201. Ik kan de klant niet vertellen wat we bouwen zolang het er niet staat."
+Speler [Bastiaan]: "daan,, BBD-201,, ik weet niet wat ik moet bouwen,, er staat één zin,,"
+Speler [Koen]: "Daan, ik check BBD-201 even met je. Eén zin, geen story. Dat wil ik niet gokken."
+Speler [default]: "Daan, ik loop vast op BBD-201. Er ligt een user story die geen user story is, en ik ga niet zelf verzinnen wat er bedoeld wordt."
+
 Daan: "Wat ligt er?"
 Speler: "Eén zin."
 Daan: "Dan is het geen story. Ait. Ik loop mee."
@@ -435,6 +446,14 @@ Speler [default]: "De planning is van Daan. Zonder hem verschuif ik hier niets."
 ### t02_recruit
 
 ```
+Speler [Danny]: "daan, BBD-202. ik sta drie keer op de planning. dat is geen planning, dat is ruis."
+Speler [Victor]: "Daan, BBD-202. Ik sta er drie keer op. Manmanman."
+Speler [Jonathan]: "Daan, BBD-202. Ik sta drie keer op dezelfde planning. Niet deze sprint een probleem, maar wel structureel."
+Speler [Willem]: "Heeee Daan, BBD-202. Ik weet niet aan wie ik vandaag toebehoor. Dat is lastig plannen."
+Speler [Bastiaan]: "daan,, BBD-202,, ik sta er drie keer op,, of nul keer,, het ligt eraan waar je kijkt,,"
+Speler [Koen]: "Daan, BBD-202. Ik check de planning even met je, want ik sta er drie keer op."
+Speler [default]: "Daan, ik loop vast op BBD-202. Ik sta drie keer op de planning, of helemaal niet. Dennis weet het ook niet meer."
+
 Daan: "Wat is er met de planning?"
 Speler: "Ik sta er drie keer op."
 Daan: "Dat is twee keer te veel of drie keer te weinig. Ait, ik loop mee."
@@ -506,6 +525,14 @@ Speler [default]: "Klanten zijn van Willem. Ik ga hem halen."
 ### t03_recruit
 
 ```
+Speler [Daan]: "Willem, BBD-203. Ze zit in de entree met elf punten. Sorry wat moet ik daarmee."
+Speler [Danny]: "willem, BBD-203. elf punten, drie spreken elkaar tegen. dat is jouw taal, niet de mijne."
+Speler [Victor]: "Willem, BBD-203. Ze zit er. Elf punten. Godver."
+Speler [Jonathan]: "Willem, BBD-203. Ze heeft elf punten en drie ervan sluiten elkaar uit. Ik ga daar niets over zeggen."
+Speler [Bastiaan]: "willem,, BBD-203,, ze zit in de entree,, met een mapje,, ik durf niet,,"
+Speler [Koen]: "Willem, BBD-203. Elf punten van de klant, drie kloppen niet samen. Ik weet niet zeker wat ik mag beloven."
+Speler [default]: "Willem, ik loop vast op BBD-203. De klant zit in de entree met elf punten, en drie ervan spreken elkaar tegen."
+
 Willem: "Zit ze er al?"
 Speler: "Met een mapje."
 Willem: "Dan zijn het elf punten van Absoluta... ehh, Looff. Ik kom eraan."
@@ -574,6 +601,14 @@ Speler [default]: "Dit is frontend. Dus dit is Victor."
 ### t04_recruit
 
 ```
+Speler [Daan]: "Victor, BBD-204. Het paard staat boven de header. En ja, ik weet wat ik altijd roep. Nu even niet."
+Speler [Danny]: "victor, BBD-204. de cta staat onder de footer. dan converteert hij nul. psies."
+Speler [Jonathan]: "Victor, BBD-204. De productfoto is 4000 pixels breed. Niet mijn laag, maar het valt wel op."
+Speler [Willem]: "Heeee Victor. BBD-204. Ik kan dit zo niet in een deck laten zien."
+Speler [Bastiaan]: "victor,, BBD-204,, het paard staat boven de header,, dat is jouw ding,, niet het mijne,,"
+Speler [Koen]: "Victor, BBD-204. De frontend ligt eruit en ik weet niet welke regel het is. Jij vgm wel."
+Speler [default]: "Victor, ik loop vast op BBD-204. Het paard staat boven de header, de CTA onder de footer, en de productfoto is 4000 pixels breed."
+
 Victor: "Welke pagina?"
 Speler: "De productpagina."
 Victor: "Godver. Ik weet het al. Ff kijken, ik loop mee."
@@ -641,6 +676,14 @@ Speler [default]: "Jonathan moet dit oplossen. Ik ga hem halen."
 ### t05_recruit
 
 ```
+Speler [Daan]: "Jonathan, BBD-205. De webshop verkoopt niets aan niemand. Sorry wat."
+Speler [Danny]: "jonathan, BBD-205. prijs is NaN. dan meet ik niks meer. biem."
+Speler [Victor]: "Jonathan, BBD-205. Undefined, NaN en null. Godver, Janny."
+Speler [Willem]: "Heeee Jonathan. BBD-205. De webshop verkoopt op dit moment niets. Dat is wel top, maar dan andersom."
+Speler [Bastiaan]: "jonathan,, BBD-205,, de prijs is NaN,, daar kan ik geen euroteken voor zetten,,"
+Speler [Koen]: "Jonathan, BBD-205. Product undefined, prijs NaN, voorraad null. Verder check ik niet, dat is jouw laag."
+Speler [default]: "Jonathan, ik loop vast op BBD-205. Product undefined, prijs NaN, voorraad null. De webshop verkoopt op dit moment niets aan niemand."
+
 Jonathan: "Wat staat er?"
 Speler: "Undefined, NaN en null."
 Jonathan: "Alle drie. Moet zeggen dat dat bijna netjes is. Ik ga er naartoe kijken."
@@ -708,6 +751,14 @@ Speler [default]: "Dit is conversie. Dus dit is Danny."
 ### t06_recruit
 
 ```
+Speler [Daan]: "Danny, BBD-206. De conversie staat op nul komma nul vier. Ik werd helemaal waus."
+Speler [Victor]: "Danny, BBD-206. Nul komma nul vier procent. Manmanman."
+Speler [Jonathan]: "Danny, BBD-206. De webshop werkt technisch, dus dit is niet mijn laag. Ben benieuwd wat jij ziet."
+Speler [Willem]: "Heeee Danny. BBD-206. De conversie is nul komma nul vier. Dat ga ik zo niet vertellen."
+Speler [Bastiaan]: "danny,, BBD-206,, de shop werkt gewoon,, en toch koopt niemand iets,,"
+Speler [Koen]: "Danny, BBD-206. Alles staat live en werkt, en de conversie is 0,04 procent. Het gedrag check ik niet, dat doe jij."
+Speler [default]: "Danny, ik loop vast op BBD-206. De webshop werkt, en de conversie is nul komma nul vier procent. Dat is statistisch gezien niemand."
+
 Danny: "Welk getal?"
 Speler: "Nul komma nul vier."
 Danny: "psies. dan is het de knop. het is altijd de knop. biem, ik loop mee"
@@ -772,6 +823,14 @@ Speler [default]: "Merk is van Danny. Ik ga hem halen."
 ### t07_recruit
 
 ```
+Speler [Daan]: "Danny, BBD-207. Er moet een merksound komen. Niemand weet waarom. Sorry wat."
+Speler [Victor]: "Danny, BBD-207. Een merksound. Ik ga daar niks van vinden."
+Speler [Jonathan]: "Danny, BBD-207. Er moet geluid komen. Nogmaals, niet mijn laag, maar het staat wel in Jira."
+Speler [Willem]: "Heeee Danny. BBD-207. De klant wil een geluidje en ik heb ja gezegd. Dat is wel top, toch?"
+Speler [Bastiaan]: "danny,, BBD-207,, er moet een merksound komen,, vraag me niet waarom,,"
+Speler [Koen]: "Danny, BBD-207. Er moet een merksound komen. Het staat in Jira, dus het gebeurt. Alleen het waarom check ik niet."
+Speler [default]: "Danny, ik loop vast op BBD-207. Er moet een merksound komen, niemand weet waarom, en het staat in Jira, dus het gebeurt."
+
 Danny: "De merksound."
 Speler: "Ja."
 Danny: "ein-de-lijk. ik weet nog steeds niet waarom. biem"
@@ -838,6 +897,14 @@ Speler [default]: "Dit is iets voor Koen. Die heeft er waarschijnlijk al iets vo
 ### t08_recruit
 
 ```
+Speler [Daan]: "Koen, BBD-208. Een gelukkig paard in een weiland, met onze supplementen. Meer briefing is er niet."
+Speler [Danny]: "koen, BBD-208. de klant wil een ai-video van een paard. aanzetten en kijken."
+Speler [Victor]: "Koen, BBD-208. Een AI-paard. Manmanman."
+Speler [Jonathan]: "Koen, BBD-208. Er moet een AI-video komen en ik weet niet waar dat draait. Ben benieuwd."
+Speler [Willem]: "Heeee Koen. BBD-208. Een paard dat gelukkig door een weiland rent. Dat is de hele briefing."
+Speler [Bastiaan]: "koen,, BBD-208,, de klant wil een ai-video,, van een paard,, met supplementen,,"
+Speler [default]: "Koen, ik loop vast op BBD-208. Een paard dat gelukkig door een weiland rent terwijl het onze supplementen gebruikt. Meer briefing is er niet."
+
 Koen: "Ah. De paardenvideo."
 Speler: "Ja."
 Koen: "Ik loop wel even mee, lekker ouwe. Iemand moet de benen tellen."
@@ -905,6 +972,14 @@ Speler [default]: "Ze komen uit de build. Dus dit is Bastiaan."
 ### t09_recruit
 
 ```
+Speler [Daan]: "Bastiaan, BBD-209. Er lopen paarden door het kantoor. Sorry wat."
+Speler [Danny]: "bastiaan, BBD-209. er staan paarden in de build. op de verdieping. biem."
+Speler [Victor]: "Bastiaan, BBD-209. Er lopen paarden. In de build. Godver."
+Speler [Jonathan]: "Bastiaan, BBD-209. Er zitten paarden in de build. Niet deze sprint, maar wel structureel."
+Speler [Willem]: "Heeee Bastiaan. BBD-209. Er lopen paarden door het kantoor. Daar ga ik geen screenshot van maken."
+Speler [Koen]: "Bastiaan, BBD-209. Er lopen paardenbugs rond en ik weet niet hoeveel. Jij telt beter dan ik."
+Speler [default]: "Bastiaan, ik loop vast op BBD-209. Door alle wijzigingen zijn er letterlijk paarden in de build gekomen. Ze staan nu op de verdieping."
+
 Bastiaan: "hoeveel,,"
 Speler: "Acht. Denk ik."
 Bastiaan: "dat is precies de testset,, wacht ik kom,, ik neem mijn laptop mee,,"
