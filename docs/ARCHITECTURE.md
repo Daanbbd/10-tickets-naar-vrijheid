@@ -31,9 +31,9 @@ Regel: een autoload bevat *state of routing*, nooit gameplaylogica.
 |---|---|
 | `Bus` | Alleen signal-declaraties. Geen state, geen logica. |
 | `GameData` | Laadt alle JSON één keer en parset naar getypte modellen. Daarna read-only. |
-| `Session` | Muteerbare runtime-state: personage, flags, inventory, ticketstanden. |
+| `Session` | Muteerbare runtime-state: personage, flags, voorwerpen, ticketstanden, gevonden tickets en de gekozen ticket. |
 | `Shell` | Scene-router, fades, host van de minigame-overlay. De enige plek die `get_tree().paused` aanraakt. |
-| `AudioDirector` | SFX-pool, muziek-crossfade, ducking tijdens dialoog. |
+| `AudioDirector` | SFX-pool en de muziekstapel. Luistert zelf naar de Bus, dus scenes regelen hun eigen muziek niet. |
 
 Bewust géén autoload: dialoog (leeft als node in de wereldscene), quests
 (`QuestEngine` is volledig statisch), inventory (dictionary in `Session`).
@@ -52,6 +52,11 @@ QuestEngine ->  Session, GameData, Bus, Conditions
 GDScript struikelt over wederzijdse `class_name`-verwijzingen, en zo blijft de
 queststroom headless testbaar zonder scene.
 
+Een speelbeurt begint op precies één plek: `QuestEngine.start_run(personage)`.
+Die zet de sessie op en de tickets open. Roep `Session.start_new()` nooit los
+aan — dan blijft elk ticket LOCKED en is er geen enkele interactie meer die
+iets oplevert. De testsuite (`startroutes`) bewaakt dat.
+
 ## Data in JSON, niet in `.tres`
 
 Alle content staat in platte JSON in `data/`. Reden: de content wordt grotendeels
@@ -64,11 +69,22 @@ gameplaycode nooit een rauwe `Dictionary` aanraakt.
 
 **Condition** — gedeeld door quest-requirements, dialoogvarianten en
 interactable-gating. Keys: `character`, `trait`, `flags_all`, `flags_none`,
-`tickets_done`, `tickets_not_done`, `has_item`, `min_tickets_done`.
+`tickets_done`, `tickets_not_done`, `has_item`, `min_tickets_done`, `overwerk`.
 Eén evaluator: `Conditions.check()`.
+
+> `overwerk` is een bool en staat daarom achter een `has()`-wacht, anders dan
+> `min_tickets_done` erboven. Die draait onvoorwaardelijk met default 0, wat voor
+> een getal onschuldig is; een bool met default `false` zou elke lége conditie
+> "het is geen overwerk" laten beweren en na vijven elke fallbackvariant in de
+> game omklappen. En niet via `_names()`, want dat maakt van een bool `&"true"`.
 
 **Effect / WorldChange** — zie de tabel hierboven. Beide hebben een
 whitelist die de validator controleert.
+
+> De effect-op `kost_tijd` boekt minuten op de werkdag. Bedoeld voor scènes (een
+> kop koffie, een praatje), niet voor tickets: die prijs hangt af van *hoe* je ze
+> oploste en kan daarom niet uit data komen. Code boekt wat het systeem kost,
+> data boekt wat een scène kost.
 
 ## Scene-boom van de wereld
 
@@ -85,6 +101,8 @@ Main (Node2D)                  main.gd — expliciete bootvolgorde
 ├── WorldMutator               past world_changes toe
 ├── TicketController           ticketstroom en minigame-start
 ├── DialogueController         eigen CanvasLayer (20)
+├── Telefoon (CanvasLayer 30)  De Klant — alleen een telefoonscherm
+├── Besturing (CanvasLayer 9)  knoppenbalk + joystick, drukt gewone acties in
 └── HUD (CanvasLayer 10)
 ```
 
@@ -112,12 +130,120 @@ Contract: `MinigameBase.setup(config)` → signal `finished(MinigameResult)`.
 `Shell.run_minigame()` pauzeert de wereld, hangt de minigame op MinigameLayer en
 `await`t het resultaat.
 
+## Muziek als stapel, niet als playlist
+
+Het kantoor is het hoofdthema en het enige dat vrij doorspeelt. Al het andere is
+een variant op hetzelfde akkoordenschema, zodat het spel als één stuk muziek
+klinkt. `AudioDirector` houdt vier lagen bij; de hoogste gevulde laag is wat je
+hoort, en zodra die leeg is valt het terug naar wat eronder lag.
+
+| Laag | Gevuld door | Stuk |
+|---|---|---|
+| `basis` | `set_base()` vanuit de wereld, het titelscherm en `set_ambience` | `kantoor`, `kantoor_merksound`, `intro` |
+| `gesprek` | `Bus.dialogue_started` / `_finished` | `gesprek` |
+| `minigame` | `Bus.minigame_started` / `_finished` | `mg_<minigame_id>`, tien eigen varianten |
+| `overwinning` | `Bus.all_tickets_done` | `overwinning` |
+
+Geen enkele scene roept muziek aan behalve voor zijn eigen basislaag: de
+AudioDirector is op de Bus aangesloten en volgt de spelstand vanzelf. Een
+minigame zonder eigen stuk laat het kantoor gewoon staan — een gemis, geen bug.
+
+Twee dingen houden dit weg bij "hetzelfde deuntje, de hele dag":
+
+- **Stukken hervatten waar ze verlaten werden.** Kom je uit een minigame, dan
+  gaat het kantoor verder in plaats van opnieuw bij maat een te beginnen.
+  Zonder dat hoor je die eerste maat twintig keer op een dag.
+- **De intro en de overwinning loopen pas ná hun kop** (`LOOP_START`, via
+  `loop_offset`). Je hoort die aanloop één keer, en dat is precies wat er een
+  begin en een winstmoment van maakt.
+
+Het kantoorthema zelf duurt een minuut en bestaat uit negen secties waarvan er
+geen twee achter elkaar hetzelfde zijn. Alle arrangementen staan in
+`tools/generators/gen_audio.py`; de looppunten in `LOOP_START` horen bij die
+arrangementen en worden bij het genereren meegeprint.
+
 ## Valkuilen die hier expliciet zijn opgelost
 
 - **`TileSetAtlasSource` moet aan de `TileSet` hangen vóór je `TileData` opvraagt**,
   anders kent hij de physics layers nog niet.
 - **Een Control die in code onder een in code gemaakte `CanvasLayer` hangt blijft
   0×0.** `UiKit.fill_viewport()` zet het formaat zelf en volgt vensterwijzigingen.
+- **De minimummaat van een afbrekend label is onbetrouwbaar, en containers leggen
+  zich erop vast.** Eén oorzaak, drie gedaanten, alle drie in dit project
+  tegengekomen op een canvas van 192 px:
+
+  | Gedaante | Wat je ziet |
+  |---|---|
+  | label of Button **zonder** autowrap | meldt de volledige tekstbreedte als minimum; een `PanelContainer` met `GROW_DIRECTION_BOTH` groeit daar aan *beide* kanten buiten beeld voor, dus je verliest het begin én het eind van de regel |
+  | afbrekend label **naast** een buur met `SIZE_EXPAND_FILL` | de buur pakt alle breedte, het label krijgt een paar pixels, en de autowrap breekt per teken af: `1 1 : 2 0` als kolom |
+  | afbrekend label **in** een `Container` | in de eerste meetronde is er nog geen breedte, dus het vraagt hoogte voor één letter per regel — en die opgeblazen maat krimpt daarna niet meer |
+
+  Vandaar dat `UiKit.label()` en `UiKit.button()` autowrap standaard aanzetten, en
+  dat je bij een buur met `SIZE_EXPAND_FILL` autowrap juist **uit** moet zetten met
+  een `custom_minimum_size` erbij. Wat vast breed is (een tijdstip, een getal, een
+  naam) hoort af te kappen met `OVERRUN_TRIM_ELLIPSIS`, niet af te breken.
+- **Het venster moet op een laptop passen, en `--shot` verklapt niet dat het
+  niet past.** Het canvas is 192x416, dus 3x is 576x1248. Dat is hoger dan de
+  982 logische punten van een 14" MacBook, en dan knijpt het besturingssysteem
+  het venster af: het dialoogvenster en de duimknoppen hangen aan de onderrand
+  en vallen daar dus onder weg. `window_height_override` staat daarom op **2x**
+  (384x832).
+
+  De reden dat dit lang onopgemerkt bleef: `--shot` schrijft de **viewport**
+  weg, niet het OS-venster. Op een afbeelding van 576x1248 is altijd alles te
+  zien, ook wanneer het venster op het scherm afgekapt wordt. Een layoutbug
+  hierin is dus alleen met een echte schermafbeelding te zien, niet met de
+  QA-shots.
+- **Vier minigames leunen op `emulate_mouse_from_touch`.** `mg_scope`,
+  `mg_cableboard`, `mg_uitlijnen` en `mg_pijplijn` lezen in hun `_gui_input()`
+  een `InputEventMouseButton`. Dat werkt op een telefoon omdat Godot standaard
+  muis uit touch emuleert, en die instelling staat **niet** in `project.godot` —
+  hij is dus de default en geen keuze. Zet iemand
+  `input_devices/pointing/emulate_mouse_from_touch` uit, dan accepteren die vier
+  stil geen tikken meer: geen fout, geen melding, alleen een minigame die niet
+  reageert. Alles wat via `UiKit.button()` loopt is hier ongevoelig voor, want
+  een `Button` handelt `InputEventScreenTouch` zelf af.
+- **`custom_minimum_size` is een ondergrens, niet de maat.** Een `Button` meldt
+  zelf regelhoogte plus de marges van zijn stijlbox, en die som wint als hij
+  groter is: met `UiKit.KNOP_MIN_H` (24) komt er 26 uit (14 regel + 2 × 6
+  marge). De knoppenbalk rekende eerst met 24, at daardoor twee pixels van zijn
+  eigen ondermarge op — een `Control` groeit standaard naar `GROW_DIRECTION_END`,
+  en dat is onderaan het scherm de kant waar niets meer is — en trok de
+  onderste HUD-regels mee. Het verschil is twee canvaspixels en op een
+  screenshot niet te zien. Vandaar dat `Besturing.KNOP_HOOGTE` een **gemeten**
+  getal is, dat `_test_balkmaat()` in de testsuite vastzet, en dat de balk naar
+  `GROW_DIRECTION_BEGIN` groeit.
+- **Eén besturing, geen platformvertakking.** Er was een `Invoer.touch()` en zes
+  plekken die daar hun eigen indeling uit haalden (HUD, besturingskaart,
+  ticketbord, dialoogbox, prompt, elke minigame). Dat leverde twee spellen met
+  dezelfde inhoud op, en van die twee werd de mobiele helft alleen bekeken:
+  elke QA-shot stond op `--touch` terwijl er met een toetsenbord gespeeld werd,
+  dus de toetsenbordroute was de ongeteste. `Invoer.touch()` bestaat niet meer;
+  wat overblijft is `muis_als_vinger()`, en dat gaat over gebeurtenistypes en
+  niet over indeling.
+- **`Session.input_locked` is een teller, geen bool.** Vier systemen zetten hem
+  rechtstreeks: de dialoogcontroller, de telefoon van De Klant, de intro en het
+  vertrek uit het kantoor. Die overlappen, en wie als laatste `false` schreef
+  zette de vloer open terwijl een ander er nog op rekende. Zetten gaat daarom
+  via `lock_input()` / `unlock_input()`; `input_locked` is puur een lezing van
+  de teller en een directe toewijzing levert een `push_error`.
+  `Shell._change_scene()` doet `reset_input_lock()`, want geen enkele aanroeper
+  overleeft een scenewissel.
+- **Een minigame leest zijn opgave uit `content()`, niet uit `config`.** Dat zijn
+  twee gescheiden ingangen: `config` (via `setup()`, gelezen met `cfg()`) is
+  parameters, `content()` is de opgave uit `data/minigame_content.json`.
+  `TraitModifier` schreef zijn voordeel jarenlang naar `config`, waar geen
+  enkele minigame naar kijkt — en las bovendien uit `t.minigame_config`, een
+  veld dat in alle tien de tickets `{}` is. Twee losse redenen waarom hetzelfde
+  niets gebeurde, mét een toast op het scherm die de speler een voordeel
+  beloofde. Een aangepaste opgave gaat nu als configsleutel `inhoud` mee, die
+  `MinigameBase.setup()` op `content_override` zet.
+- **Een tabel die tegelijk dekkingslijst is.** `TraitModifier.VOORDEEL` en
+  `GEEN_VOORDEEL` samen moeten elk `type` uit `minigame_content.json` dekken, en
+  `_test_traits()` eist dat plus dat een belofte uit die tabel de opgave écht
+  verandert. Zonder die eis kon een `match` zonder tak voor een nieuw type stil
+  niets doen — precies wat er gebeurde toen zes minigames nieuwe mechanieken
+  kregen.
 - **`MOTION_MODE_FLOATING`** op de speler; `GROUNDED` (de standaard) geeft
   vreemde slide-effecten in top-down.
 - **Area2D-monitoring staat stil tijdens pause.** De interactieprobe evalueert

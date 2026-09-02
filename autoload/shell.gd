@@ -3,6 +3,7 @@ extends Node
 ## De enige plek in het project die get_tree().paused aanraakt.
 
 const SCENE_TITLE := "res://scenes/boot/title.tscn"
+const SCENE_INTRO_UITLEG := "res://scenes/boot/intro_uitleg.tscn"
 const SCENE_SELECT := "res://scenes/boot/character_select.tscn"
 const SCENE_GAME := "res://scenes/world/main.tscn"
 const SCENE_END := "res://scenes/boot/ending.tscn"
@@ -108,6 +109,9 @@ func _qa_shot() -> void:
 func goto_title() -> void:
 	await _change_scene(SCENE_TITLE)
 
+func goto_intro_uitleg() -> void:
+	await _change_scene(SCENE_INTRO_UITLEG)
+
 func goto_character_select() -> void:
 	await _change_scene(SCENE_SELECT)
 
@@ -124,6 +128,10 @@ func _change_scene(path: String) -> void:
 	_busy = true
 	await fade_out()
 	get_tree().paused = false
+	# Geen enkel invoerslot overleeft een scenewissel: de dialoog, de telefoon of
+	# de vertrekscene die hem zette bestaat straks niet meer, dus niemand gooit
+	# hem nog los. Zonder dit is de volgende scene onbestuurbaar.
+	Session.reset_input_lock()
 	var err := get_tree().change_scene_to_file(path)
 	if err != OK:
 		push_error("Shell: kon scene '%s' niet laden (%d)" % [path, err])

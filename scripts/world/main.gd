@@ -40,6 +40,15 @@ var builder: WorldBuilder = WorldBuilder.new()
 var player: Player = null
 
 var _zone_id: StringName = &""
+## Alleen voor de speelbeurt-harnas: hoeveel meldingen van De Klant er gevallen zijn.
+var _klant_meldingen: int = 0
+
+## Zolang de intro loopt houdt de vloer zijn tickets vast. Zonder dit vuurt
+## _report_tile() op physics-frame 1 al een toast af over BBD-203: boven de
+## infade, voordat het spel het woord "ticket" heeft gezegd, en zonder dat de
+## speler een stap heeft gezet. Precies de omgekeerde les.
+var _intro_loopt: bool = false
+var _uitgestelde_zone: StringName = &""
 
 
 func _ready() -> void:
@@ -60,12 +69,21 @@ func _ready() -> void:
 	tickets.setup(registry, npc_layer, builder)
 	hud.setup()
 
-	# De duimbesturing hangt naast de HUD in plaats van erin: hij drukt alleen
-	# de gewone acties in, dus hij hoort niet bij het schermbeeld.
-	if Invoer.touch():
-		var touch := TouchControls.new()
-		add_child(touch)
-		touch.setup()
+	# De Klant hangt naast de HUD in plaats van erin: zij is geen schermbeeld
+	# van jouw voortgang maar iemand die zich meldt. Eigen CanvasLayer, boven
+	# de dialoog en onder de minigame.
+	var telefoon := Telefoon.new()
+	telefoon.name = "Telefoon"
+	add_child(telefoon)
+	telefoon.setup()
+
+	# De besturing hangt naast de HUD in plaats van erin: de knoppenbalk drukt
+	# alleen de gewone acties in, dus hij hoort niet bij het schermbeeld.
+	# Onvoorwaardelijk — er is één besturing, ook met een toetsenbord erbij.
+	var besturing := Besturing.new()
+	besturing.name = "Besturing"
+	add_child(besturing)
+	besturing.setup()
 
 	# De wereld is een pure functie van Session: speel alles opnieuw af.
 	mutator.replay_all()
@@ -80,14 +98,30 @@ func _ready() -> void:
 	Bus.follower_joined.connect(func(_a: StringName) -> void: _refresh_marker())
 	Bus.follower_released.connect(func(_a: StringName) -> void: _refresh_marker())
 	Bus.flag_changed.connect(func(_a: StringName, _b: bool) -> void: _refresh_marker())
+	# Dirk moet wegwandelen op het moment dat je geboekt hebt, niet pas bij het
+	# volgende ticket.
+	Bus.flag_changed.connect(func(f: StringName, _b: bool) -> void:
+		if f == &"uren_geboekt":
+			_dirk_bijwerken())
 	_refresh_marker()
 	Bus.game_started.emit()
-	AudioDirector.play_music(&"kantoor")
+	AudioDirector.set_base(&"kantoor")
 	_qa_bord()
+	_qa_kaart()
+	_qa_briefing()
 
 	if Autopilot.gevraagd():
 		add_child(Autopilot.new())
 	if "--playthrough" in OS.get_cmdline_user_args():
+		# De spanningsboog is het enige systeem dat niet uit een minigame of een
+		# ticketstand blijkt: als De Klant zich nooit meldt, ziet een speelbeurt
+		# er precies hetzelfde uit en valt de hele escalatie stil zonder fout.
+		# Daarom logt de harnas haar meldingen, en controleert hij aan het eind
+		# of alle vier de drempels gevallen zijn.
+		Bus.klant_bericht.connect(func(bid: StringName) -> void:
+			_klant_meldingen += 1
+			print("[SPEELBEURT] De Klant meldt zich: %s  (bij %d/10)" % [
+				bid, Session.done_count()]))
 		_qa_playthrough()
 	else:
 		_qa_auto()
@@ -125,8 +159,10 @@ func _mark_node(n: Node2D) -> void:
 	n.add_child(ObjectiveMarker.new())
 
 
-## De eerste minuut: premisse, wincondititie, het werkwoord en het eerste doel.
-## Zes nodes, niet meer: elke node is een E-druk en een lap Nederlands.
+## De uitleg (aantal, spreiding, bord, collega ophalen) staat sinds kort vóór
+## character select op een eigen scherm (`IntroUitleg`); hier blijft alleen het
+## mechanische deel over: de eerste vondst niet als toast tijdens de infade,
+## maar als bordbeat zodra de speler kan kijken.
 func _intro_beat() -> void:
 	if Session.done_count() > 0:
 		return
@@ -134,16 +170,20 @@ func _intro_beat() -> void:
 		if a.begins_with("--auto=") or a == "--autoplay" or a == "--playthrough":
 			return
 
+	_intro_loopt = true
 	await get_tree().create_timer(0.4).timeout
-	if GameData.dialogue(&"intro") != null:
-		await dialogue.play(&"intro")
 
-	# Even laten zien waar het eerste ticket ligt: op deze vloer is de
-	# vergaderruimte niet vanuit de entree te zien.
-	var t: TicketDef = QuestEngine.next_hint_ticket()
-	if t != null:
-		Bus.camera_focus_requested.emit(t.anchor, 2.0)
-		await get_tree().create_timer(2.4).timeout
+	# De vondst is nu het gevolg van de infade in plaats van een toast die eraan
+	# voorafgaat. Er ligt werk in de entree waar je al staat: dit is de eerste
+	# keer dat "een ruimte binnenlopen levert een ticket op" iets doet in plaats
+	# van iets beweert.
+	_intro_loopt = false
+	Session.lock_input()
+	var nieuw := _vind_werk(_uitgestelde_zone)
+	if not nieuw.is_empty():
+		await hud.toon_nieuw_briefje(nieuw[0], 2.6)
+	Session.unlock_input()
+
 	hud.show_controls_card()
 
 
@@ -186,9 +226,34 @@ func _qa_playthrough() -> void:
 			printerr("[SPEELBEURT] %s werd nooit beschikbaar" % t.code)
 			break
 
-		# de collega ophalen simuleren
+		# Kiezen wat we gaan doen. Zonder dit vraagt het scrumbord in de gang
+		# welk van de twee tickets we bedoelen, en dan blijft de speelbeurt op
+		# een dialoogvenster wachten dat niemand wegklikt.
+		if "--geen-pin" not in OS.get_cmdline_user_args():
+			Session.pin(tid)
+
+		# De collega echt ophalen, niet de vlag zetten. Dit is de route die een
+		# speler neemt, en juist daar zat de bug: werven veranderde niets
+		# zichtbaars. Alleen als de NPC onvindbaar is valt de speelbeurt terug
+		# op de vlag, zodat een spawn-probleem niet als questfout leest.
 		if not QuestEngine.is_own_expertise(tid):
-			QuestEngine.mark_helper_present(tid)
+			var helper_id := QuestEngine.required_helper(tid)
+			var helper := npc_layer.find_npc(helper_id)
+			if helper == null:
+				printerr("[SPEELBEURT] %s: collega '%s' staat niet op de vloer" % [t.code, helper_id])
+				QuestEngine.mark_helper_present(tid)
+			else:
+				player.global_position = builder.tile_to_world(
+					builder.nearest_walkable(builder.world_to_tile(helper.global_position)))
+				camera.global_position = player.global_position
+				camera.reset_smoothing()
+				await get_tree().create_timer(0.3).timeout
+				tickets.handle_npc_talk(helper.interactable)
+				if not await _qa_wacht_tot(func() -> bool: return helper.is_following(), 30.0):
+					printerr("[SPEELBEURT] %s: %s liep niet mee" % [t.code, helper_id])
+					break
+				print("[SPEELBEURT] %s: %s opgehaald, doel staat op %s" % [
+					t.code, helper.def.name, Session.pinned_ticket])
 		# benodigde items simuleren (de deploysleutel uit het magazijn)
 		for item: Variant in (t.requirements.get("has_item", []) as Array):
 			if not Session.has_item(StringName(item)):
@@ -209,12 +274,26 @@ func _qa_playthrough() -> void:
 
 		if await _qa_wacht_tot(func() -> bool: return Session.is_done(tid), 90.0):
 			print("[SPEELBEURT] %s opgelost  (%d/10)" % [t.code, Session.done_count()])
+			# `is_done` valt vóór de urenrol en de afrondingsdialoog, dus de
+			# stroom loopt op dit punt nog. Zonder deze wacht racet de harnas het
+			# volgende ticket in, en dan weigert `handle_npc_talk()` stil op zijn
+			# `_busy`-guard: de collega loopt niet mee en dertig seconden later
+			# meldt de speelbeurt "liep niet mee" zonder oorzaak. Dat was geen
+			# spelbug — een speler kan zijn eigen dialoog niet inhalen — maar de
+			# harnas kan dat wel, en dan test hij iets wat niet bestaat.
+			if not await _qa_wacht_tot(func() -> bool: return not tickets.bezig(), 30.0):
+				printerr("[SPEELBEURT] %s: de ticketstroom kwam niet tot rust" % t.code)
+				break
 		else:
 			printerr("[SPEELBEURT] %s liep vast" % t.code)
 			break
 
 	if Session.all_done():
 		print("[SPEELBEURT] 10/10 — naar de voordeur")
+		var gemist := Gevolgen.DREMPELS.size() - _klant_meldingen
+		if gemist > 0:
+			printerr("[SPEELBEURT] %d van de %d klantmeldingen zijn nooit gevallen" % [
+				gemist, Gevolgen.DREMPELS.size()])
 		var deur := registry.get_by_id(&"voordeur")
 		player.global_position = builder.tile_to_world(
 			builder.nearest_walkable(builder.world_to_tile(deur.global_position)))
@@ -224,6 +303,12 @@ func _qa_playthrough() -> void:
 		printerr("[SPEELBEURT] MISLUKT op %d/10" % Session.done_count())
 
 	print("[SPEELBEURT] duur: %.1fs" % ((Time.get_ticks_msec() - start) / 1000.0))
+	# De urenstaat hoort altijd over de acht uur te gaan; dit is de plek waar een
+	# geautomatiseerde doorloop dat laat zien.
+	print("[SPEELBEURT] gewerkt: %s, uit om %s (budget %s)" % [
+		Urenstaat.formatteer_duur(Session.worked_minutes),
+		Urenstaat.formatteer(Urenstaat.nu()),
+		Urenstaat.formatteer_duur(Urenstaat.BUDGET_MIN)])
 	if "--quit-when-done" in OS.get_cmdline_user_args():
 		await get_tree().create_timer(1.0).timeout
 		get_tree().quit(0 if Session.all_done() else 1)
@@ -375,6 +460,42 @@ func _qa_bord() -> void:
 	hud.toggle_board()
 
 
+## QA: `--briefing=<ticket>` speelt de briefing van dat ticket meteen af.
+##
+## De briefing is de plek waar een collega een mens wordt in plaats van een
+## sleutel, en dus de plek waar de tekst het meest telt. Zonder deze vlag is hij
+## alleen te zien door een halve speelbeurt te spelen tot precies het juiste
+## moment, en dan is prozacontrole een kwestie van frames jagen. Het langste
+## exemplaar (BBD-208) is ruim tweehonderd tekens, dus of hij in het
+## dialoogvenster past is een echte vraag.
+func _qa_briefing() -> void:
+	var doel := ""
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--briefing="):
+			doel = a.trim_prefix("--briefing=")
+	if doel == "":
+		return
+	var t: TicketDef = GameData.ticket(StringName(doel))
+	if t == null:
+		push_error("QA: onbekend ticket '%s'" % doel)
+		return
+	await get_tree().create_timer(0.5).timeout
+	await tickets.briefing(t)
+
+
+## QA: `--kaart` zet de besturingskaart in beeld en laat hem staan.
+##
+## Zonder deze vlag was de kaart alleen te zien door de intro uit te spelen of
+## F1 in te drukken, en dus niet met een `--shot` te controleren. Dat is precies
+## het scherm dat vertelt hoe het spel werkt, dus dat hoort in beeld te kunnen
+## komen zonder een mens aan het toetsenbord.
+func _qa_kaart() -> void:
+	if "--kaart" not in OS.get_cmdline_user_args():
+		return
+	await get_tree().create_timer(0.5).timeout
+	hud.show_controls_card(600.0)
+
+
 func _on_player_tile(t: Vector2i) -> void:
 	var z := builder.zone_at(t)
 	var zid := StringName(z.get("id", ""))
@@ -382,8 +503,37 @@ func _on_player_tile(t: Vector2i) -> void:
 		_zone_id = zid
 		_tint_zone(String(z.get("light", "neutraal")))
 		Bus.zone_entered.emit(zid, String(z.get("name", "")))
+		_vind_werk(zid)
 	if zid == &"z10_weekend":
 		_weekend_duwt_terug()
+
+
+## Een ruimte binnenlopen levert het werk op dat daar ligt. Dat is de reden om
+## te verkennen nu niets meer achter een ander ticket zit.
+##
+## Eén melding voor de hele ruimte, niet één per ticket: op De Vloer hangen er
+## drie, en drie toasts achter elkaar leest als een foutmelding.
+##
+## Retourneert wat er gevonden is, zodat _intro_beat() de vondst die hij heeft
+## uitgesteld zelf kan tonen in plaats van als toast.
+func _vind_werk(zone_id: StringName) -> Array[TicketDef]:
+	if _intro_loopt:
+		_uitgestelde_zone = zone_id
+		return []
+	var nieuw := QuestEngine.discover_in_zone(zone_id)
+	if nieuw.is_empty():
+		return []
+	if nieuw.size() == 1:
+		Bus.toast_requested.emit("Nieuw ticket: %s" % nieuw[0].code, &"ticket")
+	else:
+		var codes: Array[String] = []
+		for t: TicketDef in nieuw:
+			codes.append(t.code)
+		Bus.toast_requested.emit("%d tickets gevonden: %s" % [
+			nieuw.size(), ", ".join(codes)], &"ticket")
+	AudioDirector.play_ui(&"pak")
+	_refresh_marker()
+	return nieuw
 
 
 ## Weekend is van het designbureau waar we de vloer mee delen. Je mag er komen,
@@ -422,14 +572,42 @@ func _tint_zone(mood: String) -> void:
 	_licht_tween.tween_property(licht, "color", doel, 0.4)
 
 
-func _on_ticket_completed(_id: StringName, _r: MinigameResult) -> void:
+func _on_ticket_completed(id: StringName, _r: MinigameResult) -> void:
 	npc_layer.refresh_conditional()
-	npc_layer.release_all()
+	# Alleen de collega van dít ticket gaat terug naar zijn post. _handle_inner
+	# heeft hem meestal al losgelaten; dit is het vangnet. Iemand die je voor
+	# een ánder ticket hebt opgehaald blijft lopen — hem stilletjes naar huis
+	# sturen was de straf voor vooruitdenken.
+	var helper := QuestEngine.required_helper(id)
+	if helper != &"":
+		var n := npc_layer.find_npc(helper)
+		if n != null and n.is_following():
+			n.stop_following(true)
+
+	_dirk_bijwerken()
+
+
+## Dirk komt naar jou toe. Zodra hij verschijnt loopt hij mee, en hij blijft
+## meelopen tot je je uren geboekt hebt — dan gaat hij terug naar zijn plek.
+##
+## Hij blokkeert nooit iets: je kunt hem de hele dag negeren en de game gewoon
+## uitspelen. Dat hij dan de hele dag achter je aan loopt is de grap.
+func _dirk_bijwerken() -> void:
+	var dirk := npc_layer.find_npc(&"dirk")
+	if dirk == null:
+		return
+	if Session.get_flag(&"uren_geboekt"):
+		if dirk.is_following():
+			dirk.stop_following(true)
+		return
+	if not dirk.is_following():
+		dirk.start_following(player)
+		Bus.toast_requested.emit("Dirk Schrijver wil je even spreken", &"tijd")
 
 
 ## Tien van de tien: de deur klikt open en de dag zit erop.
 func _verlaat_kantoor() -> void:
-	Session.input_locked = true
+	Session.lock_input()
 	AudioDirector.play_sfx(&"deur")
 	Bus.toast_requested.emit("KLIK", &"deur")
 	await get_tree().create_timer(1.2).timeout

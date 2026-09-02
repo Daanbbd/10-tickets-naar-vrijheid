@@ -8,7 +8,7 @@ Drie lagen, allemaal zonder handmatig spelen.
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --scene res://tests/test_runner.tscn
 ```
 
-Ruim **5000 controles**, exitcode 1 bij fouten. Dekt:
+Ruim **14.000 controles**, exitcode 1 bij fouten. Dekt:
 
 - alle JSON laadt zonder fouten
 - geen dode verwijzingen: ticket→anker, ticket→minigame, dialoog→node,
@@ -21,8 +21,52 @@ Ruim **5000 controles**, exitcode 1 bij fouten. Dekt:
 - minigame-inhoud: slots accepteren bestaande kaarten, elke tagpicker heeft een
   haalbaar goed resultaat, elke choicescene-drempel is haalbaar, mg_deploy heeft
   een variant per personage
-- **de questketen voor alle vijf personages**: van 0 tot 10/10, inclusief de
+- **de questketen voor alle zeven personages**: van 0 tot 10/10, inclusief de
   controle dat een ticket buiten je vakgebied *niet* oplosbaar is zonder collega
+- **elke startroute zet de tickets open** — `QuestEngine.start_run()` is de enige
+  ingang; een script dat `Session.start_new()` los aanroept faalt de suite
+- **elk anker is vanaf de start aanspreekbaar**, per personage. Een `visible_when`
+  op een ankerobject dat op een ander ticket wacht maakt dat object onzichtbaar
+  voor de probe: E doet dan niets, zonder prompt en zonder geluid
+- **ticket-eigenaarschap**: in de dialoog van een ticket spreekt geen ander
+  speelbaar personage dan de eigenaar, elke `when.character` is die van de
+  eigenaar, en de tekst noemt geen andere collega bij naam
+- **karakterstemmen**: signature-tics per personage, Bastiaans dubbele komma,
+  zinsbegin per personage (alleen Danny en Bastiaan schrijven klein), geen tic
+  van een ander personage, en elk personage heeft minstens twaalf eigen
+  spelersvarianten. Die laatste twee kijken óók naar `when.character`-varianten,
+  die op `speaker: "speler"` staan en daardoor eerder buiten elke controle vielen
+- **de inside jokes**: Willem, Danny, Daan en Victor zeggen nooit kaal "omzet",
+  en "Absoluta" staat bij Willem nooit zonder de correctie "Looff"
+
+Met `-- --print-briefings` erachter schrijft de suite bovendien alle negen
+briefings van de eigenaars uit, gevuld met de echte getallen uit
+`minigame_content.json`. Dat is de goedkoopste manier om die teksten als geheel
+te lezen zonder een speelbeurt te spelen.
+
+## 1b. Parsecontrole over alle scripts
+
+```bash
+for f in $(find scripts autoload -name "*.gd" | sort); do
+  out=$(godot --headless --path . --check-only --script "$f" 2>&1 | grep "Parse Error")
+  [ -n "$out" ] && { echo "### $f"; echo "$out"; }
+done
+```
+
+Ongeveer 0,2 s per bestand, dus ~12 s voor het hele project. Dit is de goedkoopste
+gate die er is en hij hoort **vóór** de testsuite in een CI-pipeline.
+
+Waarom hij bestaat: `mg_abtest.gd` bevatte een regel
+`chrome_header().add_child(meter)` met een niet-bestaande `meter`. Een parsefout
+in een minigame-script blijft onzichtbaar totdat die minigame echt geladen
+wordt — de testsuite valideert data en questlogica, en laadt de scenes niet.
+Hij kwam boven water op ticket 6 van een `--playthrough`, twee minuten diep,
+als "BBD-206 liep vast".
+
+Filter op **`Parse Error`** en niet op elke fout: `--script` heeft geen
+autoloads, dus elk script dat `Bus`, `Session`, `GameData`, `Shell` of
+`AudioDirector` aanraakt levert een `Compile Error: Identifier not found` op.
+Dat is een artefact van deze modus en geen fout in het bestand.
 
 ## 2. Speelbeurt in de echte runtime
 
@@ -38,7 +82,25 @@ wereldveranderingen, de voordeur en het eindscherm. De autopilot stuurt echte
 
 Exitcode 0 alleen bij 10/10. Status per ticket komt op stdout.
 
-**Laatste run:** alle vijf personages exit 0, 10/10, nul scriptfouten.
+**Laatste run:** alle **zeven** personages exit 0, 10/10, vier van de vier
+klantmeldingen, nul parse- of scriptfouten. Daan en Danny komen uit op 8u30
+(uit om 17:42), de andere vijf op 9u (18:12).
+
+Deze doorloop was tot voor kort een muntworp. Hij wachtte op
+`Session.is_done(tid)`, en die valt vóór de urenrol en de afrondingsdialoog —
+dus begon de harnas aan het volgende ticket terwijl de stroom van het vorige
+nog liep, en dan weigert `TicketController.handle_npc_talk()` stil op zijn
+`_busy`-guard. Dertig seconden later meldde de speelbeurt "npc_<naam> liep niet
+mee" zonder oorzaak, op een ticket dat van framing afhing. Een echte speler kan
+zijn eigen dialoog niet inhalen; de harnas kon dat wel en testte daarmee iets
+wat niet bestaat. Hij wacht nu na elk ticket op `tickets.bezig()`.
+
+De speelbeurt **haalt de collega's echt op**: hij loopt naar de NPC, voert het
+wervingsgesprek en wacht tot die meeloopt, in plaats van de vlag
+`helper_bij_<ticket>` te zetten. Dat is de route die een speler neemt, en juist
+daar zat de bug dat werven niets zichtbaars veranderde. De regel
+`[SPEELBEURT] BBD-203: Willem opgehaald, doel staat op t03` bewijst dat het
+ticket ook gepind wordt.
 
 ## 3. Visuele controle
 
@@ -58,22 +120,69 @@ Alles achter `--` en alleen voor testen:
 | `--speler=<id>` | slaat titel en selectie over |
 | `--ticket=<id>` | vinkt alle eerdere tickets af |
 | `--minigame=<id>` | draait één minigame los |
-| `--scherm=select\|einde` | opent dat scherm direct |
+| `--gedaan=<n>` | zet eerst n tickets op opgelost (voor `--minigame`) |
+| `--scherm=uitleg\|select\|einde` | opent dat scherm direct |
+| `--klant=<1-4>` | legt die melding van De Klant klaar zonder er tickets voor op te lossen |
 | `--auto=<world_id>` | zet de speler bij dat object en interacteert |
 | `--autoplay` | drukt zelf op de interactietoets en lost minigames op |
 | `--playthrough` | speelt alle tien de tickets af |
 | `--geen-pin` | speelbeurt zonder een ticket te kiezen, zodat de keuzevraag op een gedeeld object echt afgaat |
 | `--quit-when-done` | sluit af met exitcode 0/1 |
-| `--touch` | zet de duimbesturing aan op de desktop (stick + knoppen) |
-| `--geen-touch` | zet de duimbesturing uit op een aanraakscherm |
+| `--bord` | opent het sprintbord meteen |
+| `--kaart` | zet de besturingskaart in beeld en laat hem staan |
+| `--briefing=<ticket>` | speelt de briefing van de eigenaar van dat ticket meteen af |
 | `--shot=<pad.png>` | schrijft één frame weg en stopt (niet met `--headless`) |
 | `--shot-na=<sec>` | wanneer die shot valt, standaard 2,5 s |
+
+## Mobiel testen op een laptop
+
+```bash
+/Applications/Godot.app/Contents/MacOS/Godot --path .
+```
+
+Geen vlag meer. Er was een `--touch` en een `--geen-touch`, en die zetten de
+duimbesturing aan of uit — want er waren twee indelingen: een mobiele met een
+knoppenbalk, en een desktopversie die naar toetsen verwees. Dat was de kern van
+het probleem: **alle QA-shots stonden op `--touch` terwijl er met een
+toetsenbord gespeeld werd**, dus de mobiele helft werd bekeken en nooit
+gebruikt. Nu is er één besturing (`Besturing`) en zijn toetsen sneltoetsen naar
+dezelfde knoppen. Wat je op je laptop ziet is wat er op een telefoon staat.
+
+De **muis bestuurt de joystick**: `Besturing._input()` accepteert
+`InputEventMouseButton`/`MouseMotion` zolang `DisplayServer.is_touchscreen_available()`
+onwaar is (`Invoer.muis_als_vinger()`). Klikken en slepen in de linkeronderhoek
+werkt dus als een duim, en tikken op het dialoogvenster zet door.
+
+Die voorwaarde is geen luxe. Godot emuleert standaard óók de andere kant op
+(`emulate_mouse_from_touch`), dus op een echte telefoon levert één vinger zowel
+een ScreenTouch als een MouseButton op — zonder die wacht zou die vinger de
+joystick twee keer aansturen.
+
+> **Wat hiermee niet te testen is:** of het venster op het scherm past. De
+> QA-shots renderen de viewport, niet het OS-venster, dus een afgekapte
+> onderrand is er onzichtbaar. Zie de venstermaat-valkuil in ARCHITECTURE.md.
 
 ## Let op: de globale class-cache
 
 `.godot/global_script_class_cache.cfg` mag **niet** verwijderd worden zonder daarna
 `Godot --headless --path . --editor --quit` te draaien: alleen de editor kan die cache
 herbouwen, headless niet. Zonder geldige cache laadt `main.tscn` helemaal niet.
+
+Datzelfde geldt bij het **toevoegen** van een script met een nieuwe
+`class_name`. De cache kent die klasse dan nog niet, en de eerstvolgende run
+faalt met `Parse Error: Identifier "X" not declared` — in een bestand dat er
+niets mee te maken heeft, want het is de autoload-keten die omvalt. Draai dus
+na elk nieuw `class_name`:
+
+```bash
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --editor --quit
+```
+
+`.godot/` staat in `.gitignore`, dus **elke verse clone en elke CI-run begint
+met een koude cache.** De editorpas hoort daarom de eerste stap van een
+CI-pipeline te zijn, vóór de testsuite. Draai hem ook niet parallel met een
+andere Godot-run op dezelfde werkboom: twee processen die de cache tegelijk
+herschrijven laten hem leeg achter.
 
 De meegeleverde skills-bibliotheek `GD-Agentic-Skills/` declareert zelf
 `class_name Interactable` (die erft van `Area3D`) en kaapte daarmee de registry, waardoor
@@ -87,6 +196,19 @@ nu een `.gdignore` in die map. Zet die niet weg.
 - BBD-202 en BBD-209 delen één anker; het object kende maar één ticket, waardoor
   BBD-209 onbereikbaar was — gevonden door de speelbeurt, niet door de datasuite
 - `owner_character: ""` op BBD-210 maakte de finale onbereikbaar
+- de karakterselectie riep `Session.start_new()` aan zonder
+  `QuestEngine.initialise_tickets()`: elk ticket bleef LOCKED, elk object zei
+  "hier is nu niets te doen" en de hint meldde dat alles al opgelost was. De
+  QA-snelstart deed het paar wél, dus de enige route met de bug was de route die
+  een speler neemt
+- `wachtbank`, het anker van BBD-203, had nog een `visible_when` op BBD-202 uit
+  de verlaten ketenopzet. BBD-203 ligt in de spawnzone en is dus het eerste
+  ticket dat je vindt: de doelwijzer plantte zich voor elke nieuwe speler op een
+  object waar E niets deed
+- commit `9da2cf2` verschoof BBD-208 en BBD-209 naar Koen en Bastiaan zonder de
+  dialoog mee te verhuizen. Naam en portret komen uit het `speaker`-veld, dus je
+  liep naar Bastiaan en kreeg Jonathan te zien — en Koen en Bastiaan hadden
+  nergens in het spel een eigen spelersvariant
 
 ## Op een echte telefoon testen
 
@@ -171,9 +293,10 @@ Dit werkt pas zodra de export templates geïnstalleerd zijn — zie hieronder.
 
 ## Wat een webexport níet test
 
-De export dekt de duimbesturing: `Invoer.touch()` accepteert ook
-`DisplayServer.is_touchscreen_available()`, en die is waar in een mobiele
-browser.
+De export dekt de besturing, want die is er nu altijd: de knoppenbalk hangt
+niet meer aan een apparaatvraag. Wat een mobiele browser wél verandert is
+`DisplayServer.is_touchscreen_available()`, en dus of een muisklik voor een
+vingertik doorgaat (`Invoer.muis_als_vinger()`).
 
 Twee dingen dekt hij niet.
 

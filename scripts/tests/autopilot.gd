@@ -34,6 +34,14 @@ func _process(delta: float) -> void:
 			mg.call(&"qa_solve")
 		return
 
+	# Staat er een keuze open, dan kiest de autopilot de bovenste. Een
+	# InputEventAction voor "interact" is geen "ui_accept", dus een knop met
+	# focus reageert daar niet op en zou de speelbeurt laten hangen.
+	var knop := get_viewport().gui_get_focus_owner() as Button
+	if knop != null and knop.is_visible_in_tree():
+		knop.pressed.emit()
+		return
+
 	_druk("interact")
 
 

@@ -4,7 +4,7 @@ Een Nederlandstalige top-down pixel-art comedy adventure op één verdieping van
 Bluebird Day. Je kiest één collega, lost tien tickets op rond een webshop voor
 paardensupplementen, en mag pas naar buiten bij 10/10.
 
-Godot 4.7.2 · GDScript · ~30–60 minuten speeltijd.
+Godot 4.7.2 · GDScript · ~25 minuten speeltijd.
 
 ## Spelen
 
@@ -30,7 +30,10 @@ knop rechtsonder draagt het werkwoord van waar je voor staat · **▤** je ticke
 · **?** hint.
 
 De tickets staan allemaal tegelijk open. Je vindt ze door rond te lopen, en je
-kiest op het bord welke je als eerste doet.
+kiest op het bord welke je als eerste doet. Elf tickets, elf verschillende
+opgaven — geen twee delen een mechaniek. Wat je onderweg besluit komt terug:
+in wat je collega's zeggen, in wat De Klant je stuurt, en in hoe zwaar de
+oplevering begint.
 
 ## Testen
 
