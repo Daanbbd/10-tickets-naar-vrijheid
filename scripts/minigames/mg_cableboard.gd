@@ -1,6 +1,6 @@
 extends MinigameBase
-## Verbind knooppunten met kabels. BBD-205 (datastroom herstellen) en de
-## backend-variant van de finale.
+## Verbind knooppunten met kabels. Draagt BBD-205 (datastroom herstellen), en
+## verder niets: de finale is een eigen mechaniek geworden (`mg_oplevering`).
 ##
 ## Klik een knooppunt, klik een tweede: er loopt een kabel. Nog eens klikken
 ## op een bestaande kabel haalt hem weg.

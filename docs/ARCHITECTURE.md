@@ -106,25 +106,29 @@ Main (Node2D)                  main.gd — expliciete bootvolgorde
 └── HUD (CanvasLayer 10)
 ```
 
-Globaal daarboven uit `shell.tscn`: MinigameLayer (50), TransitionLayer (100),
-DebugLayer (200).
+Globaal daarboven uit `shell.tscn`: MinigameLayer (50) en TransitionLayer (100).
 
 `Main._ready()` is expliciet en hangt niet af van de `_ready`-volgorde van
 siblings.
 
 ## Minigames
 
-Zes herbruikbare mechanieken dragen tien minigames. Elke minigame is een JSON-
-config, geen eigen codebase.
+Elf mechanieken dragen elf minigames: geen enkele draagt er nog twee. Elke
+minigame is een JSON-config, geen eigen codebase.
 
 | Mechaniek | Gebruikt door |
 |---|---|
-| `mg_slotboard` | BBD-201, 202, 204, 206 |
-| `mg_tagpicker` | BBD-207, 208 |
+| `mg_scope` | BBD-201 |
+| `mg_standup` | BBD-202 |
 | `mg_choicescene` | BBD-203 |
+| `mg_uitlijnen` | BBD-204 |
 | `mg_cableboard` | BBD-205 |
+| `mg_abtest` | BBD-206 |
+| `mg_tagpicker` | BBD-207 |
+| `mg_pijplijn` | BBD-208 |
 | `mg_whack` | BBD-209 |
-| `mg_deploy` | BBD-210 (hergebruikt de andere drie voor zijn varianten) |
+| `mg_oplevering` | BBD-210 |
+| `mg_slotboard` | de urenstaat van Dirk (geen ticket) |
 
 Contract: `MinigameBase.setup(config)` → signal `finished(MinigameResult)`.
 `Shell.run_minigame()` pauzeert de wereld, hangt de minigame op MinigameLayer en

@@ -1,6 +1,6 @@
 extends MinigameBase
-## Dialoogkeuzes met punten. Gebruikt door BBD-203 (klantfeedback) en door
-## sommige varianten van de deployment-finale.
+## Dialoogkeuzes met punten. Draagt BBD-203 (klantfeedback), en verder niets:
+## de finale is een eigen mechaniek geworden (`mg_oplevering`).
 
 var _ronde: int = 0
 var _score: int = 0

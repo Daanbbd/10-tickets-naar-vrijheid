@@ -1,13 +1,15 @@
 extends MinigameBase
-## Sleep-kaartjes-naar-vakken. Gedeelde mechaniek voor BBD-201 (user story),
-## BBD-202 (planning), BBD-204 (frontend) en BBD-206 (CRO-pagina).
+## De urenstaat van Dirk (`mg_urenstaat`), en verder niets: elk ander ticket
+## heeft inmiddels zijn eigen mechaniek.
 ##
-## Er zijn altijd meer kaarten dan vakken: de afleiders zijn de grap.
+## Er is geen goed antwoord. Elke regel neemt elk uurblok, een regel neemt er
+## meer dan een, en je slaagt zodra alles verdeeld is. Wat je koos komt in
+## MinigameResult.payload terecht, en daar reageert Dirk op. Geen fouten, alleen
+## een keuze die genoteerd wordt.
 ##
-## In de `vrij`-modus (de urenstaat van Dirk) is er geen goed antwoord: elk vak
-## accepteert elke kaart, vakken nemen er meer dan een, en je slaagt zodra alles
-## verdeeld is. Wat je koos komt in MinigameResult.payload terecht, en daar
-## reageert Dirk op. Geen fouten, alleen een keuze die genoteerd wordt.
+## De regels van echt werk komen niet uit de data maar uit
+## `Session.completed_tickets_in_order()`; de data levert alleen de posten die
+## niet aan een ticket hangen.
 
 # Portret: 192 px breed met 4 px chrome-marge laat ~176 px over. Twee
 # kaarten naast elkaar past, drie niet.
@@ -64,55 +66,36 @@ class DragCard extends PanelContainer:
 
 
 class DropSlot extends PanelContainer:
-	var accepts: Array = []
 	var slot_label: String = ""
 	var slot_id: String = ""
 	var holder: HBoxContainer = null
 	var board: Node = null
-	## Hoeveel kaarten erin passen. Eén, behalve op de urenstaat: daar mag je
-	## meerdere uren op dezelfde regel schrijven.
+	## Hoeveel uurblokken er op deze regel passen.
 	var cap: int = 1
 
-	func _init(lbl: String, acc: Array, b: Node, capaciteit: int = 1, id: String = "",
-			regel: bool = false) -> void:
+	func _init(lbl: String, b: Node, capaciteit: int = 1, id: String = "") -> void:
 		slot_label = lbl
-		accepts = acc
 		board = b
 		cap = maxi(1, capaciteit)
 		slot_id = id if id != "" else lbl
 		add_theme_stylebox_override("panel", UiKit.postit(UiKit.POSTIT_LEEG, UiKit.POSTIT_LEEG_RAND))
 
-		if regel:
-			# Een urenstaat leest als regels, niet als vakken: naam links, de
-			# uren die je erop schrijft rechts, over de volle breedte.
-			custom_minimum_size = Vector2(0, 20)
-			size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			var h := HBoxContainer.new()
-			h.add_theme_constant_override("separation", 2)
-			add_child(h)
-			var rl := UiKit.label(lbl, UiKit.FS_SMALL, UiKit.GRIJS)
-			rl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			rl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			h.add_child(rl)
-			holder = HBoxContainer.new()
-			holder.custom_minimum_size = Vector2(76, 16)
-			holder.alignment = BoxContainer.ALIGNMENT_END
-			holder.add_theme_constant_override("separation", 1)
-			h.add_child(holder)
-			return
-
-		custom_minimum_size = Vector2(56, 44)
-		var v := VBoxContainer.new()
-		v.add_theme_constant_override("separation", 1)
-		add_child(v)
-		var l := UiKit.label(lbl, UiKit.FS_SMALL, UiKit.GRIJS)
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		v.add_child(l)
+		# Een urenstaat leest als regels, niet als vakken: naam links, de uren
+		# die je erop schrijft rechts, over de volle breedte.
+		custom_minimum_size = Vector2(0, 20)
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 2)
+		add_child(h)
+		var rl := UiKit.label(lbl, UiKit.FS_SMALL, UiKit.GRIJS)
+		rl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		rl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		h.add_child(rl)
 		holder = HBoxContainer.new()
-		holder.custom_minimum_size = Vector2(52, 20)
-		holder.alignment = BoxContainer.ALIGNMENT_CENTER
-		v.add_child(holder)
+		holder.custom_minimum_size = Vector2(76, 16)
+		holder.alignment = BoxContainer.ALIGNMENT_END
+		holder.add_theme_constant_override("separation", 1)
+		h.add_child(holder)
 
 	func is_filled() -> bool:
 		return holder.get_child_count() >= cap
@@ -143,11 +126,7 @@ class DropSlot extends PanelContainer:
 var _opgepakt: DragCard = null
 var _slots: Array[DropSlot] = []
 var _pool: HFlowContainer = null
-var _fouten: int = 0
-var _max_fouten: int = 2
-## Geen goed antwoord; zie de docstring.
-var _vrij: bool = false
-## Wat een kaart aan minuten waard is in de vrije modus.
+## Wat een kaart aan minuten waard is.
 var _blok_min: int = 60
 
 
@@ -157,45 +136,32 @@ func _on_setup() -> void:
 		fail()
 		return
 
-	_max_fouten = int(c.get("max_fouten", 2))
-	_vrij = bool(c.get("vrij", false))
 	_blok_min = int(c.get("blok_min", 60))
 	var body := build_chrome(String(c.get("titel", default_title())), String(c.get("intro", "")))
 
-	# Vakken naast elkaar, behalve op de urenstaat: die leest als een lijst.
-	var slot_row: Container
-	if _vrij:
-		var kolom := VBoxContainer.new()
-		kolom.add_theme_constant_override("separation", 2)
-		slot_row = kolom
-	else:
-		var flow := HFlowContainer.new()
-		flow.alignment = FlowContainer.ALIGNMENT_CENTER
-		flow.add_theme_constant_override("h_separation", 2)
-		flow.add_theme_constant_override("v_separation", 2)
-		slot_row = flow
+	var slot_row := VBoxContainer.new()
+	slot_row.add_theme_constant_override("separation", 2)
 	body.add_child(slot_row)
+
 	# De urenstaat begint met het werk dat je vandaag echt gedaan hebt. Dat is
 	# per speelbeurt anders, dus die regels kunnen niet uit de data komen.
 	var cap := int(c.get("capaciteit", 1))
-	if _vrij:
-		for tid: StringName in Session.completed_tickets_in_order():
-			var t: TicketDef = GameData.ticket(tid)
-			if t == null:
-				continue
-			var ts := DropSlot.new(t.code, [], self, cap, String(tid), true)
-			slot_row.add_child(ts)
-			_slots.append(ts)
+	for tid: StringName in Session.completed_tickets_in_order():
+		var t: TicketDef = GameData.ticket(tid)
+		if t == null:
+			continue
+		var ts := DropSlot.new(t.code, self, cap, String(tid))
+		slot_row.add_child(ts)
+		_slots.append(ts)
 
 	for raw: Variant in c.get("slots", []):
 		var sd := raw as Dictionary
-		var s := DropSlot.new(String(sd.get("label", "")), sd.get("accepts", []) as Array,
-			self, cap, String(sd.get("id", "")), _vrij)
+		var s := DropSlot.new(String(sd.get("label", "")), self, cap, String(sd.get("id", "")))
 		slot_row.add_child(s)
 		_slots.append(s)
 
 	body.add_child(UiKit.label(
-		String(c.get("uitleg", "Tik een kaartje aan en tik dan het vak waar het hoort.")),
+		String(c.get("uitleg", "Tik een uur aan en tik dan de regel waar het op moet.")),
 		UiKit.FS_SMALL, UiKit.GRIJS))
 
 	_pool = HFlowContainer.new()
@@ -204,13 +170,12 @@ func _on_setup() -> void:
 	_pool.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(_pool)
 
-	# Op de urenstaat zijn de kaarten acht identieke uurblokken; die horen klein
-	# en naast elkaar, niet als acht regels van 84 px onder elkaar.
+	# De kaarten zijn acht identieke uurblokken; die horen klein en naast
+	# elkaar, niet als acht regels van 84 px onder elkaar.
 	var kw := int(c.get("kaart_breedte", CARD_W))
 	var kh := int(c.get("kaart_hoogte", CARD_H))
 	for raw: Variant in c.get("cards", []):
 		var cd := raw as Dictionary
-		# Bewust ALLE kaarten neutraal: de tint uit de data zou het antwoord verklappen.
 		_pool.add_child(DragCard.new(String(cd.get("id", "")), String(cd.get("text", "")),
 			UiKit.PANEL, self, kw, kh))
 
@@ -281,16 +246,9 @@ func return_card(card: DragCard) -> void:
 
 
 func _update_status() -> void:
-	if _vrij:
-		set_status("geboekt %s van %s" % [
-			Urenstaat.formatteer_duur(_geboekt_min()),
-			Urenstaat.formatteer_duur(_te_verdelen_min())])
-		return
-	var filled := 0
-	for s: DropSlot in _slots:
-		if s.is_filled():
-			filled += 1
-	set_status("%d/%d ingevuld   ·   fouten %d/%d" % [filled, _slots.size(), _fouten, _max_fouten])
+	set_status("geboekt %s van %s" % [
+		Urenstaat.formatteer_duur(_geboekt_min()),
+		Urenstaat.formatteer_duur(_te_verdelen_min())])
 
 
 func _geboekt_min() -> int:
@@ -307,47 +265,11 @@ func _te_verdelen_min() -> int:
 
 # --- Nakijken -------------------------------------------------------------
 
-func _check() -> void:
-	var c := content()
-	if _vrij:
-		_check_vrij(c)
-		return
-
-	var missing := 0
-	var wrong: Array[DropSlot] = []
-
-	for s: DropSlot in _slots:
-		if not s.is_filled():
-			missing += 1
-			continue
-		if not (s.card().card_id in s.accepts):
-			wrong.append(s)
-
-	if missing > 0:
-		set_status("Er zijn nog %d vakken leeg." % missing)
-		AudioDirector.play_ui(&"fout")
-		return
-
-	if wrong.is_empty():
-		await finish_with_banner(true, String(c.get("success", "Klaar.")), 100)
-		return
-
-	_fouten += 1
-	for s: DropSlot in wrong:
-		s.add_theme_stylebox_override("panel", UiKit.postit(UiKit.POSTIT, UiKit.ROOD))
-		return_card(s.card())
-	AudioDirector.play_ui(&"fout")
-
-	if _fouten >= _max_fouten:
-		await finish_with_banner(false, String(c.get("failure", "Dit klopt niet.")))
-	else:
-		set_status("%d kaartjes stonden verkeerd. Nog %d poging(en)." % [wrong.size(), _max_fouten - _fouten])
-
-
 ## Geen goed antwoord: je slaagt zodra alles verdeeld is. Wat je koos gaat mee
 ## in de payload, zodat Dirk erop kan reageren zonder dat de minigame Session
 ## aanraakt (die mag hij alleen lezen).
-func _check_vrij(c: Dictionary) -> void:
+func _check() -> void:
+	var c := content()
 	var los := _pool.get_child_count()
 	if los > 0:
 		set_status("Er is nog %s niet verdeeld." % Urenstaat.formatteer_duur(los * _blok_min))
@@ -382,28 +304,15 @@ func _check_vrij(c: Dictionary) -> void:
 	})
 
 
-## QA: legt de juiste kaart in elk vak en drukt op controleren.
+## QA: verdeelt alle uren en dient de staat in. Langs de echte winroute — de
+## eerste regel die nog ruimte heeft — precies wat een speler ook moet doen.
 func qa_solve() -> void:
-	if _vrij:
-		# Langs de echte winroute: alles verdelen over de eerste regel die nog
-		# ruimte heeft, precies wat een speler ook moet doen.
-		for n: Node in _pool.get_children().duplicate():
-			var kaart := n as DragCard
-			if kaart == null:
-				continue
-			for s: DropSlot in _slots:
-				if not s.is_filled():
-					place_card(kaart, s)
-					break
-		_check()
-		return
-
-	for s: DropSlot in _slots:
-		if s.is_filled():
+	for n: Node in _pool.get_children().duplicate():
+		var kaart := n as DragCard
+		if kaart == null:
 			continue
-		for n: Node in _pool.get_children():
-			var c := n as DragCard
-			if c != null and c.card_id in s.accepts:
-				place_card(c, s)
+		for s: DropSlot in _slots:
+			if not s.is_filled():
+				place_card(kaart, s)
 				break
 	_check()

@@ -814,7 +814,6 @@
  },
  "mg_urenstaat": {
   "type": "slotboard",
-  "vrij": true,
   "blok_min": 60,
   "capaciteit": 4,
   "titel": "Urenstaat",
@@ -825,18 +824,15 @@
   "slots": [
    {
     "id": "overleg",
-    "label": "Intern overleg",
-    "accepts": []
+    "label": "Intern overleg"
    },
    {
     "id": "kennis",
-    "label": "Kennisdeling",
-    "accepts": []
+    "label": "Kennisdeling"
    },
    {
     "id": "overig",
-    "label": "BBD-000 Overig",
-    "accepts": []
+    "label": "BBD-000 Overig"
    }
   ],
   "cards": [

@@ -444,25 +444,11 @@
         "choices": [
           {
             "text": "Vragen welk punt het belangrijkst is.",
-            "next": "prioriteit",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "klant_prioriteit",
-                "value": true
-              }
-            ]
+            "next": "prioriteit"
           },
           {
             "text": "Vragen wat haar man ervan vindt.",
-            "next": "echtgenoot",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "klant_echtgenoot",
-                "value": true
-              }
-            ]
+            "next": "echtgenoot"
           },
           {
             "text": "Niets zeggen. Alles opschrijven.",

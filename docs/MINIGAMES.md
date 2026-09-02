@@ -231,14 +231,16 @@ De minigame weet zelf niets van de wereld: hij leest `cfg("start_override")` en
 valt terug op `start` uit de data. Daardoor is de finale los te draaien met
 `--minigame=mg_deploy`.
 
-## De vrije modus: de urenstaat
+## De urenstaat
 
-`mg_urenstaat` is een `SlotBoard` met `vrij: true`, en dat vlaggetje haalt er
-precies één ding uit: **het goede antwoord**.
+`mg_urenstaat` is de enige `SlotBoard` die er nog is, en hij heeft geen goed
+antwoord. Dat is geen modus meer maar de hele mechaniek: de gecontroleerde
+variant (met `accepts` en `max_fouten`) is verwijderd toen elk ticket zijn eigen
+mechaniek kreeg.
 
-- elke regel accepteert elke kaart (`accepts` wordt niet gelezen)
+- elke regel neemt elk uurblok
 - een regel neemt er meer dan één (`capaciteit`)
-- je slaagt zodra alles verdeeld is; er zijn geen `max_fouten`
+- je slaagt zodra alles verdeeld is; er zijn geen fouten
 - de verdeling gaat mee in `MinigameResult.payload`, en Dirk reageert daarop
 
 De regels van echte tickets komen niet uit de data maar uit
