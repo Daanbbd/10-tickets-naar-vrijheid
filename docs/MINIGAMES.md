@@ -189,10 +189,12 @@ regels staan bovenaan, de goede regel vangt de rest af. Elke tag komt in
 minstens één regel voor (de testsuite controleert dat), dus er is altijd een
 uitkomst.
 
-**Renderpijplijn** (BBD-208) — zes clips door Prompt → Render → Review →
-Publish. Elke stage heeft capaciteit, elke clip rijpt, een rijpe clip schuif je
-door met een tik. De druk: Render heeft twee plekken, en een clip die daar
-**rijp staat te wachten** verbrandt credits.
+**Renderpijplijn** (BBD-208) — zes clips door Prompt → Render → Publish. Elke
+stage heeft capaciteit, elke clip rijpt, een rijpe clip schuif je door met een
+tik. De druk: Render heeft twee plekken, en een clip die daar **rijp staat te
+wachten** verbrandt credits. Was vier stages met een kosteloze Review erbij;
+die voegde een derde tik per clip toe zonder een nieuwe afweging, dus is hij
+geschrapt — Render blijft de enige stap die pijn doet.
 
 > `kost` in de data is credits per seconde voor een clip die **rijp is en niet
 > door kan**, niet voor de hele renderduur. De letterlijke lezing maakt de
