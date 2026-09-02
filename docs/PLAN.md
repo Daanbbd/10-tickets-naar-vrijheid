@@ -2,9 +2,9 @@
 
 ## Status (bijgewerkt 2 september 2026)
 
-**F0 t/m F4 zijn klaar en gemerged in `main`.** Testsuite staat op
-**17.463 controles, 0 fout, ALLES GOED** (baseline bij de start van dit plan
-was 16.658). F5 en F6 zijn nog niet begonnen.
+**F0 t/m F5 zijn klaar en gemerged in `main`.** Testsuite staat op
+**17.489 controles, 0 fout, ALLES GOED** (baseline bij de start van dit plan
+was 16.658). Alleen F6 (verificatie/docs) is nog niet begonnen.
 
 | Fase | Status | Noot |
 |---|---|---|
@@ -28,7 +28,8 @@ was 16.658). F5 en F6 zijn nog niet begonnen.
 | F4-b Vier wereldhandelingen | ✅ Klaar | BBD-203/205/207/209 lossen op zonder wereld-pauze, geen minigame-scherm meer |
 | F4-c Druk op de finale | ✅ Klaar | Klok, echte onderbreking, titel beweegt mee met score, fase 2 van 7 naar 3 regels |
 | F4-d Elk gevolg landt | ✅ Klaar | Alle 9 niet-finale tickets wegen nu mee in `finale_start()` (eis was ≥8) |
-| F5 Wereld van pause af | ⬜ Nog te doen | — |
+| F5-a Invoerslot i.p.v. wereldpauze | ✅ Klaar | `Shell.run_minigame()` gebruikt nu `Session.lock_input()`, geen `get_tree().paused` meer |
+| F5-b Storingen landen in de minigame | ✅ Klaar | `MinigameBase.storing()`, max 1 per minigame, nooit in eerste 5s |
 | F6 Verificatie en docs | ⬜ Nog te doen | — |
 
 ### Correcties uit de tweede schets (afgehandeld)
@@ -119,6 +120,32 @@ F1-a al bouwde. **Beide zijn nu doorgevoerd**, details in `docs/LEVEL.md`:
 - De vier oude minigame-scenes (`mg_choicescene`, `mg_cableboard`,
   `mg_tagpicker`, `mg_whack`) zijn **niet verwijderd**, alleen niet meer
   aangeroepen voor hun tickets — opruimen was expliciet buiten scope.
+
+### Afwijkingen t.o.v. de oorspronkelijke briefing (F5)
+
+- **Twee echte regressies gevonden en gefixt die de briefing niet noemde.**
+  `Klok._process()` en `Telefoon._process()` stopten allebei op
+  `Session.input_locked` — na F5-a staat die vlag óók aan tijdens een gewone
+  minigame (dat is precies wat `Session.lock_input()` nu doet), dus zonder
+  ingrijpen was de klok alsnog blijven stilstaan tijdens elke minigame en had
+  F5-a zijn eigen doel gemist. Fix: `Klok` krijgt een expliciete
+  `and not Shell.minigame_active()`-uitzondering (blijft tikken tijdens een
+  minigame); `Telefoon` krijgt `Shell.minigame_active()` juist wél als expliciete
+  extra voorwaarde (een melding mag een minigame nog steeds niet onderbreken) —
+  eerst leunde dat toevallig op dezelfde vlag, nu staat het er met opzet.
+- **`pauzeer_voor_menu()`'s `_active != null`-guard is nu onbereikbare
+  achtervang** in plaats van actieve logica: `main.gd::_unhandled_input()`
+  blokkeert het openen van het pauzemenu al zelf zolang
+  `Shell.minigame_active()` waar is. Bewust laten staan, niet weggehaald.
+- **De "storing tijdens een minigame"-verificatie kon niet als levende
+  `--playthrough`-observatie**: elke minigame lost via `--autoplay` binnen
+  ~0,45–5s op, vrijwel altijd onder de "nooit in de eerste 5 seconden"-gate.
+  Gedekt met een deterministische unit-test die hetzelfde codepad
+  (`Storingen._vuur_eenmalig()` → `MinigameBase.storing()`) op een echte,
+  via `Shell.run_minigame()` gestarte minigame uitvoert.
+- `npc_komt_langs`-storingen (een collega die blijft meelopen) routeren
+  bewust **niet** naar `storing()` — dat is doorlopend gedrag, geen eenmalig
+  bericht, en er is geen "hij bereikt je"-moment om aan te haken.
 
 ---
 
@@ -894,7 +921,9 @@ niet stil veranderen (`gevolgen.gd:39-40`). Houd die eigenschap.
 
 # F5 · De wereld gaat van pause af
 
-**Status: ⬜ Nog niet gestart.**
+**Status: ✅ Klaar. `Shell.run_minigame()` gebruikt `Session.lock_input()`,
+storingen landen in de minigame-chrome, testsuite groen (17.489 controles,
+0 fout).**
 
 De zwaarste ingreep en de enige die de kernervaring echt verandert.
 
@@ -1037,7 +1066,7 @@ bovenstaande sectie als briefing, plus de codemap-feiten die erbij horen.
 | F4-a | 1 agent per minigame, max 3 tegelijk | 2 golven van 3, parallel met F4-b in golf 1 | ✅ Gemerged (6 minigames) |
 | F4-b | 1 agent (vier wereldhandelingen) | 1 agent, parallel met golf 1 van F4-a | ✅ Gemerged |
 | F4-c, F4-d | 1 agent | 1 agent, ná alle F4-a/F4-b-merges | ✅ Gemerged |
-| F5 | 1 agent, seriëel — dit raakt Shell | nog te doen | ⬜ |
+| F5 | 1 agent, seriëel — dit raakt Shell | 1 agent, seriëel, zoals gepland | ✅ Gemerged |
 | F6 | 1 agent + ik lees de shots | nog te doen | ⬜ |
 
 **Twee dingen geleerd tijdens de uitvoering, relevant voor de resterende
