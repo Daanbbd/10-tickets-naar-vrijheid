@@ -54,6 +54,7 @@ func _ready() -> void:
 	_test_briefings()
 	_test_intro()
 	_test_save_ronde()
+	_test_save_verwijderen()
 	_test_uitlijnen_perfect()
 	_test_wereldhandelingen()
 	_test_urenstaat_scherm()
@@ -70,6 +71,22 @@ func _ok(cond: bool, wat: String) -> void:
 
 func _kop(t: String) -> void:
 	print("-- %s" % t)
+
+
+## Vindt de eerste Button onder `root` waarvan de tekst met `voorvoegsel`
+## begint. Voor tests die een echte, in code opgebouwde UI controleren zonder
+## op een structureel kindpad te leunen dat bij de eerstvolgende herschikking
+## toch weer verandert.
+func _vind_knop(root: Node, voorvoegsel: String) -> Button:
+	if root == null:
+		return null
+	if root is Button and (root as Button).text.begins_with(voorvoegsel):
+		return root as Button
+	for kind: Node in root.get_children():
+		var gevonden := _vind_knop(kind, voorvoegsel)
+		if gevonden != null:
+			return gevonden
+	return null
 
 
 func _rapport() -> void:
@@ -2181,6 +2198,78 @@ func _test_save_ronde() -> void:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(Session.SAVE_PATH))
 
 	QuestEngine.start_run(&"daan")
+
+
+## "Opnieuw beginnen" op het titelscherm is de enige destructieve knop in het
+## spel: `Session.delete_saved_run()` gooit de bewaarde dag weg, zonder eigen
+## bevestiging (die hoort bij de aanroeper, `title_screen.gd::_toon_bevestiging()`).
+## Deze test bewaakt de functie zelf: hij moet echt verwijderen, en stil niets
+## doen als er toch al niets lag.
+func _test_save_verwijderen() -> void:
+	_kop("een dag wissen (opnieuw beginnen)")
+
+	var had_save := FileAccess.file_exists(Session.SAVE_PATH)
+	var oude_save := FileAccess.get_file_as_string(Session.SAVE_PATH) if had_save else ""
+
+	var f := FileAccess.open(Session.SAVE_PATH, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify({"character_id": "daan"}))
+		f.close()
+	_ok(Session.has_saved_run(), "kon geen testsave neerzetten om te verwijderen")
+
+	Session.delete_saved_run()
+	_ok(not FileAccess.file_exists(Session.SAVE_PATH),
+		"delete_saved_run() liet het savebestand staan")
+	_ok(not Session.has_saved_run(),
+		"delete_saved_run() wiste het bestand, maar has_saved_run() zegt nog steeds ja")
+
+	# Stil, geen foutmelding: een tweede keer wissen (of een race met een
+	# andere opslag) mag niet klagen over een bestand dat al weg is.
+	Session.delete_saved_run()
+
+	# --- de echte titelscherm-overlay: opbouwen, annuleren, en de knop-
+	# bedrading van "Ja" -----------------------------------------------------
+	# `_op_wis_en_begin()` zelf wordt hier niet aangeroepen: die eindigt in
+	# `Shell.goto_intro_uitleg()`, en een echte scenewissel middenin de
+	# testsuite zou de testrunner-scene onder zichzelf vandaan trekken. De
+	# bedrading (welke functie de knop aanroept) is wél te controleren zonder
+	# hem uit te voeren.
+	var f2 := FileAccess.open(Session.SAVE_PATH, FileAccess.WRITE)
+	if f2 != null:
+		f2.store_string(JSON.stringify({"character_id": "daan"}))
+		f2.close()
+
+	var scherm: Control = (load("res://scenes/boot/title.tscn") as PackedScene).instantiate()
+	add_child(scherm)
+
+	scherm.call("_toon_bevestiging")
+	var overlay: Control = scherm.get("_bevestiging")
+	_ok(overlay != null, "_toon_bevestiging() bouwt geen overlay op")
+
+	scherm.call("_sluit_bevestiging")
+	_ok(scherm.get("_bevestiging") == null,
+		"_sluit_bevestiging() sluit de overlay niet")
+	_ok(Session.has_saved_run(),
+		"annuleren wiste de save alsnog — dat mag nooit")
+
+	scherm.call("_toon_bevestiging")
+	var wis_knop := _vind_knop(scherm.get("_bevestiging") as Control, "Ja, dag wissen")
+	_ok(wis_knop != null, "geen wisknop gevonden in de bevestigingsoverlay")
+	if wis_knop != null:
+		var verbonden := false
+		for c: Dictionary in wis_knop.pressed.get_connections():
+			if (c["callable"] as Callable).get_method() == "_op_wis_en_begin":
+				verbonden = true
+		_ok(verbonden, "de wisknop roept niet _op_wis_en_begin() aan")
+	scherm.call("_sluit_bevestiging")
+
+	scherm.queue_free()
+
+	if had_save:
+		var g := FileAccess.open(Session.SAVE_PATH, FileAccess.WRITE)
+		if g != null:
+			g.store_string(oude_save)
+			g.close()
 
 
 ## Wat er na een round-trip terug hoort te staan. Twee keer aangeroepen — via

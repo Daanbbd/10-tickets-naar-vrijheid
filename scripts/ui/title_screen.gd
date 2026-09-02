@@ -32,26 +32,30 @@ func _ready() -> void:
 
 	v.add_child(UiKit.spacer(10))
 
-	# Precies één blauwe knop per scherm, en dat is dezelfde knop die de focus
-	# krijgt — zie de regel onderaan: wie een dag heeft openstaan wil die
-	# afmaken, en anders begin je een nieuwe. "Beginnen" en "Afsluiten" waren
-	# hiervoor pixelidentiek, dus stoppen met spelen zag er even uitnodigend uit
-	# als beginnen.
+	# "Beginnen" is nu áltijd de primaire, gefocuste knop, ook als er een
+	# lopende dag ligt. Dat stond hiervoor op "Doorgaan" zodra er een save was
+	# ("wie een dag heeft openstaan wil die meestal afmaken") — maar dat
+	# betekende dat een enkele Enter of tik op het titelscherm genoeg was om
+	# er zonder het te willen middenin te belanden, en dan sla je de intro en
+	# de personagekeuze allebei over zonder dat te beseffen. "Beginnen" vraagt
+	# nu eerst bevestiging als dat een lopende dag zou wegschrijven — zie
+	# `_op_beginnen()` — en is daarmee zowel de veiligste als de meest
+	# voorspelbare knop om te focussen.
 	var heeft_save := Session.has_saved_run()
 
-	var start := (UiKit.button("Beginnen", UiKit.FS_BODY) if heeft_save
-		else UiKit.knop_primair("Beginnen", UiKit.FS_BODY))
-	start.pressed.connect(_on_start)
+	var start := UiKit.knop_primair("Beginnen", UiKit.FS_BODY)
+	start.pressed.connect(_op_beginnen)
 	v.add_child(start)
 
 	# "Doorgaan" staat er alleen als er echt iets is om naar terug te keren. De
 	# save wordt bij elk opgelost ticket en bij het naar de achtergrond gaan
 	# weggeschreven, dus hij bestaat allang — hij had tot nu toe alleen geen
 	# enkele lezer, en een half uur spelen was op een telefoon onherstelbaar weg
-	# terwijl het bestand er gewoon stond.
+	# terwijl het bestand er gewoon stond. Secundaire stijl: "Beginnen" is de
+	# gefocuste, primaire actie, "Doorgaan" is er voor wie hem gericht opzoekt.
 	var verder: Button = null
 	if heeft_save:
-		verder = UiKit.knop_primair("Doorgaan", UiKit.FS_BODY)
+		verder = UiKit.button("Doorgaan", UiKit.FS_BODY)
 		verder.pressed.connect(_on_doorgaan)
 		v.add_child(verder)
 
@@ -59,8 +63,7 @@ func _ready() -> void:
 	quit.pressed.connect(func() -> void: get_tree().quit())
 	v.add_child(quit)
 
-	# Wie een dag heeft openstaan wil die meestal afmaken.
-	(verder if verder != null else start).grab_focus()
+	start.grab_focus()
 	AudioDirector.set_base(&"intro")
 	_qa_doorgaan(verder)
 
@@ -85,9 +88,104 @@ func _qa_doorgaan(knop: Button) -> void:
 	knop.pressed.emit()
 
 
-func _on_start() -> void:
+## "Beginnen" is onschuldig zolang er niets te verliezen is. Ligt er een
+## lopende dag, dan overschrijft een nieuwe run die zodra hij zijn eerste
+## ticket oplost of naar de achtergrond gaat (`Shell._naar_achtergrond()`),
+## dus dit is het enige moment waarop de speler dat nog kan weten vóórdat het
+## gebeurt.
+func _op_beginnen() -> void:
+	if Session.has_saved_run():
+		_toon_bevestiging()
+		return
+	_start_nieuwe_dag()
+
+
+func _start_nieuwe_dag() -> void:
 	AudioDirector.play_ui(&"klik")
 	Shell.goto_intro_uitleg()
+
+
+## Eén bevestigingsscherm, en de enige plek in het spel die er een heeft. Dat
+## is bewust: `pauzemenu.gd::_op_verlaten()` heeft er expres geen, want die
+## actie is nooit destructief — hij slaat eerst op. Dit wél: "Ja" gooit de
+## huidige dag zonder terugweg weg.
+var _bevestiging: Control = null
+
+
+func _toon_bevestiging() -> void:
+	AudioDirector.play_ui(&"klik")
+	_bevestiging = UiKit.full_rect(Control.new())
+	_bevestiging.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_bevestiging)
+	_bevestiging.add_child(UiKit.dimmer())
+
+	var paneel := PanelContainer.new()
+	paneel.add_theme_stylebox_override("panel", UiKit.panel(UiKit.PANEL, UiKit.INK, 2))
+	paneel.set_anchors_preset(Control.PRESET_CENTER)
+	paneel.anchor_left = 0.5; paneel.anchor_right = 0.5
+	paneel.anchor_top = 0.5; paneel.anchor_bottom = 0.5
+	paneel.offset_left = -84; paneel.offset_right = 84
+	paneel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_bevestiging.add_child(paneel)
+
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	paneel.add_child(v)
+
+	var kop := UiKit.label("Opnieuw beginnen?", UiKit.FS_SUB, UiKit.INK)
+	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(kop)
+
+	var uitleg := UiKit.label(
+		"Je huidige dag wordt gewist. Wat je al hebt opgelost is dan weg.",
+		UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+	uitleg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	uitleg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(uitleg)
+
+	v.add_child(UiKit.spacer(4))
+
+	# Rood, niet blauw: de blauwe knop op dit scherm is "Beginnen" zelf, en
+	# een tweede primaire kleur voor een destructieve actie zou de twee door
+	# elkaar laten lopen. Rood is hier de enige plek in de boot-schermen die
+	# een waarschuwing draagt.
+	var wis := UiKit.button("Ja, dag wissen en opnieuw beginnen", UiKit.FS_BODY)
+	for kleur: StringName in [&"font_color", &"font_hover_color", &"font_focus_color"]:
+		wis.add_theme_color_override(kleur, UiKit.ROOD)
+	wis.pressed.connect(_op_wis_en_begin)
+	v.add_child(wis)
+
+	var annuleer := UiKit.button("Annuleren", UiKit.FS_BODY)
+	annuleer.pressed.connect(_sluit_bevestiging)
+	v.add_child(annuleer)
+
+	# Veiligste focus: een per ongeluk doorgedrukte Enter/bevestiging mag nooit
+	# de dag wissen. "Annuleren" is hier de onschuldige default, niet "Beginnen"
+	# zelf zoals op het titelscherm erachter.
+	annuleer.grab_focus()
+
+
+func _op_wis_en_begin() -> void:
+	AudioDirector.play_ui(&"klik")
+	Session.delete_saved_run()
+	_sluit_bevestiging()
+	_start_nieuwe_dag()
+
+
+func _sluit_bevestiging() -> void:
+	if _bevestiging == null:
+		return
+	AudioDirector.play_ui(&"klik")
+	_bevestiging.queue_free()
+	_bevestiging = null
+
+
+## `cancel` sluit de bevestiging net als overal elders in het spel — zie
+## `pauzemenu.gd::_input()` voor hetzelfde patroon.
+func _unhandled_input(event: InputEvent) -> void:
+	if _bevestiging != null and event.is_action_pressed("cancel"):
+		get_viewport().set_input_as_handled()
+		_sluit_bevestiging()
 
 
 ## De bewaarde dag hervatten.

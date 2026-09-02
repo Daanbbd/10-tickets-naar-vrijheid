@@ -355,6 +355,16 @@ func has_saved_run() -> bool:
 	return String(lees_save().get("character_id", "")) != ""
 
 
+## Gooit een bewaarde dag weg. Alleen voor "Opnieuw beginnen" op het
+## titelscherm — die actie is per ontwerp destructief en vraagt zelf om
+## bevestiging vóórdat dit aangeroepen wordt; deze functie zelf vraagt niets.
+## Stil als er toch niets lag: een dubbele klik of een race met een andere
+## opslag mag geen foutmelding geven over een bestand dat al weg is.
+func delete_saved_run() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+
+
 # --- Ticketstanden op naam ------------------------------------------------
 
 ## De ticketstand gaat als **naam** de save in, niet als getal.
