@@ -9,7 +9,7 @@ extends RefCounted
 
 const EFFECT_OPS: Array[String] = [
 	"set_flag", "add_item", "remove_item", "add_counter",
-	"unlock_ticket", "toast", "cue", "kost_tijd",
+	"unlock_ticket", "toast", "cue", "kost_tijd", "reopen_ticket",
 ]
 
 
@@ -48,6 +48,21 @@ static func refresh_availability() -> void:
 static func unlock(id: StringName) -> void:
 	if Session.ticket_state(id) == GameEnums.TicketState.LOCKED:
 		_set_state(id, GameEnums.TicketState.AVAILABLE)
+
+
+## Een opgeleverd ticket terug naar TO DO — "iets gaat stuk" uit een storing.
+## `docs/GAME_DESIGN.md` staat dit expliciet toe: falen (of hier, pech) kost
+## nooit voortgang, alleen tijd. Gaat terug naar AVAILABLE en niet LOCKED: het
+## was al opgelost, dus het hoort weer meteen oppakbaar te zijn, niet opnieuw
+## achter een available_when te zitten dat misschien niet meer klopt.
+##
+## Haalt het ook uit done_order, want anders blijft het meetellen voor
+## done_count()/all_done() terwijl het weer open op de vloer ligt.
+static func reopen(id: StringName) -> void:
+	if Session.ticket_state(id) != GameEnums.TicketState.DONE:
+		return
+	Session.done_order.erase(id)
+	_set_state(id, GameEnums.TicketState.AVAILABLE)
 
 
 static func activate(id: StringName) -> void:
@@ -288,6 +303,8 @@ static func run_effects(list: Array) -> void:
 				Bus.audio_cue_requested.emit(StringName(e.get("cue", "")))
 			"kost_tijd":
 				Session.book_time(int(e.get("minuten", 0)), StringName(e.get("reden", "")))
+			"reopen_ticket":
+				reopen(StringName(e.get("ticket", "")))
 			_:
 				push_error("QuestEngine: onbekende effect-op '%s'" % e.get("op", ""))
 
