@@ -182,7 +182,14 @@ func _load_ticket(path: String) -> void:
 	t.zone_name = String(d.get("zone_name", ""))
 	t.anchor = StringName(d.get("anchor", ""))
 	t.owner_character = StringName(d.get("owner_character", ""))
-	t.owner_role = String(d.get("owner_role", ""))
+	# De rol komt uit het personage en niet uit het ticket. Hij stond op beide
+	# plekken, en beide weken af van de character bible: Daan heette "Product
+	# Owner" (dat is Danny), Koen "Backend developer" (hij is frontender) en
+	# Willem "Client Lead". Twee kopieen die allebei fout zijn, is een kopie te
+	# veel — `data/characters.json` is de databelichaming van de bible en dus de
+	# enige bron. Personages laden voor tickets, dus dit is hier al bekend.
+	var eigenaar: CharacterDef = characters.get(t.owner_character, null) as CharacterDef
+	t.owner_role = eigenaar.role if eigenaar != null else ""
 	t.available_when = d.get("available_when", {}) as Dictionary
 	t.requirements = d.get("requirements", {}) as Dictionary
 	t.dialogue_ids = _sn_dict(d.get("dialogue_ids", {}))

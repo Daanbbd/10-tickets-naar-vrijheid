@@ -10,11 +10,11 @@ Dit document is gegenereerd vanuit de daadwerkelijke spelbestanden (`data/dialog
 
 | Character | Stijl | Catchphrase / tic |
 |---|---|---|
-| **Daan** | Rustig, procesmatig, licht zelfrelativerend | — |
-| **Danny** | Geen hoofdletters, bondig, data-first | "psies", "biem", "lekker insmeren met olijfolie" |
-| **Victor** | Direct, oog voor detail, af en toe vloekt | "manmanman", "godver", "hahaha" |
+| **Daan** | Rustig, procesmatig, licht zelfrelativerend | "puur uit interesse", "O-M-Z" |
+| **Danny** | Geen hoofdletters, bondig, data-first | "psies", "biem", "lekker insmeren met olijfolie", "o-m-z" |
+| **Victor** | Direct, oog voor detail, af en toe vloekt | "manmanman", "godver", "hahaha", "O-M-Z" |
 | **Jonathan** | Droog, nauwkeurig, weinig woorden | "ik ga er naartoe kijken", "lokaal werkt het" |
-| **Willem** | Warm, sociaal, overdrijft soms | "Absoluta", "heeeel" |
+| **Willem** | Warm, sociaal, overdrijft soms | "Absoluta... ehh, Looff", "heeeel", "O-M-Z" |
 | **Koen** | Relaxed, gerust, enigszins mysterieus | "lekker ouwe", "piepelienies", "vgm" |
 | **Bastiaan** | Enthousiast, vergeet leestekens | ",," (dubbele komma als pauze/afsluiter) |
 | **Dennis** | Minimalistisch, scrum-neutraal | "-_-", "oke.", "alvast" |
@@ -32,7 +32,7 @@ De algemene dialogen triggeren wanneer de speler een NPC aanspreekt buiten een a
 **Context:** Dennis loopt zijn vaste ronde. Hij heeft het bord al bijgewerkt.
 
 ```
-Dennis start [bezocht]:  "oh jij nog een keer. bord staat nog goed."
+Dennis start [bezocht]:  "Oh, jij nog een keer. Bord staat nog goed."
 Dennis start [default]:  "Alles staat op het bord. Heb ik vanmorgen alvast bijgewerkt."
 
 Dennis: [< 4 done] "Ik heb de issues alvast nagelopen. Verder heb ik niks nodig."
@@ -50,7 +50,7 @@ Dennis: [≥ 8 done] "Nog twee. Is maar weekje later."
      [flag: dennis_bezocht = true]
 
 Dennis slot [dennis_weet_het]: "Ik heb het al aangepast. Zei ik niks over."
-Dennis slot [default]: "cool. thanks is gedaan."
+Dennis slot [default]: "Cool. thanks is gedaan."
 ```
 
 ---
@@ -60,9 +60,9 @@ Dennis slot [default]: "cool. thanks is gedaan."
 **Context:** Koen zit in het Patchhok. Hij is bezig maar heeft er geen haast mee.
 
 ```
-Koen start [bezocht + koen_verborgen_voor_jonathan]: "is jonathan al weg? psst. lekker ouwe."
+Koen start [bezocht + koen_verborgen_voor_jonathan]: "Is Jonathan al weg? Psst. Lekker ouwe."
 Koen start [bezocht + koen_piepelienies_uitgelegd + ≥ 6]: "piepelienies lopen nog steeds. heb ze goed ingesteld haha."
-Koen start [bezocht]:  "ah ben je er weer. ik zit in een andere rabbit hole. geen zorg haha."
+Koen start [bezocht]:  "Ah, ben je er weer. Ik zit in een andere rabbit hole. Geen zorg haha."
 Koen start [≥ 6]:     "De logs zijn stil. Is weer een pareltje hoor haha."
 Koen start [default]: "Ik zal even kijken. Het duurt nog veertig minuten, vgm."
 
@@ -70,13 +70,13 @@ Koen: "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken."
 Koen: [< 6] "Ik kijk straks nog even naar de piepelienies. Iets met een timeout, vgm."
 Koen: [≥ 6] "De piepelienies lopen trouwens weer. Took a while haha."
 
-Koen: "wat is er?"
+Koen: "Wat is er?"
 → [Keuze] "Wat zijn piepelienies precies?"
      Koen: "piepelienies. ci/cd. build, test, deploy. maar dan lekker. en als ze kapot zijn duurt het veertig minuten, vgm."
      [flag: koen_piepelienies_uitgelegd, koen_bezocht]
 
 → [Keuze] "Jonathan zoekt je."
-     Koen: "ah nee. zeg maar dat ik in een call zit. lekker ouwe."
+     Koen: "Ah nee. Zeg maar dat ik in een call zit, lekker ouwe."
      [flag: koen_verborgen_voor_jonathan, koen_bezocht]
 
 → [Keuze] "Niets. Ga zo door."
@@ -135,24 +135,6 @@ Klant: "Mijn man vindt blauw mooier. Hij is hovenier, maar hij heeft er wel oog 
 
 ---
 
-### Stagiair *(Doorgang entree)*
-
-**Context:** De stagiair loopt mee maar raakt niets aan. Hij heeft vier verschillende antwoorden gekregen op dezelfde vraag.
-
-```
-Stagiair: [start] "Ik loop mee. Dat mag. Ik moet alleen niets aanraken."
-Stagiair: [≥ 4 done] "Ik heb gevraagd wat een sprint is. Ik heb vier antwoorden gekregen."
-Stagiair: [≥ 8 done] "Ik heb alles genoteerd. Ik snap er inmiddels ongeveer een derde van."
-
-Stagiair: "Mag ik iets vragen? Waarom heet het een stand-up als iedereen zit?"
-
-Speler [trait: proces]: "Goede vraag. Bewaar hem voor de retro."
-Speler [trait: technisch]: "Omdat het anders een uur duurt."
-Speler [default]: "Dat weet niemand meer."
-```
-
----
-
 ### Bezorger *(Verschijnt na BBD-208)*
 
 **Context:** Bezorger komt een doos brengen. Er zit stro in.
@@ -170,8 +152,8 @@ Bezorger [default]: "Ze zei: geef maar aan degene die de website doet. Dus veel 
 ### Collega Daan *(Summit — als NPC voor andere characters)*
 
 ```
-Daan start [bezocht + daan_op_de_hoogte]: "heb je dat ding gevonden wat je dwars zat?"
-Daan start [bezocht + daan_goed_nieuws + ≥ 6 done]: "jij zei dat het goed liep. dat klopt nog steeds, hoop ik."
+Daan start [bezocht + daan_op_de_hoogte]: "Heb je dat ding gevonden dat je dwars zat?"
+Daan start [bezocht + daan_goed_nieuws + ≥ 6 done]: "Jij zei dat het goed liep. Dat klopt nog steeds, hoop ik."
 Daan start [bezocht]:        "Al iets gevonden?"
 Daan start [≥ 8 done]:      "Bijna. Ik durf het bijna hardop te zeggen."
 Daan start [≥ 5 done]:      "De helft staat. De helft die overblijft is altijd de lastigste helft."
@@ -182,13 +164,13 @@ Daan tweede [trait: technisch]:   "Kom je iets tegen dat niet in het ticket staa
 Daan tweede [trait: commercieel]: "Als de klant belt: doorverbinden. Naar Willem. Altijd naar Willem."
 Daan tweede [default]:            "Zeg het als iets niet klopt. Liever nu dan bij de oplevering."
 
-Daan: "hoe zit het?"
+Daan: "Hoe zit het?"
 → [Keuze] "Alles loopt goed."
-     Daan: "dat is fijn om te horen. echt."
+     Daan: "Dat is fijn om te horen. Echt."
      [flag: daan_goed_nieuws, daan_bezocht]
 
 → [Keuze] "Er is iets wat me dwars zit."
-     Daan: "zeg het."
+     Daan: "Zeg het maar."
      Speler [trait: technisch]: "De backend gedraagt zich raar."
      Speler [trait: commercieel]: "De klant verwacht meer dan in het ticket staat."
      Speler [default]: "Ik weet het nog niet precies."
@@ -198,7 +180,7 @@ Daan: "hoe zit het?"
      [flag: daan_op_de_hoogte, daan_bezocht]
 
 → [Keuze] "Niets bijzonders."
-     Daan: "mooi."
+     Daan: "Mooi. Dan laat ik je verder met rust."
      [flag: daan_bezocht]
 ```
 
@@ -243,8 +225,8 @@ Danny: "?"
 ### Collega Victor *(De Vloer — als NPC voor andere characters)*
 
 ```
-Victor start [bezocht + victor_entree_gemeld]: "die drie pixels bij de entree. gefixed. niemand zag het. behalve jij. en ik."
-Victor start [bezocht + victor_compliment]:    "ik heb de build nog een keer gecheckt. klopt nog steeds. voor nu."
+Victor start [bezocht + victor_entree_gemeld]: "Die drie pixels bij de entree. Gefixed. Niemand zag het. Behalve jij. En ik."
+Victor start [bezocht + victor_compliment]:    "Ik heb de build nog een keer gecheckt. Klopt nog steeds. Voor nu."
 Victor start [bezocht]:        "Oh. Is er iets scheef?"
 Victor start [≥ 8 done]:      "De build is groen. Done."
 Victor start [≥ 4 done]:      "manmanman. Ik heb vandaag drie dingen rechtgezet die niemand scheef zag staan."
@@ -256,14 +238,14 @@ Victor tweede [default]:       "Als je iets scheef ziet staan, zeg het. Dan zie 
 
 Victor: "wat?"
 → [Keuze] "Er zit iets scheef bij de entree."
-     Victor: "welke kant?"
+     Victor: "Welke kant?"
      Speler [trait: detail]: "Links. Drie pixels."
      Speler [default]: "Links, denk ik."
-     Victor: "dat dacht ik al. ik fix het. godver."
+     Victor: "Dat dacht ik al. Ik fix het. Godver."
      [flag: victor_entree_gemeld, victor_bezocht]
 
 → [Keuze] "De build ziet er goed uit."
-     Victor: "dat zei ik ook. maar ik vertrouw het nog niet. hahaha."
+     Victor: "Dat zei ik ook. Maar ik vertrouw het nog niet. Hahaha."
      [flag: victor_compliment, victor_bezocht]
 
 → [Keuze] "Oke."
@@ -275,8 +257,8 @@ Victor: "wat?"
 ### Collega Jonathan *(Het Patchhok — als NPC voor andere characters)*
 
 ```
-Jonathan start [bezocht + jonathan_alert]:   "die E die je noemde. was een W. toch even naartoe gegaan."
-Jonathan start [bezocht + jonathan_logs_ok]: "logs nog steeds ok. verbazingwekkend."
+Jonathan start [bezocht + jonathan_alert]:   "Die E die je noemde was een W. Ben er toch even naartoe gegaan."
+Jonathan start [bezocht + jonathan_logs_ok]: "Logs nog steeds ok. Moet zeggen dat dat me verbaast."
 Jonathan start [bezocht]:        "Ik ga er naartoe kijken, voor je het vraagt."
 Jonathan start [≥ 8 done]:      "De verbinding staat. Ben benieuwd hoe lang."
 Jonathan start [≥ 4 done]:      "Ik heb iets gerepareerd dat niemand kapot heeft zien gaan. Dat is het werk."
@@ -288,19 +270,19 @@ Jonathan tweede [default]:            "Het werkt lokaal. Moet zeggen dat dat ook
 
 Jonathan: "."
 → [Keuze] "Er is iets in de logs."
-     Jonathan: "welke letter?"
+     Jonathan: "Welke letter?"
      Speler [trait: technisch]: "Een E. En er staan er drie."
      Speler [default]: "Een hoofdletter. Weet niet welke."
-     Jonathan [technisch]: "drie E's. één is echt, twee zijn gevolgen. ik ga er naartoe kijken."
-     Jonathan [default]: "als het een E is ben ik het niet. anders ook niet. ik kijk even."
+     Jonathan [technisch]: "Drie E's. Eén is echt, twee zijn gevolgen. Ik ga er naartoe kijken."
+     Jonathan [default]: "Als het een E is, ben ik het niet. Anders ook niet. Ik ga er naartoe kijken."
      [flag: jonathan_alert, jonathan_bezocht]
 
 → [Keuze] "Logs zien er goed uit."
-     Jonathan: "dat zei ik ook. niemand gelooft het als ik het zeg."
+     Jonathan: "Dat zei ik ook. Niemand gelooft het als ik het zeg."
      [flag: jonathan_logs_ok, jonathan_bezocht]
 
 → [Keuze] "Niets van belang."
-     Jonathan: "mooi."
+     Jonathan: "Mooi. Ben benieuwd."
      [flag: jonathan_bezocht]
 ```
 
@@ -309,28 +291,28 @@ Jonathan: "."
 ### Collega Willem *(Doorheen kantoor — als NPC voor andere characters)*
 
 ```
-Willem start [bezocht + willem_klant_blij]:  "ze heeft nóg een keer gebeld. ook blij. dit is uitzonderlijk."
-Willem start [bezocht + willem_vragen_op]:   "die vragen van de klant. heb ze beantwoord. twee van de drie klopen ook."
-Willem start [bezocht + willem_wacht]:       "ze heeft nog niet teruggebeld. ik sta klaar. absoluta."
+Willem start [bezocht + willem_klant_blij]:  "Ze heeft nóg een keer gebeld. Absoluta... ehh, Looff. Ook blij. Dat is uitzonderlijk."
+Willem start [bezocht + willem_vragen_op]:   "Die vragen van de klant heb ik beantwoord. Twee van de drie kloppen ook."
+Willem start [bezocht + willem_wacht]:       "Ze heeft nog niet teruggebeld. Ik sta klaar."
 Willem start [bezocht]:        "Ben net terug. Ze is rustig. Voorlopig."
 Willem start [≥ 8 done]:      "Ik heb de klant gesproken. Ze is heeeel enthousiast, en dat is nu nog terecht."
-Willem start [≥ 4 done]:      "Ik heb drie dingen toegezegd. Twee daarvan kunnen ook echt. Absoluta."
-Willem start [default]:        "Ik hou de klant bij je vandaan. Dat is geen grap, dat is de functieomschrijving."
+Willem start [≥ 4 done]:      "Ik heb drie dingen toegezegd aan Absoluta... ehh, Looff. Twee daarvan kunnen ook echt."
+Willem start [default]:        "Ik hou de klant bij je vandaan. Dat is geen grap, dat is de functieomschrijving. En het levert O-M-Z op."
 
 Willem tweede [trait: technisch]: "Zeg tegen mij dat iets niet kan. Ik vertaal het wel naar iets vriendelijkers."
 Willem tweede [trait: sociaal]:   "Jij begrijpt het. Nee zeggen kost een uur. Ja zeggen kost een kwartaal."
 Willem tweede [default]:          "Als ze belt, ben ik in het hokje. Ook als ik daar niet ben."
 
-Willem: "heeft ze al gebeld?"
+Willem: "Heeft ze al gebeld?"
 → [Keuze] "Nog niet."
-     Willem: "dat duurt niet lang meer. absoluta."
+     Willem: "Dat duurt niet lang meer. Ze belt altijd terug."
      [flag: willem_bezocht]
 
 → [Keuze] "Ze belde al."
-     Willem: "wat zei ze?"
-     → "Blij."        → Willem: "gelukkig. anders had ik nu gerend. heeeel snel."    [flag: willem_klant_blij]
-     → "Vragen."      → Willem: "geef ze mij maar. ik vertaal ze naar iets uitvoerbaars." [flag: willem_vragen_op]
-     → "Ze belt terug." → Willem: "ah. dan ga ik vast staan. absoluta."              [flag: willem_wacht]
+     Willem: "Wat zei ze?"
+     → "Blij."        → Willem: "Gelukkig. Anders had ik nu gerend. Heeeel snel."    [flag: willem_klant_blij]
+     → "Vragen."      → Willem: "Geef ze maar aan mij. Ik vertaal ze naar iets uitvoerbaars." [flag: willem_vragen_op]
+     → "Ze belt terug." → Willem: "Ah. Dan ga ik vast klaarstaan. Absoluta... ehh, Looff."              [flag: willem_wacht]
      [flag: willem_bezocht]
 
 → [Keuze] "Oke, ga door."
@@ -521,14 +503,14 @@ Speler [default]: "Klanten zijn van Willem. Ik ga hem halen."
 ```
 Willem: "Zit ze er al?"
 Speler: "Met een mapje."
-Willem: "Dan zijn het elf punten. Absoluta. Ik kom eraan."
+Willem: "Dan zijn het elf punten van Absoluta... ehh, Looff. Ik kom eraan."
 ```
 
 ### t03_complete
 
 ```
-Speler [willem]: "Elf punten, vier acties. Hier besta ik voor."
-Willem [anderen]: "Elf punten, vier acties. De rest was twee keer hetzelfde punt."
+Speler [willem]: "Elf punten, vier acties. Hier besta ik voor. Dit is O-M-Z."
+Willem [anderen]: "Elf punten, vier acties. De rest was twee keer hetzelfde punt. En het is O-M-Z."
 
 Klant: "Fijn dat u zo goed luistert."
 
@@ -729,8 +711,8 @@ Danny: "psies. dan is het de knop. het is altijd de knop. biem, ik loop mee"
 ### t06_complete
 
 ```
-Danny [danny als speler]: "pluszeventien. lekker insmeren met olijfolie en gaan. zo werkt dat."
-Danny [anderen]: "pluszeventien procent. de knop stond verkeerd. hij stond al jaren verkeerd."
+Danny [danny als speler]: "pluszeventien. lekker insmeren met olijfolie en gaan. dat is o-m-z"
+Danny [anderen]: "pluszeventien procent o-m-z. de knop stond verkeerd. hij stond al jaren verkeerd."
 
 [Omschrijving] Op de muur springt het getal om. Iemand in de loungehoek kijkt op en gaat weer verder.
 
@@ -822,21 +804,21 @@ Danny [anderen]: "Saxofoon eruit. Opnieuw."
 ---
 
 ## T08 — BBD-208: De klant wil een AI-video
-**Owner:** Victor | **Locatie:** Z8 Het Vergaderhokje | **Minigame:** mg_video
+**Owner:** Koen | **Locatie:** Z8 Het Vergaderhokje | **Minigame:** mg_video
 
 ### t08_offer
 
 ```
 [Omschrijving] In het vergaderhokje ligt een iPad. Op het briefje ernaast: paard rent gelukkig door weiland.
 
-Speler [victor]: "Hoe zie je aan een paard dat het gelukkig is?"
-Victor [anderen]: "Hoe zie je aan een paard dat het gelukkig is?"
+Speler [koen]: "Hoe zie je aan een paard dat het gelukkig is. Aan de oren, vgm."
+Koen [anderen]: "Hoe zie je aan een paard dat het gelukkig is? Aan de oren."
 
-[Omschrijving, victor]: "Er staat verder niets op het briefje."
+[Omschrijving, koen]: "Er staat verder niets op het briefje."
 Speler [anderen]: "Dat staat er niet bij."
 
-Speler [victor]: "Dan tel ik de benen en noem ik het klaar."
-Victor [anderen]: "Dan let ik op de benen. Vier. Dat is het criterium."
+Speler [koen]: "Dan tel ik de benen en noem ik het een pareltje."
+Koen [anderen]: "Ik let op de benen. Vier is genoeg, lekker ouwe."
 ```
 
 ### t08_fetch
@@ -844,23 +826,23 @@ Victor [anderen]: "Dan let ik op de benen. Vier. Dat is het criterium."
 ```
 [Omschrijving] De iPad ligt in het vergaderhokje. Iemand heeft er een geeltje op geplakt: AI-VIDEO.
 
-Speler [trait: technisch]: "Ik doe servers, geen paarden. Victor kijkt er anders naar."
-Speler [default]: "Beeld is van Victor. Hij ziet meteen wat er niet klopt."
+Speler [trait: technisch]: "Ik doe servers, geen paarden. Koen blijft daar rustiger onder."
+Speler [default]: "Dit is iets voor Koen. Die heeft er waarschijnlijk al iets voor."
 ```
 
 ### t08_recruit
 
 ```
-Victor: "De paardenvideo."
+Koen: "Ah. De paardenvideo."
 Speler: "Ja."
-Victor: "manmanman. Ik ga mee. Iemand moet de benen tellen."
+Koen: "Ik loop wel even mee, lekker ouwe. Iemand moet de benen tellen."
 ```
 
 ### t08_complete
 
 ```
-Speler [victor]: "Vier benen, één staart, één paard. Ik heb er twee uur naar gekeken."
-Victor [anderen]: "Vier benen, één staart, één paard. Drie keer beter dan de vorige."
+Speler [koen]: "Vier benen, één staart, één paard. Ik heb er twee uur rustig naar zitten kijken."
+Koen [anderen]: "Vier benen, één staart, één paard. Toch een pareltje, vgm."
 
 [Omschrijving] Op het scherm in de entree rent een paard door een weiland. Het is grotendeels overtuigend.
 
@@ -872,11 +854,11 @@ Speler [default]: "Goed genoeg."
 ### t08_fail
 
 ```
-Speler [victor]: "Vijf benen. Ik zie het, en nu zie jij het ook."
+Speler [koen]: "Vijf benen. Geen zorg. Dat krijgen we er wel af."
 [Omschrijving, default]: "Het paard heeft vijf benen. Eén ervan loopt uit de maat."
 
-[Omschrijving, victor]: "Je start de generatie opnieuw."
-Victor [anderen]: "Opnieuw. En zet 'weiland' er nog een keer in."
+[Omschrijving, koen]: "Je start de generatie opnieuw."
+Koen [anderen]: "Gewoon opnieuw, lekker ouwe. En zet 'weiland' er nog een keer in."
 ```
 
 ### t08_done
@@ -888,18 +870,19 @@ Victor [anderen]: "Opnieuw. En zet 'weiland' er nog een keer in."
 ---
 
 ## T09 — BBD-209: Er lopen paardenbugs door het kantoor
-**Owner:** Jonathan | **Locatie:** Z9 De Vloer | **Minigame:** mg_paarden
+**Owner:** Bastiaan | **Locatie:** Z9 De Vloer | **Minigame:** mg_paarden
 
 ### t09_offer
 
 ```
 [Omschrijving] Er staat een pony bij de printer. In de gang staat er nog een. Ze zijn er sinds de laatste release.
 
-Speler [jonathan]: "Dit komt uit mijn seed-data. Dat wordt een lange middag."
-Jonathan [anderen]: "Dit komt uit de seed-data. En nee, dat is niet grappig."
+Speler [bastiaan]: "ze zitten in mijn build,, ik heb ze niet gemaakt,, ze zijn er gewoon,,"
+Bastiaan [anderen]: "ze komen uit de build,, ik heb het drie keer nagekeken,, ze renderen gewoon,,"
 
 [Omschrijving] De pony bij de printer drukt met zijn neus op Kopiëren. Er komen elf pagina's uit.
 
+Speler [bastiaan]: "we drijven ze bij elkaar,, en dan tel ik ze nog een keer,,"
 Speler [trait: proces]: "We zetten ze in de vergaderruimte. Dan is het een bezetting en geen storing."
 Speler [trait: data]: "Acht stuks. Dat is precies de testset."
 Speler [default]: "Kom, we drijven ze bij elkaar."
@@ -910,26 +893,27 @@ Speler [default]: "Kom, we drijven ze bij elkaar."
 ```
 [Omschrijving] Een pony kijkt je aan vanuit de gang. Hij kauwt op een sprintplanning.
 
-Speler [trait: detail]: "Ze staan niet eens netjes uitgelijnd. Dit is voor Jonathan."
-Speler [default]: "Dit komt uit de data. Dus dit is Jonathan."
+Speler [trait: detail]: "Ze staan niet eens netjes uitgelijnd. Dat is iets voor Bastiaan."
+Speler [default]: "Ze komen uit de build. Dus dit is Bastiaan."
 ```
 
 ### t09_recruit
 
 ```
-Jonathan: "Hoeveel?"
+Bastiaan: "hoeveel,,"
 Speler: "Acht. Denk ik."
-Jonathan: "Dat is precies de testset. Ik ga er naartoe kijken."
+Bastiaan: "dat is precies de testset,, wacht ik kom,, ik neem mijn laptop mee,,"
 ```
 
 ### t09_complete
 
 ```
-Speler [jonathan]: "Acht pony's, één ruimte. In productie was dit niemand opgevallen."
-Jonathan [anderen]: "Acht pony's, één ruimte. Nu staan ze waar ik ze kan zien."
+Speler [bastiaan]: "acht pony's,, één ruimte,, in productie was dit niemand opgevallen,,"
+Bastiaan [anderen]: "acht pony's,, één ruimte,, nu staan ze waar ik ze kan zien,,"
 
 [Omschrijving] In de vergaderruimte staan acht pony's. Ze staan er rustiger bij dan de meeste vergaderingen.
 
+Speler [bastiaan]: "acht,, ik heb ze twee keer geteld,, het klopt nu,,"
 Speler [trait: sociaal]: "Ik verplaats de vergadering wel naar het hokje."
 Speler [trait: proces]: "Ik zet de ruimte op bezet. Tot nader order."
 Speler [default]: "Dat is dan geregeld."
@@ -938,11 +922,11 @@ Speler [default]: "Dat is dan geregeld."
 ### t09_fail
 
 ```
-Speler [jonathan]: "Er zijn er nu negen. Dat kan niet en toch is het zo."
+Speler [bastiaan]: "er zijn er nu negen,, dat kan niet,, en toch is het zo,,"
 [Omschrijving, default]: "Er lopen er nu negen. Niemand weet waar de negende vandaan komt."
 
-[Omschrijving, jonathan]: "Je begint opnieuw. Bij de printer."
-Jonathan [anderen]: "Opnieuw. En doe de deur van de koffiecorner dicht."
+[Omschrijving, bastiaan]: "Je begint opnieuw. Bij de printer."
+Bastiaan [anderen]: "opnieuw,, en doe de deur van de koffiecorner dicht,,"
 ```
 
 ### t09_done
@@ -977,6 +961,8 @@ Speler [default]: "Hij ligt in de plantenkast. Onder het speelgoedpaard."
 [Rode regel, victor]: "ERROR: frontend build failed."
 [Rode regel, jonathan]: "FATAL: production database connection failed."
 [Rode regel, willem]: "HOLD: client approval required."
+[Rode regel, koen]: "BLOCKED: ai output not reviewed."
+[Rode regel, bastiaan]: "FAILED: visual regression detected."
 [Rode regel, default]: "ERROR: deployment failed."
 
 Speler [daan]: "Natuurlijk. Van alle regels die er konden staan, staat die van mij er."
@@ -984,6 +970,8 @@ Speler [danny]: "Eén rode regel, en het is mijn getal."
 Speler [victor]: "Het is de build. Het is altijd de build."
 Speler [jonathan]: "De verbinding. Dat los ik niet lokaal op."
 Speler [willem]: "Er ontbreekt een akkoord. Dat is precies mijn functie."
+Speler [koen]: "Niemand heeft ernaar gekeken. Ik kijk wel even, vgm."
+Speler [bastiaan]: "een visuele regressie,, dat ben ik,, dat is altijd ik,,"
 Speler [default]: "Eén ding. Er is altijd één ding."
 
 [Omschrijving] Achter je is het stil geworden. Iedereen staat te kijken.
@@ -999,6 +987,8 @@ Speler [danny]: "Nu gaan we pas meten."
 Speler [victor]: "Hij staat recht. In productie. Op elk scherm."
 Speler [jonathan]: "Het werkt niet meer alleen lokaal."
 Speler [willem]: "Ik bel de klant. Nu het nog goed nieuws is."
+Speler [koen]: "Het staat live. Toch een pareltje, lekker ouwe."
+Speler [bastiaan]: "hij staat live,, en er is niets verschoven,, ik heb gekeken,,"
 Speler [default]: "Het staat live."
 
 [Omschrijving] Niemand juicht. Iemand zet koffie. Hier is dat hetzelfde.
@@ -1015,6 +1005,8 @@ Speler [danny]: "Vierennegentig procent. Bijna. Bijna is nul."
 Speler [victor]: "Ergens staat een puntkomma die er niet hoort."
 Speler [jonathan]: "Ik zie het al. Vier regels lager."
 Speler [willem]: "Ik zeg tegen de klant dat we in de laatste fase zitten."
+Speler [koen]: "Terug. Geen zorg, we hebben er nog veertig minuten voor."
+Speler [bastiaan]: "één pixel,, ergens,, ik vind hem wel,,"
 Speler [default]: "Terug naar nul. Nog een keer."
 
 [Omschrijving] Achter je zegt niemand iets. Dat is hier een vorm van steun.
@@ -1037,18 +1029,23 @@ Speler [default]: "Terug naar nul. Nog een keer."
 - Koen is nooit gehaast. "Vgm" en "lekker ouwe" voelen niet geforceerd; ze zitten in één zin.
 - Dennis reageert altijd op het minimum. "oke." is een heel antwoord voor hem.
 - Victor mag vloeken. "Godver" en "manmanman" horen bij hem; gebruik ze spaarzaam zodat ze gewicht houden.
-- Willem overdrijft positief. "Absoluta" en "heeeel" zijn zijn tells.
+- Willem overdrijft positief. "heeeel" is zijn tell.
+- **Absoluta is geen bevestiging maar een klantnaam die Willem verhaspelt.** De klant is Mevrouw P. Aardenmens van Manege De Vrije Teugel; Willem noemt haar Absoluta, corrigeert zichzelf naar Looff, en komt er nooit uit. Niemand verbetert hem. Het vaste patroon is `"Absoluta... ehh, Looff."` — alleen die twee namen, geen derde. Zonder de correctie is het weer een bevestiging, en dan is de grap weg. `_test_omz_en_absoluta` bewaakt dat.
+- **O-M-Z is van Willem, Danny, Daan en Victor.** Die vier willen omzet verdienen maar noemen het nooit zo; ze spellen het. Danny schrijft zonder hoofdletters, dus bij hem is het `o-m-z`. Koen en Bastiaan doen niet mee en mogen gewoon "omzet" zeggen. Dezelfde test bewaakt dat die vier het woord nergens kaal gebruiken.
 - Daan is de rustigste. Hij ziet problemen voor ze uitgesproken zijn, maar zegt er dan ook weinig over.
 
 > **Let op — nog niet overal doorgevoerd:** Danny's eigen regels in `t06_fail` (`data/dialogue/tickets.json`) staan nog met hoofdletters ("De conversie staat nu op..." / "Terugzetten. En dan..."). Dat is inconsistent met de stijlregel hierboven en zou op termijn naar zijn kleine-letters-conventie gebracht moeten worden, zoals net gedaan is voor `t06_complete`.
 
 **Catchphrases — ingebouwd:**
-- Jonathan "ik ga er naartoe kijken" → t05_recruit, t09_recruit, collega_jonathan
+- Jonathan "ik ga er naartoe kijken" → t05_recruit, collega_jonathan
 - Koen "lekker ouwe" → koen algemeen
 - Danny "psies" / "biem" → t06_recruit, t07_recruit, collega_danny
 - Danny "lekker insmeren met olijfolie" → t06_complete
 - Bastiaan `,,` → bastiaan algemeen
-- Willem "Absoluta" → t03_recruit, collega_willem
+- Willem "Absoluta... ehh, Looff" → t03_recruit, collega_willem
+- Koen "vgm" / "pareltje" → t08 compleet, collega_koen
+- Bastiaan `,,` → t09 compleet, collega_bastiaan
+- O-M-Z → collega_willem, collega_danny, collega_daan, collega_victor, t03_complete, t06_complete, user story-minigame
 
 **Varianten-logica:**
 - `[character]` overrides `[trait]` — character-specifieke reactie gaat voor alles

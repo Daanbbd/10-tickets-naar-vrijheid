@@ -51,6 +51,53 @@
     "pants": "#34384e"
   },
   {
+    "id": "dirk",
+    "name": "Dirk Schrijver",
+    "role": "Scrum Master",
+    "zone": "z11_gang",
+    "home_tile": [
+      33,
+      11
+    ],
+    "dialogue_id": "dirk",
+    "route": [
+      [
+        33,
+        11
+      ],
+      [
+        35,
+        11
+      ],
+      [
+        35,
+        12
+      ],
+      [
+        33,
+        12
+      ]
+    ],
+    "route_pause": 3.0,
+    "can_follow": true,
+    "spawn_when": {
+      "min_tickets_done": 5
+    },
+    "color": "#9aa0a8",
+    "skin": "#f2c9a8",
+    "hair": "#6b4a2f",
+    "portrait": "res://assets/sprites/portraits/dirk.png",
+    "look": {
+      "body": "gemiddeld",
+      "hair": "zijscheiding",
+      "facial": "",
+      "outfit": "blazer",
+      "accessory": "speldje"
+    },
+    "pants": "#3a3d44",
+    "accent": "#2f6fb5"
+  },
+  {
     "id": "npc_bastiaan",
     "name": "Bastiaan",
     "role": "Frontend developer",
@@ -185,40 +232,6 @@
       "accessory": "tas"
     },
     "pants": "#4a3c52"
-  },
-  {
-    "id": "stagiair",
-    "name": "De stagiair",
-    "role": "Stagiair",
-    "zone": "z11_gang",
-    "home_tile": [
-      16,
-      10
-    ],
-    "dialogue_id": "stagiair",
-    "route": [
-      [
-        16,
-        10
-      ],
-      [
-        18,
-        11
-      ]
-    ],
-    "route_pause": 1.0,
-    "can_follow": false,
-    "color": "#f5d76e",
-    "skin": "#e8c39e",
-    "hair": "#c98a3a",
-    "look": {
-      "body": "slank",
-      "hair": "stekels",
-      "facial": "",
-      "outfit": "vest",
-      "accessory": "doos"
-    },
-    "pants": "#3f4a3a"
   },
   {
     "id": "bezorger",

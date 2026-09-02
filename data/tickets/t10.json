@@ -1,8 +1,6 @@
 {
   "available_when": {
-    "tickets_done": [
-      "t09"
-    ]
+    "min_tickets_done": 9
   },
   "requirements": {
     "has_item": [
@@ -45,7 +43,7 @@
       "hold": 1.4
     }
   ],
-  "hint": "De deploymentcomputer staat in Birdhouse. Je hebt de deploysleutel uit de plantenkast nodig.",
+  "hint": "De deploymentcomputer staat in Birdhouse, de laatste en grootste glazen zaal. De deploysleutel ligt in de plantenkast, onder het speelgoedpaard.",
   "id": "t10",
   "code": "BBD-210",
   "order": 10,
@@ -53,7 +51,6 @@
   "summary": "Alles staat klaar. Er is nog precies een ding mis, en dat ding is jouw vakgebied.",
   "anchor": "deploycomputer",
   "owner_character": "",
-  "owner_role": "",
   "minigame_id": "mg_deploy",
   "zone": "z7_birdhouse",
   "zone_name": "Birdhouse"

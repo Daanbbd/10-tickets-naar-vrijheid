@@ -36,8 +36,7 @@ func play(dialogue_id: StringName, fallback_label: String = "") -> StringName:
 		return &""
 
 	_active = true
-	Session.input_locked = true
-	AudioDirector.duck()
+	Session.lock_input()
 	Bus.dialogue_started.emit(dialogue_id, StringName(_speaker_of(def, def.start_node)))
 
 	var outcome := &""
@@ -77,31 +76,41 @@ func play(dialogue_id: StringName, fallback_label: String = "") -> StringName:
 
 	_box.close()
 	_active = false
-	AudioDirector.unduck()
 	# Eén frame wachten zodat de bevestigingstoets niet doorlekt naar de wereld.
 	await get_tree().process_frame
-	Session.input_locked = false
+	Session.unlock_input()
 	Bus.dialogue_finished.emit(dialogue_id, outcome)
 	return outcome
 
 
 ## Losse regel zonder dialoogbestand, voor korte onderzoeksteksten.
-func say(speaker: String, text: String) -> void:
-	await _play_single(speaker, text)
+##
+## `speaker_id` is optioneel en alleen voor de animatie: `npc.gd` luistert op
+## `dialogue_started` om de mond van de juiste collega te laten bewegen, en
+## vergelijkt daar op id ("jonathan") en niet op weergavenaam ("Jonathan").
+## Zonder dit staat er bij een briefing wel een naam boven de tekst, maar
+## beweegt er niemand.
+func say(speaker: String, text: String, speaker_id: StringName = &"") -> void:
+	await _play_single(speaker, text, speaker_id)
 
 
-func _play_single(speaker: String, text: String) -> void:
+## Ook een losse regel is een gesprek. Het signaal gaat er daarom net zo goed
+## uit als bij een hele dialoogboom -- de AudioDirector zet de muziek erop terug
+## en zonder deze emit blijft het kantoor gewoon doorspelen onder de tekst.
+func _play_single(speaker: String, text: String, speaker_id: StringName = &"") -> void:
 	_active = true
-	Session.input_locked = true
+	Session.lock_input()
+	Bus.dialogue_started.emit(&"", speaker_id if speaker_id != &"" else StringName(speaker))
 	await _show_and_wait(speaker, text)
 	_box.close()
 	_active = false
 	await get_tree().process_frame
-	Session.input_locked = false
+	Session.unlock_input()
+	Bus.dialogue_finished.emit(&"", &"")
 
 
 func _show_and_wait(speaker: String, text: String, portrait: Texture2D = null) -> void:
-	_box.show_line(speaker, text, portrait)
+	_box.show_line(speaker, vul_in(text), portrait)
 	while true:
 		await _next_press()
 		if _box.typing():
@@ -110,10 +119,35 @@ func _show_and_wait(speaker: String, text: String, portrait: Texture2D = null) -
 			return
 
 
+## Een losse keuzevraag, buiten een dialoogboom om. Nodig sinds alle tickets
+## tegelijk openstaan: één object kan er twee dragen (het scrumbord in de gang
+## is er zowel voor de planning als voor de paardenbugs), en dan moet de speler
+## zeggen welke hij bedoelt. Hergebruikt de keuzeknoppen van de dialoogbox.
+func ask_choice(vraag: String, labels: Array[String]) -> int:
+	if _active or labels.is_empty():
+		return -1
+	_active = true
+	Session.lock_input()
+	Bus.dialogue_started.emit(&"", &"")
+	_box.show_line("", vraag)
+	_box.finish_typing()
+	var keuze := await _wait_for_choice(labels)
+	_box.close()
+	_active = false
+	await get_tree().process_frame
+	Session.unlock_input()
+	Bus.dialogue_finished.emit(&"", &"")
+	return keuze
+
+
 func _ask(choices: Array) -> int:
 	var labels: Array[String] = []
 	for c: Variant in choices:
-		labels.append(String((c as Dictionary).get("text", "...")))
+		labels.append(vul_in(String((c as Dictionary).get("text", "..."))))
+	return await _wait_for_choice(labels)
+
+
+func _wait_for_choice(labels: Array[String]) -> int:
 	_choice_index = -1
 	_box.show_choices(labels)
 	while _choice_index < 0:
@@ -133,6 +167,10 @@ var _getikt: bool = false
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed:
+		_getikt = true
+	elif Invoer.muis_als_vinger() and event is InputEventMouseButton \
+			and (event as InputEventMouseButton).pressed \
+			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 		_getikt = true
 
 
@@ -165,6 +203,30 @@ func _portrait_for(speaker_id: String) -> Texture2D:
 			if ch != null:
 				path = ch.portrait
 	return load(path) if path != "" and ResourceLoader.exists(path) else null
+
+
+## Vult de tokens in die pas tijdens het spelen bestaan.
+##
+## Dirk bestaat bij de gratie van een exact getal — "er staat {geboekt} geboekt,
+## terwijl de verwachting rond de {gewerkt} ligt" — en hij begint altijd met je
+## naam. Met zeven speelbare personages en een lopende klok kan dat niet in
+## vaste strings. Onbekende accolades laat dit staan, zodat een typefout in de
+## data zichtbaar is in plaats van stil te verdwijnen.
+##
+## Statisch, zodat de testsuite hem zonder scene kan controleren.
+static func vul_in(text: String) -> String:
+	if not text.contains("{"):
+		return text
+	var naam := ""
+	var c: CharacterDef = Session.character()
+	if c != null:
+		naam = c.name
+	return text \
+		.replace("{naam}", naam) \
+		.replace("{gewerkt}", Urenstaat.formatteer_duur(Session.worked_minutes)) \
+		.replace("{geboekt}", Urenstaat.formatteer_duur(Session.booked_minutes)) \
+		.replace("{budget}", Urenstaat.formatteer_duur(Urenstaat.BUDGET_MIN)) \
+		.replace("{klok}", Urenstaat.formatteer(Urenstaat.nu()))
 
 
 func _display_name(speaker_id: String) -> String:

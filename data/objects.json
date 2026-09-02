@@ -17,12 +17,7 @@
     ],
     "kind": "ticket",
     "label": "Wachtbank",
-    "ticket": "t03",
-    "visible_when": {
-      "tickets_done": [
-        "t02"
-      ]
-    }
+    "ticket": "t03"
   },
   {
     "world_id": "printer",

@@ -545,7 +545,7 @@
       },
       "oordeel": {
         "speaker": "willem",
-        "text": "Dan zijn het elf punten. Absoluta. Ik kom eraan."
+        "text": "Dan zijn het elf punten van Absoluta... ehh, Looff. Ik kom eraan."
       }
     }
   },
@@ -561,11 +561,11 @@
               ]
             },
             "speaker": "speler",
-            "text": "Elf punten, vier acties. Hier besta ik voor."
+            "text": "Elf punten, vier acties. Hier besta ik voor. Dit is O-M-Z."
           },
           {
             "speaker": "willem",
-            "text": "Elf punten, vier acties. De rest was twee keer hetzelfde punt."
+            "text": "Elf punten, vier acties. De rest was twee keer hetzelfde punt. En het is O-M-Z."
           }
         ],
         "next": "klantregel"
@@ -1205,11 +1205,11 @@
               ]
             },
             "speaker": "speler",
-            "text": "pluszeventien. lekker insmeren met olijfolie en gaan. zo werkt dat."
+            "text": "pluszeventien. lekker insmeren met olijfolie en gaan. dat is o-m-z"
           },
           {
             "speaker": "danny",
-            "text": "pluszeventien procent. de knop stond verkeerd. hij stond al jaren verkeerd."
+            "text": "pluszeventien procent o-m-z. de knop stond verkeerd. hij stond al jaren verkeerd."
           }
         ],
         "next": "muur"
@@ -1505,15 +1505,15 @@
           {
             "when": {
               "character": [
-                "victor"
+                "koen"
               ]
             },
             "speaker": "speler",
-            "text": "Hoe zie je aan een paard dat het gelukkig is?"
+            "text": "Hoe zie je aan een paard dat het gelukkig is. Aan de oren, vgm."
           },
           {
-            "speaker": "victor",
-            "text": "Hoe zie je aan een paard dat het gelukkig is?"
+            "speaker": "koen",
+            "text": "Hoe zie je aan een paard dat het gelukkig is? Aan de oren."
           }
         ],
         "next": "antwoord"
@@ -1523,7 +1523,7 @@
           {
             "when": {
               "character": [
-                "victor"
+                "koen"
               ]
             },
             "speaker": "",
@@ -1541,15 +1541,15 @@
           {
             "when": {
               "character": [
-                "victor"
+                "koen"
               ]
             },
             "speaker": "speler",
-            "text": "Dan tel ik de benen en noem ik het klaar."
+            "text": "Dan tel ik de benen en noem ik het een pareltje."
           },
           {
-            "speaker": "victor",
-            "text": "Dan let ik op de benen. Vier. Dat is het criterium."
+            "speaker": "koen",
+            "text": "Ik let op de benen. Vier is genoeg, lekker ouwe."
           }
         ]
       }
@@ -1572,10 +1572,10 @@
                 "technisch"
               ]
             },
-            "text": "Ik doe servers, geen paarden. Victor kijkt er anders naar."
+            "text": "Ik doe servers, geen paarden. Koen blijft daar rustiger onder."
           },
           {
-            "text": "Beeld is van Victor. Hij ziet meteen wat er niet klopt."
+            "text": "Dit is iets voor Koen. Die heeft er waarschijnlijk al iets voor."
           }
         ]
       }
@@ -1585,8 +1585,8 @@
     "start": "start",
     "nodes": {
       "start": {
-        "speaker": "victor",
-        "text": "De paardenvideo.",
+        "speaker": "koen",
+        "text": "Ah. De paardenvideo.",
         "next": "antwoord"
       },
       "antwoord": {
@@ -1595,8 +1595,8 @@
         "next": "oordeel"
       },
       "oordeel": {
-        "speaker": "victor",
-        "text": "manmanman. Ik ga mee. Iemand moet de benen tellen."
+        "speaker": "koen",
+        "text": "Ik loop wel even mee, lekker ouwe. Iemand moet de benen tellen."
       }
     }
   },
@@ -1608,15 +1608,15 @@
           {
             "when": {
               "character": [
-                "victor"
+                "koen"
               ]
             },
             "speaker": "speler",
-            "text": "Vier benen, één staart, één paard. Ik heb er twee uur naar gekeken."
+            "text": "Vier benen, één staart, één paard. Ik heb er twee uur rustig naar zitten kijken."
           },
           {
-            "speaker": "victor",
-            "text": "Vier benen, één staart, één paard. Drie keer beter dan de vorige."
+            "speaker": "koen",
+            "text": "Vier benen, één staart, één paard. Toch een pareltje, vgm."
           }
         ],
         "next": "scherm"
@@ -1660,11 +1660,11 @@
           {
             "when": {
               "character": [
-                "victor"
+                "koen"
               ]
             },
             "speaker": "speler",
-            "text": "Vijf benen. Ik zie het, en nu zie jij het ook."
+            "text": "Vijf benen. Geen zorg. Dat krijgen we er wel af."
           },
           {
             "speaker": "",
@@ -1678,15 +1678,15 @@
           {
             "when": {
               "character": [
-                "victor"
+                "koen"
               ]
             },
             "speaker": "",
             "text": "Je start de generatie opnieuw."
           },
           {
-            "speaker": "victor",
-            "text": "Opnieuw. En zet 'weiland' er nog een keer in."
+            "speaker": "koen",
+            "text": "Gewoon opnieuw, lekker ouwe. En zet 'weiland' er nog een keer in."
           }
         ]
       }
@@ -1714,15 +1714,15 @@
           {
             "when": {
               "character": [
-                "jonathan"
+                "bastiaan"
               ]
             },
             "speaker": "speler",
-            "text": "Dit komt uit mijn seed-data. Dat wordt een lange middag."
+            "text": "ze zitten in mijn build,, ik heb ze niet gemaakt,, ze zijn er gewoon,,"
           },
           {
-            "speaker": "jonathan",
-            "text": "Dit komt uit de seed-data. En nee, dat is niet grappig."
+            "speaker": "bastiaan",
+            "text": "ze komen uit de build,, ik heb het drie keer nagekeken,, ze renderen gewoon,,"
           }
         ],
         "next": "printer"
@@ -1735,6 +1735,14 @@
       "slot": {
         "speaker": "speler",
         "variants": [
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "we drijven ze bij elkaar,, en dan tel ik ze nog een keer,,"
+          },
           {
             "when": {
               "trait": [
@@ -1775,10 +1783,10 @@
                 "detail"
               ]
             },
-            "text": "Ze staan niet eens netjes uitgelijnd. Dit is voor Jonathan."
+            "text": "Ze staan niet eens netjes uitgelijnd. Dat is iets voor Bastiaan."
           },
           {
-            "text": "Dit komt uit de data. Dus dit is Jonathan."
+            "text": "Ze komen uit de build. Dus dit is Bastiaan."
           }
         ]
       }
@@ -1788,8 +1796,8 @@
     "start": "start",
     "nodes": {
       "start": {
-        "speaker": "jonathan",
-        "text": "Hoeveel?",
+        "speaker": "bastiaan",
+        "text": "hoeveel,,",
         "next": "antwoord"
       },
       "antwoord": {
@@ -1798,8 +1806,8 @@
         "next": "oordeel"
       },
       "oordeel": {
-        "speaker": "jonathan",
-        "text": "Dat is precies de testset. Ik ga er naartoe kijken."
+        "speaker": "bastiaan",
+        "text": "dat is precies de testset,, wacht ik kom,, ik neem mijn laptop mee,,"
       }
     }
   },
@@ -1811,15 +1819,15 @@
           {
             "when": {
               "character": [
-                "jonathan"
+                "bastiaan"
               ]
             },
             "speaker": "speler",
-            "text": "Acht pony's, één ruimte. In productie was dit niemand opgevallen."
+            "text": "acht pony's,, één ruimte,, in productie was dit niemand opgevallen,,"
           },
           {
-            "speaker": "jonathan",
-            "text": "Acht pony's, één ruimte. Nu staan ze waar ik ze kan zien."
+            "speaker": "bastiaan",
+            "text": "acht pony's,, één ruimte,, nu staan ze waar ik ze kan zien,,"
           }
         ],
         "next": "ruimte"
@@ -1832,6 +1840,14 @@
       "slot": {
         "speaker": "speler",
         "variants": [
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "acht,, ik heb ze twee keer geteld,, het klopt nu,,"
+          },
           {
             "when": {
               "trait": [
@@ -1863,11 +1879,11 @@
           {
             "when": {
               "character": [
-                "jonathan"
+                "bastiaan"
               ]
             },
             "speaker": "speler",
-            "text": "Er zijn er nu negen. Dat kan niet en toch is het zo."
+            "text": "er zijn er nu negen,, dat kan niet,, en toch is het zo,,"
           },
           {
             "speaker": "",
@@ -1881,15 +1897,15 @@
           {
             "when": {
               "character": [
-                "jonathan"
+                "bastiaan"
               ]
             },
             "speaker": "",
             "text": "Je begint opnieuw. Bij de printer."
           },
           {
-            "speaker": "jonathan",
-            "text": "Opnieuw. En doe de deur van de koffiecorner dicht."
+            "speaker": "bastiaan",
+            "text": "opnieuw,, en doe de deur van de koffiecorner dicht,,"
           }
         ]
       }
@@ -1956,6 +1972,22 @@
             "text": "HOLD: client approval required."
           },
           {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "BLOCKED: ai output not reviewed."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "FAILED: visual regression detected."
+          },
+          {
             "text": "ERROR: deployment failed."
           }
         ],
@@ -2003,6 +2035,22 @@
               ]
             },
             "text": "Er ontbreekt een akkoord. Dat is precies mijn functie."
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Niemand heeft ernaar gekeken. Ik kijk wel even, vgm."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "een visuele regressie,, dat ben ik,, dat is altijd ik,,"
           },
           {
             "text": "Eén ding. Er is altijd één ding."
@@ -2102,6 +2150,22 @@
             "text": "Ik bel de klant. Nu het nog goed nieuws is."
           },
           {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Het staat live. Toch een pareltje, lekker ouwe."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "hij staat live,, en er is niets verschoven,, ik heb gekeken,,"
+          },
+          {
             "text": "Het staat live."
           }
         ],
@@ -2168,6 +2232,22 @@
               ]
             },
             "text": "Ik zeg tegen de klant dat we in de laatste fase zitten."
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Terug. Geen zorg, we hebben er nog veertig minuten voor."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "één pixel,, ergens,, ik vind hem wel,,"
           },
           {
             "text": "Terug naar nul. Nog een keer."

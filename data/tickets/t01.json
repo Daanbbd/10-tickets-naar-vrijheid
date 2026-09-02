@@ -24,9 +24,7 @@
       "cue": "ticket_klaar"
     }
   ],
-  "unlocks": [
-    "t02"
-  ],
+  "unlocks": [],
   "world_changes": [
     {
       "op": "set_text",
@@ -39,7 +37,7 @@
       "hold": 1.4
     }
   ],
-  "hint": "De user story staat op de vergadertafel in Summit.",
+  "hint": "Op de tafel in Summit: de eerste van de drie glazen vergaderruimtes langs de gang.",
   "id": "t01",
   "code": "BBD-201",
   "order": 1,
@@ -47,7 +45,6 @@
   "summary": "Er ligt een user story die geen user story is. Niemand weet wat er precies opgeleverd moet worden.",
   "anchor": "vergadertafel",
   "owner_character": "daan",
-  "owner_role": "Product Owner",
   "minigame_id": "mg_user_story",
   "zone": "z5_summit",
   "zone_name": "Summit"

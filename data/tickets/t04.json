@@ -1,9 +1,5 @@
 {
-  "available_when": {
-    "tickets_done": [
-      "t03"
-    ]
-  },
+  "available_when": {},
   "requirements": {},
   "dialogue_ids": {
     "offer": "t04_offer",
@@ -28,9 +24,7 @@
       "cue": "ticket_klaar"
     }
   ],
-  "unlocks": [
-    "t06"
-  ],
+  "unlocks": [],
   "world_changes": [
     {
       "op": "set_text",
@@ -43,7 +37,7 @@
       "hold": 1.4
     }
   ],
-  "hint": "De wandmonitor achter de bureaus laat de staging zien.",
+  "hint": "De wandmonitor hangt aan het begin van de werkvloer, naast het ticketbord.",
   "id": "t04",
   "code": "BBD-204",
   "order": 4,
@@ -51,7 +45,6 @@
   "summary": "Het paard staat boven de header, de CTA staat onder de footer en de productfoto is 4000 pixels breed.",
   "anchor": "wandmonitor_vloer",
   "owner_character": "victor",
-  "owner_role": "Frontend developer",
   "minigame_id": "mg_frontend_fix",
   "zone": "z9_vloer",
   "zone_name": "De Vloer"
