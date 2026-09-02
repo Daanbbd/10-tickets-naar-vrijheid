@@ -184,7 +184,7 @@ static func card(text: String, tint: Color = PANEL) -> Button:
 	var b := keuzeknop(text, FS_SMALL)
 	b.add_theme_stylebox_override("normal", panel(tint, LINE))
 	b.add_theme_stylebox_override("hover", panel(tint.lightened(0.18), BLUEBIRD_INK))
-	b.custom_minimum_size = Vector2(94, 22)
+	b.custom_minimum_size = Vector2(94, 26)
 	return b
 
 

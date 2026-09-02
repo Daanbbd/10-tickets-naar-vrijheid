@@ -38,7 +38,7 @@ func _on_setup() -> void:
 		var id := String(t.get("id", ""))
 		var b := UiKit.keuzeknop(String(t.get("label", id)), UiKit.FS_SMALL)
 		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(0, 18)
+		b.custom_minimum_size = Vector2(46, 26)
 		b.toggled.connect(_on_toggle.bind(id))
 		flow.add_child(b)
 		_buttons[id] = b
