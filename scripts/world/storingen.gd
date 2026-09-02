@@ -53,6 +53,11 @@ const TRIGGER_KEYS: Array[String] = [
 ## sowieso met rust, zodat een speler eerst kan zien wat de opgave is.
 const MIN_WACHT_MINIGAME_SEC := 5.0
 
+## Waar de verstreken minuten van vandaag bijgehouden worden, voor
+## `wachttijd_min`. In `Session.counters` en niet in een veld hier, zodat een
+## wachtende storing de save overleeft. Deze node is de enige schrijver.
+const VERSTREKEN_TELLER := &"storing_verstreken_min"
+
 var _defs: Array[Dictionary] = []
 var _npc_layer: NpcLayer = null
 var _mutator: WorldMutator = null
@@ -89,7 +94,10 @@ func setup(npc_layer: NpcLayer, mutator: WorldMutator, speler: Node2D) -> void:
 	# Alle vier uitgesteld, en met opzet niet met CONNECT_DEFERRED: `zone_entered`
 	# moet `_laatste_zone` wél meteen vastleggen, alleen de evaluatie mag wachten.
 	Bus.ticket_completed.connect(func(_a: StringName, _b: MinigameResult) -> void: _plan_evaluatie())
-	Bus.time_booked.connect(func(_a: int, _b: StringName, _c: int) -> void: _plan_evaluatie())
+	Bus.time_booked.connect(func(m: int, reden: StringName, _c: int) -> void:
+		if reden == &"verloop":
+			Session.counters[VERSTREKEN_TELLER] = Session.get_counter(VERSTREKEN_TELLER) + m
+		_plan_evaluatie())
 	Bus.flag_changed.connect(func(_a: StringName, _b: bool) -> void: _plan_evaluatie())
 	Bus.zone_entered.connect(func(zid: StringName, _naam: String) -> void:
 		_laatste_zone = zid
@@ -227,36 +235,54 @@ func _trigger_klopt(t: Dictionary) -> bool:
 	return true
 
 
-## Een storing die pas "later die dag" hoort te vallen. `wachttijd_min` telt in
-## geboekte minuten vanaf het moment dat `trigger` en `when` voor het eerst
-## allebei klopten — niet vanaf het begin van de dag.
+## Een storing die pas "later die dag" hoort te vallen. `wachttijd_min` telt de
+## **verstreken** minuten vanaf het moment dat `trigger` en `when` voor het
+## eerst allebei klopten.
 ##
-## **Waarom niet gewoon `na_minuten`.** Dat is een absoluut tijdstip op de dag,
-## en dat geeft geen enkele scheiding zodra de eigenlijke voorwaarde later valt
-## dan dat tijdstip. `storing_backend_crash` botste daarop: zijn `when` (t05 is
-## opgelost) wordt waar op precies het moment dat zijn `min_tickets_done` al
-## lang klopt, want zeven tickets zijn oplosbaar zonder t05. Los je t05 als
-## zevende of later op, dan is elke absolute drempel al gepasseerd en valt
-## "BBD-205 staat weer open" over de regel "BBD-205 opgelost" heen. Met een
-## wachttijd vanaf het moment van in aanmerking komen is die afstand er altijd,
-## ongeacht in welke volgorde de speler zijn dag doet.
+## **Waarom niet `na_minuten`.** Dat is een absoluut tijdstip op de dag, en dat
+## geeft geen enkele scheiding zodra de voorwaarde later valt dan dat tijdstip.
+## `storing_backend_crash` botste daarop: zijn `when` (t05 is opgelost) wordt
+## waar op precies het moment dat zijn `min_tickets_done` al lang klopt, want
+## zeven tickets zijn oplosbaar zonder t05. Los je t05 als zevende of later op,
+## dan is elke absolute drempel al gepasseerd en valt "BBD-205 staat weer open"
+## over de regel "BBD-205 opgelost" heen.
+##
+## **Waarom verstreken minuten en niet alle geboekte.** Een oplevering boekt er
+## 30 tot 45 in één sprong, en die sprong staat ín `QuestEngine.complete()`.
+## Elke drempel boven ~20 wordt dus vrijwel altijd overschreden door precies de
+## gebeurtenis waarvan deze storing afstand moet houden — de wachttijd meet dan
+## feitelijk "één oplevering later" en botst alleen met een andere afronding.
+## Dat was aantoonbaar zo: de heropening verschoof van BBD-207 naar BBD-208 en
+## bleef in een afrondingsbeat vallen.
+##
+## De klok-onderstroom (`klok.gd`, één minuut per 2,5 reële seconden, reden
+## `&"verloop"`) heeft die eigenschap niet, en beter nog: `Klok._process()`
+## staat stil zolang `Session.input_locked` waar is en er geen minigame draait.
+## Verstreken minuten lopen dus **alleen op terwijl de speler zelf aan zet is**,
+## nooit tijdens een dialoog. Daarmee is de scheiding structureel in plaats van
+## statistisch: deze storing kán niet meer in de afrondingsdialoog vallen, hij
+## valt gegarandeerd terwijl je loopt.
 ##
 ## Het ijkpunt gaat in `Session.counters` en dus mee de save in: een storing die
 ## op zijn wachttijd staat hoort niet opnieuw te beginnen met aftellen omdat de
-## speler het spel afsloot. Geteld in geboekte minuten en niet op de wandklok,
-## om dezelfde reden als de rest van de urenstaat: dan is het headless testbaar
-## en kost rondlopen geen tijd.
+## speler het spel afsloot.
 func _wachttijd_verstreken(id: String, t: Dictionary) -> bool:
 	var wacht := int(t.get("wachttijd_min", 0))
 	if wacht <= 0:
 		return true
+	# Twee sleutels, en dat onderscheid is essentieel voor wie hier een tweede
+	# storing met een wachttijd bijzet: `VERSTREKEN_TELLER` is één gedeelde
+	# teller die de hele dag oploopt, `wacht_teller(id)` is het ijkpunt van
+	# déze storing erin. Zonder dat eigen ijkpunt zou een tweede storing meteen
+	# afgaan, want de gedeelde teller staat dan al ver voorbij elke drempel.
 	var sleutel := wacht_teller(id)
+	var nu := Session.get_counter(VERSTREKEN_TELLER)
 	# Rechtstreeks in `counters` en niet via `add_counter()`: dit is een ijkpunt
 	# dat één keer gezet wordt, geen teller die oploopt.
 	if not Session.counters.has(sleutel):
-		Session.counters[sleutel] = Session.worked_minutes
+		Session.counters[sleutel] = nu
 		return false
-	return Session.worked_minutes - Session.get_counter(sleutel) >= wacht
+	return nu - Session.get_counter(sleutel) >= wacht
 
 
 static func wacht_teller(id: String) -> StringName:
