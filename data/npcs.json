@@ -37,14 +37,14 @@
     ],
     "route_pause": 2.5,
     "can_follow": true,
-    "color": "#4a6d99",
+    "color": "#3b4364",
     "skin": "#e8bd94",
-    "hair": "#b99a63",
+    "hair": "#9c7a4a",
     "portrait": "res://assets/sprites/portraits/dennis.png",
     "look": {
       "body": "stevig",
-      "hair": "dunnend",
-      "facial": "stoppels",
+      "hair": "stekels",
+      "facial": "",
       "outfit": "overhemd",
       "accessory": ""
     },
@@ -128,13 +128,13 @@
     "route_pause": 6.0,
     "can_follow": true,
     "color": "#e8e4dc",
-    "skin": "#e9b89b",
-    "hair": "#1c1a1c",
+    "skin": "#e3b096",
+    "hair": "#2c221d",
     "portrait": "res://assets/sprites/portraits/bastiaan.png",
     "look": {
       "body": "slank",
       "hair": "stekels",
-      "facial": "",
+      "facial": "stoppels",
       "outfit": "hoodie",
       "accessory": "",
       "bezigheid": "zoekglas"
@@ -180,16 +180,16 @@
     ],
     "route_pause": 3.0,
     "can_follow": true,
-    "color": "#6f8fd0",
+    "color": "#6d84b0",
     "skin": "#eac09a",
-    "hair": "#a8834e",
+    "hair": "#b07c44",
     "portrait": "res://assets/sprites/portraits/koen.png",
     "look": {
       "body": "gemiddeld",
-      "hair": "knot",
+      "hair": "fade",
       "facial": "",
       "outfit": "tshirt",
-      "accessory": "bril",
+      "accessory": "",
       "bezigheid": "peuk"
     },
     "pants": "#34384e",
@@ -300,8 +300,8 @@
     "can_follow": true,
     "is_playable_colleague": true,
     "color": "#2b2b30",
-    "skin": "#dcae86",
-    "hair": "#2a2320",
+    "skin": "#e0b491",
+    "hair": "#6b4b36",
     "portrait": "res://assets/sprites/portraits/daan.png",
     "look": {
       "body": "gemiddeld",
@@ -346,9 +346,9 @@
     "portrait": "res://assets/sprites/portraits/danny.png",
     "look": {
       "body": "slank",
-      "hair": "zijscheiding",
+      "hair": "kuif",
       "facial": "stoppels",
-      "outfit": "polo",
+      "outfit": "tshirt",
       "accessory": "",
       "bezigheid": "bier"
     },
@@ -385,16 +385,16 @@
     "route_pause": 5.0,
     "can_follow": true,
     "is_playable_colleague": true,
-    "color": "#3a3a40",
+    "color": "#2e2e34",
     "skin": "#f0c49a",
-    "hair": "#cf8a48",
+    "hair": "#c1854a",
     "portrait": "res://assets/sprites/portraits/victor.png",
     "look": {
       "body": "gemiddeld",
       "hair": "krullen",
-      "facial": "snor",
+      "facial": "baard",
       "outfit": "tshirt",
-      "accessory": "koptelefoon",
+      "accessory": "",
       "bezigheid": "hobbyhorse"
     },
     "pants": "#34384e"
@@ -422,15 +422,15 @@
     "route_pause": 6.0,
     "can_follow": true,
     "is_playable_colleague": true,
-    "color": "#2f4750",
+    "color": "#39505c",
     "skin": "#d6a578",
     "hair": "#1b1a1c",
     "portrait": "res://assets/sprites/portraits/jonathan.png",
     "look": {
       "body": "stevig",
-      "hair": "kort",
-      "facial": "",
-      "outfit": "trui",
+      "hair": "lang",
+      "facial": "sik",
+      "outfit": "overhemd",
       "accessory": "bril",
       "bezigheid": "gamen"
     },
@@ -474,8 +474,8 @@
     "look": {
       "body": "gemiddeld",
       "hair": "zijscheiding",
-      "facial": "",
-      "outfit": "blazer",
+      "facial": "stoppels",
+      "outfit": "polo",
       "accessory": "",
       "bezigheid": "padel"
     },
@@ -486,12 +486,44 @@
     "name": "Een paardenbug",
     "role": "Toilet en Patchhok",
     "zone": "z2_toilet",
-    "home_tile": [4, 3],
+    "home_tile": [
+      4,
+      3
+    ],
     "dialogue_id": "",
-    "route": [[4, 3], [6, 5], [4, 12], [4, 10], [15, 9], [25, 9]],
+    "route": [
+      [
+        4,
+        3
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        4,
+        12
+      ],
+      [
+        4,
+        10
+      ],
+      [
+        15,
+        9
+      ],
+      [
+        25,
+        9
+      ]
+    ],
     "route_pause": 3.0,
     "can_follow": false,
-    "spawn_when": {"tickets_done": ["t02"]},
+    "spawn_when": {
+      "tickets_done": [
+        "t02"
+      ]
+    },
     "static_sprite": "res://assets/sprites/props/paard_bug.png"
   },
   {
@@ -499,12 +531,48 @@
     "name": "Een paardenbug",
     "role": "De Gang, De Vloer en Weekend",
     "zone": "z11_gang",
-    "home_tile": [60, 9],
+    "home_tile": [
+      60,
+      9
+    ],
     "dialogue_id": "",
-    "route": [[60, 9], [30, 20], [55, 22], [99, 15], [105, 15], [115, 10], [110, 3]],
+    "route": [
+      [
+        60,
+        9
+      ],
+      [
+        30,
+        20
+      ],
+      [
+        55,
+        22
+      ],
+      [
+        99,
+        15
+      ],
+      [
+        105,
+        15
+      ],
+      [
+        115,
+        10
+      ],
+      [
+        110,
+        3
+      ]
+    ],
     "route_pause": 3.0,
     "can_follow": false,
-    "spawn_when": {"tickets_done": ["t02"]},
+    "spawn_when": {
+      "tickets_done": [
+        "t02"
+      ]
+    },
     "static_sprite": "res://assets/sprites/props/paard_bug.png"
   },
   {
@@ -512,12 +580,32 @@
     "name": "Een paard",
     "role": "Klant, Manege De Vrije Teugel",
     "zone": "z9_vloer",
-    "home_tile": [45, 22],
+    "home_tile": [
+      45,
+      22
+    ],
     "dialogue_id": "",
-    "route": [[45, 22], [60, 20], [70, 22]],
+    "route": [
+      [
+        45,
+        22
+      ],
+      [
+        60,
+        20
+      ],
+      [
+        70,
+        22
+      ]
+    ],
     "route_pause": 3.0,
     "can_follow": false,
-    "spawn_when": {"tickets_done": ["t02"]},
+    "spawn_when": {
+      "tickets_done": [
+        "t02"
+      ]
+    },
     "static_sprite": "res://assets/sprites/props/paard_klant.png"
   }
 ]

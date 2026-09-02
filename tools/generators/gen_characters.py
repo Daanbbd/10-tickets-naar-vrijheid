@@ -324,8 +324,8 @@ def laag_outfit(v, richting, p, variant):
 # =============================================================================
 # 4. hair — kruin, pony, zijkanten
 # =============================================================================
-HAIRS = ["kaal", "kort", "stekels", "zijscheiding", "krullen", "lang",
-         "staart", "dunnend", "knot"]
+HAIRS = ["kaal", "kort", "fade", "kuif", "stekels", "zijscheiding", "krullen",
+         "lang", "staart", "dunnend", "knot"]
 
 
 def laag_hair(v, richting, p, variant):
@@ -343,6 +343,42 @@ def laag_hair(v, richting, p, variant):
     # De kruin begint op de schedel zelf, niet erboven: anders zweeft het haar
     # als een plank los van het hoofd. Alleen het volume steekt 1 px uit.
     diepte = 5 if richting == 1 else 2
+
+    if variant == "fade":
+        # Geschoren zijkanten met volume bovenop. Het verschil met `kort` zit
+        # niet in de kruin maar in de breedte: `kort` laat het haar 1 px buiten
+        # de schedel uitsteken, hier houdt het precies op waar de tondeuse
+        # ophield. Dat maakt de kop smaller en dat lees je op 16 px terug.
+        v.rect(KOP_L, top, KOP_R, top + diepte, HAIR)
+        v.rect(KOP_L + 1, top - 1, KOP_R - 1, top - 1, HAIR)
+        v.px(KOP_L - 1, top + 1, HAIR_S)
+        v.px(KOP_R + 1, top + 1, HAIR_S)
+        if richting != 1:
+            # de aanzet loopt dood in de kaaklijn in plaats van er strak af te
+            # snijden; zonder dit lijkt het haar opgeplakt
+            v.px(KOP_L, top + diepte + 1, HAIR_S)
+            v.px(KOP_R, top + diepte + 1, HAIR_S)
+        return
+
+    if variant == "kuif":
+        # Volume naar boven en naar achteren gekamd. In profiel zit dat volume
+        # aan de voorkant, van voren leest het als een dikke kruin; van achteren
+        # zie je er niets van, dus daar blijft het plat.
+        v.rect(KOP_L, top, KOP_R, top + diepte, HAIR)
+        if richting == 1:
+            v.rect(KOP_L + 1, top - 1, KOP_R - 1, top - 1, HAIR)
+        else:
+            # Het volume moet oplopen, niet als een plaat over de kop liggen:
+            # twee even brede rijen boven elkaar lezen als de rand van een pet.
+            # Daarom versmalt elke rij naar een kant toe, zoals haar dat doet
+            # als het opzij is gekamd.
+            v.rect(KOP_L + 1, top - 1, KOP_R, top - 1, HAIR)
+            v.rect(KOP_L + 3, top - 2, KOP_R - 1, top - 2, HAIR)
+            v.px(KOP_L, top - 1, HAIR_S)
+        v.px(KOP_L - 1, top + 1, HAIR_S)
+        v.px(KOP_R + 1, top + 1, HAIR_S)
+        return
+
     if variant == "dunnend":
         v.rect(KOP_L + 1, top, KOP_R - 1, top + diepte - 1, HAIR)
         v.rect(KOP_L, top + 1, KOP_L, top + 2, HAIR_S)
@@ -372,7 +408,7 @@ def laag_hair(v, richting, p, variant):
 # =============================================================================
 # 5. facial — snor, stoppels, baard
 # =============================================================================
-FACIALS = ["snor", "stoppels", "baard"]
+FACIALS = ["snor", "sik", "stoppels", "baard"]
 
 
 def laag_facial(v, richting, p, variant):
@@ -381,6 +417,14 @@ def laag_facial(v, richting, p, variant):
     bob = p["bob"]
     if variant == "snor":
         v.rect(6, MOND_Y - 1 + bob, 9, MOND_Y - 1 + bob, HAIR_S)
+    elif variant == "sik":
+        # Snor plus kinlapje, met de wangen vrij. Dat is een ander gezicht dan
+        # een volle baard: de kaaklijn blijft zichtbaar en dus blijft de kop
+        # smal, precies waar een baard hem juist breed maakt.
+        v.rect(6, MOND_Y - 1 + bob, 9, MOND_Y - 1 + bob, HAIR_S)
+        v.rect(7, MOND_Y + 1 + bob, 8, KOP_BOT + bob, HAIR_S)
+        v.px(6, KOP_BOT + bob, HAIR_S)
+        v.px(9, KOP_BOT + bob, HAIR_S)
     elif variant == "stoppels":
         for x in range(KOP_L + 1, KOP_R):
             if (x + bob) % 2 == 0:

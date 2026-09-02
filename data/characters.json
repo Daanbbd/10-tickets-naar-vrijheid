@@ -22,8 +22,8 @@
     ],
     "finale_id": "scope_not_approved",
     "color": "#2b2b30",
-    "skin": "#dcae86",
-    "hair": "#2a2320",
+    "skin": "#e0b491",
+    "hair": "#6b4b36",
     "portrait": "res://assets/sprites/portraits/daan.png",
     "accent": "#f4a259",
     "look": {
@@ -65,9 +65,9 @@
     "accent": "#43aa8b",
     "look": {
       "body": "slank",
-      "hair": "zijscheiding",
+      "hair": "kuif",
       "facial": "stoppels",
-      "outfit": "polo",
+      "outfit": "tshirt",
       "accessory": "",
       "bezigheid": "bier"
     },
@@ -94,17 +94,17 @@
       "t04"
     ],
     "finale_id": "frontend_build_failed",
-    "color": "#3a3a40",
+    "color": "#2e2e34",
     "skin": "#f0c49a",
-    "hair": "#cf8a48",
+    "hair": "#c1854a",
     "portrait": "res://assets/sprites/portraits/victor.png",
     "accent": "#5b8def",
     "look": {
       "body": "gemiddeld",
       "hair": "krullen",
-      "facial": "snor",
+      "facial": "baard",
       "outfit": "tshirt",
-      "accessory": "koptelefoon",
+      "accessory": "",
       "bezigheid": "hobbyhorse"
     },
     "pants": "#34384e",
@@ -131,16 +131,16 @@
       "t05"
     ],
     "finale_id": "production_database_connection_failed",
-    "color": "#2f4750",
+    "color": "#39505c",
     "skin": "#d6a578",
     "hair": "#1b1a1c",
     "portrait": "res://assets/sprites/portraits/jonathan.png",
     "accent": "#9b5de5",
     "look": {
       "body": "stevig",
-      "hair": "kort",
-      "facial": "",
-      "outfit": "trui",
+      "hair": "lang",
+      "facial": "sik",
+      "outfit": "overhemd",
       "accessory": "bril",
       "bezigheid": "gamen"
     },
@@ -175,8 +175,8 @@
     "look": {
       "body": "gemiddeld",
       "hair": "zijscheiding",
-      "facial": "",
-      "outfit": "blazer",
+      "facial": "stoppels",
+      "outfit": "polo",
       "accessory": "",
       "bezigheid": "padel"
     },
@@ -204,14 +204,14 @@
     ],
     "finale_id": "visual_regression_detected",
     "color": "#e8e4dc",
-    "skin": "#e9b89b",
-    "hair": "#1c1a1c",
+    "skin": "#e3b096",
+    "hair": "#2c221d",
     "portrait": "res://assets/sprites/portraits/bastiaan.png",
     "accent": "#e8c547",
     "look": {
       "body": "slank",
       "hair": "stekels",
-      "facial": "",
+      "facial": "stoppels",
       "outfit": "hoodie",
       "accessory": "",
       "bezigheid": "zoekglas"
@@ -239,17 +239,17 @@
       "t08"
     ],
     "finale_id": "ai_output_not_reviewed",
-    "color": "#6f8fd0",
+    "color": "#6d84b0",
     "skin": "#eac09a",
-    "hair": "#a8834e",
+    "hair": "#b07c44",
     "portrait": "res://assets/sprites/portraits/koen.png",
     "accent": "#e56fa8",
     "look": {
       "body": "gemiddeld",
-      "hair": "knot",
+      "hair": "fade",
       "facial": "",
       "outfit": "tshirt",
-      "accessory": "bril",
+      "accessory": "",
       "bezigheid": "peuk"
     },
     "pants": "#34384e",
