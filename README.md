@@ -8,15 +8,29 @@ Godot 4.7.2 · GDScript · ~30–60 minuten speeltijd.
 
 ## Spelen
 
+**In de browser: https://daanbbd.github.io/10-tickets-naar-vrijheid/**
+
+Werkt op desktop en op een telefoon; op een aanraakscherm verschijnt de
+duimbesturing. Bijwerken na een wijziging gaat met `tools/deploy_web.sh`.
+
+## Lokaal spelen
+
 Open het project in Godot en druk op play, of vanaf de command line:
 
 ```bash
 /Applications/Godot.app/Contents/MacOS/Godot --path .
 ```
 
-**Besturing** — WASD of pijltjes lopen · Shift rennen · **E** praten,
-onderzoeken, gebruiken · **TAB** ticketbord · **Q** hint · **ESC** minigame
-afbreken.
+**Besturing (toetsenbord)** — WASD of pijltjes lopen · Shift rennen · **E**
+praten, onderzoeken, gebruiken · **TAB** je tickets · **Q** hint · **ESC**
+minigame afbreken.
+
+**Besturing (telefoon)** — duim links om te lopen, ver uitduwen is rennen · de
+knop rechtsonder draagt het werkwoord van waar je voor staat · **▤** je tickets
+· **?** hint.
+
+De tickets staan allemaal tegelijk open. Je vindt ze door rond te lopen, en je
+kiest op het bord welke je als eerste doet.
 
 ## Testen
 
