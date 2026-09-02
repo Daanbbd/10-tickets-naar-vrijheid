@@ -54,6 +54,7 @@ const K_ACCENT_S := 0x00aaaa
 
 static var _cache: Dictionary = {}      ## look-sleutel -> SpriteFrames
 static var _lagen: Dictionary = {}      ## pad -> Image
+static var _static_cache: Dictionary = {}   ## pad -> SpriteFrames
 
 
 ## Vult ontbrekende sleutels aan en accepteert nog het oude `sheet`-veld.
@@ -67,6 +68,35 @@ static func normaliseer_look(look: Dictionary, sheet: StringName = &"") -> Dicti
 		if uit.has(sleutel):
 			uit[sleutel] = StringName(look[k])
 	return uit
+
+
+## Voor een "collega" zonder personagelagen: één los sprite-bestand
+## (`res://assets/sprites/props/paard_bug.png` en dergelijke) in plaats van het
+## gelaagde silhouet. Geen richting, geen loop-animatie — een paard in dit
+## spel deint, het rent niet — dus elke animatienaam die `npc.gd` opvraagt
+## krijgt hetzelfde ene beeld. Dat is precies genoeg: `_animate()` wisselt van
+## animatie op basis van richting en beweging, en ziet hier telkens hetzelfde.
+static func static_frames(path: String) -> SpriteFrames:
+	if _static_cache.has(path):
+		return _static_cache[path] as SpriteFrames
+
+	var tex: Texture2D = load(path) if ResourceLoader.exists(path) else null
+	var sf := SpriteFrames.new()
+	sf.remove_animation(&"default")
+	for dir: String in DIRS:
+		for voorvoegsel: String in ["idle_", "walk_", "talk_"]:
+			var anim := StringName(voorvoegsel + dir)
+			sf.add_animation(anim)
+			sf.set_animation_loop(anim, true)
+			if tex != null:
+				sf.add_frame(anim, tex)
+	sf.add_animation(&"bezig_down")
+	sf.set_animation_loop(&"bezig_down", false)
+	if tex != null:
+		sf.add_frame(&"bezig_down", tex)
+
+	_static_cache[path] = sf
+	return sf
 
 
 static func frames_for(look: Dictionary, shirt: Color, skin: Color, hair: Color,

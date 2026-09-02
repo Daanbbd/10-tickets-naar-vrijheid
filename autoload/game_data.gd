@@ -136,6 +136,7 @@ func _load_npcs(path: String) -> void:
 		n.accent = _color(d.get("accent", "#f4a259"))
 		n.portrait = String(d.get("portrait", ""))
 		n.spawn_when = d.get("spawn_when", {}) as Dictionary
+		n.static_sprite = String(d.get("static_sprite", ""))
 		var route: Array[Vector2i] = []
 		for p: Variant in d.get("route", []):
 			route.append(_tile(p))
@@ -199,6 +200,7 @@ func _load_ticket(path: String) -> void:
 	t.unlocks = _sn_array(d.get("unlocks", []))
 	t.world_changes = d.get("world_changes", []) as Array
 	t.hint = String(d.get("hint", ""))
+	t.wereldhandeling = bool(d.get("wereldhandeling", false))
 	if t.id == &"":
 		load_errors.append("ticket zonder id: %s" % path)
 		return

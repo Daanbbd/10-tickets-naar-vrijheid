@@ -53,8 +53,9 @@ func setup(d: NpcDef, builder: WorldBuilder) -> void:
 	for t: Vector2i in d.route:
 		_route.append(builder.tile_to_world(builder.nearest_walkable(t)))
 
-	sprite.sprite_frames = CharacterSprites.frames_for(
-		d.look, d.color, d.skin, d.hair, d.pants, d.accent)
+	sprite.sprite_frames = CharacterSprites.static_frames(d.static_sprite) \
+		if d.static_sprite != "" else CharacterSprites.frames_for(
+			d.look, d.color, d.skin, d.hair, d.pants, d.accent)
 	sprite.play("idle_down")
 
 	interactable.world_id = StringName("npc_obj_%s" % d.id)

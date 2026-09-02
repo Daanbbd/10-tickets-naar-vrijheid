@@ -51,5 +51,6 @@
   "owner_character": "willem",
   "minigame_id": "mg_klantfeedback",
   "zone": "z1_entree",
-  "zone_name": "Entree"
+  "zone_name": "Entree",
+  "wereldhandeling": true
 }

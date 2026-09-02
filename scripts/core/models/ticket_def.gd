@@ -25,3 +25,8 @@ extends Resource
 @export var unlocks: Array[StringName] = []
 @export var world_changes: Array = []
 @export var hint: String = ""              ## getoond door de Blauwe Vogel / ticketbord
+## F4-b: dit ticket lost op door in de wereld te handelen (een gesprek, een
+## keuze bij een object, een collega aanspreken) in plaats van door een
+## afgesloten, wereld-pauzerende minigame.
+## Zie TicketController._resolve_wereldhandeling().
+@export var wereldhandeling: bool = false

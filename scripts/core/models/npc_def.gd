@@ -23,3 +23,7 @@ extends Resource
 @export var accent: Color = Color("#f4a259")
 @export var portrait: String = ""
 @export var spawn_when: Dictionary = {}
+## Leeg = het gewone gelaagde personagesilhouet. Gezet = een los sprite-bestand
+## (bijv. de paardenbugs) in plaats van het body/hair/outfit-silhouet — voor
+## een "collega" die geen mens is en dus geen personagelagen heeft.
+@export var static_sprite: String = ""

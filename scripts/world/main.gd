@@ -389,18 +389,36 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 		if not Session.has_item(StringName(item)):
 			Session.add_item(StringName(item))
 
-	var wo := registry.get_by_id(t.anchor)
-	if wo == null:
-		printerr("[SPEELBEURT] %s: anker '%s' ontbreekt" % [t.code, t.anchor])
-		return false
-	player.global_position = builder.tile_to_world(
-		builder.nearest_walkable(builder.world_to_tile(wo.global_position)))
-	camera.global_position = player.global_position
-	camera.reset_smoothing()
-	await get_tree().create_timer(0.3).timeout
+	# BBD-209 (F4-b) lost niet meer op via zijn anker: het scrumbord vertelt je
+	# alleen dat er ergens een paard loopt. De echte handeling is een dwalende
+	# paardenbug aanspreken, dus de speelbeurt doet hier hetzelfde als een
+	# speler zou doen — op een paard af lopen in plaats van op het bord.
+	if t.minigame_id == &"mg_paarden":
+		var paard := npc_layer.find_npc(&"paard_bug_1")
+		if paard == null:
+			paard = npc_layer.find_npc(&"paard_bug_2")
+		if paard == null:
+			printerr("[SPEELBEURT] %s: geen paardenbug op de vloer" % t.code)
+			return false
+		player.global_position = builder.tile_to_world(
+			builder.nearest_walkable(builder.world_to_tile(paard.global_position)))
+		camera.global_position = player.global_position
+		camera.reset_smoothing()
+		await get_tree().create_timer(0.3).timeout
+		_interact_with(paard.interactable)
+	else:
+		var wo := registry.get_by_id(t.anchor)
+		if wo == null:
+			printerr("[SPEELBEURT] %s: anker '%s' ontbreekt" % [t.code, t.anchor])
+			return false
+		player.global_position = builder.tile_to_world(
+			builder.nearest_walkable(builder.world_to_tile(wo.global_position)))
+		camera.global_position = player.global_position
+		camera.reset_smoothing()
+		await get_tree().create_timer(0.3).timeout
 
-	var it := wo.get_node_or_null("Interactable") as Interactable
-	_interact_with(it)
+		var it := wo.get_node_or_null("Interactable") as Interactable
+		_interact_with(it)
 
 	if not await _qa_wacht_tot(func() -> bool: return Session.is_done(tid), 90.0):
 		printerr("[SPEELBEURT] %s liep vast" % t.code)
