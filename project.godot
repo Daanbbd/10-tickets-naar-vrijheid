@@ -28,8 +28,8 @@ AudioDirector="*res://autoload/audio_director.gd"
 
 window/size/viewport_width=192
 window/size/viewport_height=416
-window/size/window_width_override=576
-window/size/window_height_override=1248
+window/size/window_width_override=384
+window/size/window_height_override=832
 window/stretch/mode="canvas_items"
 window/stretch/scale_mode="integer"
 window/handheld/orientation=1
@@ -108,14 +108,6 @@ debug_panel={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194332,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
-
-; De drie minigames met een tikbaar bord luisteren op InputEventMouseButton.
-; Dat werkt op een telefoon alleen zolang Godot muisgebeurtenissen uit touch
-; blijft afleiden. Het staat standaard aan, maar het staat hier expliciet:
-; wie het uitzet maakt mg_whack, mg_cableboard en mg_slotboard onbedienbaar.
-[input_devices]
-
-pointing/emulate_mouse_from_touch=true
 
 [rendering]
 

@@ -6,35 +6,29 @@ extends Control
 ## Doing naar Done schuiven, met de kleur van het vakgebied dat erbij hoort. Dat
 ## is waar het spel over gaat, dus het hoort er ook uit te zien.
 ##
-## Twee gedaantes, dezelfde opbouw:
-##   TAB overal        -> compact, om even te kijken waar je stond
-##   het bord zelf     -> close-up, met de landingsanimatie van een nieuw briefje
+## Twee ingangen, dezelfde opbouw: TAB overal om te kijken waar je stond, en
+## het bord zelf, waar een nieuw briefje op landt.
 ##
-## Kolommen zijn de bestaande TicketState. LOCKED en AVAILABLE staan allebei in
-## To do, want dat is waar ze op een echt bord ook hangen; geblokkeerd is
-## vervaagd in plaats van weggelaten. Negen geredigeerde regels lezen als negen
-## weigeringen, en dat was al een bewuste keuze van dit bord.
+## Sinds alle tickets tegelijk openstaan is dit je inventaris in plaats van een
+## voortgangslijst. "Welke bestaan er" is geen informatie meer; "welke heb ik
+## gevonden" wel. Dus staan hier alleen de briefjes die je bij je hebt, met
+## eronder hoeveel er nog ergens op de vloer liggen — dat leest als een reden om
+## te gaan kijken, waar negen geblokkeerde briefjes als negen weigeringen lazen.
+##
+## Een briefje aantikken kiest het: dat wordt je doel, en de doelregel, de hint
+## en de wijzer in de wereld volgen mee.
 
-const KOLOMMEN: Array[String] = ["TO DO", "DOING", "DONE"]
+const KOLOMMEN: Array[String] = ["BIJ JE", "OPGELOST"]
 
 
 var _kolom: Array[VBoxContainer] = []
 var _detail: RichTextLabel
 var _titel: Label
-var _inventaris: Label
-var _sluit: Label
+var _sluit: Button
 var _onder: Label
-var _close_up: bool = false
 
 
-func zet_close_up(aan: bool) -> void:
-	_close_up = aan
-	if _onder != null:
-		_onder.visible = aan
-
-
-func bouw(close_up: bool = false) -> void:
-	_close_up = close_up
+func bouw() -> void:
 	var paneel := PanelContainer.new()
 	paneel.add_theme_stylebox_override("panel", UiKit.panel(UiKit.WIT, UiKit.LINE))
 	UiKit.full_rect(paneel)
@@ -48,10 +42,9 @@ func bouw(close_up: bool = false) -> void:
 	v.add_theme_constant_override("separation", 2)
 	paneel.add_child(v)
 
-	_titel = UiKit.label("SPRINTBORD", UiKit.FS_BODY, UiKit.INK)
+	_titel = UiKit.label("JOUW TICKETS", UiKit.FS_BODY, UiKit.INK)
 	v.add_child(_titel)
-	_onder = UiKit.label("Je staat er met je neus bovenop.", UiKit.FS_SMALL, UiKit.GRIJS)
-	_onder.visible = close_up
+	_onder = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
 	v.add_child(_onder)
 
 	# de markerstreep onder de kop: het is een whiteboard, geen dialoogvenster
@@ -96,46 +89,18 @@ func bouw(close_up: bool = false) -> void:
 	_detail.custom_minimum_size = Vector2(0, 34)
 	v.add_child(_detail)
 
-	# Wat je bij je hebt hoort hier en niet permanent in beeld: het is iets wat
-	# je opzoekt, geen statusregel.
-	_inventaris = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
-	v.add_child(_inventaris)
-
-	_sluit = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
-	_sluit.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	# Een echte knop, geen regel met "TAB  sluiten" erin. Het bord vult het
+	# scherm en scrollt, dus "tik ergens om te sluiten" kan niet: elke tik is
+	# daar ook het begin van een veeg. Zelfde vorm als de Stoppen-knop in een
+	# minigame, zodat "hier kom je weg" er overal eender uitziet.
+	_sluit = UiKit.button("Sluiten", UiKit.FS_SMALL)
+	_sluit.focus_mode = Control.FOCUS_NONE
 	v.add_child(_sluit)
 
 
-func toon_sluitregel(regel: String) -> void:
-	if _sluit != null:
-		_sluit.text = regel
-
-
-## Op een aanraakscherm wordt de sluitregel een echte knop op dezelfde plek.
-## Het bord vult het scherm en scrollt, dus "tik ergens om te sluiten" kan
-## niet: elke tik is daar ook het begin van een veeg. Zelfde vorm als de
-## Stoppen-knop in een minigame, zodat "hier kom je weg" er overal eender
-## uitziet.
 func zet_sluitknop(bij_klik: Callable) -> void:
-	if _sluit == null:
-		return
-	var v := _sluit.get_parent() as VBoxContainer
-	var idx := _sluit.get_index()
-	v.remove_child(_sluit)
-	_sluit.queue_free()
-	_sluit = null
-
-	var b := UiKit.button("Sluiten", UiKit.FS_SMALL)
-	b.custom_minimum_size = Vector2(0, 26)
-	b.focus_mode = Control.FOCUS_NONE
-	b.pressed.connect(bij_klik)
-	v.add_child(b)
-	v.move_child(b, idx)
-
-
-func toon_inventaris(regel: String) -> void:
-	if _inventaris != null:
-		_inventaris.text = regel
+	if _sluit != null:
+		_sluit.pressed.connect(bij_klik)
 
 
 func vul() -> void:
@@ -148,36 +113,57 @@ func vul() -> void:
 	ids.sort_custom(func(a: StringName, b: StringName) -> bool:
 		return GameData.ticket(a).order < GameData.ticket(b).order)
 
+	# Alleen wat je gevonden of opgelost hebt. Wat je nog niet bent tegengekomen
+	# hoort niet in een inventaris thuis; daarvoor is de regel eronder.
 	var eerste: TicketDef = null
 	for id: StringName in ids:
+		if not (Session.is_discovered(id) or Session.is_done(id)):
+			continue
 		var t: TicketDef = GameData.ticket(id)
 		var st: GameEnums.TicketState = Session.ticket_state(id)
 		_kolom[_kolom_van(st)].add_child(_briefje(t, st))
-		if eerste == null and st == GameEnums.TicketState.AVAILABLE:
+		if st != GameEnums.TicketState.DONE and (eerste == null or Session.is_pinned(id)):
 			eerste = t
 
-	_titel.text = "SPRINTBORD   %d/10" % Session.done_count()
+	_titel.text = "JOUW TICKETS   %d/10" % Session.done_count()
+	_onder.text = _restregel()
+	_onder.visible = true
+
 	if eerste != null:
 		toon_detail(eerste)
+	elif Session.all_done():
+		_detail.text = "[color=#%s]Alles opgelost. Ga naar de voordeur.[/color]" % UiKit.GROEN.to_html(false)
 	else:
-		_detail.text = "[color=#%s]Tik een briefje aan.[/color]" % UiKit.GRIJS.to_html(false)
+		_detail.text = "[color=#%s]Je hebt nog niets gevonden. Elk ticket ligt in de ruimte waar het hoort.[/color]" % UiKit.GRIJS.to_html(false)
+
+
+## Hoeveel er nog liggen, en in de close-up ook waar je staat. Dit is de reden
+## om het kantoor in te lopen, dus het staat direct onder de kop.
+func _restregel() -> String:
+	var rest := QuestEngine.undiscovered_count()
+	if Session.all_done():
+		return "Klaar. Naar de voordeur."
+	if rest <= 0:
+		return "Alles gevonden."
+	# Kort houden: op 192 px breed breekt een langere regel over twee regels en
+	# duwt hij de briefjes uit beeld.
+	return "Nog %s op de vloer." % ("één" if rest == 1 else str(rest))
 
 
 static func _kolom_van(st: GameEnums.TicketState) -> int:
-	match st:
-		GameEnums.TicketState.ACTIVE: return 1
-		GameEnums.TicketState.DONE: return 2
-		_: return 0        # LOCKED en AVAILABLE hangen allebei in To do
+	return 1 if st == GameEnums.TicketState.DONE else 0
 
 
 func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
 	var p := PanelContainer.new()
 	var kleur := _papier(t)
-	if st == GameEnums.TicketState.LOCKED:
-		# geblokkeerd blijft leesbaar maar wijkt terug, zodat de kolom vertelt
-		# waar je nu iets mee kunt
-		kleur = kleur.lerp(UiKit.WIT, 0.55)
-	p.add_theme_stylebox_override("panel", UiKit.postit(kleur, kleur.darkened(0.30)))
+	if st == GameEnums.TicketState.DONE:
+		# opgelost wijkt terug: die kolom is een archief, geen keuze
+		kleur = kleur.lerp(UiKit.WIT, 0.45)
+	# Het gekozen briefje krijgt de oranje rand van de doelwijzer, zodat "dit is
+	# waar ik mee bezig ben" er op het bord net zo uitziet als in de wereld.
+	var rand := UiKit.ORANJE if Session.is_pinned(t.id) else kleur.darkened(0.30)
+	p.add_theme_stylebox_override("panel", UiKit.postit(kleur, rand))
 	p.mouse_filter = Control.MOUSE_FILTER_STOP
 	p.tooltip_text = t.title
 	p.set_meta(&"ticket", t.id)
@@ -190,7 +176,10 @@ func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
 	code.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(code)
 
-	var wie := _korte_eigenaar(t)
+	# Wie het moet doen is alleen nog nieuws zolang het niet gedaan is. Een
+	# opgelost briefje blijft zo half zo hoog, en dan is de archiefkolom niet
+	# langer luider dan je inventaris ernaast.
+	var wie := "" if st == GameEnums.TicketState.DONE else _korte_eigenaar(t)
 	if wie != "":
 		var w := UiKit.label(wie, UiKit.FS_SMALL, UiKit.INK.lightened(0.35))
 		w.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -211,9 +200,24 @@ func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
 	UiKit.full_rect(knop)
 	knop.pressed.connect(func() -> void:
 		AudioDirector.play_ui(&"klik")
-		toon_detail(t))
+		_kies(t))
 	p.add_child(knop)
 	return p
+
+
+## Een briefje aantikken kiest het. Dat is het hele punt van dit scherm: de
+## doelregel, de hint en de wijzer in de wereld lezen alle drie uit die keuze.
+## Nog een keer tikken laat hem weer los, voor als je toch wilt rondkijken.
+func _kies(t: TicketDef) -> void:
+	if Session.is_done(t.id):
+		toon_detail(t)
+		return
+	if Session.is_pinned(t.id):
+		Session.unpin()
+	else:
+		Session.pin(t.id)
+	vul()
+	toon_detail(t)
 
 
 ## Papierkleur uit de accentkleur van de eigenaar, niet uit zijn rol. Er zijn
@@ -231,31 +235,48 @@ static func _papier(t: TicketDef) -> Color:
 
 ## Alleen de voornaam: op een briefje van 56 px past geen rol.
 static func _korte_eigenaar(t: TicketDef) -> String:
-	if QuestEngine.is_own_expertise(t.id):
-		return "jij"
 	var d: NpcDef = GameData.npc(QuestEngine.required_helper(t.id))
-	return d.name if d != null else t.owner_role
+	match QuestEngine.helper_stand(t.id):
+		GameEnums.HelperStand.EIGEN:
+			return "jij"
+		GameEnums.HelperStand.MEE:
+			# Zonder naam: het briefje trimt met ellipsis en zou "loopt mee"
+			# als eerste opeten. Wie het is staat op de detailregel eronder.
+			return "loopt mee"
+		GameEnums.HelperStand.GEWEEST:
+			return ""
+		_:
+			return d.name if d != null else t.owner_role
 
 
+## Twee regels, meer niet: wat het is en waar je heen moet. De code staat al op
+## het briefje, de oranje rand zegt al dat het gekozen is, en de hint staat
+## achter de hintknop én wordt door de wijzer in de wereld aangewezen. Dat drie
+## keer herhalen onder aan een telefoonscherm maakt er geen keuzescherm van maar
+## een lap tekst waar niemand iets mee doet.
 func toon_detail(t: TicketDef) -> void:
-	var st: GameEnums.TicketState = Session.ticket_state(t.id)
-	var regels := "[color=#%s]%s[/color]  %s\n" % [
-		UiKit.BLUEBIRD_INK.to_html(false), t.code, t.title]
-	if st == GameEnums.TicketState.DONE:
+	var regels := "%s\n" % t.title
+	if Session.is_done(t.id):
 		regels += "[color=#%s]Opgelost.[/color]" % UiKit.GROEN.to_html(false)
-	elif st == GameEnums.TicketState.LOCKED:
-		regels += "[color=#%s]Nog niet aan de beurt.[/color]" % UiKit.GRIJS.to_html(false)
 	else:
-		regels += "[color=#%s]%s  ·  %s[/color]\n%s" % [
-			UiKit.GRIJS.to_html(false), t.zone_name, _volledige_eigenaar(t), t.hint]
+		regels += "[color=#%s]%s  ·  %s[/color]" % [
+			UiKit.GRIJS.to_html(false), t.zone_name, _volledige_eigenaar(t)]
 	_detail.text = regels
 
 
 static func _volledige_eigenaar(t: TicketDef) -> String:
-	if QuestEngine.is_own_expertise(t.id):
-		return "jouw vakgebied"
 	var d: NpcDef = GameData.npc(QuestEngine.required_helper(t.id))
-	return "haal %s" % d.name if d != null else t.owner_role
+	if d == null:
+		return "jouw vakgebied" if QuestEngine.is_own_expertise(t.id) else t.owner_role
+	match QuestEngine.helper_stand(t.id):
+		GameEnums.HelperStand.EIGEN:
+			return "jouw vakgebied"
+		GameEnums.HelperStand.MEE:
+			return "%s loopt met je mee" % d.name
+		GameEnums.HelperStand.GEWEEST:
+			return "%s is langs geweest" % d.name
+		_:
+			return "haal %s" % d.name
 
 
 ## Een nieuw briefje landt op het bord. Dit is de enige plek waar voortgang

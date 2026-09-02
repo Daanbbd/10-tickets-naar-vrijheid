@@ -39,6 +39,15 @@ const FS_BODY := 10
 const FS_HEAD := 20
 const FS_TITLE := 30
 
+## Minimumhoogte van een knop, in canvaspixels. Een duimmaat, geen designkeuze:
+## op een 1080-brede telefoon schaalt dit canvas 5x, dus 24 px is ~9 mm en dat
+## is wat Android als 48 dp vraagt. Daaronder wordt een knop een mikpunt.
+##
+## Staat hier en niet in de knoppenbalk omdat de balk zijn eigen hoogte hieruit
+## afleidt en de HUD zijn onderste regels daar weer boven hangt: één getal, drie
+## lezers.
+const KNOP_MIN_H := 24
+
 
 static func panel(bg: Color = PANEL, border: Color = INK, width: int = 1) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -49,10 +58,6 @@ static func panel(bg: Color = PANEL, border: Color = INK, width: int = 1) -> Sty
 	return sb
 
 
-## Let op: labels breken standaard af. Een label zonder autowrap rapporteert de
-## volledige tekstbreedte als minimum, en een Container groeit daar buiten zijn
-## ankers voor uit. Op een canvas van 192 px trekt een enkele lange regel zo de
-## hele indeling van het scherm af.
 ## Een ticket is een briefje op het bord, geen tabelrij. Vandaar papierkleur met
 ## een rand in een donkerdere tint van datzelfde papier: een zwarte lijn van 1 px
 ## maakt er op deze schaal een invoerveld van.
@@ -87,6 +92,10 @@ static func panel_krap(bg: Color = PANEL, border: Color = INK, width: int = 1) -
 	return sb
 
 
+## Let op: labels breken standaard af. Een label zonder autowrap rapporteert de
+## volledige tekstbreedte als minimum, en een Container groeit daar buiten zijn
+## ankers voor uit. Op een canvas van 192 px trekt een enkele lange regel zo de
+## hele indeling van het scherm af.
 static func label(text: String, size: int = FS_BODY, color: Color = INK) -> Label:
 	var l := Label.new()
 	l.text = text
@@ -107,9 +116,36 @@ static func rich(size: int = FS_BODY, color: Color = INK) -> RichTextLabel:
 	return r
 
 
+## Zelfde valkuil als bij `label()`: een Button zonder autowrap meldt zijn
+## volledige tekstbreedte als minimum. Een dialoogkeuze als "BBD-202 Waarom sta
+## ik hier eigenlijk?" duwde het dialoogpaneel daardoor breder dan het canvas,
+## en omdat dat paneel `GROW_DIRECTION_BOTH` heeft viel de tekst aan *beide*
+## kanten buiten beeld — de ticketcode links, de titel rechts. Vandaar dat
+## afbreken hier de standaard is en niet iets wat elke aanroeper zelf regelt.
+##
+## De minimumhoogte komt uit `KNOP_MIN_H`; de rekensom staat daar.
+##
+## **Geen autowrap.** Een gewone knop moet met zijn tekst meegroeien, en een
+## Button met autowrap meldt zijn tekstbreedte niet als minimum. Gemeten op
+## FS_BODY, met `custom_minimum_size` op 34x34:
+##
+## | tekst | zonder autowrap | met autowrap |
+## |---|---|---|
+## | Praten | 55 x 34 | 34 x 34 |
+## | Oppakken | 74 x 34 | 34 x 34 |
+## | Onderzoeken | 96 x 34 | 34 x 34 |
+##
+## De actieknop van de duimbesturing draagt het werkwoord van waar je voor
+## staat en is rechtsonder verankerd; met autowrap bleef die op 34 px staan en
+## las "Oppakken" als "Oppa" met "kken" afgekapt onder de rand.
+##
+## Een knop die juist in een vaste breedte moet passen — een dialoogkeuze, een
+## regel in een keuzelijst — hoort daarom `keuzeknop()` te gebruiken. Die twee
+## behoeften zijn tegengesteld en kunnen niet één standaard zijn.
 static func button(text: String, size: int = FS_BODY) -> Button:
 	var b := Button.new()
 	b.text = text
+	b.custom_minimum_size = Vector2(0, KNOP_MIN_H)
 	b.add_theme_font_size_override("font_size", size)
 	b.add_theme_color_override("font_color", INK)
 	b.add_theme_color_override("font_hover_color", BLUEBIRD_INK)
@@ -118,16 +154,36 @@ static func button(text: String, size: int = FS_BODY) -> Button:
 	b.add_theme_stylebox_override("hover", panel(WIT, BLUEBIRD_INK))
 	b.add_theme_stylebox_override("pressed", panel(BLUEBIRD_TINT, INK))
 	b.add_theme_stylebox_override("focus", panel(WIT, BLUEBIRD_INK, 2))
+	# Zonder deze override valt een uitgeschakelde knop terug op Godots eigen
+	# grijze doos met ronde hoeken, en die komt zichtbaar uit een andere game.
+	# Uitgeschakeld hoort hier hetzelfde te zijn als ingeschakeld, maar dan
+	# uitgebleekt: zelfde rand, zelfde marges, alleen minder aanwezig.
+	b.add_theme_stylebox_override("disabled", panel(NEUTRAAL_TINT, GRIJS))
+	b.add_theme_color_override("font_disabled_color", GRIJS)
 	b.focus_mode = Control.FOCUS_ALL
 	return b
 
 
+## Een knop voor een keuzelijst: hij past zich aan de beschikbare breedte aan
+## in plaats van eraan te trekken.
+##
+## Dit is de tegenhanger van `button()`. Zonder autowrap meldt een keuze als
+## "202 · Waarom sta ik hier eigenlijk?" zijn volle tekstbreedte als minimum,
+## en dan groeit het dialoogpaneel — dat `GROW_DIRECTION_BOTH` heeft — aan
+## *beide* kanten buiten het canvas: de ticketcode valt links weg en de titel
+## rechts. Vandaar afbreken plus meegroeien in de breedte.
+static func keuzeknop(text: String, size: int = FS_SMALL) -> Button:
+	var b := button(text, size)
+	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	b.clip_text = false
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return b
+
+
 static func card(text: String, tint: Color = PANEL) -> Button:
-	var b := button(text, FS_SMALL)
+	var b := keuzeknop(text, FS_SMALL)
 	b.add_theme_stylebox_override("normal", panel(tint, LINE))
 	b.add_theme_stylebox_override("hover", panel(tint.lightened(0.18), BLUEBIRD_INK))
-	b.clip_text = false
-	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.custom_minimum_size = Vector2(94, 22)
 	return b
 

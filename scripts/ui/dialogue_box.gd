@@ -75,8 +75,10 @@ func _ready() -> void:
 	_choices.add_theme_constant_override("separation", 2)
 	v.add_child(_choices)
 
-	_hint = UiKit.label("tik  verder" if Invoer.touch() else "E  verder",
-		UiKit.FS_SMALL, UiKit.GRIJS)
+	# Eén regel, want tikken werkt overal: een muisklik gaat door voor een
+	# vingertik zolang er geen aanraakscherm is (`Invoer.muis_als_vinger()`).
+	# E doet hetzelfde en staat op de besturingskaart.
+	_hint = UiKit.label("tik  verder", UiKit.FS_SMALL, UiKit.GRIJS)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v.add_child(_hint)
 
@@ -113,7 +115,7 @@ func show_choices(options: Array[String]) -> void:
 	_clear_choices()
 	_hint.visible = false
 	for i: int in options.size():
-		var b := UiKit.button(options[i], UiKit.FS_SMALL)
+		var b := UiKit.keuzeknop(options[i], UiKit.FS_SMALL)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.pressed.connect(_on_choice.bind(i))
 		_choices.add_child(b)
