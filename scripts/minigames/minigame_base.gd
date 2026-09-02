@@ -217,6 +217,10 @@ func finish_with_banner(ok: bool, text: String, score: int = 0, payload: Diction
 		_banner_label.text = text
 		_banner.visible = true
 	AudioDirector.play_ui(&"ticket_klaar" if ok else &"fout")
+	# De banner is groen of rood, maar op een telefoon in de trein is het geluid
+	# uit en zit het scherm halverwege achter een duim. De trilling draagt hier
+	# dezelfde uitslag: lang voor gelukt, kort en hard voor mislukt.
+	Haptiek.tril(Haptiek.Sterkte.GELUKT if ok else Haptiek.Sterkte.SLAG)
 	await get_tree().create_timer(1.9 if ok else 1.6, true).timeout
 	if ok:
 		succeed(score, payload)

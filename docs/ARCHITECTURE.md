@@ -1,8 +1,8 @@
 # Architectuur
 
 Godot **4.7.2**, GDScript met statische typering. Renderer `gl_compatibility`
-(2D pixel art), viewport **480×270**, venster 1440×810, stretch `canvas_items`
-met `nearest` filtering.
+(2D pixel art), viewport **192×416** (staand, telefoonformaat), venster 384×832,
+stretch `canvas_items` met `integer` scaling en `nearest` filtering.
 
 ## Kernidee
 

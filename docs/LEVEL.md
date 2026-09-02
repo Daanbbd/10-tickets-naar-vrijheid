@@ -108,9 +108,10 @@ wegschrijven. Huidige stand:
 
 Dat is de prijs van de echte verhouding (was 14,6 s op de vierkante verzonnen
 vloer). Wil je dat omlaag brengen, dan moet **`WALK_SPEED` in
-`scripts/entities/player.gd`** omhoog — `walk_speed_tiles_per_sec` in
-`floor.json` wordt door het spel **niet gelezen** en verandert alleen de
-schatting die de generator print.
+`scripts/entities/player.gd`** omhoog. `WALK_SPEED_TILES` in `gen_floor.py`
+moet dan mee: dat getal staat er alleen voor de looptijden die het script
+print. Het stond ook als `walk_speed_tiles_per_sec` in `floor.json` en werd
+daar door niets gelezen — die dode kopie is weg.
 
 ## Alles komt uit de generator
 

@@ -11,7 +11,15 @@ extends Node2D
 const LABEL_BREEDTE := 96.0
 const LABEL_HOOGTE := 30.0
 
-@onready var _sprite: Sprite2D = get_node_or_null("Sprite") as Sprite2D
+const SPRITE_NAAM := "Sprite"
+
+## De Sprite2D gaat dezelfde kant op als de Label: hij bestaat alleen als er ook
+## echt een beeld voor dit object is. Vandaag heeft geen enkel object er een — de
+## meubels staan als losse props op `objects_layer` en dit blijft een onzichtbaar
+## anker voor de Interactable. `set_sprite()` is de plek waar dat verandert zodra
+## er een spritepad in de data staat, en `op_set_modulate` kleurt de hele node,
+## dus vanaf dat moment doet die operatie ook echt iets.
+@onready var _sprite: Sprite2D = get_node_or_null(SPRITE_NAAM) as Sprite2D
 
 var _label: Label = null
 var _locked: bool = false
@@ -20,6 +28,37 @@ var _locked: bool = false
 func _ready() -> void:
 	add_to_group(&"world_object")
 	_label = get_node_or_null("Label") as Label
+	# Een WorldObject wordt in code gebouwd (`Main._spawn_objects`), dus het kind
+	# kan er vóór of ná `_ready` bij komen. Niet vertrouwen op @onready alleen.
+	if _sprite == null:
+		_sprite = get_node_or_null(SPRITE_NAAM) as Sprite2D
+
+
+# --- Beeld ----------------------------------------------------------------
+
+## Geeft dit object een beeld. Maakt de Sprite2D aan bij de eerste aanroep en
+## hergebruikt hem daarna, zodat een replay hetzelfde eindplaatje oplevert.
+##
+## Een leeg pad is de normale toestand en doet niets. Een pad dat niet bestaat
+## laat het object staan zoals het stond en meldt zich in de log: de propdata
+## mag vooruitlopen op een PNG die nog gegenereerd moet worden, zonder dat de
+## hele vloer erop wacht.
+func set_sprite(path: String) -> void:
+	if path == "" or not ResourceLoader.exists(path):
+		if path != "":
+			push_warning("WorldObject %s: sprite ontbreekt: %s" % [world_id, path])
+		return
+	if _sprite == null:
+		_sprite = get_node_or_null(SPRITE_NAAM) as Sprite2D
+	if _sprite == null:
+		_sprite = Sprite2D.new()
+		_sprite.name = SPRITE_NAAM
+		_sprite.centered = true
+		_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		# Vóór de Label en de Interactable: tekst hoort over het beeld heen.
+		add_child(_sprite)
+		move_child(_sprite, 0)
+	_sprite.texture = load(path)
 
 
 # --- Idempotente operaties, aangeroepen door WorldMutator -----------------
@@ -27,9 +66,11 @@ func _ready() -> void:
 func op_set_visible(v: bool) -> void:
 	visible = v
 
+## Wisselt het beeld, en maakt het kind alsnog aan als dit object er nog geen
+## had. Anders is een `swap_texture` op een spriteloos object een stille no-op —
+## precies het soort verandering dat niemand mist tot de replay hem overslaat.
 func op_swap_texture(path: String) -> void:
-	if _sprite != null and ResourceLoader.exists(path):
-		_sprite.texture = load(path)
+	set_sprite(path)
 
 func op_set_modulate(c: Color) -> void:
 	modulate = c

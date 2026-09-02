@@ -1774,6 +1774,20 @@ func _test_briefings() -> void:
 
 	_ok(gezien == 9, "verwacht 9 tickets met een eigenaar, gevonden %d" % gezien)
 
+	# Eén functietitel per collega. `characters.json` is de bron voor de briefing
+	# en het selectiescherm, `npcs.json` voor het bordje boven zijn hoofd op de
+	# vloer. Wijken die af, dan heeft dezelfde man twee banen: de speler kiest
+	# "Client Lead" en spreekt daarna "Account management" aan. Dat is geen crash
+	# en dus niets wat vanzelf opvalt — vandaar deze regel.
+	for cid: StringName in GameData.character_ids():
+		var pc: CharacterDef = GameData.character(cid)
+		var np: NpcDef = GameData.npc(StringName("npc_%s" % cid))
+		if pc == null or np == null:
+			continue    # het ontbreken van de NPC wordt hierboven al gemeld
+		_ok(np.role == pc.role,
+			"%s heeft twee functietitels: '%s' in npcs.json, '%s' in characters.json" % [
+				cid, np.role, pc.role])
+
 	# De stand-up noemt bij naam wie iets te melden heeft. Die naam moet een
 	# spreker zijn die in de data ook echt `belangrijk` staat, anders stuurt de
 	# briefing je een verkeerde kant op — erger dan geen briefing.
