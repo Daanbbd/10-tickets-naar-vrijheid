@@ -11,6 +11,14 @@ extends MinigameBase
 ## Lang genoeg om de beweging te zien, kort genoeg om drie keer te doen.
 const METING_DUUR := 0.9
 
+## Hoe breed de bandbreedte om het echte effect heen ligt (zie
+## `_spreiding_tekst()`). Smal genoeg om een duidelijke winnaar (bijv. +0,5
+## tegenover +0,1) nog als duidelijke winnaar te tonen, breed genoeg om twee
+## varianten die dicht bij elkaar liggen (+0,1 tegenover -0,1) elkaars
+## bandbreedte te laten overlappen — dan blijft meten de enige manier om ze
+## uit elkaar te trekken.
+const SPREIDING_MARGE := 0.15
+
 var _basis: float = 0.0
 var _doel: float = 0.0
 var _eenheid: String = ""
@@ -19,10 +27,12 @@ var _eenheid: String = ""
 ## tegen de rand aan en zie je de laatste winst niet meer.
 var _bovengrens: float = 1.0
 
-## Staan de effecten al op de knoppen? Dit is het voordeel van een CRO'er:
-## niet een makkelijker getal maar minder blind kiezen. Zie
-## `TraitModifier._abtest()`.
-var _toon_effect: bool = false
+## Staat de bandbreedte al op de knoppen? Dit is het voordeel van een CRO'er:
+## niet het exacte effect (dat maakte meten overbodig en verwijderde zo zijn
+## eigen minigame — BBD-206/F4-a), maar een indicatie die een duidelijke
+## winnaar verraadt en twee dicht bij elkaar liggende varianten toch nog
+## open laat. Zie `TraitModifier._abtest()`.
+var _toon_spreiding: bool = false
 
 var _ronde: int = 0
 var _conversie: float = 0.0
@@ -52,7 +62,7 @@ func _on_setup() -> void:
 	_basis = float(c.get("basis", 0.0))
 	_doel = float(c.get("doel", 0.0))
 	_eenheid = String(c.get("eenheid", ""))
-	_toon_effect = bool(c.get("toon_effect", false))
+	_toon_spreiding = bool(c.get("toon_spreiding", false))
 	_conversie = _basis
 	_bovengrens = maxf(_doel, _hoogst_haalbaar()) * 1.06
 
@@ -201,20 +211,36 @@ func _toon_ronde() -> void:
 		(_varianten.get_child(0) as Button).grab_focus()
 
 
-## Het label van een variant, met bij eigen vakgebied het verwachte effect
-## erachter. Achter het label en niet ervoor: je leest nog steeds eerst wat je
-## aanzet, en het getal is een tweede overweging en niet de eerste.
+## Het label van een variant, met bij eigen vakgebied de bandbreedte erachter.
+## Achter het label en niet ervoor: je leest nog steeds eerst wat je aanzet,
+## en de indicatie is een tweede overweging en niet de eerste.
 func _variant_label(v: Dictionary) -> String:
 	var label := String(v.get("label", "..."))
-	if not _toon_effect:
+	if not _toon_spreiding:
 		return label
-	return "%s   %s" % [label, _effect_tekst(float(v.get("effect", 0.0)))]
+	return "%s   %s" % [label, _spreiding_tekst(float(v.get("effect", 0.0)))]
 
 
 ## Een effect draagt altijd zijn teken, ook als het nul is: "0,0" zonder teken
 ## leest als een meetwaarde en niet als "hier verandert niets".
 func _effect_tekst(e: float) -> String:
 	return "%s%s" % ["+" if e >= 0.0 else "-", _getal(absf(e))]
+
+
+## De ondergrens en bovengrens rond het echte effect, in die volgorde. Een
+## losstaande methode (in plaats van meteen tekst) omdat de test bewijst dat
+## twee dicht bij elkaar liggende varianten overlappen, en dat bewijs hoort
+## op het getal te leunen en niet op het geformatteerde label te parsen.
+func _spreiding_bereik(effect: float) -> Vector2:
+	return Vector2(effect - SPREIDING_MARGE, effect + SPREIDING_MARGE)
+
+
+## Danny's voordeel: een bandbreedte in plaats van het precieze getal. Genoeg
+## om een duidelijke winnaar te herkennen, niet genoeg om de meting over te
+## slaan bij twee varianten die dicht bij elkaar liggen.
+func _spreiding_tekst(effect: float) -> String:
+	var bereik := _spreiding_bereik(effect)
+	return "%s tot %s" % [_effect_tekst(bereik.x), _effect_tekst(bereik.y)]
 
 
 func _kies(index: int) -> void:
