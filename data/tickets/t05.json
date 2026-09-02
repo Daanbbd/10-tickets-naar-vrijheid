@@ -28,7 +28,7 @@
       "cue": "ticket_klaar"
     }
   ],
-  "unlocks": [],
+  "unlocks": ["t06"],
   "world_changes": [
     {
       "op": "set_text",

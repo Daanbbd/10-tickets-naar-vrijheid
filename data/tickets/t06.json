@@ -1,5 +1,7 @@
 {
-  "available_when": {},
+  "available_when": {
+    "flags_all": ["_never_"]
+  },
   "requirements": {},
   "dialogue_ids": {
     "offer": "t06_offer",

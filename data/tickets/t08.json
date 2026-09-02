@@ -1,5 +1,7 @@
 {
-  "available_when": {},
+  "available_when": {
+    "flags_all": ["_never_"]
+  },
   "requirements": {},
   "dialogue_ids": {
     "offer": "t08_offer",
@@ -24,7 +26,7 @@
       "cue": "ticket_klaar"
     }
   ],
-  "unlocks": [],
+  "unlocks": ["t01"],
   "world_changes": [
     {
       "op": "set_text",

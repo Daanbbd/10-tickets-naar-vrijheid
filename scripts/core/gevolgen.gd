@@ -172,7 +172,7 @@ static func minigame_config(ticket_id: StringName) -> Dictionary:
 ## allemaal tegelijk open, dus voortgang is het enige dat voor elke speler in
 ## dezelfde richting loopt. Wát ze stuurt hangt wél van je keuzes af — dat
 ## staat in `data/klant_berichten.json` achter gewone `when`-condities.
-const DREMPELS: Array[int] = [3, 5, 7, 9]
+const DREMPELS: Array[int] = [1, 3, 5, 6, 7, 9]
 
 
 static func druk() -> int:

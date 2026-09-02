@@ -2,18 +2,35 @@
  "afzender": "Manege De Vrije Teugel",
  "berichten": {
   "k1": {
-   "tijd": "11:20",
+   "tijd": "09:45",
    "variants": [
     {
-     "when": {"flags_all": ["gevolg_paard_beloofd"]},
-     "text": "Wat leuk dat het paard erin komt! Kunnen jullie hem trouwens iets meer naar links?"
-    },
-    {
-     "text": "Hoi! Ik zag dat er al aan gewerkt wordt. Kunnen jullie dat paard trouwens iets meer naar links?"
+     "text": "Hoi! Superleuk dat het al loopt. Trouwens: kan er een geluidje bij als je op de site klikt? Mijn zwager zei dat mensen daar blij van worden.",
+     "effects": [
+      {"op": "unlock_ticket", "ticket": "t07"}
+     ]
     }
    ]
   },
   "k2": {
+   "tijd": "11:20",
+   "variants": [
+    {
+     "when": {"flags_all": ["gevolg_paard_beloofd"]},
+     "text": "Wat leuk dat het paard erin komt! Kunnen jullie hem trouwens iets meer naar links?",
+     "effects": [
+      {"op": "set_flag", "flag": "klant_wil_paard_links"}
+     ]
+    },
+    {
+     "text": "Hoi! Ik zag dat er al aan gewerkt wordt. Kunnen jullie dat paard trouwens iets meer naar links?",
+     "effects": [
+      {"op": "set_flag", "flag": "klant_wil_paard_links"}
+     ]
+    }
+   ]
+  },
+  "k3": {
    "tijd": "14:05",
    "variants": [
     {
@@ -29,7 +46,18 @@
     }
    ]
   },
-  "k3": {
+  "k4": {
+   "tijd": "15:20",
+   "variants": [
+    {
+     "text": "Trouwens, ik heb nog een wens opgeschreven. Mijn neef zei dat dat een 'user story' moet heten. Ik zet hem in de bijlage, misschien handig voor jullie planning.",
+     "effects": [
+      {"op": "unlock_ticket", "ticket": "t01"}
+     ]
+    }
+   ]
+  },
+  "k5": {
    "tijd": "16:40",
    "variants": [
     {
@@ -45,7 +73,7 @@
     }
    ]
   },
-  "k4": {
+  "k6": {
    "tijd": "20:15",
    "variants": [
     {
