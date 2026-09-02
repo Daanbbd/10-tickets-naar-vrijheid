@@ -48,6 +48,7 @@ func _ready() -> void:
 	_test_intro()
 	_test_save_ronde()
 	_test_uitlijnen_perfect()
+	_test_wereldhandelingen()
 	_rapport()
 
 
@@ -2437,3 +2438,54 @@ func _test_uitlijnen_perfect() -> void:
 			"%s: staat na een exacte sleep niet 'vast', terwijl de rest al op nul staat" % id)
 
 	mg.queue_free()
+
+
+## F4-b: BBD-203, BBD-205, BBD-207 en BBD-209 lossen op dóór in de wereld te
+## handelen, niet meer via een afgesloten, wereld-pauzerende minigame. Zonder
+## deze test kan een vijfde `wereldhandeling`-ticket stil op de
+## `push_error`-tak van `TicketController._resolve_wereldhandeling()` belanden
+## — onzichtbaar tot een echte speelbeurt erop stuit — of kan het paarden-drietal
+## uit `data/npcs.json` uit elkaar groeien met wat BBD-209 verwacht.
+func _test_wereldhandelingen() -> void:
+	_kop("wereldhandelingen (F4-b)")
+
+	# Elke minigame_id die TicketController._resolve_wereldhandeling() echt
+	# herkent. Twee kanten op bewaakt: een ticket dat wereldhandeling:true
+	# draagt zonder hier te staan, én andersom.
+	const BEKEND: Array[StringName] = [
+		&"mg_klantfeedback", &"mg_backend_fix", &"mg_muziek", &"mg_paarden",
+	]
+	for id: StringName in GameData.ticket_ids():
+		var t: TicketDef = GameData.ticket(id)
+		if t.wereldhandeling:
+			_ok(t.minigame_id in BEKEND,
+				"%s: wereldhandeling:true maar '%s' heeft geen resolver" % [t.code, t.minigame_id])
+		else:
+			_ok(not (t.minigame_id in BEKEND),
+				"%s: '%s' heeft een wereldhandeling-resolver, maar wereldhandeling staat niet aan" % [
+					t.code, t.minigame_id])
+
+	# De vier bekende eigenaren: een wereldhandeling is geen degradatie, het is
+	# nog steeds een werkwoord uit de mond van de eigenaar.
+	var verwacht_eigenaar := {
+		&"t03": &"willem", &"t05": &"jonathan", &"t07": &"danny", &"t09": &"bastiaan",
+	}
+	for id: StringName in verwacht_eigenaar.keys():
+		var t: TicketDef = GameData.ticket(id)
+		_ok(t.wereldhandeling, "%s hoort een wereldhandeling te zijn" % t.code)
+		_ok(t.owner_character == verwacht_eigenaar[id],
+			"%s: eigenaar is '%s', verwacht '%s'" % [t.code, t.owner_character, verwacht_eigenaar[id]])
+
+	# De paarden zelf: ze bestaan, en t09 ruimt ze op als hij afrond — anders
+	# blijven ze na "opgelost" nog over de vloer dwalen.
+	var paarden: Array[StringName] = [&"paard_bug_1", &"paard_bug_2", &"paard_klant_decoy"]
+	for nid: StringName in paarden:
+		_ok(GameData.npc(nid) != null, "npc '%s' ontbreekt uit data/npcs.json" % nid)
+
+	var despawnd: Array[String] = []
+	for raw: Variant in GameData.ticket(&"t09").world_changes:
+		var c := raw as Dictionary
+		if String(c.get("op", "")) == "despawn_npc":
+			despawnd.append(String(c.get("npc", "")))
+	for nid: StringName in paarden:
+		_ok(String(nid) in despawnd, "t09 despawnt '%s' niet in zijn world_changes" % nid)

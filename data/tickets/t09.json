@@ -28,6 +28,18 @@
       "op": "set_text",
       "target": "vergadertafel",
       "value": "Bezet: 8 pony's"
+    },
+    {
+      "op": "despawn_npc",
+      "npc": "paard_bug_1"
+    },
+    {
+      "op": "despawn_npc",
+      "npc": "paard_bug_2"
+    },
+    {
+      "op": "despawn_npc",
+      "npc": "paard_klant_decoy"
     }
   ],
   "hint": "Ze zijn overal. Je vindt ze vanzelf.",
@@ -40,5 +52,6 @@
   "owner_character": "bastiaan",
   "minigame_id": "mg_paarden",
   "zone": "z9_vloer",
-  "zone_name": "De Vloer"
+  "zone_name": "De Vloer",
+  "wereldhandeling": true
 }

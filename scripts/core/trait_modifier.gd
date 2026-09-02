@@ -29,8 +29,8 @@ extends RefCounted
 ## regel noemt wat er concreet anders is en niet dat er iets anders is.
 const VOORDEEL := {
 	"cableboard":  "Jouw vakgebied. Minder losse draden.",
-	"tagpicker":   "Jouw vakgebied. Een poging extra.",
-	"whack":       "Jouw vakgebied. Wat meer tijd.",
+	"tagpicker":   "Jouw vakgebied. Eén afleider minder.",
+	"whack":       "Jouw vakgebied. Je hoeft ze niet op te zoeken.",
 	"choicescene": "Jouw vakgebied. Je hoeft minder te raden.",
 	"scope":       "Jouw vakgebied. Twee punten meer ruimte.",
 	"standup":     "Jouw vakgebied. Je mag één keer extra afkappen.",
@@ -129,8 +129,14 @@ static func _tagpicker(c: Dictionary) -> void:
 	c["pogingen"] = int(c.get("pogingen", 2)) + 1
 
 
+## F4-b: BBD-209 is een wereldhandeling geworden, geen getimede minigame meer —
+## `duur` boosten blijft staan (schaadt niets, en houdt de opgave identiek als
+## `mg_whack` ooit teruggezet wordt), maar het echte voordeel voor Bastiaan is
+## nu dat hij geen paard hoeft te zoeken: hij weet al waar de bug zit. Zie
+## `TicketController._wh_paarden()`.
 static func _whack(c: Dictionary) -> void:
 	c["duur"] = float(c.get("duur", 30.0)) * EXTRA_TIJD
+	c["geen_zoektocht"] = true
 
 
 static func _choicescene(c: Dictionary) -> void:

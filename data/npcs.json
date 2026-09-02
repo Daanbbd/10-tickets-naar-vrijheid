@@ -480,5 +480,44 @@
       "bezigheid": "padel"
     },
     "pants": "#2f3242"
+  },
+  {
+    "id": "paard_bug_1",
+    "name": "Een paardenbug",
+    "role": "Toilet en Patchhok",
+    "zone": "z2_toilet",
+    "home_tile": [4, 3],
+    "dialogue_id": "",
+    "route": [[4, 3], [6, 5], [4, 12], [4, 10], [15, 9], [25, 9]],
+    "route_pause": 3.0,
+    "can_follow": false,
+    "spawn_when": {"tickets_done": ["t02"]},
+    "static_sprite": "res://assets/sprites/props/paard_bug.png"
+  },
+  {
+    "id": "paard_bug_2",
+    "name": "Een paardenbug",
+    "role": "De Gang, De Vloer en Weekend",
+    "zone": "z11_gang",
+    "home_tile": [60, 9],
+    "dialogue_id": "",
+    "route": [[60, 9], [30, 20], [55, 22], [99, 15], [105, 15], [115, 10], [110, 3]],
+    "route_pause": 3.0,
+    "can_follow": false,
+    "spawn_when": {"tickets_done": ["t02"]},
+    "static_sprite": "res://assets/sprites/props/paard_bug.png"
+  },
+  {
+    "id": "paard_klant_decoy",
+    "name": "Een paard",
+    "role": "Klant, Manege De Vrije Teugel",
+    "zone": "z9_vloer",
+    "home_tile": [45, 22],
+    "dialogue_id": "",
+    "route": [[45, 22], [60, 20], [70, 22]],
+    "route_pause": 3.0,
+    "can_follow": false,
+    "spawn_when": {"tickets_done": ["t02"]},
+    "static_sprite": "res://assets/sprites/props/paard_klant.png"
   }
 ]

@@ -97,7 +97,10 @@ func _kies_uit(opties: Array[TicketDef], vraag: String) -> TicketDef:
 	return opties[i] if i >= 0 and i < opties.size() else null
 
 
-func _handle_inner(t: TicketDef) -> void:
+## `via_npc` is alleen van belang voor BBD-209: dat ticket lost pas op als je
+## een dwalende paardenbug aanspreekt, niet als je alleen het scrumbord
+## aanklikt. Zie `_wh_paarden()`.
+func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 	if Session.is_done(t.id):
 		await _line(_dlg(t, &"done", "Dit is opgelost. Even niet aan zitten."))
 		return
@@ -155,7 +158,16 @@ func _handle_inner(t: TicketDef) -> void:
 	# Boven op de trait-aanpassing komt wat de dag heeft opgeleverd. Voor negen
 	# tickets levert dat niets op; de finale begint er zijn hele toestand mee.
 	mg_config.merge(Gevolgen.minigame_config(t.id), true)
-	var result: MinigameResult = await Shell.run_minigame(t.minigame_id, mg_config)
+
+	# F4-b: vier tickets lossen op dóór in de wereld te handelen — een gesprek,
+	# een keuze bij een object, een collega aanspreken — in plaats van door een
+	# afgesloten, wereld-pauzerende minigame. `Shell.run_minigame()` pauzeert
+	# `get_tree()`; dat is precies wat hier niet mag gebeuren.
+	var result: MinigameResult
+	if t.wereldhandeling:
+		result = await _resolve_wereldhandeling(t, mg_config.get("inhoud", {}) as Dictionary, via_npc)
+	else:
+		result = await Shell.run_minigame(t.minigame_id, mg_config)
 
 	match result.outcome:
 		GameEnums.Outcome.SUCCESS:
@@ -209,6 +221,184 @@ func _briefing(t: TicketDef) -> void:
 	await _dialogue.say(d.name, tekst, t.owner_character)
 
 
+# --- Wereldhandelingen (F4-b) ----------------------------------------------
+#
+# Vier tickets kregen geen afgesloten, wereld-pauzerende minigame meer, maar
+# lossen op dóór in de wereld te handelen: een gesprek, een keuze bij een
+# object, een collega aanspreken. `content` is hier altijd al de config zoals
+# de oude minigame hem zou hebben gekregen — inclusief het TraitModifier-
+# voordeel van je eigen vakgebied — dus deze functies hoeven zelf niets van
+# traits te weten. Ze hergebruiken uitsluitend bestaande grammatica:
+# `DialogueController.ask_choice()` / `.say()`, en de gewone `MinigameResult`.
+#
+# Geen van de vier kan hier nog mislukken: dat is een bewuste keuze en geen
+# oude bug die is blijven staan. Een wereldhandeling is een gewone interactie
+# en geen toets — de kwaliteit van je keuze landt in het `payload`-dict voor
+# een latere stap (F4-d), niet in een pass/fail-scherm. Alleen BBD-209 kan nog
+# "niet af" zijn: die wacht op het aanspreken van een paard, niet op een
+# score.
+
+func _resolve_wereldhandeling(t: TicketDef, inhoud: Dictionary, via_npc: bool) -> MinigameResult:
+	var content: Dictionary = inhoud if not inhoud.is_empty() else MinigameContent.get_config(t.minigame_id)
+	match t.minigame_id:
+		&"mg_klantfeedback":
+			return await _wh_klantfeedback(content)
+		&"mg_backend_fix":
+			return await _wh_backend(content)
+		&"mg_muziek":
+			return await _wh_muziek(content)
+		&"mg_paarden":
+			return await _wh_paarden(t, content, via_npc)
+		_:
+			push_error("TicketController: geen wereldhandeling-resolver voor '%s'" % t.minigame_id)
+			return MinigameResult.aborted(t.minigame_id)
+
+
+## BBD-203, De klant heeft feedback. Willem (of jij, in zijn vakgebied) vertaalt
+## haar drie tegenstrijdige rondes rechtstreeks in het lopende gesprek — een
+## echte keuze per ronde in plaats van een quiz waarvan knop 1 altijd goed was.
+func _wh_klantfeedback(content: Dictionary) -> MinigameResult:
+	var intro := String(content.get("intro", ""))
+	if intro != "":
+		await _line(intro)
+
+	var score := 0
+	for raw: Variant in (content.get("rondes", []) as Array):
+		var ronde := raw as Dictionary
+		var opties: Array[Dictionary] = []
+		for o_raw: Variant in (ronde.get("opties", []) as Array):
+			var o := o_raw as Dictionary
+			if Conditions.check(o.get("when", {}) as Dictionary):
+				opties.append(o)
+		if opties.is_empty():
+			continue
+
+		var labels: Array[String] = []
+		for o: Dictionary in opties:
+			labels.append(String(o.get("tekst", "...")))
+		var i := await _dialogue.ask_choice(String(ronde.get("prompt", "")), labels)
+		if i < 0 or i >= opties.size():
+			continue
+
+		var gekozen := opties[i]
+		score += int(gekozen.get("punten", 0))
+		var reactie := String(gekozen.get("reactie", ""))
+		if reactie != "":
+			await _line(reactie)
+
+	var drempel := int(content.get("drempel", 0))
+	var eindtekst := String(content.get("success", "")) if score >= drempel else String(content.get("failure", ""))
+	if eindtekst != "":
+		await _line(eindtekst)
+	return MinigameResult.make(&"mg_klantfeedback", GameEnums.Outcome.SUCCESS, score,
+		{"score": score, "drempel": drempel})
+
+
+## BBD-205, De backend is stuk. Jonathans briefing gaf de aanwijzing; de
+## dialoogkeuze bij het serverrack is de handeling zelf. `set_modulate` (via
+## WorldMutator, op `reward_effects`/`world_changes` van t05) is het zichtbare
+## gevolg zodra `QuestEngine.complete()` draait — niets nieuws nodig hier.
+func _wh_backend(content: Dictionary) -> MinigameResult:
+	var intro := String(content.get("intro", ""))
+	if intro != "":
+		await _line(intro)
+
+	var labels_van_id := {}
+	for raw: Variant in (content.get("nodes", []) as Array):
+		var n := raw as Dictionary
+		labels_van_id[String(n.get("id", ""))] = String(n.get("label", n.get("id", "")))
+
+	var verbindingen: Array = content.get("verbindingen", [])
+	if verbindingen.is_empty():
+		return MinigameResult.make(&"mg_backend_fix", GameEnums.Outcome.SUCCESS, 1, {"juist": true})
+
+	# De juiste verbinding staat op index 0: geen quiz met een verborgen
+	# antwoord, gewoon de kabel die Jonathan je net beschreef.
+	var opties: Array = [verbindingen[0]]
+	var afleiders: Array = content.get("afleiders", [])
+	for i: int in range(mini(2, afleiders.size())):
+		opties.append(afleiders[i])
+
+	var labels: Array[String] = []
+	for raw: Variant in opties:
+		var paar := raw as Array
+		var a := String(labels_van_id.get(String(paar[0]), paar[0]))
+		var b := String(labels_van_id.get(String(paar[1]), paar[1]))
+		labels.append("Verbind %s met %s." % [a, b])
+
+	var gekozen := await _dialogue.ask_choice("Welke kabel leg je?", labels)
+	var juist := gekozen == 0
+	var eindtekst := String(content.get("success", "")) if juist else String(content.get("failure", ""))
+	if eindtekst != "":
+		await _line(eindtekst)
+	return MinigameResult.make(&"mg_backend_fix", GameEnums.Outcome.SUCCESS, 1 if juist else 0,
+		{"juist": juist})
+
+
+## BBD-207, We hebben muziek nodig. Drie tags in plaats van twaalf, één
+## dialoogkeuze bij de speaker in plaats van een kapot gerenderd tag-scherm.
+## De grap (hardstyle, panfluit, ...) blijft gewoon in de content staan.
+func _wh_muziek(content: Dictionary) -> MinigameResult:
+	var intro := String(content.get("intro", ""))
+	if intro != "":
+		await _line(intro)
+
+	var resultaten: Array = content.get("resultaten", [])
+	var goede: Dictionary = {}
+	var slechte: Array[Dictionary] = []
+	for raw: Variant in resultaten:
+		var r := raw as Dictionary
+		if bool(r.get("goed", false)) and goede.is_empty():
+			goede = r
+		elif not bool(r.get("goed", false)):
+			slechte.append(r)
+	if goede.is_empty():
+		return MinigameResult.make(&"mg_muziek", GameEnums.Outcome.SUCCESS, 0, {"goed": false})
+
+	# Danny's vakgebiedvoordeel was in de oude minigame "een poging extra"
+	# (`TraitModifier._tagpicker()` zet `pogingen` een hoger dan het bestand
+	# belooft). Zonder pogingen in deze vorm vertaalt dat naar minder afleiders
+	# op tafel — dezelfde belofte ("Jouw vakgebied.") in dezelfde grammatica als
+	# `_wh_backend()` hierboven.
+	var basis_pogingen := int(MinigameContent.get_config(&"mg_muziek").get("pogingen", 2))
+	var bonus := maxi(0, int(content.get("pogingen", basis_pogingen)) - basis_pogingen)
+	var opties: Array[Dictionary] = [goede]
+	for i: int in range(maxi(0, mini(2, slechte.size()) - bonus)):
+		opties.append(slechte[i])
+
+	var labels: Array[String] = []
+	for r: Dictionary in opties:
+		labels.append(String(r.get("titel", "...")))
+
+	var i2 := await _dialogue.ask_choice("Welke tags kies je voor de merksound?", labels)
+	var gekozen := opties[i2] if i2 >= 0 and i2 < opties.size() else goede
+	var reactie := String(gekozen.get("tekst", ""))
+	if reactie != "":
+		await _line(reactie)
+
+	var goed := bool(gekozen.get("goed", false))
+	var eindtekst := String(content.get("success", "")) if goed else String(content.get("failure", ""))
+	if eindtekst != "":
+		await _line(eindtekst)
+	return MinigameResult.make(&"mg_muziek", GameEnums.Outcome.SUCCESS, 1 if goed else 0,
+		{"goed": goed, "titel": String(gekozen.get("titel", ""))})
+
+
+## BBD-209, Paardenbugs. Via het scrumbord (`via_npc == false`) kom je hier
+## zonder ooit een paard te hebben aangesproken: dan is er niets te doen, en
+## blijft het ticket ACTIVE (net als "Stoppen" in een oude minigame). Via een
+## bugpaard (`handle_npc_talk()`) IS het aanspreken zelf de handeling.
+##
+## Bastiaans vakgebiedvoordeel (`TraitModifier._whack()`) zet `geen_zoektocht`:
+## hij hoeft niet zelf een paard te vinden, want hij weet al waar de bug zit.
+func _wh_paarden(t: TicketDef, content: Dictionary, via_npc: bool) -> MinigameResult:
+	if not via_npc and not bool(content.get("geen_zoektocht", false)):
+		await _line("Ze lopen ergens rond — in de gang, het toilet, zelfs in Weekend. Spreek er een aan.")
+		return MinigameResult.aborted(t.minigame_id)
+	return MinigameResult.make(t.minigame_id, GameEnums.Outcome.SUCCESS, 1,
+		{"paard": true, "zelf_gevonden": via_npc})
+
+
 # --- Collega aanspreken ---------------------------------------------------
 
 func handle_npc_talk(source: Interactable) -> void:
@@ -216,6 +406,24 @@ func handle_npc_talk(source: Interactable) -> void:
 		return
 	var npc := source.get_parent() as Npc
 	if npc == null:
+		return
+
+	# BBD-209: de paarden lopen als wereldobjecten door het kantoor, en het
+	# aanspreken van een bugpaard IS de handeling die het ticket oplost — geen
+	# apart scherm, geen minigame. `_handle_inner()` doet verder precies
+	# hetzelfde als bij elk ander ticket (activeren, briefje, eigen-vakgebied,
+	# briefing); alleen de resolutiestap verschilt via `via_npc`.
+	if String(npc.npc_id).begins_with("paard_bug"):
+		_busy = true
+		await _handle_inner(GameData.ticket(&"t09"), true)
+		_busy = false
+		return
+	# Het klantpaard-dat-op-een-bug-lijkt blijft de grap uit de oude
+	# `mg_whack`: hem aanspreken lost niets op, want hij is geen bug.
+	if npc.npc_id == &"paard_klant_decoy":
+		_busy = true
+		await _line("Gewoon een paard van de klant. Geen bug — hij hoort hier niet, maar hij hoort ook nergens.")
+		_busy = false
 		return
 
 	_busy = true

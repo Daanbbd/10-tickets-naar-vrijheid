@@ -56,5 +56,6 @@
   "owner_character": "jonathan",
   "minigame_id": "mg_backend_fix",
   "zone": "z3_patchhok",
-  "zone_name": "Het Patchhok"
+  "zone_name": "Het Patchhok",
+  "wereldhandeling": true
 }
