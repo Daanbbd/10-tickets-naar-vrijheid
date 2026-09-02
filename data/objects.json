@@ -3,7 +3,7 @@
     "world_id": "voordeur",
     "tile": [
       1,
-      11
+      17
     ],
     "kind": "door",
     "label": "Voordeur",
@@ -12,8 +12,8 @@
   {
     "world_id": "wachtbank",
     "tile": [
-      10,
-      9
+      2,
+      21
     ],
     "kind": "ticket",
     "label": "Wachtbank",
@@ -22,8 +22,8 @@
   {
     "world_id": "printer",
     "tile": [
-      4,
-      9
+      7,
+      12
     ],
     "kind": "examine",
     "label": "Printer",
@@ -32,8 +32,8 @@
   {
     "world_id": "scherm_entree",
     "tile": [
-      1,
-      9
+      2,
+      20
     ],
     "kind": "examine",
     "label": "Scherm",
@@ -42,8 +42,8 @@
   {
     "world_id": "jas_kapstok",
     "tile": [
-      3,
-      9
+      2,
+      15
     ],
     "kind": "examine",
     "label": "Kapstok",
@@ -52,8 +52,8 @@
   {
     "world_id": "prijzenkast",
     "tile": [
-      17,
-      5
+      31,
+      4
     ],
     "kind": "examine",
     "label": "Prijzenkast",
@@ -62,7 +62,7 @@
   {
     "world_id": "urinoirs",
     "tile": [
-      12,
+      2,
       3
     ],
     "kind": "examine",
@@ -72,8 +72,8 @@
   {
     "world_id": "wastafel",
     "tile": [
-      14,
-      5
+      6,
+      6
     ],
     "kind": "examine",
     "label": "Wastafel",
@@ -82,7 +82,7 @@
   {
     "world_id": "wc_poster",
     "tile": [
-      13,
+      5,
       1
     ],
     "kind": "examine",
@@ -92,8 +92,8 @@
   {
     "world_id": "serverrack_a",
     "tile": [
-      6,
-      2
+      4,
+      10
     ],
     "kind": "ticket",
     "label": "Serverrack",
@@ -102,8 +102,8 @@
   {
     "world_id": "serverrack_b",
     "tile": [
-      9,
-      4
+      4,
+      11
     ],
     "kind": "examine",
     "label": "Serverrack",
@@ -112,8 +112,8 @@
   {
     "world_id": "badgelezer",
     "tile": [
-      6,
-      6
+      8,
+      10
     ],
     "kind": "examine",
     "label": "Badgelezer",
@@ -132,7 +132,7 @@
   {
     "world_id": "koffiemachine",
     "tile": [
-      23,
+      20,
       4
     ],
     "kind": "examine",
@@ -142,7 +142,7 @@
   {
     "world_id": "koelkast",
     "tile": [
-      33,
+      23,
       4
     ],
     "kind": "examine",
@@ -152,7 +152,7 @@
   {
     "world_id": "lunchtafel",
     "tile": [
-      30,
+      26,
       5
     ],
     "kind": "examine",
@@ -162,8 +162,8 @@
   {
     "world_id": "prikbord",
     "tile": [
-      24,
-      5
+      11,
+      1
     ],
     "kind": "examine",
     "label": "Prikbord",
@@ -274,7 +274,7 @@
     "world_id": "hokje_telefoon",
     "tile": [
       36,
-      8
+      9
     ],
     "kind": "examine",
     "label": "Telefoon",
@@ -284,7 +284,7 @@
     "world_id": "samen_bingo_poster",
     "tile": [
       31,
-      8
+      10
     ],
     "kind": "examine",
     "label": "Poster",
@@ -323,7 +323,7 @@
   {
     "world_id": "ticketbord",
     "tile": [
-      5,
+      13,
       24
     ],
     "kind": "use",
@@ -334,7 +334,7 @@
   {
     "world_id": "scrumbord_gang",
     "tile": [
-      28,
+      6,
       24
     ],
     "kind": "ticket",
@@ -344,7 +344,7 @@
   {
     "world_id": "wandmonitor_vloer",
     "tile": [
-      12,
+      18,
       24
     ],
     "kind": "ticket",
@@ -374,8 +374,8 @@
   {
     "world_id": "plantenkast",
     "tile": [
-      23,
-      14
+      18,
+      18
     ],
     "kind": "examine",
     "label": "Plantenkast",

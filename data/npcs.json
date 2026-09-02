@@ -57,25 +57,25 @@
     "zone": "z11_gang",
     "home_tile": [
       33,
-      11
+      12
     ],
     "dialogue_id": "dirk",
     "route": [
       [
         33,
-        11
-      ],
-      [
-        35,
-        11
+        12
       ],
       [
         35,
         12
+      ],
+      [
+        35,
+        13
       ],
       [
         33,
-        12
+        13
       ]
     ],
     "route_pause": 3.0,
@@ -149,17 +149,17 @@
     "zone": "z3_patchhok",
     "home_tile": [
       7,
-      6
+      9
     ],
     "dialogue_id": "collega_koen",
     "route": [
       [
         7,
-        6
+        9
       ],
       [
-        8,
-        9
+        9,
+        10
       ],
       [
         21,
@@ -174,8 +174,8 @@
         9
       ],
       [
-        8,
-        9
+        9,
+        10
       ]
     ],
     "route_pause": 3.0,
@@ -201,22 +201,22 @@
     "role": "Klant, Manege De Vrije Teugel",
     "zone": "z1_entree",
     "home_tile": [
-      9,
-      9
+      2,
+      21
     ],
     "dialogue_id": "klant",
     "route": [
       [
-        9,
-        9
+        2,
+        21
       ],
       [
-        11,
-        9
+        3,
+        21
       ],
       [
-        9,
-        11
+        3,
+        19
       ]
     ],
     "route_pause": 4.0,
@@ -239,18 +239,18 @@
     "role": "Bezorger, Manege De Vrije Teugel",
     "zone": "z1_entree",
     "home_tile": [
-      3,
-      12
+      2,
+      16
     ],
     "dialogue_id": "bezorger",
     "route": [
       [
-        3,
-        12
+        2,
+        16
       ],
       [
-        5,
-        12
+        4,
+        16
       ]
     ],
     "route_pause": 3.0,
@@ -405,18 +405,18 @@
     "role": "Backend developer",
     "zone": "z3_patchhok",
     "home_tile": [
-      9,
-      3
+      4,
+      13
     ],
     "dialogue_id": "collega_jonathan",
     "route": [
       [
-        9,
-        3
+        4,
+        13
       ],
       [
-        9,
-        5
+        7,
+        13
       ]
     ],
     "route_pause": 6.0,
@@ -442,26 +442,26 @@
     "role": "Client Lead",
     "zone": "z1_entree",
     "home_tile": [
-      11,
-      9
+      3,
+      18
     ],
     "dialogue_id": "collega_willem",
     "route": [
       [
-        11,
-        9
+        3,
+        18
       ],
       [
-        14,
-        9
+        3,
+        22
       ],
       [
-        14,
-        12
+        2,
+        22
       ],
       [
-        11,
-        12
+        2,
+        18
       ]
     ],
     "route_pause": 4.0,

@@ -12,52 +12,97 @@ boven- en onderwand op y≈310 en y≈1930 → **≈5,06 : 1**. Het spel gebruik
 **130 × 26 tegels** = 2080 × 416 px, dus 5,0 : 1.
 
 De schets is dezelfde vloer 90° tegen de klok in gedraaid: schets-links =
-plan-boven (entree, trappenhuis, toiletten), schets-boven = plan-rechts (de
+plan-boven (toiletten, serverhok, entree), schets-boven = plan-rechts (de
 gesloten ruimtes), schets-rechts = plan-onder (Weekend, spiltrap). Beide
 referenties zijn consistent: open werkvloer aan de raamzijde, gesloten ruimtes
 aan de binnenzijde, één circulatieband ertussen.
+
+Op de schets staan met rood vier aanwijzingen die de indeling vastleggen en die
+je in de tekening zelf makkelijk mist: **SERVER HOK** onder het toilet, **Kast
+(Blauw)** en **RAAM** op de noordwand achter de koffiecorner, en de pijlen
+"Ingang zit hier" (westwand, ónder het toiletblok) en "Scrumbord hangt hier"
+(zuidwestkant, achter het eerste bureau-eiland).
 
 ## Vorm: een strook, één lange lus
 
 De oude vloer was een verzonnen *ring* om een dichte kern. Die kern bestaat niet.
 Wat er wel is:
 
-| Band | y | Inhoud |
-|---|---|---|
-| buitenwand | 0 | |
-| gesloten ruimtes | 1–6 | Toilet · Patchhok · Koffiecorner · Summit · Basecamp · Birdhouse |
-| scheidingslijn | 7 | glas vóór de drie vergaderruimtes, wand met deuropening vóór de rest |
-| circulatieband | 8–13 | De Gang, met het vrijstaande Vergaderhokje en de grote tafel met planten |
-| open werkvloer | 14–24 | De Vloer: vijf bureau-eilanden en twee plantenkasten, raamzijde |
-| buitenwand | 25 | |
+| Band | y | West (x1–8) | Oost (x10–95) |
+|---|---|---|---|
+| buitenwand | 0 | | kastenwand `k` en raam `w` achter de koffiecorner |
+| noordband | 1–6 | Toilet | open, met de **Koffiecorner als vrijstaand eiland**, dan Summit · Basecamp · Birdhouse |
+| scheidingslijn | 7 | wand tussen toilet en serverhok | glas vóór de drie vergaderruimtes; **open van x10 tot x41** |
+| circulatieband | 8–13 | Het Patchhok | De Gang, met het Vergaderhokje op x30–38 en de grote tafel met planten op x55–92 |
+| open werkvloer | 14–24 | Entree bij de voordeur | De Vloer: vijf bureau-eilanden en twee plantenkasten, raamzijde |
+| buitenwand | 25 | | |
 
-Geen doodlopers: de gang loopt door van x1 tot x95 en de bureauband is een tweede
-doorlopende baan. Samen één lange lus. Weekend ligt achter een glaslijn op x96
-met een brede opening op y10–15.
+Geen doodlopers: de gang loopt door van x10 tot x95 en de bureauband is een
+tweede doorlopende baan. Samen één lange lus. Weekend ligt achter een glaslijn
+op x96 met een brede opening op y10–15.
 
 Het glas op y7 vóór Summit, Basecamp en Birdhouse is het wayfinding-wapen: je
-blijft de drie vergaderruimtes door de hele gang zien. Toilet, Patchhok en
-Koffiecorner hebben een dichte wand met een deuropening.
+blijft de drie vergaderruimtes door de hele gang zien.
+
+### Toilet en serverhok zijn gestapeld, niet naast elkaar
+
+Ze stonden náást elkaar in de noordband (Patchhok x6–9, Toilet x11–15). Op de
+schets zijn het twee ruimtes op elkaar aan het westeinde: toilet boven
+(x1–8, y1–6), Patchhok eronder (x1–8, y8–13), met de scheidingswand op y7 en
+één deur per ruimte in de oostwand op x9. De **ingang zit op de westwand
+daaronder**, in de bureauband — vandaar dat de Entree nu op y14–24 ligt en niet
+meer in de gang.
+
+Het trappenhuis is vervallen. Het vulde de noordwesthoek die nu het toilet is,
+het was per definitie niet te betreden, en de schets kent het niet. Legenda-teken
+`X` is daarmee weg.
+
+### De koffiecorner is een eiland, geen kamer
+
+Hij was een gesloten ruimte tegen de noordwand (x17–34, y1–6): je kon er per
+definitie niet omheen lopen, terwijl dat het enige is wat een *corner* van een
+kamer onderscheidt. Nu is het één solide blok op x18–33, y2–3 —
+`keukenblok_5x2` · koelkast · `tribune_10x2`, met de speaker van t07 tegen het
+oosteinde — met loopruimte aan alle vier de kanten: y1 boven, y4–y7 onder,
+x10–17 west, x34–41 oost. Op de buitenwand erachter staan de kastenwand (`k`,
+donkerblauw, met de bank ervoor) en het raam (`w`), precies waar de schets ze
+rood aanwijst.
+
+### Het vergaderhokje stond op de verkeerde plek
+
+Het hokje stond op x44–50, maar `ACCENT_ROOMS` had nog een regel op
+`(31, 8, 37, 9)` met het commentaar `# "vergaderhokje"` — en daar, op x31–36,
+lagen ook `hokje_ipad` (het **anker van t08**), `hokje_telefoon` en
+`samen_bingo_poster`. Het anker lag dus buiten de zone die het ontdekt. Het
+hokje staat nu op x30–38, y8–11 waar de schets het zet; anker, zone en
+accentvloer vallen daarmee weer samen.
 
 ## Zones (11)
 
 `world_builder.zone_at()` geeft de **eerste** match terug, dus de volgorde in
-`ZONES` is specifiek vóór algemeen: `z1_entree` staat vóór `z11_gang`, anders
-wordt de entree "De Gang".
+`ZONES` is specifiek vóór algemeen: `z1_entree` staat vóór `z9_vloer` (anders
+wordt de entree "De Vloer") en `z8_hokje` vóór `z11_gang`. `z11_gang` is het
+vangnet voor de hele open oostkant, inclusief de noordband voorbij de
+koffiecorner waar de blauwe tijger staat.
 
-| id | naam | licht |
-|---|---|---|
-| `z1_entree` | Entree | warm |
-| `z2_toilet` | Toiletten | klinisch |
-| `z3_patchhok` | Het Patchhok | koud |
-| `z4_koffiecorner` | Koffiecorner | warm |
-| `z5_summit` | Summit | koel |
-| `z6_basecamp` | Basecamp | neutraal |
-| `z7_birdhouse` | Birdhouse | koel |
-| `z8_hokje` | Het Vergaderhokje | dim |
-| `z10_weekend` | Weekend | jungle |
-| `z9_vloer` | De Vloer | neutraal |
-| `z11_gang` | De Gang | neutraal |
+| id | naam | rect | licht |
+|---|---|---|---|
+| `z2_toilet` | Toiletten | 1,1 – 8,6 | klinisch |
+| `z3_patchhok` | Het Patchhok | 1,8 – 8,13 | koud |
+| `z8_hokje` | Het Vergaderhokje | 30,8 – 38,11 | dim |
+| `z1_entree` | Entree | 1,14 – 4,24 | warm |
+| `z4_koffiecorner` | Koffiecorner | 10,1 – 36,6 | warm |
+| `z5_summit` | Summit | 43,1 – 53,6 | koel |
+| `z6_basecamp` | Basecamp | 55,1 – 71,6 | neutraal |
+| `z7_birdhouse` | Birdhouse | 73,1 – 92,6 | koel |
+| `z10_weekend` | Weekend | 97,1 – 128,24 | jungle |
+| `z9_vloer` | De Vloer | 1,14 – 95,24 | neutraal |
+| `z11_gang` | De Gang | 10,1 – 95,13 | neutraal |
+
+Elk van de tien ticketankers ligt in de zone die het ticket noemt. Dat gold niet
+voor t08 (zie hierboven) en is geen toeval meer: wie een anker verplaatst, moet
+de zone controleren, want de ontdekking hangt aan de zone en de interactie aan
+het object.
 
 De `light`-waarde wordt gelezen door `main.gd._tint_zone()` en getween'd op een
 `CanvasModulate`. **Houd de waarden subtiel** (±2–4%): sterker en de grijze
@@ -77,7 +122,7 @@ aantreffen), Birdhouse is de grote zaal voor de finale.
 
 ## De toiletgag
 
-Één deur op x9,y7 voor de hele ruimte van 15 × 6 tegels, met twee urinoirs tegen
+Één deur op x9,y3 voor de hele ruimte van 8 × 6 tegels, met twee urinoirs tegen
 de westwand en één pot tegen de zuidwand. De absurde leegte **is** de grap.
 
 ## Art direction
@@ -90,10 +135,15 @@ schaakbordvloerkleed, de **blauwe tijger** als landmark in de gang, de "Samen
 Bingo"-poster op de houten zijde van het vergaderhokje, blauwe gordijnen als
 divider, plantenkast met klimop, clown en **speelgoedpaard**.
 
-Tien nieuwe legenda-letters: `u` urinoir · `R` tribune · `n` plantenkast ·
+Tien legenda-letters uit die ronde: `u` urinoir · `R` tribune · `n` plantenkast ·
 `l` lamellenwand · `j` gordijn · `Y` blauwe tijger · `J` jungle · `q`
 schaakbordkleed · `s` kuipstoel · `r` ronde tafel. Plus `C` als teal
 accentvloer voor de koffiecorner.
+
+Daar kwamen bij, met de vrijstaande koffiecorner: `k` donkerblauwe kastenwand
+met bank · `w` raam · `z` speaker. Alle drie staan ze óók in `CHARS` in
+`gen_tiles.py` — zonder atlas-coördinaat rendert een nieuw teken stil als
+gewone vloer.
 
 ## Looptijden
 
@@ -102,12 +152,13 @@ wegschrijven. Huidige stand:
 
 | | |
 |---|---|
-| begaanbare tegels | 2231 |
+| begaanbare tegels | 2404 |
 | onbereikbaar | 0 (het script weigert te schrijven bij >0) |
-| verste punt vanaf spawn | 131,6 tegels = **21,9 s lopen** |
+| verste punt vanaf spawn | 140,5 tegels = **23,4 s lopen** |
 
 Dat is de prijs van de echte verhouding (was 14,6 s op de vierkante verzonnen
-vloer). Wil je dat omlaag brengen, dan moet **`WALK_SPEED` in
+vloer), plus de verhuizing van het spawnpunt naar de voordeur in de zuidwesthoek.
+Wil je dat omlaag brengen, dan moet **`WALK_SPEED` in
 `scripts/entities/player.gd`** omhoog. `WALK_SPEED_TILES` in `gen_floor.py`
 moet dan mee: dat getal staat er alleen voor de looptijden die het script
 print. Het stond ook als `walk_speed_tiles_per_sec` in `floor.json` en werd
@@ -140,9 +191,9 @@ Gebruik `tiles(meters)` en `m2(w, h)` uit `gen_floor.py` voor elke nieuwe maat.
 
 | Ruimte | Tegels | m² |
 |---|---|---|
-| Toiletten | 5 × 6 | 6,4 |
-| Het Patchhok | 4 × 6 | 5,1 |
-| Koffiecorner | 18 × 6 | 23,0 |
+| Toiletten | 8 × 6 | 10,2 |
+| Het Patchhok | 8 × 6 | 10,2 |
+| Koffiecorner (het eiland zelf) | 16 × 2 | 6,8 |
 | **Summit** | 11 × 6 | **14,1** — klein en leeg |
 | **Basecamp** | 17 × 6 | **21,7** — hybride werk/overleg |
 | **Birdhouse** | 20 × 6 | **25,6** — de grote zaal |
@@ -187,24 +238,34 @@ elkaar toe kijken — niet tien lange horizontale stroken. De hoogte volgt uit h
 aantal werkplekken (`bureau_4x8` = 8 plekken, `bureau_4x4` = 4).
 
 Volgorde in de zuidband, uit de schets:
-8 werkplekken · plantenkast · 4 · 4 · plantenkast · 8 · 4.
+8 werkplekken · plantenkast · 4 · 4 · plantenkast · 4 · 4.
+
+Het vierde eiland stond hier lang op 8. De schets telt er vier, en met vier
+plekken past de loopruimte naar de grote tafel met planten er weer naast.
 
 ### Omgezet
 
-`bureau_4x4` · `bureau_4x8` · `plantenkast_3x6` · `plantenkast_3x8` ·
-`tafel_lang_26x2` · `monitorwand_4x1` · `tribune_10x2` · `keukenblok_5x1` ·
-`balie_5x1` · `serverrack_2x4` — samen 13 geplaatste objecten.
+`bureau_4x4` (4×) · `bureau_4x8` · `plantenkast_3x6` · `plantenkast_3x8` ·
+`tafel_lang_38x2` · `monitorwand_4x1` · `tribune_10x2` · `keukenblok_5x2` ·
+`serverrack_2x4` (2×) — samen 13 geplaatste objecten.
 
 Nog als `rect()`-vulling (allemaal klein genoeg dat één tegel volstaat, of nog
 niet gedaan): whiteboard, ticketbord, bank, gordijn, kast, koelkast, prikbord,
-urinoir, lamellen, jungle, kuipstoel, ronde tafel.
+urinoir, lamellen, jungle, kuipstoel, ronde tafel, kastenwand, raam, speaker.
 
 ## Objecten en NPC's
 
 `data/objects.json` (42 objecten) en `data/npcs.json` (11 NPC's) staan op
 absolute tegels. De testsuite is de vangrail: `_test_wereld` faalt op elk object
-of NPC dat op een solide tegel staat, op elk object dat niet in
-`data/world_ids.json` voorkomt, en op een spawnpunt in een muur.
+of NPC dat op een solide tegel staat, op **elke route-waypoint** die dat doet,
+op elk object dat niet in `data/world_ids.json` voorkomt, en op een spawnpunt in
+een muur.
+
+Een hertekening van de vloer raakt dus altijd deze twee bestanden. Bij de
+herindeling naar de schets verhuisden 26 objecttegels en zes NPC-routes mee;
+het spawnpunt ging van `[2, 11]` (oude gang) naar `[2, 17]`, net binnen de
+voordeur in de Entree — waar `wachtbank`, het anker van t03, nog steeds het
+eerste is wat je tegenkomt.
 
 Tickets ankeren op `world_id`, nooit op coördinaten. Daarom overleeft de
 `--playthrough`-harnas een hertekening ongewijzigd: hij teleporteert naar

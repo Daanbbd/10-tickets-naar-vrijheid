@@ -55,34 +55,54 @@ def rect(x0, y0, x1, y1, ch):
                 g[y][x] = ch
 
 # ---------------------------------------------------------------------------
-# De echte Bluebird Day-vloer. Opgemeten op de ontruimingsplattegrond in
-# assets/nieuwe assets/: buitenwanden op x 544/868 en y 310/1930 -> 5,06 : 1.
-# 130 x 26 tegels geeft 5,0 : 1 (2080 x 416 px).
+# De echte Bluebird Day-vloer, gelegd naar `assets/nieuwe assets/schets idee.jpeg`
+# inclusief de rode aantekeningen daarop (RAAM, SERVER HOK, Kast (Blauw),
+# "Ingang zit hier", "Scrumbord hangt hier").
 #
 # Bandindeling (de schets is de plattegrond 90 graden gedraaid):
-#   y0      buitenwand
-#   y1-6    gesloten ruimtes, binnenzijde   (toilet .. birdhouse)
-#   y7      scheidingslijn: glas voor de vergaderruimtes, wand voor de rest
-#   y8-13   circulatieband ("De Gang")
-#   y14-24  open werkvloer, raamzijde       (bureaus + plantenkasten)
-#   y25     buitenwand
+#   y0      buitenwand, binnenzijde — met de kastenwand en het raam achter
+#           de koffiecorner, precies waar de schets ze rood aanwijst
+#   y1-6    west  x1-8 : Toilet
+#           oost x10+  : open noordband met de koffiecorner als vrijstaand
+#                        eiland, daarna Summit / Basecamp / Birdhouse
+#   y7      west: wand tussen toilet en serverhok
+#           oost: glas voor de drie vergaderruimtes, open van x10 tot x41
+#   y8-13   west  x1-8 : Het Patchhok, direct ónder het toilet
+#           oost       : De Gang, met het Vergaderhokje op x30-38 en de
+#                        grote tafel met planten op x55-92
+#   y14-24  De Vloer: vijf bureau-eilanden (8·4·4·4·4) en twee plantenkasten,
+#           met de voordeur op de westwand en het scrumbord ernaast
+#   y25     buitenwand, raamzijde
 #
-# Eén lange lus in plaats van de oude ring: de gang loopt door van x1 tot x95
-# en de bureauband is een tweede doorlopende baan. Geen doodlopers.
+# Wat hier veranderde t.o.v. de eerste opzet, en waarom:
+# - Patchhok en Toilet stonden náást elkaar in de noordband. Op de schets zijn
+#   ze gestápeld aan het westeinde, met de ingang op de westwand eronder.
+# - De koffiecorner was een gesloten ruimte tegen de noordwand; je kon er per
+#   definitie niet omheen. Nu is het een solide blok in een open band, met
+#   loopruimte aan alle vier de kanten — dat is wat "corner" hier betekent.
+# - Het vergaderhokje stond op x44-50, terwijl `hokje_ipad` (het anker van t08),
+#   `hokje_telefoon` en `samen_bingo_poster` op x31-36 lagen. Het anker lag dus
+#   buiten zijn eigen zone. Het hokje staat nu waar de schets het zet, en waar
+#   de objecten al stonden.
+#
+# Eén lange lus in plaats van de oude ring: de gang loopt door van x10 tot x95,
+# de bureauband is een tweede doorlopende baan. Geen doodlopers.
 # ---------------------------------------------------------------------------
 
 # alles binnen de buitenwanden is eerst vloer; muren komen er daarna weer in
 rect(1, 1, W - 2, H - 2, '.')
 
-# Volgorde van west naar oost, afgelezen van de geannoteerde ontruimings-
-# plattegrond: trappenhuis, serverhok, toilet, en dan pas de open kantoorvloer.
-# Het serverhok zat eerder midden op de vloer (x18-21); dat klopte niet met de
-# plattegrond en ook niet met de hint van t05 ("het Patchhok zit naast de
-# toiletten"). De ingang ligt voorbij het trappenhuis, dat op slot zit.
+# ---- Het westeinde: toilet boven, serverhok eronder ------------------------
+# Twee gesloten ruimtes op elkaar, samen één blok tegen de westwand, met de
+# scheidingswand op y7 en de gang erlangs op x10. De ingang zit eronder.
+rect(9, 1, 9, 13, '#')        # oostwand van het blok, van buitenwand tot gang
+rect(1, 7, 8, 7, '#')         # wand tussen toilet en serverhok
+rect(1, 14, 9, 14, '#')       # zuidwand van het serverhok, tegen De Vloer aan
+rect(9, 3, 9, 3, 'D')         # Toilet: één deur voor 8x6 tegels — dat ís de grap
+rect(9, 10, 9, 10, 'D')       # Patchhok: één deur, achter de badgelezer
+
+# de noordband is verder open; alleen de drie vergaderruimtes staan er dicht
 NOORD = [   # (x0, x1, deur-x0, deur-x1, glas?)
-    (6, 9, 7, 8, False),       # Het Patchhok, het echte serverhok — 4x6 = 5,1 m2
-    (11, 15, 13, 13, False),   # Toilet — 5x6 = 6,4 m2
-    (17, 34, 20, 22, False),   # Koffiecorner — brede doorgang, het is een corner
     # docs/LEVEL.md beschrijft ze als merkbaar verschillend: Summit klein en
     # leeg, Birdhouse de grote zaal. Nu ook in tegels, via tiles(meters).
     (43, 53, 48, 49, True),    # Summit    11x6 = 14,1 m2
@@ -90,26 +110,20 @@ NOORD = [   # (x0, x1, deur-x0, deur-x1, glas?)
     (73, 92, 82, 83, True),    # Birdhouse 20x6 = 25,6 m2
 ]
 
-# scheidingslijn y7 dicht maken, per ruimte glas of wand, met deuropening
-rect(1, 7, 95, 7, '#')
+# scheidingslijn y7: alleen dicht waar er een ruimte achter zit. Tussen x10 en
+# x41 loopt de noordband gewoon door in de gang — dat is wat de koffiecorner
+# tot een eiland maakt in plaats van tot een kamer.
+rect(42, 7, 42, 7, '#')
+rect(54, 7, 54, 7, '#')
+rect(72, 7, 72, 7, '#')
+rect(93, 7, 95, 7, '#')
 for (x0, x1, d0, d1, glas) in NOORD:
     rect(x0, 7, x1, 7, '=' if glas else '#')
     rect(d0, 7, d1, 7, 'D')
 
 # tussenwanden van de noordband
-for x in (5, 10, 16, 42, 54, 72):
+for x in (42, 54, 72):
     rect(x, 1, x, 6, '#')
-rect(35, 1, 36, 6, '#')       # smalle schacht naast de koffiecorner
-rect(41, 1, 42, 6, '#')       # en naast Summit; ertussen de tijgernis
-rect(37, 7, 40, 7, '#')
-rect(38, 7, 39, 7, 'D')       # opening naar de tijgernis
-
-# ---- Trappenhuis: op slot, dus geen speelruimte ----
-# Je komt de verdieping binnen voorbij de trap; de trap zelf is niet te
-# bereiken. Als massief blok getekend, anders meldt de bereikbaarheidscheck
-# terecht dat er vloer is waar niemand kan komen.
-rect(1, 1, 4, 6, 'X')
-rect(2, 7, 3, 7, 'N')         # deur op slot, zichtbaar vanuit de gang
 # de strook tussen Birdhouse en Weekend is dicht: schacht, geen ruimte
 rect(93, 1, 95, 6, '#')
 
@@ -117,35 +131,39 @@ rect(93, 1, 95, 6, '#')
 rect(96, 1, 96, 24, '=')
 rect(96, 10, 96, 15, 'D')
 
-# ---- Vergaderhokje: vrijstaand blok in de gang, onder Summit ----
-rect(44, 9, 50, 12, '#')
-rect(45, 10, 49, 11, '.')
-rect(47, 9, 47, 9, 'D')       # deur naar de gang, aan de Summit-kant
-rect(44, 10, 44, 11, 'l')     # houten lamellenzijde met de "Samen Bingo"-poster
-rect(50, 10, 50, 11, '=')
+# ---- Noordwand achter de koffiecorner: kastenwand en raam ------------------
+# De twee rode aantekeningen op de schets. Ze staan op de buitenwand zelf, dus
+# ze kosten geen vloer: `k` is de donkerblauwe kastenwand met de bank ervoor,
+# `w` het enige raam aan deze binnenzijde.
+rect(11, 0, 11, 0, 'H')       # prikbord met de losse mini-tickets
+rect(12, 0, 25, 0, 'k')       # "Kast (Blauw)"
+rect(26, 0, 40, 0, 'w')       # "RAAM"
 
-# ---- Voordeur op de westwand: de wincondititie ----
-rect(0, 10, 0, 12, 'V')
+# ---- Voordeur op de westwand, in de bureauband: de wincondititie ----
+rect(0, 16, 0, 18, 'V')
 
 # ---- Entree: geen balie. De receptie zit op een andere verdieping; deze
-# verdieping is puur kantoor. Alleen een scherm en de printer bij de deur.
-rect(1, 8, 1, 8, 'm')          # scherm_entree, tegen de westwand
-rect(10, 8, 11, 8, 'c')        # wachtbank: hier zit de klant
-rect(9, 6, 9, 6, 'P')          # printer, in het serverhok
+# verdieping is puur kantoor. Een scherm, een bank, en verder is het gang.
+rect(0, 20, 0, 21, 'm')        # scherm_entree, in de westwand boven de bank
+rect(1, 20, 1, 21, 'c')        # wachtbank: hier zit de klant
 
 # ---- Toiletgag letterlijk: 2 urinoirs en 1 pot, alles achter één deur ----
-rect(12, 2, 12, 2, 'u')
-rect(12, 4, 12, 4, 'u')
-rect(15, 5, 15, 5, 'W')
+rect(1, 2, 1, 2, 'u')
+rect(1, 4, 1, 4, 'u')
+rect(7, 6, 7, 6, 'W')
 
-# ---- Patchhok: krappe warme techniekkast, naast de toiletten ----
-prop("serverrack", 7, 2, 8, 5)
+# ---- Patchhok: krappe warme techniekkast, direct onder de toiletten ----
+prop("serverrack", 2, 9, 3, 12)
+prop("serverrack", 5, 9, 6, 12)
+rect(8, 12, 8, 12, 'P')        # printer, net binnen de deur
 
-# ---- Koffiecorner: tribune-trap, Jura en de DIA-awards ----
+# ---- Koffiecorner: vrijstaand blok, loopruimte rondom ----------------------
+# y1 vrij boven, y4-y7 vrij onder, x10-17 vrij west, x34-41 vrij oost. Je kunt
+# er dus echt omheen — dat was het hele punt van de herindeling.
+prop("keukenblok", 18, 2, 22, 3)
+rect(23, 2, 23, 3, 'f')        # koelkast, aan het eind van het aanrecht
 prop("tribune", 24, 2, 33, 3)
-prop("keukenblok", 18, 2, 22, 2)
-rect(33, 5, 33, 5, 'f')
-rect(17, 2, 17, 2, 'H')        # prikbord met de losse mini-tickets
+rect(34, 3, 34, 3, 'z')        # de speaker van t07, tegen het eind van de tribune
 
 # ---- Summit: kleine tafel, 4 witte stoelen, schaakbordkleed ----
 rect(44, 1, 46, 1, 'x')        # whiteboard_vergader: hier landt de user story
@@ -171,24 +189,35 @@ rect(77, 3, 77, 5, 's')
 rect(89, 3, 89, 5, 's')
 rect(81, 1, 84, 1, 'm')       # deploycomputer aan de noordwand
 
-# ---- De Gang: de blauwe tijger en de grote tafel met planten ----
-# De tijger staat in de opening tussen de koffiecorner en Summit: het eerste
+# ---- De Gang: de blauwe tijger, het vergaderhokje en de grote tafel ----
+# De tijger staat in de open ruimte tussen de koffiecorner en Summit: het eerste
 # wat je ziet als je de gang in kijkt.
 rect(38, 4, 38, 4, 'Y')
+
+# Vergaderhokje: vrijstaand blok in de gang, onder de koffiecorner. Hier ligt de
+# iPad van t08 — het anker, de zone en de accentvloer vallen nu samen.
+rect(30, 8, 38, 11, '#')
+rect(31, 9, 37, 10, '.')
+rect(34, 8, 34, 8, 'D')       # deur naar de noordband
+rect(30, 9, 30, 10, 'l')      # houten lamellenzijde met de "Samen Bingo"-poster
+rect(38, 9, 38, 10, '=')
+
 # De grote tafel begint rechts van het vergaderhokje en loopt door tot het
 # einde van Birdhouse. Tussen hokje en tafel blijft ruimte om door te lopen.
 prop("tafel_lang", 55, 10, 92, 11)
 
 # ---- De Vloer (raamzijde): bureau-eilanden en plantenkasten ----
-# Een kwartslag gedraaid t.o.v. de eerste opzet: elk eiland is een blok dat de
-# diepte in staat, met een verticaal privacyscherm door het midden. Vijf
-# eilanden en twee plantenkasten, in de volgorde van schets idee.jpeg:
-#   8 werkplekken · plantenkast · 4 · 4 · plantenkast · 8 · 4
+# Elk eiland is een blok dat de diepte in staat, met een verticaal
+# privacyscherm door het midden. Vijf eilanden en twee plantenkasten, in de
+# volgorde van schets idee.jpeg:
+#   8 werkplekken · plantenkast · 4 · 4 · plantenkast · 4 · 4
+# Het vierde eiland stond hier jarenlang op 8; de schets zegt 4, en met vier
+# stoelen erlangs klopt ook de loopruimte naar de grote tafel weer.
 EILANDEN = [
     (5, 8),    # (x0, aantal werkplekken) — de hoogte volgt uit het aantal
     (24, 4),
     (38, 4),
-    (60, 8),
+    (60, 4),
     (76, 4),
 ]
 for (x0, n) in EILANDEN:
@@ -196,12 +225,12 @@ for (x0, n) in EILANDEN:
 for (x0, h) in [(15, 8), (50, 6)]:
     prop("plantenkast", x0, 15, x0 + 2, 15 + h - 1)
 
-# Zuidwand, west naar oost — de route loopt zo monotoon mogelijk mee:
-# ticketbord bij de ingang (waar de schets het zet), dan de wandmonitor van t04,
-# dan het scrumbord van t02/t09.
-rect(4, 25, 6, 25, 'T')      # ticketbord: opent het echte bord
-rect(11, 25, 13, 25, 'm')    # wandmonitor_vloer: staging van t04
-rect(27, 25, 29, 25, 'T')    # scrumbord_gang: planning (t02) en paarden (t09)
+# Zuidwand, west naar oost. De schets zet het scrumbord bij de ingang, achter
+# het eerste bureau-eiland (zie "scrumboard achter bureau.jpeg"), daarna het
+# ticketbord en dan de wandmonitor van t04.
+rect(5, 25, 7, 25, 'T')      # scrumbord_gang: planning (t02) en paarden (t09)
+rect(12, 25, 14, 25, 'T')    # ticketbord: opent het echte bord
+rect(17, 25, 19, 25, 'm')    # wandmonitor_vloer: staging van t04
 
 # ---- Weekend: jungle, chaos, en de spullen die hier niemand mist ----
 rect(100, 3, 104, 7, 'J')
@@ -222,7 +251,6 @@ LEGEND = {
     "=": {"kind": "glass", "solid": True},
     "V": {"kind": "exit",  "solid": True,  "prop": "voordeur"},
     "N": {"kind": "wall",  "solid": True,  "prop": "nooduitgang"},
-    "X": {"kind": "wall",  "solid": True,  "prop": "trappenhuis"},
     "B": {"kind": "prop",  "solid": True,  "prop": "balie"},
     "P": {"kind": "prop",  "solid": True,  "prop": "printer"},
     "T": {"kind": "prop",  "solid": True,  "prop": "ticketbord"},
@@ -250,6 +278,10 @@ LEGEND = {
     "J": {"kind": "prop",  "solid": True,  "prop": "jungle"},
     "s": {"kind": "prop",  "solid": True,  "prop": "kuipstoel"},
     "r": {"kind": "prop",  "solid": True,  "prop": "ronde_tafel"},
+    # de noordwand achter de koffiecorner, en de speaker van t07
+    "k": {"kind": "wall",  "solid": True,  "prop": "kastenwand"},
+    "w": {"kind": "wall",  "solid": True,  "prop": "raam"},
+    "z": {"kind": "prop",  "solid": True,  "prop": "speaker"},
     # accentvloeren
     "E": {"kind": "floor", "solid": False, "accent": "bb_blue"},
     "O": {"kind": "floor", "solid": False, "accent": "bb_orange"},
@@ -262,11 +294,11 @@ LEGEND = {
 
 # ---- accentvloeren: één accent per ruimte, de rest blijft neutraal beton ----
 ACCENT_ROOMS = [
-    (1, 8, 16, 13, 'E'),      # entree/gang — bb-blue, hero-moment
-    (23, 1, 40, 6, 'C'),      # koffiecorner — teal, de tribune-kleur
+    (1, 15, 4, 24, 'E'),      # entree bij de voordeur — bb-blue, hero-moment
+    (10, 1, 36, 6, 'C'),      # koffiecorner — teal, tot net voorbij de tribune
     (43, 1, 53, 6, 'L'),      # Summit — bb-light-blue
     (73, 1, 92, 6, 'L'),      # Birdhouse — bb-light-blue
-    (31, 8, 37, 9, 'I'),      # vergaderhokje — bb-pink
+    (31, 9, 37, 10, 'I'),     # vergaderhokje — bb-pink, nu op de echte binnenmaat
     (97, 1, 128, 24, 'G'),    # Weekend — groen, dichter gestrooid: de jungle
 ]
 for (x0, y0, x1, y1, ch) in ACCENT_ROOMS:
@@ -277,20 +309,22 @@ for (x0, y0, x1, y1, ch) in ACCENT_ROOMS:
 
 # ZONES: specifiek vóór algemeen — world_builder.zone_at() geeft de eerste match
 ZONES = [
-    {"id": "z2_toilet",       "name": "Toiletten",        "rect": [11, 1, 15, 6],    "light": "klinisch"},
-    {"id": "z3_patchhok",     "name": "Het Patchhok",     "rect": [6, 1, 9, 6],      "light": "koud"},
-    {"id": "z1_entree",       "name": "Entree",           "rect": [1, 7, 16, 13],    "light": "warm"},
-    {"id": "z4_koffiecorner", "name": "Koffiecorner",     "rect": [17, 1, 40, 6],    "light": "warm"},
+    {"id": "z2_toilet",       "name": "Toiletten",        "rect": [1, 1, 8, 6],      "light": "klinisch"},
+    {"id": "z3_patchhok",     "name": "Het Patchhok",     "rect": [1, 8, 8, 13],     "light": "koud"},
+    {"id": "z8_hokje",        "name": "Het Vergaderhokje","rect": [30, 8, 38, 11],   "light": "dim"},
+    {"id": "z1_entree",       "name": "Entree",           "rect": [1, 14, 4, 24],    "light": "warm"},
+    {"id": "z4_koffiecorner", "name": "Koffiecorner",     "rect": [10, 1, 36, 6],    "light": "warm"},
     {"id": "z5_summit",       "name": "Summit",           "rect": [43, 1, 53, 6],    "light": "koel"},
     {"id": "z6_basecamp",     "name": "Basecamp",         "rect": [55, 1, 71, 6],    "light": "neutraal"},
     {"id": "z7_birdhouse",    "name": "Birdhouse",        "rect": [73, 1, 92, 6],    "light": "koel"},
-    {"id": "z8_hokje",        "name": "Het Vergaderhokje","rect": [44, 9, 50, 12],   "light": "dim"},
     {"id": "z10_weekend",     "name": "Weekend",          "rect": [97, 1, 128, 24],  "light": "jungle"},
     {"id": "z9_vloer",        "name": "De Vloer",         "rect": [1, 14, 95, 24],   "light": "neutraal"},
-    {"id": "z11_gang",        "name": "De Gang",          "rect": [1, 7, 95, 13],    "light": "neutraal"},
+    # Vangnet voor de hele open oostkant: de noordband voorbij de koffiecorner
+    # (waar de blauwe tijger staat) hoort bij de gang, niet bij een kamer.
+    {"id": "z11_gang",        "name": "De Gang",          "rect": [10, 1, 95, 13],   "light": "neutraal"},
 ]
 
-SPAWN = [2, 11]   # net binnen de voordeur, in de circulatieband
+SPAWN = [2, 17]   # net binnen de voordeur, in de entree
 
 # ---------------- validatie ----------------
 

@@ -216,16 +216,28 @@ def tribune(tw=10, th=2):
 
 
 def keukenblok(tw=5, th=1):
-    """Keukenblok met kraan en twee spoelbakken, als één aanrecht."""
+    """Keukenblok met kraan en twee spoelbakken, als één aanrecht.
+
+    Bij th=2 is het een dubbel blok: aanrecht aan de gangzijde en een tweede
+    rij kasten erachter. Dat is de variant in de vrijstaande koffiecorner —
+    daar kijk je er van vier kanten tegenaan, dus een enkele rand leest als
+    een omgevallen plank."""
     img, d = _canvas(tw, th + 1)
     W, H = img.width, img.height
-    d.rectangle([0, 6, W - 1, H - 1], fill=rgba("lichtgrijs"), outline=rgba("grijs"))
+    onder = H - 1 if th == 1 else T + 9
+    d.rectangle([0, 6, W - 1, onder], fill=rgba("lichtgrijs"), outline=rgba("grijs"))
     d.rectangle([0, 4, W - 1, 9], fill=rgba("beton"), outline=rgba("grijs"))
     for x in (T + 4, 3 * T + 4):
         d.rectangle([x, 6, x + 9, 8], fill=rgba("schaduw"), outline=rgba("grijs"))
         d.line([(x + 4, 3), (x + 4, 6)], fill=rgba("lichtgrijs"))
     for x in range(6, W - 6, T):                                 # deurtjes
-        d.line([(x, 10), (x, H - 2)], fill=rgba("grijs"))
+        d.line([(x, 10), (x, onder - 1)], fill=rgba("grijs"))
+    if th > 1:
+        # tweede rij: hoge kasten met de Jura-plank, van de andere kant gezien
+        d.rectangle([0, onder + 1, W - 1, H - 1], fill=rgba("wit_kast"), outline=rgba("grijs"))
+        d.line([(0, onder + 4), (W - 1, onder + 4)], fill=rgba("lichtgrijs"))
+        for x in range(4, W - 8, 2 * T):
+            d.rectangle([x, onder + 6, x + 8, H - 3], fill=rgba("beton"), outline=rgba("grijs"))
     return img
 
 
@@ -293,7 +305,7 @@ def main():
     items["tafel_lang_38x2.png"] = tafel_lang(38)
     items["monitorwand_4x1.png"] = monitorwand(4)
     items["tribune_10x2.png"] = tribune(10)
-    items["keukenblok_5x1.png"] = keukenblok(5)
+    items["keukenblok_5x2.png"] = keukenblok(5, 2)
     items["balie_5x1.png"] = balie(5)
     items["serverrack_2x4.png"] = serverrack(2, 4)
     for name, img in items.items():

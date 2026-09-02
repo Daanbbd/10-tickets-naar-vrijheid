@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://o1c3i76rb2og"
-path="res://.godot/imported/keukenblok_5x1.png-22f186057205536f16dbfebe3ec59cfb.ctex"
+uid="uid://cfb40p874fj6v"
+path="res://.godot/imported/keukenblok_5x2.png-b535fe6e73b6b6f6944f9b31367df222.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/props/keukenblok_5x1.png"
-dest_files=["res://.godot/imported/keukenblok_5x1.png-22f186057205536f16dbfebe3ec59cfb.ctex"]
+source_file="res://assets/sprites/props/keukenblok_5x2.png"
+dest_files=["res://.godot/imported/keukenblok_5x2.png-b535fe6e73b6b6f6944f9b31367df222.ctex"]
 
 [params]
 
