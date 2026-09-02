@@ -4,6 +4,13 @@ extends Node
 ##
 ## Beheert zijn eigen CanvasLayer en de input-grab. Staat bewust ná World in de
 ## scene-boom zodat _unhandled_input de interactietoets als eerste ziet.
+##
+## F5-a: dit grijpt zijn invoer via `Session.lock_input()`, niet via
+## `get_tree().paused` — dat stond al zo vóórdat een minigame haar eigen pauze
+## kwijtraakte, en verandert hier dus niet. Een dialoog zette de klok en de
+## collega's nooit stil (alleen `Besturing`/`main.gd` bailen op
+## `Session.input_locked`); dat blijft zo. Lezen mag geen straf zijn — het
+## enige dat vastzit is de speler zelf, niet het kantoor eromheen.
 
 var _layer: CanvasLayer
 var _box: DialogueBox

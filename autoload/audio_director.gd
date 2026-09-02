@@ -91,7 +91,13 @@ func play_sfx(cue: StringName, pitch_jitter: float = 0.06, volume_db: float = 0.
 	p.play()
 
 
-## SFX die tijdens een gepauzeerde wereld hoorbaar moet blijven (UI, minigames).
+## SFX die hoorbaar moet blijven ongeacht `get_tree().paused` — een klik in het
+## pauzemenu dat de tree zelf net pauzeerde, bijvoorbeeld. Sinds F5-a pauzeert
+## een gewone minigame de tree niet meer, dus `storing()` en
+## `finish_with_banner()` hebben dit vandaag niet meer nodig om gehoord te
+## worden — maar backgrounden pauzeert nog altijd wél, ook tijdens een
+## minigame, en blijft dan ook een geldige reden. Ongewijzigd gelaten: geen
+## downside om elke `play_ui()`-oproep hetzelfde te behandelen.
 func play_ui(cue: StringName) -> void:
 	var stream := _load_audio("%s/%s" % [SFX_DIR, cue])
 	if stream == null:

@@ -11,11 +11,20 @@ extends Node
 ## De HUD-klok en de `overwerk`-conditie lopen daardoor vanzelf mee; niets in
 ## deze node kent een van beide.
 ##
-## Loopt NIET tijdens dialoog en menu's — dezelfde guards als
-## `telefoon.gd::_process()` (Session.input_locked en get_tree().paused),
-## anders straf je lezen. Pauzeert bewust NIET tijdens een minigame: dat is
-## expliciet F5, nog niet begonnen, en de wereld pauzeert daar vandaag niet
-## voor.
+## Loopt NIET tijdens dialoog, de telefoon of het vertrek — dezelfde
+## `Session.input_locked` als `telefoon.gd::_process()` gebruikt, anders straf
+## je lezen. Loopt ook niet tijdens het pauzemenu of de achtergrondgang
+## (`get_tree().paused`, de enige twee dingen die de tree na F5-a nog
+## pauzeren).
+##
+## Loopt WEL door tijdens een minigame — dat is F5's hele punt: "geen klok kon
+## tikken" was precies de klacht over het oude pauzemodel. Sinds F5-a zet
+## `Shell.run_minigame()` ook `Session.lock_input()` (zodat de speler niet kan
+## weglopen), dus `Session.input_locked` staat tijdens een minigame ook aan —
+## zonder de uitzondering hieronder zou deze klok daardoor alsnog stilvallen,
+## precies het probleem dat F5 moest oplossen. Vandaar de expliciete
+## `Shell.minigame_active()`-uitzondering: het slot mag de speler tegenhouden
+## zonder de klok tegen te houden.
 ##
 ## Getal: 1 in-game minuut per 2,5 reële seconden. Een sessie van ~25 minuten
 ## reëel bestrijkt dan ~600 in-game minuten: 09:12 -> iets voorbij 19:00,
@@ -26,7 +35,9 @@ var _t: float = 0.0
 
 
 func _process(delta: float) -> void:
-	if Session.all_done() or Session.input_locked or get_tree().paused:
+	if Session.all_done() or get_tree().paused:
+		return
+	if Session.input_locked and not Shell.minigame_active():
 		return
 	_t += delta
 	while _t >= TICK_SEC:

@@ -30,7 +30,13 @@ func _ready() -> void:
 	_test_abtest_spreiding()
 	_test_urenstaat()
 	_test_klok()
-	_test_storingen()
+	# Beide draaien een echte minigame via Shell.run_minigame() en wachten op
+	# zijn `finished`-signaal — zonder `await` hier loopt hun staart pas ná
+	# _rapport()/quit(), en dan tellen die controles nooit mee (zie de
+	# soortgelijke, niet-awaited `_test_urenstaat_scherm()` onderaan: dat is
+	# een bestaande tekortkoming die hier niet herhaald wordt).
+	await _test_storingen()
+	await _test_minigame_pauze()
 	_test_gevolgen()
 	_test_questketen_alle_personages()
 	_test_vrije_volgorde()
@@ -2442,6 +2448,154 @@ func _test_storingen() -> void:
 		_ok(Session.is_done(&"t10") or QuestEngine.requirements_met(&"t10"),
 			"storing '%s': de finale (t10) is niet meer haalbaar na de storing" % id)
 
+	# --- F5-b: storingen tijdens een minigame -------------------------------
+	# Frequentie is een ontwerpknop die als een echte constraint gebouwd moet
+	# zijn (max één onderbreking per minigame, nooit in de eerste vijf
+	# seconden) — dit test de zuivere gatingfunctie met een injecteerbare klok,
+	# zodat er geen vijf reële seconden gewacht hoeft te worden.
+	var storingen := Storingen.new()
+	add_child(storingen)
+
+	_ok(not storingen.mag_onderbreken_minigame(0.0),
+		"mag_onderbreken_minigame(): staat 'ja' toe terwijl er geen minigame draait")
+
+	var lopend: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	_ok(Shell.minigame_active(), "run_minigame(): minigame_active() bleef false — kan F5-b niet testen")
+	var gestart := Time.get_ticks_msec() / 1000.0
+	storingen._op_minigame_gestart(&"mg_paarden")  # zelfde pad als Bus.minigame_started
+
+	_ok(not storingen.mag_onderbreken_minigame(gestart),
+		"mag_onderbreken_minigame(): staat 'ja' toe op t=0 — de eerste vijf seconden horen met rust gelaten")
+	_ok(not storingen.mag_onderbreken_minigame(gestart + Storingen.MIN_WACHT_MINIGAME_SEC - 0.01),
+		"mag_onderbreken_minigame(): staat 'ja' toe vlak vóór de vijf seconden")
+	_ok(storingen.mag_onderbreken_minigame(gestart + Storingen.MIN_WACHT_MINIGAME_SEC),
+		"mag_onderbreken_minigame(): staat 'nee' terwijl er wél vijf seconden om zijn en er niets anders in de weg staat")
+
+	# --- de echte routing: _vuur_eenmalig() moet storing() aanroepen op de
+	# actieve minigame zodra het mag, en zijn eigen mutatie moet gewoon
+	# doorgaan — nul nieuwe grammatica, storing() is de enige nieuwe oppervlakte.
+	#
+	# `_vuur_eenmalig()` roept `mag_onderbreken_minigame()` zelf zonder `nu` aan,
+	# dus die kijkt op de ECHTE klok. `_mg_gestart_op` een heel eind terugzetten
+	# (ver voorbij nul, niet zomaar "5 seconden vóór nu" — de suite draait in de
+	# praktijk sneller dan 5 seconden real time, dus "nu min 5" kan zelf negatief
+	# uitkomen) laat die aanroep ook zonder echt te wachten "ja" zeggen.
+	# `_mg_actief` blijft intact (los veld, geen sentinel op het getal), dus dit
+	# leest niet per ongeluk als "geen minigame gestart".
+	storingen._mg_gestart_op = -1000.0
+	var actief := Shell.active_minigame()
+	_ok(actief != null, "active_minigame(): geeft niets terug terwijl mg_paarden loopt")
+	var nep_storing := {
+		"id": "test_storing_f5b",
+		"soort": "afleiding",
+		"dialogue": "Test: het weekend maakt weer lawaai.",
+		"effects": [{"op": "kost_tijd", "minuten": 5, "reden": "afleiding"}],
+	}
+	var voor_minuten := Session.worked_minutes
+	storingen._vuur_eenmalig(nep_storing)
+	_ok(Session.worked_minutes == voor_minuten + 5,
+		"_vuur_eenmalig(): de normale state-mutatie (kost_tijd) bleef uit toen er ook naar storing() geroute werd")
+	if actief != null:
+		var strook := actief.chrome_header()
+		var gevonden := false
+		for kind: Node in strook.find_children("*", "Label", true, false):
+			if (kind as Label).text == "Test: het weekend maakt weer lawaai.":
+				gevonden = true
+		_ok(gevonden,
+			"_vuur_eenmalig(): storing() landde niet zichtbaar in chrome_header() van de actieve minigame")
+	_ok(not storingen.mag_onderbreken_minigame(gestart + 100.0),
+		"mag_onderbreken_minigame(): staat een tweede onderbreking toe in dezelfde minigame-sessie")
+
+	# Opruimen: de echte minigame afronden zoals qa_solve() dat ook zou doen.
+	if actief != null:
+		actief.succeed(100, {"qa": true})
+	await lopend
+	storingen.queue_free()
+	_ok(not Shell.minigame_active(), "na afloop van de teststoring: minigame_active() moet weer false zijn")
+
+
+## F5-a: het invoerslot en niet `get_tree().paused` eigent "de speler kan niet
+## lopen". Vóór en na een minigame moeten `Session.input_locked` en
+## `Shell.minigame_active()` allebei op false staan (geen lek van het slot), en
+## `get_tree().paused` moet FALSE blijven terwijl de minigame loopt — dat is
+## letterlijk het verschil dat F5-a maakt.
+func _test_minigame_pauze() -> void:
+	_kop("een minigame pauzeert het invoerslot, niet de wereld (F5-a)")
+
+	_ok(not Session.input_locked, "input_locked stond al aan vóór de test — vervuilde staat")
+	_ok(not Shell.minigame_active(), "er draaide al een minigame vóór de test — vervuilde staat")
+	_ok(not get_tree().paused, "de tree stond al gepauzeerd vóór de test — vervuilde staat")
+
+	var lopend: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
+
+	_ok(Shell.minigame_active(), "run_minigame(): minigame_active() bleef false")
+	_ok(Session.input_locked,
+		"run_minigame(): input_locked bleef false — de speler kan dan gewoon wegwandelen")
+	_ok(not get_tree().paused,
+		"run_minigame(): de tree staat gepauzeerd — F5-a ontkoppelt dit juist van de minigame")
+
+	# `run_minigame()` slikt zelf één process_frame vóór `mg.setup()` (om de
+	# toetsaanslag te slikken waarmee de minigame gestart werd) en luistert pas
+	# ná die frame naar `mg.finished`. Zonder deze wacht hier vuurt `succeed()`
+	# hieronder `finished` af vóórdat `run_minigame()` daar zelf naar luistert
+	# — een gemist signaal waar niemand ooit meer op wacht, en de `await lopend`
+	# verderop hangt dan voor altijd.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_ok(not get_tree().paused, "run_minigame(): na setup() staat de tree alsnog gepauzeerd")
+
+	var actief := Shell.active_minigame()
+	_ok(actief != null, "active_minigame(): geeft niets terug terwijl er een minigame loopt")
+
+	# F5's kernbelofte: "geen klok kon tikken" was de klacht over het oude
+	# pauzemodel, dus de wandklok moet nu wél doortikken terwijl deze minigame
+	# open staat — ook al staat `Session.input_locked` aan (zie klok.gd).
+	# `done_order` even leegmaken: eerdere tests (_test_storingen() hierboven)
+	# laten alle tickets op DONE staan, en Klok._process() stopt terecht zodra
+	# `Session.all_done()` — dat zou hier verkeerd als "klok tikt niet" lezen.
+	var bewaarde_done_order := Session.done_order.duplicate()
+	Session.done_order.clear()
+	var klok := Klok.new()
+	add_child(klok)
+	var voor_klok := Session.worked_minutes
+	klok._process(Klok.TICK_SEC)
+	_ok(Session.worked_minutes == voor_klok + 1,
+		"Klok._process(): tikt niet door terwijl een minigame open staat — F5's klok-belofte is gebroken")
+	klok.queue_free()
+	Session.done_order = bewaarde_done_order
+
+	if actief != null:
+		actief.succeed(100, {"qa": true})
+
+	var result: MinigameResult = await lopend
+	_ok(result != null and result.outcome == GameEnums.Outcome.SUCCESS,
+		"run_minigame(): succeed() op de minigame leverde geen geslaagd MinigameResult op")
+	_ok(not Shell.minigame_active(), "na afloop: minigame_active() moet weer false zijn")
+	_ok(not Session.input_locked, "na afloop: input_locked moet weer false zijn — anders lekt het slot")
+	_ok(Shell.active_minigame() == null, "na afloop: active_minigame() moet weer null zijn")
+
+	# Achtervang uit Shell.pauzeer_voor_menu(): main.gd/Besturing voorkomen al
+	# dat het pauzemenu tijdens een minigame opengaat, maar mocht iets die
+	# functie ooit rechtstreeks aanroepen terwijl er een minigame loopt, dan
+	# mag dat de tree niet aanraken (de menu-laag hoort sowieso nooit boven een
+	# minigame te verschijnen — zie Pauzemenu's klassecommentaar).
+	var lopend2: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
+	await get_tree().process_frame
+	await get_tree().process_frame
+	Shell.pauzeer_voor_menu(true)
+	_ok(not get_tree().paused,
+		"pauzeer_voor_menu(true) tijdens een minigame pauzeerde de tree alsnog — de achtervang faalt")
+	Shell.pauzeer_voor_menu(false)
+	var actief2 := Shell.active_minigame()
+	if actief2 != null:
+		actief2.succeed(100, {"qa": true})
+	await lopend2
+	_ok(not Shell.minigame_active(), "opruimen van de tweede testminigame is niet gelukt")
+	_ok(not Session.input_locked, "opruimen van de tweede testminigame liet het invoerslot aanstaan")
+
 
 ## F3-d: de klok tikt door met de speeltijd. Bewaakt dat dit (a) het spel niet
 ## onwinbaar kan maken, ongeacht hoe lang iemand blijft rondlopen, en (b) de
@@ -2552,7 +2706,7 @@ func _test_uitlijnen_perfect() -> void:
 
 
 ## F4-b: BBD-203, BBD-205, BBD-207 en BBD-209 lossen op dóór in de wereld te
-## handelen, niet meer via een afgesloten, wereld-pauzerende minigame. Zonder
+## handelen, niet meer via een afgesloten minigame-overlay. Zonder
 ## deze test kan een vijfde `wereldhandeling`-ticket stil op de
 ## `push_error`-tak van `TicketController._resolve_wereldhandeling()` belanden
 ## — onzichtbaar tot een echte speelbeurt erop stuit — of kan het paarden-drietal
