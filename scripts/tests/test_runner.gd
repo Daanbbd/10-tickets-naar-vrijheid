@@ -629,14 +629,23 @@ func _test_minigame_inhoud() -> void:
 				_ok(sprekers.size() >= 4, "%s: te weinig sprekers" % mid)
 				var spreektijd := 0.0
 				var belangrijk := 0
+				var langste_duur := 0.0
 				for raw: Variant in sprekers:
 					var sp := raw as Dictionary
 					_ok(String(sp.get("naam", "")) != "", "%s: spreker zonder naam" % mid)
 					_ok(not (sp.get("regels", []) as Array).is_empty(),
 						"%s: %s zegt niets" % [mid, sp.get("naam", "?")])
-					spreektijd += float(sp.get("duur", 0.0))
+					var duur := float(sp.get("duur", 0.0))
+					spreektijd += duur
+					langste_duur = maxf(langste_duur, duur)
 					if bool(sp.get("belangrijk", false)):
 						belangrijk += 1
+						# De naam zelf hoort niet in de data-aanwijzing te lekken: die
+						# staat in de briefing als categorie, niet als naam (zie
+						# `_test_briefings()`), maar de aanwijzing zelf moet er wel zijn.
+						_ok(String(sp.get("aanwijzing", "")) != "" or sp.get("id", "") == "danny",
+							"%s: belangrijke spreker %s heeft geen aanwijzing en is niet Danny" % [
+								mid, sp.get("naam", "?")])
 				# De grap staat of valt hiermee: wie niets doet moet verliezen.
 				#
 				# Met een marge en niet met `>=`. Dit stond op gelijk (42 tegen 42)
@@ -649,6 +658,13 @@ func _test_minigame_inhoud() -> void:
 				_ok(marge >= 2.0,
 					"%s: de spreektijd (%.0fs) loopt maar %.1fs over het budget (%.0fs) heen; niets doen moet met marge verliezen" % [
 						mid, spreektijd, marge, c.get("tijd", 0.0)])
+				# BBD-202/F4-a: één afkapping mag het nooit meer redden. Zelfs de
+				# langste spreker alleen eraf halen moet de rest nog steeds over het
+				# budget laten lopen, anders is "kap één keer de juiste af" weer de
+				# hele opgave.
+				_ok(marge > langste_duur,
+					"%s: de marge (%.1fs) is niet groter dan de langste spreker (%.1fs); één afkapping volstaat dan al" % [
+						mid, marge, langste_duur])
 				_ok(belangrijk >= 1,
 					"%s: geen enkele spreker is belangrijk, dus afkappen heeft geen gevolgen" % mid)
 				_ok(int(c.get("ingrepen", 0)) > 0 and int(c.get("ingrepen", 0)) < sprekers.size(),
@@ -2163,20 +2179,29 @@ func _test_briefings() -> void:
 			"%s heeft twee functietitels: '%s' in npcs.json, '%s' in characters.json" % [
 				cid, np.role, pc.role])
 
-	# De stand-up noemt bij naam wie iets te melden heeft. Die naam moet een
-	# spreker zijn die in de data ook echt `belangrijk` staat, anders stuurt de
-	# briefing je een verkeerde kant op — erger dan geen briefing.
+	# De stand-up geeft een categorie-aanwijzing over wie iets te melden heeft
+	# ("de collega die..."), nooit een naam — dat zou de afweging voor de
+	# speler oplossen. Danny, de tweede belangrijke spreker, krijgt bewust
+	# geen aanwijzing: hij moet ongemarkeerd blijven, dat is de enige verborgen
+	# informatie in het spel.
 	var st: Dictionary = MinigameContent.get_config(&"mg_planning")
 	var brief_st := Briefing.regel(GameData.ticket(&"t02"))
-	var genoemd := ""
+	var eerste_belangrijke := {}
 	for raw: Variant in (st.get("sprekers", []) as Array):
 		var sp := raw as Dictionary
 		var naam := String(sp.get("naam", ""))
-		if naam != "" and brief_st.contains(naam):
-			genoemd = naam
-			_ok(bool(sp.get("belangrijk", false)),
-				"de stand-up-briefing noemt %s, maar die staat niet als belangrijk" % naam)
-	_ok(genoemd != "", "de stand-up-briefing noemt geen enkele spreker bij naam")
+		_ok(naam == "" or not brief_st.contains(naam),
+			"de stand-up-briefing noemt %s bij naam, en verraadt zo wie je moet sparen" % naam)
+		if eerste_belangrijke.is_empty() and bool(sp.get("belangrijk", false)):
+			eerste_belangrijke = sp
+	_ok(not eerste_belangrijke.is_empty(),
+		"mg_planning heeft geen enkele belangrijke spreker")
+	if not eerste_belangrijke.is_empty():
+		var aanwijzing := String(eerste_belangrijke.get("aanwijzing", ""))
+		_ok(aanwijzing != "",
+			"de eerste belangrijke spreker (%s) heeft geen aanwijzing" % eerste_belangrijke.get("naam", "?"))
+		_ok(aanwijzing != "" and brief_st.contains(aanwijzing),
+			"de stand-up-briefing bevat niet de aanwijzing van de belangrijke spreker")
 
 	# En de scope-briefing noemt hoeveel van haar wensen eigenlijk projecten
 	# zijn. Dat getal komt uit `Gevolgen.ZWARE_WENSEN` en moet kloppen: het

@@ -69,9 +69,9 @@
  },
  "mg_planning": {
   "type": "standup",
-  "briefing": "{tijd} seconden, en je mag {ingrepen} keer iemand afkappen. {belangrijk} heeft echt iets. Dus wie dan ook, maar NIET {belangrijk}.",
-  "intro": "Iedereen staat. Dennis kijkt op zijn telefoon. Je hebt drie keer dat je iemand mag afkappen.",
-  "tijd": 42.0,
+  "briefing": "{tijd} seconden, en je mag {ingrepen} keer iemand afkappen. Let op {belangrijk}: die kap je niet af.",
+  "intro": "Iedereen staat. Dennis kijkt op zijn telefoon. Je mag {ingrepen} keer iemand afkappen.",
+  "tijd": 30.0,
   "ingrepen": 3,
   "kap_regel": "Je kapt hem af. Hij knikt.",
   "sprekers": [
@@ -101,6 +101,7 @@
     "naam": "Jonathan",
     "duur": 9.0,
     "belangrijk": true,
+    "aanwijzing": "de collega die net een technisch probleem signaleert",
     "regels": [
      "Ik zie overal store-id based assortment staan.",
      "Dat klopt niet. Een assortment hangt aan een store EN een levering.",
