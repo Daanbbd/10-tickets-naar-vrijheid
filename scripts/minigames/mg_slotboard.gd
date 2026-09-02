@@ -85,7 +85,7 @@ class DropSlot extends PanelContainer:
 		if regel:
 			# Een urenstaat leest als regels, niet als vakken: naam links, de
 			# uren die je erop schrijft rechts, over de volle breedte.
-			custom_minimum_size = Vector2(0, 20)
+			custom_minimum_size = Vector2(0, 24)
 			size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var h := HBoxContainer.new()
 			h.add_theme_constant_override("separation", 2)
