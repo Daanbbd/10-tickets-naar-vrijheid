@@ -36,7 +36,7 @@ func _on_setup() -> void:
 	for raw: Variant in c.get("tags", []):
 		var t := raw as Dictionary
 		var id := String(t.get("id", ""))
-		var b := UiKit.button(String(t.get("label", id)), UiKit.FS_SMALL)
+		var b := UiKit.keuzeknop(String(t.get("label", id)), UiKit.FS_SMALL)
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(0, 18)
 		b.toggled.connect(_on_toggle.bind(id))

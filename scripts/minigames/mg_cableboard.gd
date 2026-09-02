@@ -106,7 +106,7 @@ func _on_setup() -> void:
 	check.pressed.connect(_check)
 	body.add_child(check)
 
-	set_status("Klik twee knooppunten om ze te verbinden.")
+	set_status("Tik twee knooppunten aan om ze te verbinden.")
 
 
 func node_ctrl(id: String) -> Control:

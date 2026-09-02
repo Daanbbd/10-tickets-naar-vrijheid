@@ -57,7 +57,7 @@ func _show_ronde() -> void:
 		var o := raw as Dictionary
 		if not Conditions.check(o.get("when", {}) as Dictionary):
 			continue
-		var b := UiKit.button(String(o.get("tekst", "...")), UiKit.FS_SMALL)
+		var b := UiKit.keuzeknop(String(o.get("tekst", "...")), UiKit.FS_SMALL)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.pressed.connect(_pick.bind(o))
