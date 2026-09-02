@@ -50,6 +50,7 @@ func _ready() -> void:
 	_test_save_ronde()
 	_test_uitlijnen_perfect()
 	_test_wereldhandelingen()
+	_test_urenstaat_scherm()
 	_rapport()
 
 
@@ -490,17 +491,21 @@ func _test_minigame_inhoud() -> void:
 		var t := String(c.get("type", ""))
 		match t:
 			"slotboard":
-				# Het slotboard draagt nog maar een minigame: de urenstaat, en die
-				# heeft bewust geen goed antwoord. Elke regel neemt elk uurblok, en
-				# er zijn juist meer uren dan regels.
-				_ok(int(c.get("capaciteit", 1)) > 1,
-					"%s: geen capaciteit; dan past er maar een uur per regel" % mid)
-				_ok(int(c.get("blok_min", 0)) > 0,
-					"%s: geen blok_min; een uurblok is dan nul minuten waard" % mid)
-				var uren := (c.get("cards", []) as Array).size() * int(c.get("blok_min", 0))
-				_ok(uren == Urenstaat.BUDGET_MIN,
-					"%s: de blokken tellen op tot %d minuten, en het budget is %d" % [
-						mid, uren, Urenstaat.BUDGET_MIN])
+				# F4-a: het slotboard draagt nog maar een minigame — de urenstaat —
+				# en die heeft bewust geen goed antwoord: drie kant-en-klare
+				# tijdverdelingen, niet meer 22 sleepbare uurblokjes.
+				var opties := c.get("opties", []) as Array
+				_ok(opties.size() == 3,
+					"%s: geen drie voorgestelde verdelingen (%d gevonden)" % [mid, opties.size()])
+				var ids := {}
+				for raw: Variant in opties:
+					var o := raw as Dictionary
+					var oid := String(o.get("id", ""))
+					_ok(oid != "", "%s: optie zonder id" % mid)
+					_ok(not ids.has(oid), "%s: id '%s' komt dubbel voor" % [mid, oid])
+					ids[oid] = true
+					_ok(String(o.get("tekst", "")) != "", "%s/%s: optie zonder tekst" % [mid, oid])
+					_ok(String(o.get("reactie", "")) != "", "%s/%s: optie zonder reactie" % [mid, oid])
 			"tagpicker":
 				var tag_ids: Array[String] = []
 				for raw: Variant in c.get("tags", []):
@@ -2541,3 +2546,70 @@ func _test_wereldhandelingen() -> void:
 			despawnd.append(String(c.get("npc", "")))
 	for nid: StringName in paarden:
 		_ok(String(nid) in despawnd, "t09 despawnt '%s' niet in zijn world_changes" % nid)
+
+
+## F4-a: `mg_slotboard.gd` (de urenstaat, `mg_urenstaat`) werd een dialoogkeuze
+## met drie kant-en-klare tijdverdelingen in plaats van een sleepspel met 22
+## elementen. `ticket_controller.gd::_urenstaat()` en `_dirk_oordeel()` lezen
+## drie sleutels uit de payload — `geboekt_min`, `op_rest`, `lege_tickets` —
+## en dat contract mag een presentatiewijziging niet stilletjes breken.
+func _test_urenstaat_scherm() -> void:
+	_kop("de urenstaat als dialoogkeuze (F4-a)")
+
+	QuestEngine.start_run(&"daan")
+	Session.done_order.clear()
+	for i: int in 4:
+		Session.done_order.append(GameData.ticket_ids()[i])
+
+	var packed: PackedScene = load("res://scenes/minigames/mg_slotboard.tscn")
+	var mg: MinigameBase = packed.instantiate() as MinigameBase
+	mg.minigame_id = &"mg_urenstaat"
+	add_child(mg)
+	mg.setup({})
+
+	var opties: Array = mg.content().get("opties", [])
+	_ok(opties.size() == 3, "mg_urenstaat: geen drie voorgestelde verdelingen")
+
+	# Elke voorgestelde verdeling rekent zelf uit tegen de vier tickets die
+	# hierboven als "vandaag afgerond" zijn opgezet, en moet daarbij de drie
+	# sleutels leveren die Dirk leest, met waarden die bij de naam van de
+	# optie passen.
+	for id: String in ["tickets", "eerlijk", "overig"]:
+		var v: Dictionary = mg.call("_verdeling", id)
+		for sleutel: String in ["geboekt_min", "op_rest", "lege_tickets"]:
+			_ok(v.has(sleutel), "urenstaat/%s: payload mist '%s'" % [id, sleutel])
+		_ok(int(v.get("geboekt_min", -1)) == Urenstaat.BUDGET_MIN,
+			"urenstaat/%s: geboekt_min is %s, en een dag is altijd %d minuten" % [
+				id, v.get("geboekt_min"), Urenstaat.BUDGET_MIN])
+		_ok(int(v.get("lege_tickets", -1)) >= 0, "urenstaat/%s: lege_tickets is negatief" % id)
+
+		match id:
+			"tickets":
+				_ok(int(v.get("op_rest", -1)) == 0,
+					"urenstaat/tickets: 'vooral op de tickets zelf' laat nog %s minuten op overig staan" %
+						v.get("op_rest"))
+			"eerlijk":
+				_ok(int(v.get("op_rest", -1)) > 0 and int(v.get("op_rest", 0)) < 4 * 60,
+					"urenstaat/eerlijk: 'een eerlijke spreiding' hoort niet op 0 en niet op Dirks " +
+						"vraagteken-drempel uit te komen (%s min)" % v.get("op_rest"))
+			"overig":
+				_ok(int(v.get("op_rest", 0)) >= 4 * 60,
+					"urenstaat/overig: 'veel op overig' haalt Dirks vraagteken-drempel niet (%s van de %d min)" % [
+						v.get("op_rest"), 4 * 60])
+
+		# Dirk accepteert per code toch alles, maar zijn regel mag op geen van
+		# de drie combinaties leeg blijven of crashen.
+		_ok(TicketController._dirk_oordeel(v) != "", "urenstaat/%s: Dirk heeft niets te zeggen" % id)
+
+	# En de echte weg: een tik op een keuze moet via de echte MinigameResult
+	# dezelfde drie sleutels opleveren, niet alleen de rekenfunctie op zich.
+	mg.call("_kies", opties[0] as Dictionary)
+	var result: MinigameResult = await mg.finished
+	_ok(result.outcome == GameEnums.Outcome.SUCCESS,
+		"urenstaat: een dialoogkeuze levert geen geslaagde MinigameResult op")
+	for sleutel2: String in ["geboekt_min", "op_rest", "lege_tickets"]:
+		_ok(result.payload.has(sleutel2), "urenstaat: MinigameResult.payload mist '%s'" % sleutel2)
+	_ok(int(result.payload.get("geboekt_min", 0)) == Urenstaat.BUDGET_MIN,
+		"urenstaat: de echte flow boekt geen volle dag")
+
+	mg.queue_free()
