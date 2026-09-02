@@ -2,9 +2,9 @@
 
 ## Status (bijgewerkt 2 september 2026)
 
-**F0, F1 en F2 zijn klaar en gemerged in `main`.** Testsuite staat op
-**16.873 controles, 0 fout, ALLES GOED** (baseline bij de start van dit plan
-was 16.658). F3 t/m F6 zijn nog niet begonnen.
+**F0 t/m F3 zijn klaar en gemerged in `main`.** Testsuite staat op
+**17.215 controles, 0 fout, ALLES GOED** (baseline bij de start van dit plan
+was 16.658). F4 t/m F6 zijn nog niet begonnen.
 
 | Fase | Status | Noot |
 |---|---|---|
@@ -20,7 +20,10 @@ was 16.658). F3 t/m F6 zijn nog niet begonnen.
 | F2-c leesbaarheid | ✅ Klaar | Twee grijzen i.p.v. één (licht/donker ondergrond); vond een 4e stapelfout die de briefing niet noemde |
 | F2-d kompasstrip | ✅ Klaar | Leest vloerbreedte uit data, geen hardcoded 130 |
 | F2-e minigame-chrome | ✅ Klaar | Vond en repareerde een portret-overflow-bug en twee misplaatste knoppen |
-| F3 De dag aanzetten | ⬜ Nog te doen | — |
+| F3-a De inbox loopt vol | ✅ Klaar | 4 tickets open bij start (west-cluster, 4 eigenaren), rest via `unlocks`-keten |
+| F3-b De klant kan ontsporen | ✅ Klaar | 4 → 6 beats, `Gevolgen.DREMPELS` uitgebreid, effects op klantberichten |
+| F3-c Storingen | ✅ Klaar | Dirk gegeneraliseerd naar `data/storingen.json`; nieuw `QuestEngine.reopen()` |
+| F3-d De klok gaat lopen | ✅ Klaar | Geen ticket-herbalancering nodig, zie "Afwijkingen" |
 | F4 Tien tickets, zes schermen | ⬜ Nog te doen | — |
 | F5 Wereld van pause af | ⬜ Nog te doen | — |
 | F6 Verificatie en docs | ⬜ Nog te doen | — |
@@ -61,6 +64,30 @@ F1-a al bouwde. **Beide zijn nu doorgevoerd**, details in `docs/LEVEL.md`:
 - Een kleine, losstaande hygiëne-fix onderweg: `tools/generators/__pycache__/*.pyc`
   stond onder versiebeheer en werd bij elke generator-run herschreven —
   nu gegitignored.
+
+### Afwijkingen t.o.v. de oorspronkelijke briefing (F3)
+
+- **Ticketverdeling.** Start open: t02 (daan), t03 (willem), t04 (victor),
+  t05 (jonathan) — een west-cluster die toevallig ook meteen vier eigenaren
+  bedient. De rest ontsluit via het bestaande `unlocks`-veld op tickets:
+  t02→t09, t03→t08→t01, t04→t07, t05→t06. Danny (t06/t07), koen (t08) en
+  bastiaan (t09) krijgen zo hun eigen werk in de eerste ontsluitingsgolf,
+  daan heeft al t02 en krijgt t01 pas laat.
+- **`_qa_playthrough()` (harnas, niet gameplay) moest twee keer mee-evolueren**,
+  buiten de letterlijke briefing om: eerst omdat de vaste t01..t10-volgorde
+  niet meer klopte (F3-a), toen omdat een heropend ticket (F3-c) een tweede
+  keer opgepakt moest kunnen worden zonder de collega opnieuw te werven. De
+  twee parallelle agents losten dit allebei zelf op met een verschillende
+  structuur (inline while vs. `_qa_doe_ticket()`-helper); bij het samenvoegen
+  is gekozen voor de laatste, want die dekt ook het heropening-geval.
+- **F3-d deed geen ticket-herbalancering.** De ~30/45 minuten-kosten staan
+  niet in `data/tickets/*.json` maar zijn `urenstaat.gd`-constanten; de klok
+  (1 in-game minuut / 2,5 seconde) haalt op zichzelf al ruim boven de 8 uur
+  bij elk personage, dus dubbel tellen bleek in de praktijk geen probleem.
+  `_test_urenstaat()` bevestigt dit voor een gesimuleerde dag van 24 uur.
+- Nieuw op `QuestEngine`: `reopen(id)` + effect-op `reopen_ticket`, nodig om
+  "iets gaat stuk" (F3-c) een DONE-ticket terug naar AVAILABLE te zetten
+  zonder ooit naar LOCKED terug te vallen.
 
 ---
 
@@ -600,7 +627,8 @@ onder 4,5:1 contrast zit, en geen enkel element buiten de 192 px valt.
 
 # F3 · De dag aanzetten
 
-**Status: ⬜ Nog niet gestart.**
+**Status: ✅ Klaar. Alle vier substappen gemerged, testsuite groen (17.215
+controles, 0 fout).**
 
 Dit is de fase die de audit "de kernlus" noemt.
 
@@ -972,8 +1000,8 @@ bovenstaande sectie als briefing, plus de codemap-feiten die erbij horen.
 | F1-a | 1 agent (vloergenerator) | 1 agent | ✅ Gemerged (met openstaand correctiepunt, zie boven) |
 | F1-b, F1-c | 2 agents, ná F1-a | F1-b geen aparte agent (zie F1-b); F1-c 1 agent | 🟡 F1-c ✅, F1-b ⬜ |
 | F2-a t/m F2-e | 3 agents | 3 waves: (F2-a+F2-b samen), (F2-c+F2-d samen), F2-e apart, telkens 1 agent | ✅ Alle vijf gemerged |
-| F3-a, F3-b | 1 agent (data + telefoon) | nog te doen | ⬜ |
-| F3-c, F3-d | 1 agent (storingen + klok) | nog te doen | ⬜ |
+| F3-a, F3-b | 1 agent (data + telefoon) | 1 agent, parallel met F3-c/d | ✅ Gemerged |
+| F3-c, F3-d | 1 agent (storingen + klok) | 1 agent, parallel met F3-a/b | ✅ Gemerged (1 conflict in `main.gd`, handmatig) |
 | F4-a | 1 agent per minigame, max 3 tegelijk | nog te doen | ⬜ |
 | F4-b | 1 agent (vier wereldhandelingen) | nog te doen | ⬜ |
 | F4-c, F4-d | 1 agent | nog te doen | ⬜ |
