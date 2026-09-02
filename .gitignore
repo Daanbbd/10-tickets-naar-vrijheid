@@ -17,3 +17,5 @@ tools/.venv/
 
 # Gevendorde skills-bundel met eigen .git — geen onderdeel van dit project
 GD-Agentic-Skills/
+__pycache__/
+*.pyc
