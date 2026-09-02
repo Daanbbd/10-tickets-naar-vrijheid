@@ -23,11 +23,14 @@ Open het project in Godot en druk op play, of vanaf de command line:
 
 **Besturing (toetsenbord)** — WASD of pijltjes lopen · Shift rennen · **E**
 praten, onderzoeken, gebruiken · **TAB** je tickets · **Q** hint · **ESC**
-minigame afbreken.
+pauzemenu, en een minigame afbreken.
 
 **Besturing (telefoon)** — duim links om te lopen, ver uitduwen is rennen · de
 knop rechtsonder draagt het werkwoord van waar je voor staat · **▤** je tickets
-· **?** hint.
+· **?** hint · **≡** pauze.
+
+Je dag wordt bij elk opgelost ticket bewaard, en ook als je de app wegdrukt.
+**Doorgaan** op het titelscherm zet je terug waar je gebleven was.
 
 De tickets staan allemaal tegelijk open. Je vindt ze door rond te lopen, en je
 kiest op het bord welke je als eerste doet. Elf tickets, elf verschillende

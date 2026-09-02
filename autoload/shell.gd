@@ -104,6 +104,36 @@ func _qa_shot() -> void:
 	get_tree().quit()
 
 
+# --- Pauze ----------------------------------------------------------------
+
+## Staat het pauzemenu open? Hier en niet in het menu zelf, want dit is dezelfde
+## vraag als "wie bezit de pauze".
+var _menu_pauze: bool = false
+
+
+## Het pauzemenu vraagt hier of de wereld stil moet staan.
+##
+## Shell is de enige eigenaar van `get_tree().paused`, en dat is geen stijlregel:
+## een minigame draait op een gepauzeerde tree, en de achtergrondgang hierboven
+## bewaart de vorige stand. Zou het menu zelf `paused = false` schrijven bij het
+## sluiten, dan ontpauzeert het een minigame die er nog onder ligt, of het
+## achtergrondslot van een app die net terug in beeld komt.
+##
+## Vandaar dat dit alleen de stand bijhoudt en de tree niet aanraakt zolang een
+## andere eigenaar hem vasthoudt.
+func pauzeer_voor_menu(aan: bool) -> void:
+	if _menu_pauze == aan:
+		return
+	_menu_pauze = aan
+	if _active != null or _in_achtergrond:
+		return
+	get_tree().paused = aan
+
+
+func menu_pauze_actief() -> bool:
+	return _menu_pauze
+
+
 # --- Routing --------------------------------------------------------------
 
 func goto_title() -> void:
@@ -127,6 +157,9 @@ func _change_scene(path: String) -> void:
 		return
 	_busy = true
 	await fade_out()
+	# Net als het invoerslot overleeft geen enkele pauze-eigenaar een scenewissel:
+	# het pauzemenu dat hem zette bestaat straks niet meer.
+	_menu_pauze = false
 	get_tree().paused = false
 	# Geen enkel invoerslot overleeft een scenewissel: de dialoog, de telefoon of
 	# de vertrekscene die hem zette bestaat straks niet meer, dus niemand gooit

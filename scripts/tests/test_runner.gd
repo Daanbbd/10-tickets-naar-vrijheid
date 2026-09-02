@@ -31,6 +31,7 @@ func _ready() -> void:
 	_test_balkmaat()
 	_test_briefings()
 	_test_intro()
+	_test_save_ronde()
 	_rapport()
 
 
@@ -1548,6 +1549,169 @@ func _test_intro() -> void:
 		for toets: String in ["druk op E", " TAB", " Q "]:
 			_ok(not tekst.contains(toets),
 				"dialoog '%s' noemt een toets ('%s')" % [gid, toets])
+
+
+## Een halve dag heen en terug door de save.
+##
+## `Session.load_from_disk()` had nul aanroepers terwijl `save_to_disk()` bij elk
+## opgelost ticket en bij het naar de achtergrond gaan draait. De save stond dus
+## op schijf en niemand las hem: een half uur spelen was op een telefoon
+## onherstelbaar weg terwijl het bestand er gewoon lag. Nu het titelscherm hem
+## met "Doorgaan" wél leest is die round-trip een contract, en dan hoort er een
+## test op te staan die breekt vóór een speler zijn dag kwijt is.
+##
+## De echte valkuil zit niet in het schrijven maar in wat er stil verdwijnt: een
+## sleutel die niet meegaat komt terug als de standaardwaarde, en dat leest als
+## "die had ik nog niet gedaan" in plaats van als een fout.
+func _test_save_ronde() -> void:
+	_kop("save en laden")
+
+	# Deze test schrijft naar het echte savepad. Wat er stond gaat er straks weer
+	# terug: een testrun hoort geen speelbeurt van iemand over te schrijven.
+	var had_save := FileAccess.file_exists(Session.SAVE_PATH)
+	var oude_save := FileAccess.get_file_as_string(Session.SAVE_PATH) if had_save else ""
+
+	# --- een halve run opbouwen -------------------------------------------
+	QuestEngine.start_run(&"daan")
+	var gedaan: Array[StringName] = []
+	for tid: StringName in GameData.ticket_ids():
+		if gedaan.size() >= 5:
+			break
+		var t: TicketDef = GameData.ticket(tid)
+		QuestEngine.activate(tid)
+		if not QuestEngine.is_own_expertise(tid):
+			QuestEngine.mark_helper_present(tid)
+		for item: Variant in (t.requirements.get("has_item", []) as Array):
+			Session.add_item(StringName(item))
+		QuestEngine.complete(tid, MinigameResult.make(t.minigame_id, GameEnums.Outcome.SUCCESS))
+		gedaan.append(tid)
+	_ok(gedaan.size() == 5, "de halve run haalt maar %d tickets" % gedaan.size())
+
+	# En de rest van wat een speelbeurt achterlaat: losse vlaggen, spullen,
+	# tellers, een keuze, geboekte uren en de getallen uit Gevolgen.
+	Session.set_flag(&"save_test_vlag", true)
+	Session.add_item(&"koffie", 3)
+	Session.add_counter(&"save_test_teller", 2)
+	Session.pin(&"t07")
+	Session.book_hours(240)
+	Gevolgen.boek(&"mg_user_story", MinigameResult.make(&"mg_user_story",
+		GameEnums.Outcome.SUCCESS, 0, {&"punten": 17, &"blij": 13}))
+	# Bewust runtime-only; zie de assert verderop.
+	Session.add_follower(&"npc_willem")
+
+	var verwacht_min := Session.worked_minutes
+	var verwacht_gevonden := Session.discovered.size()
+	_ok(verwacht_min > 0, "een halve run boekt geen enkele minuut")
+
+	# --- het formaat: standen als naam, niet als getal ---------------------
+	var heen := Session.to_dict()
+	var rauwe_standen := heen.get("ticket_states", {}) as Dictionary
+	_ok(String(rauwe_standen.get(String(gedaan[0]), "")) == "DONE",
+		"een opgelost ticket staat niet als \"DONE\" in de save, maar als %s"
+			% rauwe_standen.get(String(gedaan[0]), "<niets>"))
+	_ok(String(rauwe_standen.get("t10", "")) == "LOCKED",
+		"t10 staat niet als \"LOCKED\" in de save")
+
+	# --- round-trip in het geheugen ---------------------------------------
+	QuestEngine.start_run(&"victor")   # alles leeg, en expres een ánder personage
+	Session.from_dict(heen)
+	_controleer_halve_run("from_dict", gedaan, verwacht_min, verwacht_gevonden)
+
+	# --- round-trip over de schijf ----------------------------------------
+	Session.save_to_disk()
+	QuestEngine.start_run(&"victor")
+	_ok(Session.has_saved_run(), "has_saved_run() ziet de zojuist bewaarde run niet")
+	_ok(Session.load_from_disk(), "load_from_disk() kon de save niet lezen")
+	_controleer_halve_run("load_from_disk", gedaan, verwacht_min, verwacht_gevonden)
+
+	# --- de collega's blijven bewust thuis ---------------------------------
+	# Niet vergeten maar weggelaten: na het laden staat iedereen weer op zijn
+	# post, dus een bewaarde lijst zou beweren dat Willem achter je aan loopt
+	# terwijl hij aan zijn bureau zit. De vlag `helper_bij_<ticket>` overleeft
+	# wél, zodat werk waar je hem al voor had opgehaald oplosbaar blijft.
+	_ok(Session.followers.is_empty(),
+		"followers komt terug uit de save; die hoort runtime-only te zijn")
+	_ok(Session.get_flag(QuestEngine.helper_flag(gedaan[0]))
+			or QuestEngine.is_own_expertise(gedaan[0]),
+		"de helper-vlag van %s overleeft het laden niet" % gedaan[0])
+
+	# --- migratiepad: een save met rauwe ints -----------------------------
+	# Zo staan alle bestaande saves op schijf. Die horen door te spelen, niet
+	# stil terug te vallen op een lege dag.
+	QuestEngine.start_run(&"daan")
+	Session.from_dict({
+		"character_id": "daan",
+		"ticket_states": {
+			"t01": int(GameEnums.TicketState.DONE),
+			"t02": int(GameEnums.TicketState.AVAILABLE),
+		},
+	})
+	_ok(Session.ticket_state(&"t01") == GameEnums.TicketState.DONE,
+		"een oude save met een rauwe int leest t01 niet meer als opgelost")
+	_ok(Session.ticket_state(&"t02") == GameEnums.TicketState.AVAILABLE,
+		"een oude save met een rauwe int leest t02 niet meer als open")
+
+	# --- een lege sessie is geen run ---------------------------------------
+	# Wegdrukken op het titelscherm mag geen knop "Doorgaan" opleveren die je in
+	# een wereld zonder personage zet.
+	var f := FileAccess.open(Session.SAVE_PATH, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify({"character_id": ""}))
+		f.close()
+	_ok(not Session.has_saved_run(),
+		"een save zonder personage telt toch als een run om naar terug te keren")
+
+	# --- de schijf weer terugzetten zoals hij was --------------------------
+	if had_save:
+		var g := FileAccess.open(Session.SAVE_PATH, FileAccess.WRITE)
+		if g != null:
+			g.store_string(oude_save)
+			g.close()
+	else:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(Session.SAVE_PATH))
+
+	QuestEngine.start_run(&"daan")
+
+
+## Wat er na een round-trip terug hoort te staan. Twee keer aangeroepen — via
+## `from_dict()` en via de schijf — omdat JSON een eigen laag fouten toevoegt:
+## daar worden ints floats en StringNames strings, en een sleutel die dat niet
+## overleeft valt stil terug op zijn standaardwaarde.
+func _controleer_halve_run(via: String, gedaan: Array[StringName],
+		minuten: int, gevonden: int) -> void:
+	_ok(Session.character_id == &"daan", "%s: het personage is %s geworden" % [
+		via, Session.character_id])
+	_ok(Session.get_flag(&"save_test_vlag"), "%s: een losse vlag overleeft het niet" % via)
+	_ok(Session.item_count(&"koffie") == 3,
+		"%s: 3 koffie komt terug als %d" % [via, Session.item_count(&"koffie")])
+	_ok(Session.get_counter(&"save_test_teller") == 2,
+		"%s: de teller komt terug als %d" % [via, Session.get_counter(&"save_test_teller")])
+	_ok(Session.worked_minutes == minuten,
+		"%s: %d gewerkte minuten komen terug als %d" % [via, minuten, Session.worked_minutes])
+	_ok(Session.booked_minutes == 240,
+		"%s: de geboekte uren komen terug als %d" % [via, Session.booked_minutes])
+	_ok(Session.pinned_ticket == &"t07",
+		"%s: de gekozen ticket komt terug als '%s'" % [via, Session.pinned_ticket])
+	_ok(int(Gevolgen.getal(&"scope_punten", -1)) == 17,
+		"%s: de gevolgen komen terug als %s" % [via, Gevolgen.getal(&"scope_punten", -1)])
+	_ok(Session.discovered.size() == gevonden,
+		"%s: %d gevonden tickets komen terug als %d" % [via, gevonden, Session.discovered.size()])
+	_ok(Session.done_order.size() == gedaan.size(),
+		"%s: done_order telt %d in plaats van %d" % [
+			via, Session.done_order.size(), gedaan.size()])
+	for tid: StringName in gedaan:
+		_ok(Session.is_done(tid), "%s: %s staat niet meer op opgelost" % [via, tid])
+		_ok(tid in Session.done_order, "%s: %s ontbreekt in done_order" % [via, tid])
+	_ok(Session.ticket_state(&"t10") == GameEnums.TicketState.LOCKED,
+		"%s: t10 komt niet meer als geblokkeerd terug" % via)
+	_ok(Session.done_count() == gedaan.size(),
+		"%s: de teller staat op %d/10" % [via, Session.done_count()])
+
+	# En de wereld moet hierna weer verder kunnen: de promotie die de laadroute
+	# draait mag geen enkel ticket verliezen.
+	QuestEngine.refresh_availability()
+	_ok(QuestEngine.open_tickets().size() == GameData.ticket_ids().size() - gedaan.size() - 1,
+		"%s: na het laden staan er %d tickets open" % [via, QuestEngine.open_tickets().size()])
 
 
 ## Alle tekst van een dialoogboom op een rij, varianten inbegrepen, om op te

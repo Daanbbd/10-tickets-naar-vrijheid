@@ -223,6 +223,20 @@ func _muziek_db() -> float:
 	return linear_to_db(maxf(0.001, music_volume * master_volume))
 
 
+## Het hoofdvolume, en meteen hoorbaar.
+##
+## `master_volume` rechtstreeks zetten werkt wel voor SFX — die lezen het bij
+## elke cue — maar niet voor de muziek: die hangt aan een `volume_db` die één
+## keer door een fade is neergezet en daarna niets meer leest. Een schuif die
+## pas bij het volgende muziekstuk iets doet leest als een kapotte schuif.
+func set_master_volume(v: float) -> void:
+	master_volume = clampf(v, 0.0, 1.0)
+	if _tw_in != null and _tw_in.is_valid():
+		_tw_in.kill()
+	if _actief != null and _actief.playing:
+		_actief.volume_db = _muziek_db()
+
+
 # --- Muziekstand volgt spelstand -----------------------------------------
 
 func _op_gesprek_start(_dialogue_id: StringName, _speaker_id: StringName) -> void:

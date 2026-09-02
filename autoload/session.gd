@@ -287,7 +287,7 @@ func to_dict() -> Dictionary:
 		"character_id": String(character_id),
 		"flags": _sn_keys_to_str(flags),
 		"inventory": _sn_keys_to_str(inventory),
-		"ticket_states": _sn_keys_to_str(ticket_states),
+		"ticket_states": _states_naar_namen(ticket_states),
 		"counters": _sn_keys_to_str(counters),
 		"gevolgen": _sn_keys_to_str(gevolgen),
 		"worked_minutes": worked_minutes,
@@ -302,7 +302,7 @@ func from_dict(d: Dictionary) -> void:
 	character_id = StringName(d.get("character_id", ""))
 	flags = _str_keys_to_sn(d.get("flags", {}))
 	inventory = _str_keys_to_sn(d.get("inventory", {}))
-	ticket_states = _str_keys_to_sn(d.get("ticket_states", {}))
+	ticket_states = _namen_naar_states(d.get("ticket_states", {}))
 	counters = _str_keys_to_sn(d.get("counters", {}))
 	gevolgen = _str_keys_to_sn(d.get("gevolgen", {}))
 	worked_minutes = int(d.get("worked_minutes", 0))
@@ -328,14 +328,76 @@ func save_to_disk() -> void:
 
 
 func load_from_disk() -> bool:
-	if not FileAccess.file_exists(SAVE_PATH):
+	var d := lees_save()
+	if d.is_empty():
 		return false
-	var txt := FileAccess.get_file_as_string(SAVE_PATH)
-	var parsed: Variant = JSON.parse_string(txt)
-	if not (parsed is Dictionary):
-		return false
-	from_dict(parsed)
+	from_dict(d)
 	return true
+
+
+## De save zoals hij op schijf staat, of een lege dictionary als er niets bruikbaars
+## ligt. Apart van `load_from_disk()` omdat het titelscherm wil weten óf er iets is
+## zonder de lopende sessie te overschrijven.
+func lees_save() -> Dictionary:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	if not (parsed is Dictionary):
+		return {}
+	return parsed as Dictionary
+
+
+## Ligt er een speelbeurt om naar terug te keren? Niet "het bestand bestaat":
+## een save zonder `character_id` is een lege sessie die per ongeluk is
+## weggeschreven, en daar hoort geen knop "Doorgaan" bij die je in een wereld
+## zonder personage zet.
+func has_saved_run() -> bool:
+	return String(lees_save().get("character_id", "")) != ""
+
+
+# --- Ticketstanden op naam ------------------------------------------------
+
+## De ticketstand gaat als **naam** de save in, niet als getal.
+##
+## `GameEnums.TicketState` is een enum, en een enum is een volgorde. Zet iemand
+## er een stand tussen of hernoemt hij er een, dan wijst elke save op schijf
+## ineens naar een andere stand: een opgelost ticket komt terug als LOCKED, het
+## ticketbord is leeg en de speler mist de helft van zijn dag. Zoiets crasht
+## niet en meldt niets. Een naam overleeft een herordening.
+static func _states_naar_namen(d: Dictionary) -> Dictionary:
+	var out := {}
+	for k: Variant in d.keys():
+		out[String(k)] = _state_naam(int(d[k]))
+	return out
+
+
+## Leest zowel de naam als de rauwe int. Dat tweede is het migratiepad: saves
+## van vóór deze wijziging staan al op schijf en horen gewoon door te spelen.
+static func _namen_naar_states(d: Dictionary) -> Dictionary:
+	var out := {}
+	for k: Variant in d.keys():
+		out[StringName(k)] = _state_waarde(d[k])
+	return out
+
+
+static func _state_naam(waarde: int) -> String:
+	var tabel: Dictionary = GameEnums.TicketState
+	for naam: Variant in tabel.keys():
+		if int(tabel[naam]) == waarde:
+			return String(naam)
+	push_warning("Session: ticketstand %d heeft geen naam" % waarde)
+	return "LOCKED"
+
+
+static func _state_waarde(rauw: Variant) -> GameEnums.TicketState:
+	if rauw is float or rauw is int:
+		return int(rauw) as GameEnums.TicketState
+	var tabel: Dictionary = GameEnums.TicketState
+	var naam := String(rauw)
+	if not tabel.has(naam):
+		push_warning("Session: onbekende ticketstand '%s' in de save" % naam)
+		return GameEnums.TicketState.LOCKED
+	return int(tabel[naam]) as GameEnums.TicketState
 
 
 static func _sn_keys_to_str(d: Dictionary) -> Dictionary:

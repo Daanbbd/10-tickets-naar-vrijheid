@@ -31,8 +31,8 @@ Regel: een autoload bevat *state of routing*, nooit gameplaylogica.
 |---|---|
 | `Bus` | Alleen signal-declaraties. Geen state, geen logica. |
 | `GameData` | Laadt alle JSON één keer en parset naar getypte modellen. Daarna read-only. |
-| `Session` | Muteerbare runtime-state: personage, flags, voorwerpen, ticketstanden, gevonden tickets en de gekozen ticket. |
-| `Shell` | Scene-router, fades, host van de minigame-overlay. De enige plek die `get_tree().paused` aanraakt. |
+| `Session` | Muteerbare runtime-state: personage, flags, voorwerpen, ticketstanden, gevonden tickets en de gekozen ticket. Schrijft en leest de save. |
+| `Shell` | Scene-router, fades, host van de minigame-overlay. De enige plek die `get_tree().paused` aanraakt; het pauzemenu vraagt het via `pauzeer_voor_menu()`. |
 | `AudioDirector` | SFX-pool en de muziekstapel. Luistert zelf naar de Bus, dus scenes regelen hun eigen muziek niet. |
 
 Bewust géén autoload: dialoog (leeft als node in de wereldscene), quests
@@ -102,6 +102,7 @@ Main (Node2D)                  main.gd — expliciete bootvolgorde
 ├── TicketController           ticketstroom en minigame-start
 ├── DialogueController         eigen CanvasLayer (20)
 ├── Telefoon (CanvasLayer 30)  De Klant — alleen een telefoonscherm
+├── Pauzemenu (CanvasLayer 40) doorgaan, volume, run verlaten — PROCESS_MODE_ALWAYS
 ├── Besturing (CanvasLayer 9)  knoppenbalk + joystick, drukt gewone acties in
 └── HUD (CanvasLayer 10)
 ```
