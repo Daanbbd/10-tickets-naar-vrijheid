@@ -13,8 +13,8 @@ T = 16
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # volgorde bepaalt de atlas-kolom
-CHARS = (list(".D#=VNBPTbtcKfxSAWmpo") + list("EOLGI") + list("H") + list("X")
-         + list("uRnljYJqsr") + list("C") + list("_"))
+CHARS = (list(".D#=VNBPTbtcKfxSAWmpo") + list("EOLGI") + list("H")
+         + list("uRnljYJqsr") + list("C") + list("kwz") + list("_"))
 
 
 def tile():
@@ -78,13 +78,6 @@ def build(ch):
         d.rectangle([2, 2, T - 3, T - 2], fill=rgba("bluebird_donker"))
         d.rectangle([3, 4, T - 4, 10], fill=rgba("glas", 150))
         d.point((T - 5, 12), fill=rgba("geel"))
-    elif ch == "X":  # trappenhuis, op slot en niet te betreden
-        draw_wall(d)
-        d.rectangle([2, 2, T - 3, T - 2], fill=rgba("schaduw"))
-        for i in range(4):                    # treden van bovenaf
-            y = 3 + i * 3
-            d.line([(3, y), (T - 4, y)], fill=rgba("lichtgrijs"))
-            d.line([(3, y + 1), (T - 4, y + 1)], fill=rgba("inkt", 120))
     elif ch == "N":  # nooduitgang, op slot
         draw_wall(d)
         d.rectangle([2, 3, T - 3, T - 2], fill=rgba("groen_donker"))
@@ -251,6 +244,30 @@ def build(ch):
     elif ch == "C":  # koffiecorner-accent — teal fleck
         draw_floor(d)
         noise(d, rgba("teal"), [(6, 6), (10, 9)])
+    # ---- de noordwand achter de koffiecorner, rood aangewezen op de schets ----
+    elif ch == "k":  # donkerblauwe kastenwand met de bank ervoor
+        draw_wall(d)
+        d.rectangle([0, 2, T - 1, T - 4], fill=rgba("marine"))
+        for x in range(1, T, 5):              # deurtjes, doorlopend over de wand
+            d.line([(x, 3), (x, T - 6)], fill=rgba("inkt", 150))
+        d.rectangle([0, T - 5, T - 1, T - 2], fill=rgba("bluebird_donker"))  # de bank
+        d.line([(0, T - 5), (T - 1, T - 5)], fill=rgba("bluebird"))
+        d.line([(0, T - 1), (T - 1, T - 1)], fill=rgba("plint"))
+    elif ch == "w":  # het enige raam aan deze binnenzijde
+        draw_wall(d)
+        d.rectangle([0, 2, T - 1, T - 5], fill=rgba("glas", 200), outline=rgba("glas_rand"))
+        d.line([(0, 4), (T - 1, 4)], fill=rgba("wit", 120))
+        d.line([(T // 2, 2), (T // 2, T - 5)], fill=rgba("glas_rand"))   # roede
+        d.rectangle([0, T - 4, T - 1, T - 2], fill=rgba("wit_kast"))     # vensterbank
+        d.line([(0, T - 1), (T - 1, T - 1)], fill=rgba("plint"))
+    elif ch == "z":  # de speaker van t07 — op statief, tegen de tribune aan
+        draw_floor(d)
+        d.rectangle([4, 1, 11, 11], fill=rgba("inkt"), outline=rgba("zwart"))
+        d.ellipse([5, 2, 10, 7], fill=rgba("schaduw"), outline=rgba("grijs"))
+        d.ellipse([6, 8, 9, 10], fill=rgba("schaduw"), outline=rgba("grijs"))
+        d.line([(7, 12), (7, T - 2)], fill=rgba("grijs"))                # statief
+        d.line([(4, T - 2), (11, T - 2)], fill=rgba("grijs"))
+        d.point((10, 3), fill=rgba("rood"))                              # aan-lampje
     return img
 
 
