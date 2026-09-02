@@ -41,6 +41,13 @@ var _afgekapt: Array[String] = []
 var _gemist: Array[String] = []
 var _gemist_gemeld: bool = false
 
+# Of de nuttige regel van de huidige spreker al gemarkeerd is. Per spreker
+# eenmalig: zonder deze vlag zou _werk_regels_bij() 'm elk frame opnieuw
+# markeren zolang hij zichtbaar blijft.
+var _nuttig_regel_getoond: bool = false
+# Voor de dreigingspuls op de tijdbalk in de laatste seconden.
+var _puls_t: float = 0.0
+
 # Tijdens de wisseltween staat de spreker stil maar loopt de stand-up door.
 var _wissel: bool = false
 var _qa: bool = false
@@ -283,6 +290,7 @@ func _process(delta: float) -> void:
 		return
 
 	_tijd -= delta
+	_puls_t += delta
 	_werk_balk_bij()
 	_werk_status_bij()
 	_werk_rest_bij()
@@ -313,6 +321,10 @@ func _volgende() -> void:
 	# stand-up met een gehaalde.
 	if _uitslag != 0:
 		return
+	# Wie er net klaar is, vóór de kaart omslaat naar de volgende: alleen op
+	# dit moment weten we of hij belangrijk was én is uitgesproken in plaats
+	# van afgekapt. Bij setup (_idx == -1) is dit leeg, dus geen valse start.
+	var vorige := _huidig()
 	_wissel = false
 	_idx += 1
 	_spreker_t = 0.0
@@ -326,8 +338,21 @@ func _volgende() -> void:
 	for i: int in _regels.size():
 		_regels[i].text = String(regels[i]) if i < regels.size() else ""
 		_regels[i].visible = false
+		# De markering van een vorige spreker mag niet blijven hangen op het
+		# regelnummer van de volgende — anders licht bij Willem toevallig
+		# dezelfde regel op als bij Jonathan, zonder dat het iets betekent.
+		_regels[i].remove_theme_color_override("font_color")
+	_nuttig_regel_getoond = false
 	_werk_regels_bij()
 	_werk_wachtrij_bij()
+
+	# De positieve tegenhanger van de "gemist"-melding in _op_afkappen(): wie
+	# uitgesproken raakt in plaats van afgekapt te worden, bevestigt dat
+	# luisteren loonde. Zonder deze melding is "iets nuttigs horen" een gebeurtenis
+	# zonder feedback, en alleen het missen ervan (bij afkappen) was zichtbaar.
+	if not vorige.is_empty() and bool(vorige.get("belangrijk", false)) \
+			and not (String(vorige.get("id", "")) in _afgekapt):
+		_flits_tonen(String(content().get("nuttig", "")), UiKit.GROEN)
 
 
 func _op_afkappen() -> void:
@@ -376,6 +401,29 @@ func _werk_regels_bij() -> void:
 	for i: int in _regels.size():
 		_regels[i].visible = i < tot
 
+	# De regel die er inhoudelijk toe doet licht op zodra hij zichtbaar wordt —
+	# niet vooraf, niet per persoon. Wie hem niet hoort (afgekapt vóór hij
+	# valt) heeft 'm gewoon nooit gezien; geen vooruitblik, geen oneerlijke gok.
+	if not _nuttig_regel_getoond and sp.has("nuttige_regel"):
+		var idx := int(sp["nuttige_regel"])
+		if idx < tot and idx < _regels.size():
+			_nuttig_regel_getoond = true
+			_markeer_nuttige_regel(_regels[idx])
+
+
+## Kleurt de regel groen en geeft 'm een korte pop, op het moment dat hij
+## verschijnt — hetzelfde moment waarop een luisterende speler 'm zou lezen.
+## Geen aankondiging vooraf, geen los label erbij: de tekst zelf is de tell.
+func _markeer_nuttige_regel(l: Label) -> void:
+	l.add_theme_color_override("font_color", UiKit.GROEN)
+	l.pivot_offset = Vector2(0, l.size.y * 0.5)
+	var tw := create_tween()
+	tw.tween_property(l, "scale", Vector2(1.06, 1.06), 0.12) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(l, "scale", Vector2.ONE, 0.18) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	AudioDirector.play_ui(&"pak")
+
 
 ## Namen en balkjes wisselen alleen als de rij korter wordt, dus dit hoort bij
 ## een sprekerwissel en niet in _process.
@@ -400,10 +448,31 @@ func _werk_rest_bij() -> void:
 	_rest.text = "nog %d sec praten" % maxi(0, ceili(_rest_spreektijd()))
 
 
+# Onder welk aandeel resterende tijd de balk begint te knipperen — hetzelfde
+# punt waar hij vroeger in één sprong hard rood werd, nu ook voelbaar in
+# plaats van alleen zichtbaar.
+const _PULS_DREMPEL := 0.2
+const _PULS_SNELHEID := 9.0
+
+
 func _werk_balk_bij() -> void:
 	var deel := clampf(_tijd / maxf(0.001, _tijd_max), 0.0, 1.0)
 	_balk.anchor_right = deel
-	_balk.color = UiKit.GROEN if deel > 0.45 else (UiKit.ORANJE if deel > 0.2 else UiKit.ROOD)
+	_balk.color = _tijdkleur(deel)
+	# Een knipperende balk in de laatste seconden: "steeds roder" moet je
+	# voelen aankomen, niet pas zien als de kleur al omgeslagen is.
+	if deel <= _PULS_DREMPEL:
+		_balk.modulate.a = lerpf(0.55, 1.0, (sin(_puls_t * _PULS_SNELHEID) + 1.0) * 0.5)
+	else:
+		_balk.modulate.a = 1.0
+
+
+## Vloeiend van groen via oranje naar rood, in plaats van drie harde banden:
+## de urgentie loopt continu op in plaats van in twee sprongen te springen.
+static func _tijdkleur(deel: float) -> Color:
+	if deel >= 0.5:
+		return UiKit.GROEN.lerp(UiKit.ORANJE, (1.0 - deel) / 0.5)
+	return UiKit.ORANJE.lerp(UiKit.ROOD, (0.5 - deel) / 0.5)
 
 
 func _werk_status_bij() -> void:

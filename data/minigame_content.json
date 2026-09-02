@@ -102,6 +102,7 @@
     "duur": 9.0,
     "belangrijk": true,
     "aanwijzing": "de collega die net een technisch probleem signaleert",
+    "nuttige_regel": 1,
     "regels": [
      "Ik zie overal store-id based assortment staan.",
      "Dat klopt niet. Een assortment hangt aan een store EN een levering.",
@@ -145,6 +146,7 @@
     "naam": "Danny",
     "duur": 5.0,
     "belangrijk": true,
+    "nuttige_regel": 0,
     "regels": [
      "Checkout valt weg op stap twee. Dat zie ik in de funnel.",
      "Komen we maar op 1 manier achter of het werkt: aanzetten.",
@@ -154,7 +156,8 @@
   ],
   "success": "De stand-up is klaar binnen de tijd. Dennis zegt: done.",
   "failure": "Drieentwintig minuten. Victor kijkt je aan zonder iets te zeggen.",
-  "gemist": "Je hebt iemand afgekapt die iets wist."
+  "gemist": "Je hebt iemand afgekapt die iets wist.",
+  "nuttig": "Nuttige info voor de sprint."
  },
  "mg_klantfeedback": {
   "type": "choicescene",
