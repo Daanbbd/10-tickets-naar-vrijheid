@@ -122,15 +122,22 @@ Bastiaan: ",,"
 
 **Context:** Ze is te vroeg. Ze heeft elf paarden en één website.
 
+> **Eén klant, twee kanalen.** Wat zij in de entree zegt en wat er via
+> `klant_berichten.json` op je telefoon binnenkomt is dezelfde vrouw. Haar
+> twee UX-reviewers liggen daarmee vast: de **schoonzus** die het bekeken
+> heeft en er iets van vond, en de **neef** die zei dat het in een weekend
+> kan. Ze had hier eerst een kleinzoon en een echtgenoot-hovenier, en dan
+> zijn het twee verschillende mensen die toevallig dezelfde manege bezitten.
+
 ```
 Klant: [t03 niet done] "Ik ben iets te vroeg. Dat doe ik altijd."
 Klant: [t03 done] "Ik wacht op de taxi. Uw koffie is trouwens erg sterk."
 
-Klant tweede [trait: technisch]: "U bent zeker de computerman. Mijn kleinzoon doet ook iets met computers."
+Klant tweede [trait: technisch]: "U bent zeker de computerman. Mijn neef doet ook iets met computers. Hij zei dat het in een weekend kan."
 Klant tweede [trait: commercieel]: "U bent van het praten, zie ik. Prettig, dan hoef ik het niet zelf uit te leggen."
 Klant tweede [default]: "Ik heb elf paarden en één website. Met de paarden gaat het beter."
 
-Klant: "Mijn man vindt blauw mooier. Hij is hovenier, maar hij heeft er wel oog voor."
+Klant: "Mijn schoonzus vindt blauw mooier. Zij doet iets met tuinen, maar ze heeft er wel oog voor."
 ```
 
 ---
@@ -476,11 +483,9 @@ Klant: "Het logo mag groter. Maar niet te groot. En het moet premium worden. Maa
 
 → [Keuze] "Vragen welk punt het belangrijkst is."
      Klant: "Ze zijn allemaal even belangrijk. Punt zeven is iets belangrijker."
-     [flag: klant_prioriteit]
 
-→ [Keuze] "Vragen wat haar man ervan vindt."
-     Klant: "Mijn man vindt blauw mooier. Mijn man heeft een hoveniersbedrijf."
-     [flag: klant_echtgenoot]
+→ [Keuze] "Vragen wat haar schoonzus ervan vindt."
+     Klant: "Mijn schoonzus vindt blauw mooier. Mijn schoonzus doet iets met tuinen."
 
 → [Keuze] "Niets zeggen. Alles opschrijven."
      [Omschrijving] Je schrijft elf punten over. Mevrouw P. Aardenmens vindt dat een prettige werkwijze.

@@ -447,8 +447,8 @@
             "next": "prioriteit"
           },
           {
-            "text": "Vragen wat haar man ervan vindt.",
-            "next": "echtgenoot"
+            "text": "Vragen wat haar schoonzus ervan vindt.",
+            "next": "schoonzus"
           },
           {
             "text": "Niets zeggen. Alles opschrijven.",
@@ -461,9 +461,9 @@
         "text": "Ze zijn allemaal even belangrijk. Punt zeven is iets belangrijker.",
         "next": "slot"
       },
-      "echtgenoot": {
+      "schoonzus": {
         "speaker": "klant",
-        "text": "Mijn man vindt blauw mooier. Mijn man heeft een hoveniersbedrijf.",
+        "text": "Mijn schoonzus vindt blauw mooier. Mijn schoonzus doet iets met tuinen.",
         "next": "slot"
       },
       "stilte": {

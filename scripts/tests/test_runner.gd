@@ -58,6 +58,7 @@ func _ready() -> void:
 	_test_uitlijnen_perfect()
 	_test_wereldhandelingen()
 	_test_urenstaat_scherm()
+	_test_klant_is_een_persoon()
 	await _test_dialoogvenster_past()
 	_rapport()
 
@@ -3009,3 +3010,44 @@ func _test_dialoogvenster_past() -> void:
 			paneel.size.y, DialogueBox.HOOGTE_MIN])
 
 	box.queue_free()
+
+
+## De Klant is één persoon, over twee kanalen.
+##
+## Haar pushberichten (`klant_berichten.json`) volgden de character bible al —
+## de schoonzus die heeft meegekeken, de neef die zei dat het in een weekend
+## kan — maar de vrouw die in de entree zit had een kleinzoon en een echtgenoot
+## met een hoveniersbedrijf. Dat zijn twee verschillende mensen die toevallig
+## dezelfde manege bezitten, en het lopende geintje (twee UX-reviewers met
+## onbeperkt gezag en nul verantwoordelijkheid) valt daarmee uit elkaar.
+func _test_klant_is_een_persoon() -> void:
+	_kop("de klant is één persoon")
+
+	const VERBODEN: Array[String] = ["kleinzoon", "hovenier", "mijn man", "haar man", "echtgenoot"]
+	var gesproken := ""
+	for key: Variant in GameData.dialogues.keys():
+		var def: DialogueDef = GameData.dialogue(StringName(key))
+		for nid: Variant in def.nodes.keys():
+			var n := def.node(StringName(nid))
+			var basis := String(n.get("speaker", ""))
+			var regels: Array[String] = []
+			if basis == "klant":
+				regels.append(String(n.get("text", "")))
+			for raw: Variant in n.get("variants", []):
+				var v := raw as Dictionary
+				if String(v.get("speaker", basis)) == "klant":
+					regels.append(String(v.get("text", "")))
+			for regel: String in regels:
+				gesproken += " " + regel
+				for woord: String in VERBODEN:
+					_ok(not regel.to_lower().contains(woord),
+						"%s/%s: de klant noemt '%s'; haar reviewers zijn de schoonzus en de neef"
+							% [key, nid, woord])
+
+	# En ze noemt ze ook echt, in beide kanalen.
+	var telefoon := FileAccess.get_file_as_string("res://data/klant_berichten.json").to_lower()
+	for wie: String in ["schoonzus", "neef"]:
+		_ok(gesproken.to_lower().contains(wie),
+			"de klant noemt haar %s nergens in de entree" % wie)
+		_ok(telefoon.contains(wie),
+			"de klant noemt haar %s nergens op de telefoon" % wie)
