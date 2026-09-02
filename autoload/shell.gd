@@ -254,6 +254,26 @@ func run_minigame(minigame_id: StringName, config: Dictionary) -> MinigameResult
 		push_error("Shell: geen scene voor minigame '%s' (pad '%s')" % [minigame_id, path])
 		return MinigameResult.aborted(minigame_id)
 
+	# De eerste keer dat dit minigame-id in deze speelbeurt voorkomt: wat de
+	# opgave is en waarom ze ertoe doet, los van de minigame zelf en los van
+	# de briefing die de eigenaar er eventueel al over gaf. Vóór de instantiatie
+	# van `mg`: bij "Terug" is er dan nooit een minigame-node om weer op te
+	# ruimen. Eigen, volledig sequentiële lock/unlock-paar — `Session.lock_input()`
+	# is een teller en componeert dus probleemloos met het paar hieronder.
+	# `Bus.minigame_started` blijft na dit blok staan: dat hoort bij de echte
+	# minigame, niet bij dit scherm.
+	if MinigameIntro.moet_getoond(minigame_id):
+		Session.lock_input()
+		var poort := MinigameIntro.new()
+		_minigame_layer.add_child(poort)
+		poort.setup(minigame_id, config.get("inhoud", {}) as Dictionary)
+		var doorgegaan: bool = await poort.besloten
+		poort.queue_free()
+		Session.unlock_input()
+		if not doorgegaan:
+			return MinigameResult.aborted(minigame_id)
+		Session.set_flag(MinigameIntro.gezien_vlag(minigame_id), true)
+
 	var packed: PackedScene = load(path)
 	var mg := packed.instantiate() as MinigameBase
 	if mg == null:

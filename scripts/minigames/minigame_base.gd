@@ -72,7 +72,6 @@ var _scroll: ScrollContainer = null
 var _header: VBoxContainer = null
 var _footer: VBoxContainer = null
 var _status: Label = null
-var _intro: Label = null
 var _banner: PanelContainer = null
 var _banner_label: Label = null
 var _storing_paneel: PanelContainer = null
@@ -80,7 +79,13 @@ var _storing_label: Label = null
 
 
 ## Bouwt het venster en geeft de VBox terug waar de minigame zijn eigen UI in zet.
-func build_chrome(title: String, intro: String) -> VBoxContainer:
+##
+## `intro` wordt hier niet meer getoond: die tekst staat sinds `MinigameIntro`
+## op een eigen scherm vóór dit venster opent, met ruimte om te ademen in
+## plaats van vaste hoogte af te snoepen van de speelbare kaart eronder. De
+## parameter blijft bestaan zodat alle elf aanroepen ongewijzigd blijven —
+## zie `scripts/ui/minigame_intro.gd`.
+func build_chrome(title: String, _intro: String) -> VBoxContainer:
 	UiKit.full_rect(self)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(UiKit.dimmer(0.72))
@@ -122,11 +127,6 @@ func build_chrome(title: String, intro: String) -> VBoxContainer:
 	_status = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(_status)
-
-	if intro != "":
-		_intro = UiKit.label(intro, UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
-		_intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		col.add_child(_intro)
 
 	# Op een portretcanvas past de inhoud van een minigame lang niet altijd in
 	# beeld. Zonder scroll valt de knop onderaan buiten het scherm en is de
@@ -199,17 +199,6 @@ func chrome_footer() -> VBoxContainer:
 		_kolom.add_child(_footer)
 		_kolom.move_child(_footer, _scroll.get_index() + 1)
 	return _footer
-
-
-## De introregel, voor een minigame die hem halverwege wil laten vallen. De
-## finale doet dat: zijn intro belooft acht handelingen, en dat is vanaf fase 2
-## een leugen van drie regels op een scherm dat er nul te missen heeft.
-##
-## Bestaat als accessor omdat de enige manier om hem zonder deze functie te
-## vinden was: alle kinderen van de kolom aflopen en hun `text` vergelijken met
-## de intro uit de data. Dat breekt zodra iemand de tekst aanpast.
-func chrome_intro() -> Label:
-	return _intro
 
 
 static func _strook() -> VBoxContainer:

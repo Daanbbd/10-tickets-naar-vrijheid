@@ -2,7 +2,8 @@
  "mg_user_story": {
   "type": "scope",
   "briefing": "{capaciteit} punten past erin, en zij wil er {tevreden_min} blij van worden. Van de {wensen} dingen die ze noemt zijn er {zwaar} geen wens maar een project. Als ze 'een app' zegt: sorry wat.",
-  "intro": "Dennis noemt dit een user story. Het is een lijst. Er past niet alles in de sprint, en dat weet zij niet.",
+  "intro": "Het is een lijst. Er past niet alles in de sprint, en dat weet zij niet.",
+  "waarom": "Een scope die te ruim is ingeschat, kom je later in de sprint weer tegen.",
   "capaciteit": 13,
   "tevreden_min": 10,
   "eenheid": "punten",
@@ -70,7 +71,8 @@
  "mg_planning": {
   "type": "standup",
   "briefing": "{tijd} seconden, en je mag {ingrepen} keer iemand afkappen. Let op {belangrijk}: die kap je niet af.",
-  "intro": "Iedereen staat. Dennis kijkt op zijn telefoon. Je mag {ingrepen} keer iemand afkappen.",
+  "intro": "Iedereen staat. Je mag {ingrepen} keer iemand afkappen.",
+  "waarom": "Iedereen wil wat kwijt, maar de tijd is krap: blijf je te lang bij iemand hangen, dan passen niet alle sprekers er meer in.",
   "tijd": 30.0,
   "ingrepen": 3,
   "kap_regel": "Je kapt hem af. Hij knikt.",
@@ -163,6 +165,7 @@
   "type": "choicescene",
   "briefing": "Zij zegt straks {rondes} keer twee dingen die niet samen kunnen. Je moet op {drempel} punten uitkomen. Ik zit erbij en ik zeg niks — dat werkt bij haar beter. Dat is wel top.",
   "intro": "Mevrouw P. Aardenmens zit in de entree met een uitgeprinte screenshot en elf punten. Drie ervan spreken elkaar tegen. Vertaal wat ze zegt naar iets dat je kunt bouwen.",
+  "waarom": "Zij zegt vaak twee dingen tegelijk die niet allebei kunnen. Wat je ervan opschrijft, is wat er straks gebouwd wordt.",
   "rondes": [
    {
     "prompt": "'Het moet rustiger worden. Maar het moet ook meer opvallen.'",
@@ -248,6 +251,7 @@
   "type": "uitlijnen",
   "briefing": "Raster van {raster}. Speling {tolerantie}. {elementen} dingen staan scheef. manmanman.",
   "intro": "Iemand heeft de stylesheet even opgeschoond. Zet de pagina terug op zijn raster.",
+  "waarom": "Een paar pixels schelen lijkt onbelangrijk — tot iemand er met de neus bovenop staat.",
   "tolerantie": 2,
   "raster": 4,
   "elementen": [
@@ -299,6 +303,7 @@
   "type": "cableboard",
   "briefing": "{verbindingen} verbindingen kloppen niet. Er liggen {afleiders} draden bij die er niets mee te maken hebben — dat is het symptoom, niet de oorzaak. Best wel structureel ^.^",
   "intro": "Product: undefined. Prijs: NaN. Voorraad: null. Ergens tussen de webshop en de database is de draad kwijt. Verbind de lagen weer met elkaar.",
+  "waarom": "De verkeerde verbinding kan het probleem verbergen in plaats van oplossen — dat merk je pas later.",
   "nodes": [
    {
     "id": "webshop",
@@ -383,6 +388,7 @@
   "type": "abtest",
   "briefing": "Je staat op {basis}{eenheid} en je moet naar {doel}{eenheid}. {rondes} keer aanzetten en kijken. psies.",
   "intro": "De funnel valt weg op stap twee. Je mag drie dingen aanzetten en kijken wat het doet.",
+  "waarom": "Niet elke aanpassing werkt. Drie pogingen om te zien welke dat wél doet.",
   "basis": 1.8,
   "doel": 2.7,
   "eenheid": "%",
@@ -455,6 +461,7 @@
   "type": "tagpicker",
   "briefing": "{tags} woorden, je kiest er {kies}, en je hebt {pogingen} pogingen. Aanzetten en kijken. Is het niks, dan doen we het anders.",
   "intro": "Er moet een merksound komen. Niemand weet waarom. Het staat in Jira, dus het gebeurt. Kies drie tags en druk op genereren.",
+  "waarom": "Het staat in Jira, dus het gebeurt — maar het moet ook echt aan een klant te laten horen zijn.",
   "kies": 3,
   "tags": [
    {
@@ -583,6 +590,7 @@
   "type": "pijplijn",
   "briefing": "{doel} clips en {credits} credits. Het knelpunt zit bij {knelpunt}: daar staat de rij stil. Ik zou daar beginnen — en er daarna piepelienies om zetten, dan hoeft dit nooit meer met de hand.",
   "intro": "Zes clips door de pijplijn. Elke stap heeft plek voor twee. Wat in Render blijft staan kost credits.",
+  "waarom": "Eén trage stap houdt de hele pijplijn op. Vind 'm, of de credits raken op voor je klaar bent.",
   "tijd": 60.0,
   "credits": 100,
   "doel": 5,
@@ -626,6 +634,7 @@
   "type": "whack",
   "briefing": "hiya,, {doel} bugs binnen {duur} seconden. En niet op de klantpaarden slaan. Die lijken erop. Dat is de grap.",
   "intro": "Door alle wijzigingen zijn er letterlijk paarden in de build gekomen. Ze staan nu op de verdieping. Sla de bugpaarden weg. Let op: er loopt ook een klantpaard rond.",
+  "waarom": "Niet alles dat er hetzelfde uitziet, hoort opgeruimd te worden.",
   "doel": 10,
   "duur": 60,
   "spawn_start": 1.3,
@@ -639,6 +648,7 @@
  "mg_deploy": {
   "type": "oplevering",
   "intro": "Vrijdag, laat. De pijplijn staat groen. Je hebt acht handelingen voordat je op deployen drukt. De klok loopt mee.",
+  "waarom": "Dit is het laatste moment om iets recht te zetten voordat het live staat.",
   "acties": 8,
   "klok_seconden": 75,
   "start": {
@@ -815,6 +825,7 @@
   "type": "slotboard",
   "titel": "Urenstaat",
   "intro": "Dirk wil weten waar de acht uur heen gingen. Kies wat er het dichtst bij in de buurt komt.",
+  "waarom": "Dirk vraagt het je toch. Een eerlijk antwoord is minder werk dan een verzonnen.",
   "success": "Ingediend. Dirk heeft het gezien.",
   "opties": [
    {

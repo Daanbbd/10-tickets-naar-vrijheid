@@ -95,13 +95,9 @@ func _on_setup() -> void:
 	for s: Dictionary in _sprekers:
 		_langste = maxf(_langste, float(s.get("duur", 5.0)))
 
-	# De intro noemt hoeveel keer je mag afkappen, en dat getal mag nooit
-	# afwijken van de statusregel eronder: die las eerder een vast "drie keer"
-	# in de proza terwijl `_ingrepen` (met traitvoordeel erbovenop) al 4 was.
-	# Vullen uit dezelfde `_ingrepen` die de knop en de statusregel gebruiken
-	# maakt de twee onmogelijk tegen te spreken.
-	var intro := String(c.get("intro", "")).replace("{ingrepen}", str(_ingrepen))
-	var body := build_chrome(default_title(), intro)
+	# De intro zelf verschijnt niet meer hier — dat doet `MinigameIntro`, vóór
+	# dit scherm opent, gevuld met dezelfde `_ingrepen` via `Briefing.vul()`.
+	var body := build_chrome(default_title(), "")
 	_bouw_vast(body)
 	_bouw_kaart(body)
 

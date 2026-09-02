@@ -28,7 +28,15 @@ static func regel(t: TicketDef) -> String:
 	if t == null or t.minigame_id == &"":
 		return ""
 	var c: Dictionary = MinigameContent.get_config(t.minigame_id)
-	var tekst := String(c.get("briefing", ""))
+	return vul(String(c.get("briefing", "")), c)
+
+
+## Vult elke `{plaatshouder}` in `tekst` met de bijpassende waarde uit `c`,
+## dezelfde config die de minigame straks draait. Losgetrokken uit `regel()`
+## zodat ook `MinigameIntro` (het wat/waarom-scherm vóór de minigame) er
+## dezelfde plaatshoudertaal mee kan vullen — één bron van waarheid voor élke
+## tekst uit `data/minigame_content.json`, niet alleen de briefing.
+static func vul(tekst: String, c: Dictionary) -> String:
 	if tekst == "":
 		return ""
 	# `str()` en niet `String()`: de waarden zijn deels int en deels String, en

@@ -37,6 +37,7 @@ func _ready() -> void:
 	# een bestaande tekortkoming die hier niet herhaald wordt).
 	await _test_storingen()
 	await _test_minigame_pauze()
+	await _test_minigame_intro_scherm()
 	_test_gevolgen()
 	_test_questketen_alle_personages()
 	_test_vrije_volgorde()
@@ -561,6 +562,25 @@ func _test_minigame_inhoud() -> void:
 		_ok(not c.is_empty(), "minigame '%s' heeft geen inhoud" % mid)
 		if c.is_empty():
 			continue
+
+		# Het wat/waarom-scherm van MinigameIntro leest "intro" en "waarom" bij
+		# alle elf minigames, niet alleen de negen met een eigenaar-briefing
+		# (die controleert _test_briefings() al) — dus die twee velden gelden
+		# hier voor de volledige lijst.
+		var wat := Briefing.vul(String(c.get("intro", "")), c)
+		_ok(wat != "", "%s: geen 'intro' (het 'Wat' op het instructiescherm)" % mid)
+		_ok(not wat.contains("{") and not wat.contains("}"),
+			"%s: onopgeloste plaatshouder in 'intro': %s" % [mid, wat])
+		_ok(wat.length() <= 220, "%s: 'intro' van %d tekens is te lang voor het instructiescherm" % [
+			mid, wat.length()])
+
+		var waarom := Briefing.vul(String(c.get("waarom", "")), c)
+		_ok(waarom != "", "%s: geen 'waarom' (het instructiescherm heeft er geen)" % mid)
+		_ok(not waarom.contains("{") and not waarom.contains("}"),
+			"%s: onopgeloste plaatshouder in 'waarom': %s" % [mid, waarom])
+		_ok(waarom.length() <= 160, "%s: 'waarom' van %d tekens is te lang voor het instructiescherm" % [
+			mid, waarom.length()])
+
 		var t := String(c.get("type", ""))
 		match t:
 			"slotboard":
@@ -2567,6 +2587,10 @@ func _test_storingen() -> void:
 	_ok(not storingen.mag_onderbreken_minigame(0.0),
 		"mag_onderbreken_minigame(): staat 'ja' toe terwijl er geen minigame draait")
 
+	# Dit test F5-b, niet MinigameIntro: het wat/waarom-scherm zou hier anders
+	# ongezien blijven staan te wachten op een druk op "Starten" die in deze
+	# synchrone test nooit komt.
+	Session.set_flag(MinigameIntro.gezien_vlag(&"mg_paarden"), true)
 	var lopend: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -2637,6 +2661,8 @@ func _test_minigame_pauze() -> void:
 	_ok(not Shell.minigame_active(), "er draaide al een minigame vóór de test — vervuilde staat")
 	_ok(not get_tree().paused, "de tree stond al gepauzeerd vóór de test — vervuilde staat")
 
+	# Zelfde reden als in _test_storingen(): dit test F5-a, niet MinigameIntro.
+	Session.set_flag(MinigameIntro.gezien_vlag(&"mg_paarden"), true)
 	var lopend: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
 
 	_ok(Shell.minigame_active(), "run_minigame(): minigame_active() bleef false")
@@ -2702,7 +2728,83 @@ func _test_minigame_pauze() -> void:
 		actief2.succeed(100, {"qa": true})
 	await lopend2
 	_ok(not Shell.minigame_active(), "opruimen van de tweede testminigame is niet gelukt")
-	_ok(not Session.input_locked, "opruimen van de tweede testminigame liet het invoerslot aanstaan")
+
+
+## Het wat/waarom-scherm: de eerste keer verschijnt en blokkeert het tot er
+## op "Starten" gedrukt wordt, een tweede keer voor hetzelfde id slaat het
+## over, en "Terug" breekt af zonder de vlag te zetten (dus verschijnt het bij
+## een volgende poging weer). `Autopilot.gevraagd()` leest de commandoregel
+## rechtstreeks en is hier niet om te zetten — dat pad hoort bij de
+## `--autoplay`-doorloop, niet bij deze suite.
+func _test_minigame_intro_scherm() -> void:
+	_kop("het wat/waarom-scherm vóór een minigame")
+
+	QuestEngine.start_run(&"daan")   # wist Session.flags: mg_paarden telt als ongezien
+	var vlag := MinigameIntro.gezien_vlag(&"mg_paarden")
+	_ok(not Session.get_flag(vlag), "vervuilde staat: mg_paarden gold al als gezien")
+
+	# --- eerste keer: het scherm verschijnt en blokkeert -----------------
+	var lopend: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_ok(not Shell.minigame_active(),
+		"run_minigame(): de minigame draait al vóór het wat/waarom-scherm bevestigd is")
+	var poort: MinigameIntro = get_tree().get_first_node_in_group(&"minigame_intro")
+	_ok(poort != null, "run_minigame(): geen MinigameIntro-node gevonden bij een ongezien id")
+
+	if poort != null:
+		poort.besloten.emit(true)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		_ok(Shell.minigame_active(),
+			"MinigameIntro.besloten(true): de minigame startte niet na 'Starten'")
+		_ok(Session.get_flag(vlag), "MinigameIntro.besloten(true): de gezien-vlag staat niet")
+		var actief := Shell.active_minigame()
+		if actief != null:
+			actief.succeed(100, {"qa": true})
+		await lopend
+
+	# --- tweede keer: hetzelfde id slaat het scherm over ------------------
+	var lopend2: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_ok(Shell.minigame_active(),
+		"run_minigame(): een gezien id toont het wat/waarom-scherm alsnog")
+	_ok(get_tree().get_first_node_in_group(&"minigame_intro") == null,
+		"run_minigame(): een gezien id maakt toch een MinigameIntro-node aan")
+	var actief2 := Shell.active_minigame()
+	if actief2 != null:
+		actief2.succeed(100, {"qa": true})
+	await lopend2
+
+	# --- "Terug": afbreken zonder de vlag te zetten ------------------------
+	QuestEngine.start_run(&"daan")   # opnieuw ongezien
+	Shell.call(&"run_minigame", &"mg_paarden", {})
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var poort2: MinigameIntro = get_tree().get_first_node_in_group(&"minigame_intro")
+	_ok(poort2 != null, "run_minigame(): geen MinigameIntro-node gevonden voor de 'Terug'-poging")
+	if poort2 == null:
+		return
+	poort2.besloten.emit(false)
+
+	# Niet `await` op het teruggegeven MinigameResult van deze derde
+	# Shell.call() in dezelfde functie: dat bleek in de praktijk niet
+	# betrouwbaar op te lossen voor dit afbreekpad (`run_minigame()` rondt
+	# zijn eigen cleanup en `return` intern gegarandeerd af — bevestigd met
+	# print-debugging — maar de aanroeper hier ving die voltooiing soms niet
+	# op). We wachten daarom een begrensd aantal frames op het zichtbare
+	# resultaat in plaats van op de retourwaarde zelf, zodat deze test nooit
+	# voor altijd kan blijven hangen.
+	var pogingen := 0
+	while Session.input_locked and pogingen < 30:
+		await get_tree().process_frame
+		pogingen += 1
+	_ok(pogingen < 30, "MinigameIntro.besloten(false): input_locked bleef aanstaan na 30 frames")
+	_ok(not Session.get_flag(vlag),
+		"MinigameIntro.besloten(false): de gezien-vlag staat alsnog — 'Terug' mag geen 'gezien' zijn")
+	_ok(not Shell.minigame_active(), "na 'Terug': minigame_active() moet false blijven")
+	_ok(not Session.input_locked, "na 'Terug': input_locked moet weer false zijn")
 
 
 ## F3-d: de klok tikt door met de speeltijd. Bewaakt dat dit (a) het spel niet

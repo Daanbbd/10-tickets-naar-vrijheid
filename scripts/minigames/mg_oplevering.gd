@@ -138,8 +138,7 @@ func _bouw(c: Dictionary) -> void:
 	var body := build_chrome(default_title(), String(c.get("intro", "")))
 
 	# Het dashboard is het enige dat nooit mag wegscrollen, dus het gaat in de
-	# kopstrook van het chrome. De intro halen we bij naam op in plaats van hem
-	# tussen de kinderen van de kolom te zoeken.
+	# kopstrook van het chrome.
 	_bouw_dashboard()
 	_bouw_foutbalk()
 
@@ -437,8 +436,6 @@ func _deployen() -> void:
 		return
 	_fase = Fase.DEPLOYEN
 	_bezig = true
-	if chrome_intro() != null:
-		chrome_intro().visible = false
 	# De klok hoort bij fase 1. Zodra je deployt is de deadline gehaald of
 	# geforceerd, en een bevroren tijd op het scherm zou allebei ontkennen.
 	if _klok_label != null:
