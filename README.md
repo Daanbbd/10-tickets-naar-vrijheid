@@ -32,9 +32,10 @@ knop rechtsonder draagt het werkwoord van waar je voor staat · **▤** je ticke
 Je dag wordt bij elk opgelost ticket bewaard, en ook als je de app wegdrukt.
 **Doorgaan** op het titelscherm zet je terug waar je gebleven was.
 
-De tickets staan allemaal tegelijk open. Je vindt ze door rond te lopen, en je
-kiest op het bord welke je als eerste doet. Elf tickets, elf verschillende
-opgaven — geen twee delen een mechaniek. Wat je onderweg besluit komt terug:
+Vier tickets staan open zodra je binnenkomt; de rest komt vrij door werk af te
+maken. Je vindt ze door rond te lopen, en je kiest op het bord welke je als
+eerste doet. Tien tickets, tien verschillende opgaven — geen twee delen een
+mechaniek. Wat je onderweg besluit komt terug:
 in wat je collega's zeggen, in wat De Klant je stuurt, en in hoe zwaar de
 oplevering begint.
 

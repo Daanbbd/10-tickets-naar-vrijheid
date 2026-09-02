@@ -101,12 +101,20 @@ func _kies_uit(opties: Array[TicketDef], vraag: String) -> TicketDef:
 ## een dwalende paardenbug aanspreekt, niet als je alleen het scrumbord
 ## aanklikt. Zie `_wh_paarden()`.
 func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
+	# `_play_or_line` en niet `_line(_dlg(...))`. Dat tweede stond hier, en
+	# `_dlg()` geeft een dialoog-*id* terug zodra de sleutel bestaat — wat bij
+	# `done` voor alle tien de tickets zo is. `_line()` zet zijn argument
+	# rechtstreeks in de dialoogbox, dus een opgelost ticket aanspreken zei
+	# letterlijk "t01_done", en de tien geschreven afsluitdialogen speelden
+	# nooit. Twee regels lager, bij `fetch` en `blocked`, stond het goede
+	# patroon al: id als id, tekst als fallback.
 	if Session.is_done(t.id):
-		await _line(_dlg(t, &"done", "Dit is opgelost. Even niet aan zitten."))
+		await _play_or_line(_dlg(t, &"done", &""),
+			"Dit is opgelost. Even niet aan zitten.")
 		return
 
 	if Session.ticket_state(t.id) == GameEnums.TicketState.LOCKED:
-		await _line(_dlg(t, &"locked", "Hier is nu niets te doen."))
+		await _play_or_line(_dlg(t, &"locked", &""), _locked_hint(t))
 		return
 
 	QuestEngine.activate(t.id)
@@ -523,8 +531,8 @@ static func _dirk_oordeel(p: Dictionary) -> String:
 
 
 ## Het open ticket waarvoor deze NPC de eigenaar is. Danny bezit er twee en Daan
-## ook, dus nu alles tegelijk openstaat kan één collega voor meerdere dingen
-## gevraagd worden. Je pin wint; anders vraagt hij waar het over gaat.
+## ook, dus één collega kan voor meerdere dingen gevraagd worden zodra die
+## tickets tegelijk open staan. Je pin wint; anders vraagt hij waar het over gaat.
 func _ticket_waiting_for(npc_id: StringName) -> TicketDef:
 	var kandidaten: Array[TicketDef] = []
 	for id: StringName in GameData.ticket_ids():
@@ -561,6 +569,19 @@ func _fetch_hint(t: TicketDef, helper_id: StringName) -> String:
 	# systemen" is geen Nederlands.
 	var role := t.owner_role if t.owner_role != "" else "de specialist hiervoor"
 	return "Dit is niet jouw vakgebied. Je hebt %s nodig — %s." % [who, role]
+
+
+## Waarom hier nog niets ligt. Hier stond "Hier is nu niets te doen." — één
+## regel voor alle vijf de vergrendelde tickets, zonder één woord over wat het
+## losmaakt. De keten bestond dus wel en was onzichtbaar.
+func _locked_hint(t: TicketDef) -> String:
+	var blok: TicketDef = QuestEngine.blokkerend_ticket(t.id)
+	if blok != null:
+		return "Dit werk bestaat nog niet. Het komt er zodra %s klaar is." % blok.code
+	var nodig: int = QuestEngine.blokkerend_aantal(t.id)
+	if nodig > 0:
+		return "Dit is het laatste. Er moeten eerst nog %d tickets af." % nodig
+	return "Hier is nu niets te doen."
 
 
 func _line(text: String) -> void:

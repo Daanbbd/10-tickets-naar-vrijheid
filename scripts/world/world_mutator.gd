@@ -69,7 +69,6 @@ func apply(changes: Array, animated: bool) -> void:
 			_:
 				push_error("WorldMutator: onbekende op '%s'" % op)
 
-		Bus.world_change_applied.emit(target_id)
 
 
 static func unknown_ops(changes: Array) -> Array[String]:

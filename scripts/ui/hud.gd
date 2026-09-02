@@ -651,7 +651,15 @@ func _refresh_objective() -> void:
 	# binnenlopen iets oplevert. Hetzelfde getal als de lege bordtekst
 	# (undiscovered_count, niet done_count), zodat HUD en bord elkaar niet
 	# tegenspreken.
+	# `locked_count()` erbij, om dezelfde reden als op het bord: staat er niets
+	# meer op de vloer maar wacht er nog werk achter ander werk, dan is "loop
+	# een ruimte in" het verkeerde advies — er is dan niets te vinden, er is
+	# iets af te maken.
 	var rest := QuestEngine.undiscovered_count()
+	var op_slot := QuestEngine.locked_count()
+	if rest <= 0 and op_slot > 0:
+		_objective_label.text = "Niets meer te vinden. %d wacht op ander werk." % op_slot
+		return
 	_objective_label.text = "Nog %d op de vloer. Loop een ruimte in." % rest
 
 

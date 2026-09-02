@@ -12,6 +12,14 @@ const EFFECT_OPS: Array[String] = [
 	"unlock_ticket", "toast", "cue", "kost_tijd", "reopen_ticket",
 ]
 
+## De ops die bij twee keer draaien een ánder resultaat geven. Alles wat hier
+## niet in staat is idempotent (`set_flag`, `unlock_ticket`, `reopen_ticket`)
+## of puur presentatie (`toast`, `cue`), en mag dus zonder bezwaar opnieuw.
+##
+## `kost_tijd` staat er bewust NIET in: dat is geen beloning maar een prijs, en
+## opnieuw werken kost opnieuw tijd.
+const NIET_HERHAALBARE_OPS: Array[String] = ["add_item", "remove_item", "add_counter"]
+
 
 # --- Ticketstroom ---------------------------------------------------------
 
@@ -34,6 +42,14 @@ static func initialise_tickets() -> void:
 
 
 ## Promoveert LOCKED -> AVAILABLE zodra available_when klopt. Idempotent.
+##
+## **Alleen omhoog, en dat is opzet.** De `continue` hieronder slaat alles over
+## dat niet LOCKED is, dus deze functie kan een ticket nooit terugzetten. Dat is
+## precies wat de ticketketen veilig maakt: staat t01 open omdat t08 klaar was,
+## en wordt t08 daarna heropend door een storing, dan blijft t01 open. Haalt
+## iemand die `continue` weg om "de conditie klopt niet meer" af te dwingen, dan
+## wordt een heropening ineens progressieverlies — en dat verbiedt het
+## faalbeleid in `docs/GAME_DESIGN.md`.
 static func refresh_availability() -> void:
 	for id: StringName in GameData.ticket_ids():
 		if Session.ticket_state(id) != GameEnums.TicketState.LOCKED:
@@ -43,6 +59,33 @@ static func refresh_availability() -> void:
 			continue
 		if Conditions.check(t.available_when):
 			_set_state(id, GameEnums.TicketState.AVAILABLE)
+
+
+## Het ticket dat dit ticket nog tegenhoudt, of null. Leest de blokkade uit
+## `available_when` en niet uit losse data: die conditie ís de reden, dus een
+## aparte tekst per ticket zou er alleen naast kunnen komen te staan.
+##
+## Geeft het eerste nog niet opgeleverde ticket uit `tickets_done` terug — bij
+## één blokkade is dat de blokkade, en meer dan één heeft geen ticket.
+static func blokkerend_ticket(id: StringName) -> TicketDef:
+	var t: TicketDef = GameData.ticket(id)
+	if t == null:
+		return null
+	for raw: Variant in (t.available_when.get("tickets_done", []) as Array):
+		var nodig := StringName(raw)
+		if not Session.is_done(nodig):
+			return GameData.ticket(nodig)
+	return null
+
+
+## Hoeveel tickets er nog af moeten voordat dit ticket opengaat. 0 als er geen
+## `min_tickets_done` op staat of als de drempel al gehaald is. Voor de finale,
+## die niet op één ticket wacht maar op de hele dag.
+static func blokkerend_aantal(id: StringName) -> int:
+	var t: TicketDef = GameData.ticket(id)
+	if t == null:
+		return 0
+	return maxi(0, int(t.available_when.get("min_tickets_done", 0)) - Session.done_count())
 
 
 static func unlock(id: StringName) -> void:
@@ -58,11 +101,19 @@ static func unlock(id: StringName) -> void:
 ##
 ## Haalt het ook uit done_order, want anders blijft het meetellen voor
 ## done_count()/all_done() terwijl het weer open op de vloer ligt.
+##
+## Zet `alle_tickets_klaar` ook weer uit. Die vlag was eenrichting — hij ging
+## in `complete()` aan en nooit meer uit — terwijl `all_done()` er wél op terug
+## kan. De voordeur leest `Session.all_done()` en zat dus goed, maar zes
+## dialoogvarianten in `data/dialogue/wereld.json` lezen de vlag, en die zouden
+## over een afgeronde dag praten terwijl de deur dicht blijft.
 static func reopen(id: StringName) -> void:
 	if Session.ticket_state(id) != GameEnums.TicketState.DONE:
 		return
 	Session.done_order.erase(id)
 	_set_state(id, GameEnums.TicketState.AVAILABLE)
+	if not Session.all_done():
+		Session.set_flag(&"alle_tickets_klaar", false)
 
 
 static func activate(id: StringName) -> void:
@@ -71,7 +122,6 @@ static func activate(id: StringName) -> void:
 	Session.discover(id)
 	if Session.ticket_state(id) == GameEnums.TicketState.AVAILABLE:
 		_set_state(id, GameEnums.TicketState.ACTIVE)
-		Bus.ticket_activated.emit(id)
 
 
 ## Kan het gekozen personage dit ticket zelf oplossen, of moet er een collega bij?
@@ -154,10 +204,28 @@ static func complete(id: StringName, result: MinigameResult) -> void:
 	if Session.is_pinned(id):
 		Session.unpin()
 
-	run_effects(t.reward_effects)
+	# Tweede oplevering van hetzelfde ticket (na een `reopen()` uit een storing)
+	# deelt de beloning niet opnieuw uit. De wacht bovenaan is `is_done()`, en
+	# die staat na een heropening weer op false, dus zonder dit draaide
+	# `run_effects()` een tweede keer: elke doorloop eindigde met `productdata`
+	# op aantal 2. De klassecommentaar bovenaan belooft "draaien exact een keer"
+	# en dat was dus niet waar.
+	#
+	# Alleen de niet-idempotente ops worden overgeslagen — zie
+	# `NIET_HERHAALBARE_OPS`. `toast` en `cue` moeten juist wél opnieuw, anders
+	# krijgt de speler bij zijn tweede oplevering geen enkele bevestiging, en
+	# `kost_tijd` ook: opnieuw werken kost opnieuw tijd, en tijd is geen
+	# beloning maar een prijs.
+	var eerder_beloond := id in Session.beloond
+	run_effects(t.reward_effects, eerder_beloond)
+	if not eerder_beloond:
+		Session.beloond.append(id)
+
+	# Blijft staan naast de afgeleide `available_when` in de ticketdata: een
+	# `unlock_ticket`-effect elders (De Klant trekt in `klant_berichten.json`
+	# t07 en t01 naar voren) is een tweede, bewuste route.
 	for u: StringName in t.unlocks:
 		unlock(u)
-	refresh_availability()
 
 	# Vóór de save, anders is het crash-vangnet altijd een ticket achter. Kan
 	# bewust niet uit de data komen: reward_effects is per ticket identiek voor
@@ -169,6 +237,15 @@ static func complete(id: StringName, result: MinigameResult) -> void:
 	# de HUD, het eindscherm, de telefoon van De Klant — hoort de gevolgen van
 	# dit ticket al te kunnen lezen, niet die van het vorige.
 	Gevolgen.boek(t.minigame_id, result)
+
+	# Ná `run_effects()`, `unlock()`, `book_time()` én `Gevolgen.boek()`, en
+	# vóór het signaal en de save. Hier stond hij vlak na de unlocks, en toen
+	# kon elke mutatie daarónder de beschikbaarheid nog verschuiven zonder dat
+	# iemand hem opnieuw woog — een `available_when` op `overwerk` of op een
+	# vlag uit `Gevolgen` viel daardoor een oplevering te laat. Zo is de stand
+	# van zaken compleet op het moment dat de HUD, het bord en het eindscherm
+	# hem lezen.
+	refresh_availability()
 
 	Bus.ticket_completed.emit(id, result)
 	Session.save_to_disk()
@@ -212,8 +289,8 @@ static func open_tickets() -> Array[TicketDef]:
 
 ## Alle openstaande tickets die aan dit object hangen. Dit is de ENIGE plek
 ## waar een anker naar tickets vertaald wordt: het scrumbord in de gang draagt
-## er twee (de planning en de paardenbugs), en nu alles tegelijk openstaat zijn
-## die allebei tegelijk geldig.
+## er twee (de planning en de paardenbugs), en die kunnen allebei tegelijk open
+## staan — BBD-202 vanaf de start, BBD-209 zodra BBD-202 klaar is.
 static func tickets_at_anchor(world_id: StringName) -> Array[TicketDef]:
 	var out: Array[TicketDef] = []
 	if world_id == &"":
@@ -272,6 +349,19 @@ static func undiscovered_count() -> int:
 	return n
 
 
+## Hoeveel tickets nog achter ander werk wachten. Het tweede onbekende getal
+## van de dag: `undiscovered_count()` telt alleen wat al opengesteld ís, en
+## sinds de ticketketen erin zit starten vijf van de tien LOCKED. Zonder dit
+## getal zei het bord "Alles gevonden." zodra je de vier open tickets had
+## opgeraapt, met zes stuks nog op slot en 0/10 op de kop.
+static func locked_count() -> int:
+	var n := 0
+	for id: StringName in GameData.ticket_ids():
+		if Session.ticket_state(id) == GameEnums.TicketState.LOCKED:
+			n += 1
+	return n
+
+
 static func _set_state(id: StringName, st: GameEnums.TicketState) -> void:
 	if Session.ticket_states.get(id, -1) == st:
 		return
@@ -281,12 +371,19 @@ static func _set_state(id: StringName, st: GameEnums.TicketState) -> void:
 
 # --- Effecten (state-mutaties) -------------------------------------------
 
-static func run_effects(list: Array) -> void:
+## Draait een lijst effecten. `sla_niet_herhaalbare_over` is voor de tweede
+## oplevering van een heropend ticket: alles wat bij twee keer draaien een ander
+## resultaat geeft blijft dan achterwege, de rest draait gewoon. Zie
+## `complete()`.
+static func run_effects(list: Array, sla_niet_herhaalbare_over: bool = false) -> void:
 	for raw: Variant in list:
 		var e := raw as Dictionary
 		if e == null:
 			continue
-		match String(e.get("op", "")):
+		var op := String(e.get("op", ""))
+		if sla_niet_herhaalbare_over and op in NIET_HERHAALBARE_OPS:
+			continue
+		match op:
 			"set_flag":
 				Session.set_flag(StringName(e.get("flag", "")), bool(e.get("value", true)))
 			"add_item":
@@ -307,6 +404,18 @@ static func run_effects(list: Array) -> void:
 				reopen(StringName(e.get("ticket", "")))
 			_:
 				push_error("QuestEngine: onbekende effect-op '%s'" % e.get("op", ""))
+
+	# Beschikbaarheid hoort bij de bron, niet bij één pad. `refresh_availability()`
+	# had drie aanroepers (`initialise_tickets`, `complete` en het titelscherm na
+	# het laden), terwijl `run_effects()` uit vier plekken gedraaid wordt:
+	# ticketbeloningen, dialoognodes, de telefoon van De Klant en storingen.
+	# Een `available_when` op een vlag, een item of `overwerk` ging daardoor pas
+	# open bij de volgende oplevering in plaats van op het moment dat hij waar
+	# werd — en bij `overwerk`, een tijdsconditie, praktisch nooit.
+	#
+	# Kan hier veilig staan: de functie is idempotent, promoveert alleen
+	# LOCKED -> AVAILABLE en draait geen effecten, dus er is geen recursie.
+	refresh_availability()
 
 
 static func unknown_effect_ops(list: Array) -> Array[String]:

@@ -9,7 +9,6 @@ signal game_finished(escaped: bool)
 
 # --- Tickets ---
 signal ticket_state_changed(ticket_id: StringName, state: GameEnums.TicketState)
-signal ticket_activated(ticket_id: StringName)
 ## Je bent een ticket tegengekomen: het staat nu in je inventaris.
 signal ticket_discovered(ticket_id: StringName)
 ## Je hebt zelf gekozen waar je aan werkt. Leeg = keuze losgelaten.
@@ -41,7 +40,6 @@ signal minigame_finished(minigame_id: StringName, result: MinigameResult)
 # --- Wereld ---
 signal world_changes_requested(changes: Array)
 signal camera_focus_requested(world_id: StringName, hold_sec: float)
-signal world_change_applied(target_id: StringName)
 signal follower_joined(npc_id: StringName)
 signal follower_released(npc_id: StringName)
 

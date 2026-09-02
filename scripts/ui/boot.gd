@@ -50,9 +50,15 @@ func _quickstart(character_id: StringName, up_to_ticket: String) -> void:
 
 	QuestEngine.start_run(character_id)
 
-	# Alle tickets vóór het opgegeven ticket meteen afvinken. Sinds alles
-	# tegelijk openstaat is dat geen voorwaarde meer maar een snelkoppeling:
-	# je begint gewoon verderop in de dag.
+	# Alle tickets vóór het opgegeven ticket meteen afvinken, in `order` en niet
+	# in ketenvolgorde.
+	#
+	# Let op: dit is een QA-snelkoppeling en géén geldige speelbeurt. `order` is
+	# narratieve nummering (zie `TicketDef.order`), dus deze lus kan tickets
+	# afvinken die het echte spel op dat moment nog niet had opengesteld — en
+	# `unlock()` erbij zet dat door. Handig om verderop in de dag te beginnen,
+	# ongeschikt om conclusies over bereikbaarheid op te baseren; daarvoor is
+	# `--playthrough`, die de keten wél respecteert.
 	if up_to_ticket != "":
 		for id: StringName in GameData.ticket_ids():
 			if String(id) == up_to_ticket:

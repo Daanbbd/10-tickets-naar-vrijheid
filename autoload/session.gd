@@ -10,6 +10,12 @@ var flags: Dictionary = {}          ## StringName -> bool
 var inventory: Dictionary = {}      ## StringName -> int
 var ticket_states: Dictionary = {}  ## StringName -> GameEnums.TicketState
 var done_order: Array[StringName] = []
+## De tickets waarvan de `reward_effects` al zijn uitgekeerd. Apart van
+## `done_order`, want een storing haalt een ticket daar weer uit en dan zou de
+## tweede oplevering de beloning opnieuw uitdelen — zie
+## `QuestEngine.complete()`. Gaat mee de save in: een heropend ticket dat je na
+## het laden afmaakt hoort ook niet twee keer uit te betalen.
+var beloond: Array[StringName] = []
 ## De tickets die je bent tegengekomen. Alles staat vanaf het begin open, dus
 ## "welke bestaan er" zegt niets meer; "welke heb ik gevonden" wel. Dit is je
 ## inventaris: hij vult zich terwijl je de vloer verkent.
@@ -52,6 +58,7 @@ func start_new(chosen: StringName) -> void:
 	inventory.clear()
 	ticket_states.clear()
 	done_order.clear()
+	beloond.clear()
 	discovered.clear()
 	followers.clear()
 	pinned_ticket = &""
@@ -293,6 +300,7 @@ func to_dict() -> Dictionary:
 		"worked_minutes": worked_minutes,
 		"booked_minutes": booked_minutes,
 		"done_order": done_order.map(func(s: StringName) -> String: return String(s)),
+		"beloond": beloond.map(func(s: StringName) -> String: return String(s)),
 		"discovered": discovered.map(func(s: StringName) -> String: return String(s)),
 		"pinned_ticket": String(pinned_ticket),
 	}
@@ -310,6 +318,11 @@ func from_dict(d: Dictionary) -> void:
 	done_order.clear()
 	for s: Variant in d.get("done_order", []):
 		done_order.append(StringName(s))
+	# Een save van vóór dit veld heeft hem niet. Dan is `done_order` de beste
+	# benadering: wat af is, is uitbetaald.
+	beloond.clear()
+	for s: Variant in d.get("beloond", d.get("done_order", [])):
+		beloond.append(StringName(s))
 	discovered.clear()
 	for s: Variant in d.get("discovered", []):
 		discovered.append(StringName(s))
