@@ -145,6 +145,11 @@ met bank · `w` raam · `z` speaker. Alle drie staan ze óók in `CHARS` in
 `gen_tiles.py` — zonder atlas-coördinaat rendert een nieuw teken stil als
 gewone vloer.
 
+En met de diepteronde: `F` muur met face · `1`/`2`/`3` raamlicht. Plus twee
+tegels die wél een atlas-coördinaat hebben maar géén legenda-letter zijn, omdat
+ze nooit in het grid staan: `,` en `;`, de vloervarianten die `world_builder`
+zelf kiest.
+
 ## Looptijden
 
 `gen_floor.py` valideert bereikbaarheid en print de looptijden vóór het
@@ -247,11 +252,86 @@ plekken past de loopruimte naar de grote tafel met planten er weer naast.
 
 `bureau_4x4` (4×) · `bureau_4x8` · `plantenkast_3x6` · `plantenkast_3x8` ·
 `tafel_lang_38x2` · `monitorwand_4x1` · `tribune_10x2` · `keukenblok_5x2` ·
-`serverrack_2x4` (2×) — samen 13 geplaatste objecten.
+`serverrack_2x4` (2×) — samen 13 geplaatste objecten, plus vier hangende
+`bord_*_3x1`.
+
+De datasuite controleert per prop dat de PNG bestaat, dat de maat in de naam bij
+de footprint past, en dat een hangend bordje niet boven een solide tegel hangt.
+Een ontbrekende sprite was tot voor kort alleen een `push_error` in een
+draaiende wereld — dus onzichtbaar voor wie de generator draait en de suite
+kijkt.
 
 Nog als `rect()`-vulling (allemaal klein genoeg dat één tegel volstaat, of nog
 niet gedaan): whiteboard, ticketbord, bank, gordijn, kast, koelkast, prikbord,
 urinoir, lamellen, jungle, kuipstoel, ronde tafel, kastenwand, raam, speaker.
+
+## Diepte: waaraan je ziet dat dit een ruimte is en geen plattegrond
+
+De vloer las als grijze cellenblokken. Vier lagen daaroverheen, allemaal uit de
+generatoren:
+
+**Muren hebben een top en een face.** Elke muurtegel is een donkere kap
+(`muur_kap`), de bovenkant (`muur_top`), een naad en dan de face (`muur`). Een
+muur met begaanbare vloer eronder krijgt bovendien een lichtere voet
+(`muur_voet`) — dat is de kant waar je tegenaan kijkt. Die tegel heet `F` en
+wordt **afgeleid**, niet met de hand gezet: `gen_floor.py` loopt na het tekenen
+één keer over het grid en maakt van elke `#` met niet-solide vloer eronder een
+`F`. Zo kan er geen wand bijkomen die het vergeet.
+
+**Elk samengesteld meubel heeft een slagschaduw.** Dezelfde rol als
+`schaduw_karakter.png` onder een personage: zonder contactschaduw zweeft een
+blok los boven het beton. `gen_props.py::slagschaduw()` zet het silhouet in twee
+lagen onder de sprite en groeit het doek **symmetrisch** (boven én onder), want
+`main.gd::_spawn_props()` centreert horizontaal op de footprint — groeide de PNG
+alleen aan de onderkant, dan schoof het meubel omhoog. De schaduw wordt in
+`main()` op alle meubels tegelijk gezet, niet in elke tekenfunctie apart, zodat
+een nieuwe prop hem niet kan vergeten.
+
+**Raamlicht op de zuidband.** y25 is de raamzijde; `1` (tegen het raam), `2` en
+`3` (de uitdoving) leggen daar een lichtgradient over y24–y22. De vloer heeft
+daarmee een richting, ook als er geen raam in beeld is. Drie rijen en niet twee:
+de camera klemt verticaal volledig vast (26 tegels = precies de viewporthoogte,
+zie `game_camera.gd`) en de knoppenbalk dekt de onderste ~2,5 tegelrij af, dus
+een effect op alleen y24–y23 zou niemand ooit zien. Om dezelfde reden hangt geen
+enkel ruimtebordje boven y6: de HUD-balk dekt de bovenste vier rijen af.
+
+**Vloervariatie.** Drie korrelpatronen van dezelfde betonvloer (`.`, `,`, `;`).
+Ze staan **niet in het grid**: het is geen plattegrondinformatie maar textuur,
+en drie extra tekens door 2400 gridtegels strooien maakt `floor.json`
+onleesbaar voor de enige lezer die telt — een mens die de plattegrond nakijkt.
+`world_builder._vloer_variant()` kiest ze deterministisch uit de tegelcoördinaat,
+dus twee runs geven dezelfde vloer.
+
+### Vloer hoort op Ground, ook als het een accent is
+
+`populate()` zette elke tegel die geen `.` was op de **Solid**-laag, inclusief de
+accentvloeren. Die laag heeft `y_sort_enabled`, dus zo'n vloertegel sorteert mee
+tegen de propsprites en kan een meubelrand of een slagschaduw afdekken zodra hij
+een hogere y heeft. Alles met `kind: "floor"` gaat nu naar Ground (z_index -10);
+Solid houdt muren, glas en meubels.
+
+### Ruimtebordjes hangen, dus ze hebben geen footprint
+
+`Summit`, `Basecamp`, `Birdhouse` en `Toilet` hangen als bordje in de gang, bij
+de deur van hun ruimte. `bord()` in `gen_floor.py` registreert ze in `props` met
+`"hangend": true` en laat het grid ongemoeid: ze hangen aan het plafond, dus je
+loopt eronderdoor. `main.gd` geeft ze een expliciete `z_index` in plaats van een
+plek in de y-sortering — een bordje raakt de vloer nooit, dus het heeft geen voet
+om op te sorteren.
+
+### Propsprites sorteren op hun voet
+
+`objects_layer` is y-gesorteerd en een `Node2D` heeft geen `y_sort_origin` zoals
+`TileData`: de sorteersleutel is gewoon `position.y`. Met `centered = false`
+stond die op de **bovenrand** van de sprite, en die ligt bij een eiland van acht
+tegels 128 px boven zijn voet. Een speler die er noordelijk langs liep sorteerde
+daardoor vóór het hele blok, en zuidelijk ervan kon hij erachter verdwijnen.
+
+De node staat nu op de **onderrand van de footprint** en de `offset` zet het
+beeld terug op zijn plek: er verschuift niets zichtbaars, alleen de sleutel
+klopt. Dat is dezelfde conventie als `TileData.y_sort_origin = half` in
+`world_builder`, en dezelfde als de speler, die zijn oorsprong in zijn voeten
+heeft.
 
 ## Objecten en NPC's
 

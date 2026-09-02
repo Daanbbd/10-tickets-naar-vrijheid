@@ -48,6 +48,17 @@ def prop(naam, x0, y0, x1, y1):
     PROPS.append({"prop": volledig, "rect": [x0, y0, x1, y1]})
 
 
+def bord(naam, x0, y0, x1, y1):
+    """Hangend ruimtebordje: beeld zonder footprint.
+
+    Hij hangt aan het plafond, dus hij mag de gang niet dichtzetten — de tegels
+    eronder blijven wat ze zijn. `hangend` vertelt main.gd dat deze sprite niet
+    in de y-sortering meedoet maar boven de speler hangt.
+    """
+    volledig = "bord_%s_%dx%d" % (naam, x1 - x0 + 1, y1 - y0 + 1)
+    PROPS.append({"prop": volledig, "rect": [x0, y0, x1, y1], "hangend": True})
+
+
 def rect(x0, y0, x1, y1, ch):
     for y in range(y0, y1 + 1):
         for x in range(x0, x1 + 1):
@@ -228,6 +239,20 @@ for (x0, h) in [(15, 8), (50, 6)]:
 # Zuidwand, west naar oost. De schets zet het scrumbord bij de ingang, achter
 # het eerste bureau-eiland (zie "scrumboard achter bureau.jpeg"), daarna het
 # ticketbord en dan de wandmonitor van t04.
+# ---- Ruimtebordjes: wayfinding die je met je ogen oplost ----
+# Ze hangen in de gang, bij de deur van de ruimte die ze aanwijzen. Geen
+# footprint: je loopt eronderdoor. De toiletdeur zit op x9,y3 en heeft geen
+# glas, dus dat bordje is het enige dat die ruimte aankondigt.
+#
+# Niet hoger dan y6 hangen: de camera klemt verticaal vast en de HUD-balk dekt
+# de bovenste vier tegelrijen af. Een bordje op y2 hangt keurig boven de deur
+# en is in het spel onzichtbaar. Vandaar dat het toiletbordje op de zuidoosthoek
+# van het blok staat en niet naast de deur zelf.
+bord("toilet", 10, 6, 12, 6)
+bord("summit", 47, 8, 49, 8)
+bord("basecamp", 61, 8, 63, 8)
+bord("birdhouse", 81, 8, 83, 8)
+
 rect(5, 25, 7, 25, 'T')      # scrumbord_gang: planning (t02) en paarden (t09)
 rect(12, 25, 14, 25, 'T')    # ticketbord: opent het echte bord
 rect(17, 25, 19, 25, 'm')    # wandmonitor_vloer: staging van t04
@@ -248,6 +273,13 @@ LEGEND = {
     ".": {"kind": "floor", "solid": False},
     "D": {"kind": "floor", "solid": False, "door": True},
     "#": {"kind": "wall",  "solid": True},
+    # Muur met begaanbare vloer eronder: je kijkt tegen de face aan, dus die
+    # krijgt een lichtere voet. Wordt hieronder automatisch afgeleid.
+    "F": {"kind": "wall",  "solid": True},
+    # Raamlicht op de zuidband: 1 ligt tegen de raamzijde, 3 is de uitdoving.
+    "1": {"kind": "floor", "solid": False, "accent": "raamlicht"},
+    "2": {"kind": "floor", "solid": False, "accent": "raamlicht_zacht"},
+    "3": {"kind": "floor", "solid": False, "accent": "raamlicht_rand"},
     "=": {"kind": "glass", "solid": True},
     "V": {"kind": "exit",  "solid": True,  "prop": "voordeur"},
     "N": {"kind": "wall",  "solid": True,  "prop": "nooduitgang"},
@@ -306,6 +338,30 @@ for (x0, y0, x1, y1, ch) in ACCENT_ROOMS:
         for x in range(x0, x1 + 1):
             if 0 <= x < W and 0 <= y < H and g[y][x] == '.':
                 g[y][x] = ch
+
+# ---- Raamlicht: de tegels naast de raamzijde vangen daglicht ----------------
+# y25 is de raamzijde. De vloer krijgt daarmee een richting: je ziet aan de
+# helderheid welke kant het raam op ligt, ook als er geen raam in beeld is.
+# Alleen op neutrale vloer — een accentvloer is al een uitspraak.
+#
+# Drie rijen en niet twee: de camera klemt verticaal vast (zie game_camera.gd)
+# en de knoppenbalk dekt de onderste ~2,5 tegelrij af. Met alleen y24 en y23
+# staat het hele effect achter de besturing en ziet niemand het ooit. De twee
+# tegels tegen het raam dragen het licht, y22 is de uitdoving die wél in beeld
+# staat.
+for (rij, ch) in ((H - 2, '1'), (H - 3, '2'), (H - 4, '3')):
+    for x in range(W):
+        if g[rij][x] == '.':
+            g[rij][x] = ch
+
+# ---- Muurfaces: elke muur met vloer eronder toont zijn voorkant -------------
+# Afgeleid en niet met de hand gezet: een muur is een face zodra je ertegenaan
+# kijkt, en dat volgt uit de plattegrond. Zo kan er geen wand bijkomen die het
+# vergeet.
+for y in range(H - 1):
+    for x in range(W):
+        if g[y][x] == '#' and not LEGEND[g[y + 1][x]]["solid"]:
+            g[y][x] = 'F'
 
 # ZONES: specifiek vóór algemeen — world_builder.zone_at() geeft de eerste match
 ZONES = [

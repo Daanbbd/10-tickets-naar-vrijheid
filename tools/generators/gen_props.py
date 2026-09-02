@@ -78,6 +78,35 @@ def logo():
 
 T = 16   # tegelgrootte, moet gelijk zijn aan gen_floor.TILE
 
+# Slagschaduw onder een meubel. Zelfde rol als `schaduw_karakter.png` onder een
+# personage: zonder contactschaduw zweeft elk blok los boven het beton en leest
+# de vloer als een plattegrond in plaats van als een ruimte.
+SCHADUW_MARGE = 4     # extra pixels boven én onder, zodat main.gd blijft centreren
+SCHADUW_VAL = 4       # hoever de schaduw onder het object uit valt
+SCHADUW_ALPHA = 76
+
+
+def slagschaduw(img, val=SCHADUW_VAL, alpha=SCHADUW_ALPHA):
+    """Zet het silhouet van `img` als zachte schaduw eronder.
+
+    De marge is symmetrisch (boven én onder), want `main.gd::_spawn_props()`
+    centreert de sprite op zijn footprint: groeit de PNG alleen aan de onderkant,
+    dan schuift het meubel zelf omhoog. Nu blijft het staan waar het stond en
+    valt alleen de schaduw buiten de footprint.
+
+    Twee lagen: een harde kern direct onder het object en een zachtere die verder
+    uitloopt. Een echte gradient valt op deze schaal uit elkaar in banden.
+    """
+    W, H = img.size
+    uit = Image.new("RGBA", (W, H + 2 * SCHADUW_MARGE), (0, 0, 0, 0))
+    masker = img.split()[3]
+    for (dy, a) in ((val, alpha // 2), (max(1, val // 2), alpha)):
+        laag = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        laag.putalpha(masker.point(lambda p, _a=a: _a if p > 128 else 0))
+        uit.alpha_composite(laag, (0, SCHADUW_MARGE + dy))
+    uit.alpha_composite(img, (0, SCHADUW_MARGE))
+    return uit
+
 
 def _canvas(tw, th):
     img = Image.new("RGBA", (tw * T, th * T), (0, 0, 0, 0))
@@ -280,6 +309,60 @@ def monitorwand(tw, th=1):
     return img
 
 
+# --- Ruimtebordjes ----------------------------------------------------------
+# Wayfinding die je met je ogen oplost in plaats van met de kompasstrip. Ze
+# hangen aan het plafond boven de deur, dus ze hebben geen footprint: `bord()`
+# in gen_floor.py laat de tegel begaanbaar en main.gd zet ze op een eigen
+# z_index boven de speler. Zie daar.
+#
+# Eigen 3x5-font: elke bestaande bitmapfont in dit project is UI-schaal, en op
+# een bordje van 48 px moet een woord van negen letters passen.
+FONT = {
+    "A": ".#.|#.#|###|#.#|#.#", "B": "##.|#.#|##.|#.#|##.",
+    "C": ".##|#..|#..|#..|.##", "D": "##.|#.#|#.#|#.#|##.",
+    "E": "###|#..|##.|#..|###", "H": "#.#|#.#|###|#.#|#.#",
+    "I": "###|.#.|.#.|.#.|###", "L": "#..|#..|#..|#..|###",
+    # M is vijf breed. Op drie pixels wordt hij een blok met een steel en leest
+    # "SUMMIT" als "SUNNIT" — nagekeken op een echte shot, niet op gevoel.
+    "M": "#...#|##.##|#.#.#|#...#|#...#", "O": ".#.|#.#|#.#|#.#|.#.",
+    "P": "##.|#.#|##.|#..|#..", "R": "##.|#.#|##.|#.#|#.#",
+    "S": ".##|#..|.#.|..#|##.", "T": "###|.#.|.#.|.#.|.#.",
+    "U": "#.#|#.#|#.#|#.#|###",
+}
+
+
+def _breedte(tekst):
+    return sum(len(FONT[t].split("|")[0]) + 1 for t in tekst.upper()) - 1
+
+
+def _tekst(d, x, y, tekst, kleur):
+    for teken in tekst.upper():
+        if teken not in FONT:
+            raise KeyError("bordje-font mist '%s' — voeg hem toe aan FONT" % teken)
+        rijen = FONT[teken].split("|")
+        for ry, rij in enumerate(rijen):
+            for rx, p in enumerate(rij):
+                if p == "#":
+                    d.point((x + rx, y + ry), fill=kleur)
+        x += len(rijen[0]) + 1
+    return x
+
+
+def bordje(tekst, tw=3, th=1):
+    """Hangend ruimtebordje: donker paneel, witte letters, twee ophangstangen."""
+    img, d = _canvas(tw, th)
+    W, H = img.width, img.height
+    for x in (W // 4, W - W // 4):                      # ophangstangen
+        d.line([(x, 0), (x, 3)], fill=rgba("grijs"))
+    d.rectangle([1, 3, W - 2, H - 2], fill=rgba("inkt"), outline=rgba("bluebird_licht"))
+    d.line([(2, 4), (W - 3, 4)], fill=rgba("schaduw"))  # glans langs de bovenrand
+    breedte = _breedte(tekst)
+    if breedte > W - 6:
+        raise ValueError("'%s' past niet op een bordje van %d px" % (tekst, W))
+    _tekst(d, (W - breedte) // 2, (H - 5) // 2 + 1, tekst, rgba("wit"))
+    return slagschaduw(img, val=5, alpha=56)
+
+
 def schaduw_karakter():
     """Contactschaduw onder een personage. Zonder dit zweeft elke sprite los
     boven de vloer. Hard begrensd met een half-transparante rand: een echte
@@ -298,16 +381,27 @@ def main():
              "schaduw_karakter.png": schaduw_karakter()}
     # meubelcomposieten: naam moet exact matchen met PROPS uit gen_floor.py
     # gedraaide eilanden: 4 tegels breed, hoogte bepaalt het aantal werkplekken
+    meubels = {}
     for th in (4, 8):
-        items["bureau_4x%d.png" % th] = bureau_eiland_v(th)
+        meubels["bureau_4x%d.png" % th] = bureau_eiland_v(th)
     for th in (6, 8):
-        items["plantenkast_3x%d.png" % th] = plantenkast_v(th)
-    items["tafel_lang_38x2.png"] = tafel_lang(38)
-    items["monitorwand_4x1.png"] = monitorwand(4)
-    items["tribune_10x2.png"] = tribune(10)
-    items["keukenblok_5x2.png"] = keukenblok(5, 2)
-    items["balie_5x1.png"] = balie(5)
-    items["serverrack_2x4.png"] = serverrack(2, 4)
+        meubels["plantenkast_3x%d.png" % th] = plantenkast_v(th)
+    meubels["tafel_lang_38x2.png"] = tafel_lang(38)
+    meubels["monitorwand_4x1.png"] = monitorwand(4)
+    meubels["tribune_10x2.png"] = tribune(10)
+    meubels["keukenblok_5x2.png"] = keukenblok(5, 2)
+    meubels["balie_5x1.png"] = balie(5)
+    meubels["serverrack_2x4.png"] = serverrack(2, 4)
+    # Elk meubel krijgt zijn contactschaduw hier, niet in zijn eigen functie:
+    # zo kan er geen prop bijkomen die hem vergeet.
+    for name, img in meubels.items():
+        items[name] = slagschaduw(img)
+
+    # ruimtebordjes: naam moet exact matchen met bord() uit gen_floor.py
+    for naam, tekst in [("summit", "Summit"), ("basecamp", "Basecamp"),
+                        ("birdhouse", "Birdhouse"), ("toilet", "Toilet")]:
+        items["bord_%s_3x1.png" % naam] = bordje(tekst)
+
     for name, img in items.items():
         img.save(os.path.join(OUT, name))
         print(f"{name:18s} {img.width}x{img.height}")

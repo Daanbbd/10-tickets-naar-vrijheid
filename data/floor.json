@@ -125,24 +125,64 @@
     52,
     20
    ]
+  },
+  {
+   "prop": "bord_toilet_3x1",
+   "rect": [
+    10,
+    6,
+    12,
+    6
+   ],
+   "hangend": true
+  },
+  {
+   "prop": "bord_summit_3x1",
+   "rect": [
+    47,
+    8,
+    49,
+    8
+   ],
+   "hangend": true
+  },
+  {
+   "prop": "bord_basecamp_3x1",
+   "rect": [
+    61,
+    8,
+    63,
+    8
+   ],
+   "hangend": true
+  },
+  {
+   "prop": "bord_birdhouse_3x1",
+   "rect": [
+    81,
+    8,
+    83,
+    8
+   ],
+   "hangend": true
   }
  ],
  "grid": [
-  "###########Hkkkkkkkkkkkkkkwwwwwwwwwwwwwww#########################################################################################",
-  "#........#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC#LxxxLLLLLLL#......____.......#LLLLLLLLmmmmLLLLLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "#u.......#CCCCCCCC_____f__________CCCCCCCC#LLLqqssqqLL#.bb...........bb.#LLLLLsssssssssssLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "#........DCCCCCCCC_____f__________zCCCCCCC#LLLqsttsqLL#.bb....rr.....bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "#u.......#CCCCCCCCCCCCCCCCCCCCCCCCCCCCYCCC#LLLqsttsqLL#.......rr........#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbGGGG#",
-  "#........#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC#LLLqqssqqLL#.bb...........bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbJJJG#",
-  "#......W.#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC#LLLLLLLLLLL#.bb...........bb.#LLLLLLLLLLLLLLLLLLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "##########................................#=====DD====#=======DD========#=========DD=========###=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "#........#....................####D####.........................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "#.__.__..#....................lIIIIIII=.........................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "#FFFFFFFF#FHkkkkkkkkkkkkkkwwwwwwwwwwwwwwwF#F###FFFFFFF#FFFFFF####FFFFFFF#FFFFFFFF####FFFFFFFF####FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#",
+  "#........#CCCCCCCCCCCCCCCCCCCCCCCCCCC.....#LxxxLLLLLLL#......____.......#LLLLLLLLmmmmLLLLLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "#u.......FCCCCCCCC_____f__________CCC.....#LLLqqssqqLL#.bb...........bb.#LLLLLsssssssssssLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "#........DCCCCCCCC_____f__________zCC.....#LLLqsttsqLL#.bb....rr.....bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "#u.......#CCCCCCCCCCCCCCCCCCCCCCCCCCC.Y...#LLLqsttsqLL#.......rr........#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbGGGG#",
+  "#........#CCCCCCCCCCCCCCCCCCCCCCCCCCC.....#LLLqqssqqLL#.bb...........bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbJJJG#",
+  "#......W.#CCCCCCCCCCCCCCCCCCCCCCCCCCC.....#LLLLLLLLLLL#.bb...........bb.#LLLLLLLLLLLLLLLLLLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "#FFFFFFFF#................................F=====DD====F=======DD========F=========DD=========FFF=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "#........#....................#FFFDFFF#.........................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
+  "#.__.__..F....................lIIIIIII=.........................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
   "#.__.__..D....................lIIIIIII=................______________________________________...DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "#.__.__..#....................#########................______________________________________...DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "#.__.__..#....................FFFFFFFFF................______________________________________...DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
   "#.__.__.P#......................................................................................DGGGGGGttttttttGGGGGGGGGGGGGGGGGG#",
   "#........#......................................................................................DGGGGGGttttttttGGGGGGGGGGGGGGGGGG#",
-  "##########......................................................................................DGGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
+  "#FFFF####F......................................................................................DGGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
   "#EEEE____......___......____..........____........___.......____............____................DGGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
   "VEEEE____......___......____..........____........___.......____............____................=GGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
   "VEEEE____......___......____..........____........___.......____............____................=GGjjGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
@@ -150,9 +190,9 @@
   "#EEEE____......___................................___...........................................=GGjjGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
   "mcEEE____......___................................___...........................................=GGjjGGGGGGGcccccGGGGGGGGGGGGGGooN",
   "mcEEE____......___..............................................................................=GGjjGGGGGGGcccccGGGGGbbbbbbbGGooN",
-  "#EEEE____......___..............................................................................=GGjjGGGGGGGGGGGGGGGGGbbbbbbbGGoo#",
-  "#EEEE...........................................................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGoo#",
-  "#EEEE...........................................................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+  "#EEEE____333333___333333333333333333333333333333333333333333333333333333333333333333333333333333=GGjjGGGGGGGGGGGGGGGGGbbbbbbbGGoo#",
+  "#EEEE2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGoo#",
+  "#EEEE1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
   "#####TTT####TTT##mmm##############################################################################################################"
  ],
  "legend": {
@@ -168,6 +208,25 @@
   "#": {
    "kind": "wall",
    "solid": true
+  },
+  "F": {
+   "kind": "wall",
+   "solid": true
+  },
+  "1": {
+   "kind": "floor",
+   "solid": false,
+   "accent": "raamlicht"
+  },
+  "2": {
+   "kind": "floor",
+   "solid": false,
+   "accent": "raamlicht_zacht"
+  },
+  "3": {
+   "kind": "floor",
+   "solid": false,
+   "accent": "raamlicht_rand"
   },
   "=": {
    "kind": "glass",
@@ -415,7 +474,7 @@
    "rect": [
     10,
     1,
-    41,
+    36,
     6
    ],
    "light": "warm"
@@ -480,7 +539,7 @@
    "name": "De Gang",
    "rect": [
     10,
-    7,
+    1,
     95,
     13
    ],

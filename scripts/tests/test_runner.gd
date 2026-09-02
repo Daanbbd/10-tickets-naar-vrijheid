@@ -911,6 +911,27 @@ func _test_wereld() -> void:
 	for ch: Variant in legend.keys():
 		_ok(atlas.has(ch), "legenda-teken '%s' heeft geen atlas-tegel (rendert stil als vloer)" % ch)
 
+	# Elk samengesteld meubel moet zijn PNG hebben, en de maat in de naam moet
+	# kloppen met de footprint: main.gd schaalt niets, dus een sprite die niet
+	# past staat scheef op zijn eigen blok. Een ontbrekende sprite is vandaag
+	# alleen een push_error in een draaiende wereld — dus onzichtbaar voor wie
+	# de generator draait en de suite kijkt.
+	for raw: Variant in (f.get("props", []) as Array):
+		var p := raw as Dictionary
+		var naam := String(p.get("prop", ""))
+		var pad := "res://assets/sprites/props/%s.png" % naam
+		_ok(ResourceLoader.exists(pad), "prop '%s' heeft geen sprite (%s)" % [naam, pad])
+		var r: Array = p.get("rect", [0, 0, 0, 0])
+		var maat := naam.get_slice("_", naam.get_slice_count("_") - 1)
+		_ok(maat == "%dx%d" % [int(r[2]) - int(r[0]) + 1, int(r[3]) - int(r[1]) + 1],
+			"prop '%s' heeft een naam die niet bij zijn footprint %s past" % [naam, str(r)])
+		# Een hangend bordje mag de vloer niet dichtzetten: je loopt eronderdoor.
+		if bool(p.get("hangend", false)):
+			for x: int in range(int(r[0]), int(r[2]) + 1):
+				for y: int in range(int(r[1]), int(r[3]) + 1):
+					_ok(not _solide(grid, legend, x, y),
+						"hangend bordje '%s' hangt boven een solide tegel %d,%d" % [naam, x, y])
+
 	# NPC-standplaatsen moeten bereikbaar zijn
 	for nid: Variant in GameData.npcs.keys():
 		var n: NpcDef = GameData.npc(StringName(nid))
