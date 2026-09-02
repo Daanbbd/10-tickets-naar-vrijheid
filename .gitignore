@@ -11,11 +11,11 @@ build/
 
 # Python-toolchain voor de assetgeneratoren
 tools/.venv/
+__pycache__/
+*.pyc
 
 # macOS
 .DS_Store
 
 # Gevendorde skills-bundel met eigen .git — geen onderdeel van dit project
 GD-Agentic-Skills/
-__pycache__/
-*.pyc
