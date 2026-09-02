@@ -465,6 +465,14 @@
      },
      {
       "when": {
+       "flags_all": [
+        "gevolg_verkeerde_merksound"
+       ]
+      },
+      "text": "die merksound bij de speaker. psies. niet de goeie. ik zet er een test op"
+     },
+     {
+      "when": {
        "min_tickets_done": 8
       },
       "text": "joejoe. de cijfers lopen op. ik beloof nog niets"
@@ -843,6 +851,14 @@
      },
      {
       "when": {
+       "flags_all": [
+        "gevolg_backend_fout_gekozen"
+       ]
+      },
+      "text": "Die kabel bij het rack lag verkeerd. Ik heb hem omgelegd. Het werkt nu, maar ik weet ook iets over jou ^.^"
+     },
+     {
+      "when": {
        "min_tickets_done": 8
       },
       "text": "De verbinding staat. Ben benieuwd hoe lang."
@@ -1035,6 +1051,14 @@
        ]
       },
       "text": "Ik moet dit morgen presenteren. Er zit geen manier in om iets te kopen. Dat is wel top, ja."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_klant_ontevreden"
+       ]
+      },
+      "text": "Ze belde niet blij op. Ik heb het gladgestreken. Dat kost een paar dagen vertrouwen, niet meer."
      },
      {
       "when": {
@@ -1244,6 +1268,14 @@
        ]
       },
       "text": "heb je haar Comic Sans belooft,, geen Comic Sans is een beetje de standaard tegenwoordig"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_paard_gemist"
+       ]
+      },
+      "text": "wist ik meteen waar hij zat,, heb je hem zelf nog gezien,, jammer,, hij is best grappig,,"
      },
      {
       "when": {

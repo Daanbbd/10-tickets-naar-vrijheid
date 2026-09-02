@@ -224,6 +224,53 @@ func _test_gevolgen() -> void:
 	_ok(not Session.gevolgen.has(&"iets_nieuws"),
 		"een onbekend payload-veld belandt toch in de gevolgen")
 
+	# --- F4-b: de vier wereldhandelingen boeken ook een gevolg -------------
+	# Elk paar test eerst de goede kant, dan de slechte — en eindigt dus op de
+	# slechte kant. Dat is met opzet: de vier vlaggen moeten blijven staan voor
+	# de "slechte dag"-berekening van finale_start() verderop.
+	Gevolgen.boek(&"mg_klantfeedback", MinigameResult.make(&"mg_klantfeedback",
+		GameEnums.Outcome.SUCCESS, 5, {&"score": 5, &"drempel": 3}))
+	_ok(not Session.get_flag(&"gevolg_klant_ontevreden"),
+		"een score boven de drempel zet gevolg_klant_ontevreden toch")
+	Gevolgen.boek(&"mg_klantfeedback", MinigameResult.make(&"mg_klantfeedback",
+		GameEnums.Outcome.SUCCESS, 1, {&"score": 1, &"drempel": 3}))
+	_ok(Session.get_flag(&"gevolg_klant_ontevreden"),
+		"een score onder de drempel zet gevolg_klant_ontevreden niet")
+	_ok(int(Gevolgen.getal(&"klant_score", -1)) == 1, "klant_score komt niet in de gevolgen terecht")
+	_ok(int(Gevolgen.getal(&"klant_drempel", -1)) == 3, "klant_drempel komt niet in de gevolgen terecht")
+
+	Gevolgen.boek(&"mg_backend_fix", MinigameResult.make(&"mg_backend_fix",
+		GameEnums.Outcome.SUCCESS, 1, {&"juist": true}))
+	_ok(not Session.get_flag(&"gevolg_backend_fout_gekozen"),
+		"de juiste kabel kiezen zet gevolg_backend_fout_gekozen toch")
+	Gevolgen.boek(&"mg_backend_fix", MinigameResult.make(&"mg_backend_fix",
+		GameEnums.Outcome.SUCCESS, 0, {&"juist": false}))
+	_ok(Session.get_flag(&"gevolg_backend_fout_gekozen"),
+		"de verkeerde kabel kiezen zet gevolg_backend_fout_gekozen niet")
+	_ok(not bool(Gevolgen.getal(&"backend_juist", true)), "backend_juist komt niet in de gevolgen terecht")
+
+	Gevolgen.boek(&"mg_muziek", MinigameResult.make(&"mg_muziek",
+		GameEnums.Outcome.SUCCESS, 1, {&"goed": true, &"titel": "Rustig Kantoor"}))
+	_ok(not Session.get_flag(&"gevolg_verkeerde_merksound"),
+		"de goede tags kiezen zet gevolg_verkeerde_merksound toch")
+	Gevolgen.boek(&"mg_muziek", MinigameResult.make(&"mg_muziek",
+		GameEnums.Outcome.SUCCESS, 0, {&"goed": false, &"titel": "Hardstyle Intro"}))
+	_ok(Session.get_flag(&"gevolg_verkeerde_merksound"),
+		"de verkeerde tags kiezen zet gevolg_verkeerde_merksound niet")
+	_ok(String(Gevolgen.getal(&"muziek_titel", "")) == "Hardstyle Intro",
+		"muziek_titel komt niet in de gevolgen terecht")
+
+	Gevolgen.boek(&"mg_paarden", MinigameResult.make(&"mg_paarden",
+		GameEnums.Outcome.SUCCESS, 1, {&"paard": true, &"zelf_gevonden": true}))
+	_ok(not Session.get_flag(&"gevolg_paard_gemist"),
+		"het paard zelf vinden zet gevolg_paard_gemist toch")
+	Gevolgen.boek(&"mg_paarden", MinigameResult.make(&"mg_paarden",
+		GameEnums.Outcome.SUCCESS, 1, {&"paard": true, &"zelf_gevonden": false}))
+	_ok(Session.get_flag(&"gevolg_paard_gemist"),
+		"het paard niet zelf vinden zet gevolg_paard_gemist niet")
+	_ok(not bool(Gevolgen.getal(&"paard_zelf_gevonden", true)),
+		"paard_zelf_gevonden komt niet in de gevolgen terecht")
+
 	# --- de finale begint met de opgetelde dag ----------------------------
 	var slecht := Gevolgen.finale_start()
 	for k: StringName in [&"bugs", &"vertrouwen", &"getest", &"scope"]:
@@ -587,15 +634,22 @@ func _test_minigame_inhoud() -> void:
 				# Er moet altijd een uitkomst zijn, ook bij de slechtst denkbare
 				# stand. Zonder een drempel op 0 valt de finale door zonder tekst.
 				var laagste := 999
+				var titels := {}
 				for raw2: Variant in (c.get("uitkomsten", []) as Array):
 					var u := raw2 as Dictionary
-					_ok(String(u.get("titel", "")) != "", "mg_deploy: uitkomst zonder titel")
+					var titel := String(u.get("titel", ""))
+					_ok(titel != "", "mg_deploy: uitkomst zonder titel")
 					_ok(String(u.get("tekst", "")) != "", "mg_deploy: uitkomst zonder tekst")
-					# Geen game over: elke uitkomst is een oplevering.
-					_ok(String(u.get("titel", "")) == "OPGELEVERD",
-						"mg_deploy: uitkomst '%s' heet niet OPGELEVERD" % u.get("titel", ""))
+					# Geen game over: elke uitkomst is een oplevering. De titel mag
+					# wel meebewegen met de score (BBD-210) — "OPGELEVERD" moet het
+					# kernwoord blijven, maar hoeft niet meer letterlijk alles te zijn.
+					_ok(titel.begins_with("OPGELEVERD"),
+						"mg_deploy: uitkomst '%s' begint niet met OPGELEVERD" % titel)
+					titels[titel] = true
 					laagste = mini(laagste, int(u.get("min", 0)))
 				_ok(laagste == 0, "mg_deploy: geen uitkomst met min 0; een slechte dag valt door")
+				_ok(titels.size() == (c.get("uitkomsten", []) as Array).size(),
+					"mg_deploy: twee uitkomsten delen dezelfde titel — de score moet zichtbaar meebewegen")
 
 				for raw3: Variant in (c.get("gebeurtenissen", []) as Array):
 					var g := raw3 as Dictionary

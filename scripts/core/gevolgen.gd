@@ -33,6 +33,10 @@ const VLAGGEN: Array[StringName] = [
 	&"gevolg_cro_gehaald",
 	&"gevolg_uitlijn_perfect",
 	&"gevolg_credits_verbrand",
+	&"gevolg_klant_ontevreden",
+	&"gevolg_backend_fout_gekozen",
+	&"gevolg_verkeerde_merksound",
+	&"gevolg_paard_gemist",
 ]
 
 ## Wat er uit een payload wordt overgenomen, per minigame-id. Buiten deze tabel
@@ -44,6 +48,10 @@ const GETALLEN := {
 	&"mg_video": {&"gepubliceerd": &"video_gepubliceerd", &"credits_over": &"video_credits"},
 	&"mg_planning": {&"tijd_over": &"standup_tijd_over"},
 	&"mg_frontend_fix": {&"afwijking_totaal": &"uitlijn_afwijking"},
+	&"mg_klantfeedback": {&"score": &"klant_score", &"drempel": &"klant_drempel"},
+	&"mg_backend_fix": {&"juist": &"backend_juist"},
+	&"mg_muziek": {&"goed": &"muziek_goed", &"titel": &"muziek_titel"},
+	&"mg_paarden": {&"zelf_gevonden": &"paard_zelf_gevonden"},
 }
 
 ## De wensen uit BBD-201 die groot genoeg zijn om bugs op te leveren. Een app
@@ -103,6 +111,25 @@ static func boek(minigame_id: StringName, result: MinigameResult) -> void:
 			Session.gevolgen[&"oplevering_tekst"] = String(p.get(&"tekst", ""))
 			Session.gevolgen[&"oplevering_score"] = int(p.get(&"score", 0))
 			Session.gevolgen[&"oplevering_foutcode"] = String(p.get(&"foutcode", ""))
+		&"mg_klantfeedback":
+			# De drempel is per speeldoorloop hetzelfde; de score is wat jij ervan
+			# maakte in de drie rondes. Onder de drempel hangt de klant ontevreden
+			# op, en dat hoort de finale duurder te maken.
+			Session.set_flag(&"gevolg_klant_ontevreden",
+				int(p.get(&"score", 0)) < int(p.get(&"drempel", 0)))
+		&"mg_backend_fix":
+			# Eén kabel, en die kun je goed of fout leggen. Fout gelegd betekent:
+			# het werkt zolang niemand er nog eens naar kijkt.
+			Session.set_flag(&"gevolg_backend_fout_gekozen", not bool(p.get(&"juist", true)))
+		&"mg_muziek":
+			# De grap blijft de grap; verkeerd gekozen betekent alleen dat de
+			# merksound niet is wat hij moest zijn.
+			Session.set_flag(&"gevolg_verkeerde_merksound", not bool(p.get(&"goed", true)))
+		&"mg_paarden":
+			# Via het scrumbord of via Bastiaans vakgebiedvoordeel kom je hier
+			# zonder ooit zelf een paard te hebben aangesproken. Dat is een
+			# geldige route, en toch een andere dag dan wie het paard zelf vond.
+			Session.set_flag(&"gevolg_paard_gemist", not bool(p.get(&"zelf_gevonden", true)))
 
 
 static func getal(sleutel: StringName, fallback: Variant = 0) -> Variant:
@@ -126,6 +153,10 @@ static func finale_start() -> Dictionary:
 		bugs += 1
 	if Session.get_flag(&"gevolg_uitlijn_perfect"):
 		bugs -= 1
+	# Een verkeerd gelegde kabel werkt vandaag, en morgen weet niemand nog
+	# waarom hij het deed. Dat is een bug die nog moet gebeuren.
+	if Session.get_flag(&"gevolg_backend_fout_gekozen"):
+		bugs += 1
 
 	var vertrouwen := 5
 	vertrouwen += -1 if Session.get_flag(&"gevolg_geen_webshop") else 1
@@ -133,11 +164,21 @@ static func finale_start() -> Dictionary:
 		vertrouwen += 1
 	if Session.get_flag(&"gevolg_credits_verbrand"):
 		vertrouwen -= 1
+	# Een ontevreden klant en een verkeerde merksound zijn allebei iets dat
+	# zij hoort of ziet vóór jij het kunt gladstrijken.
+	if Session.get_flag(&"gevolg_klant_ontevreden"):
+		vertrouwen -= 1
+	if Session.get_flag(&"gevolg_verkeerde_merksound"):
+		vertrouwen -= 1
 
 	var getest := 0
 	if Session.get_flag(&"gevolg_cro_gehaald"):
 		getest += 1
 	if Session.get_flag(&"gevolg_danny_gemist"):
+		getest -= 1
+	# Het paard zelf nooit gezien hebben is een geldige route (Bastiaans
+	# vakgebiedvoordeel), maar wel een route met minder eigen legwerk erin.
+	if Session.get_flag(&"gevolg_paard_gemist"):
 		getest -= 1
 
 	# Scope is wat je beloofd hebt, niet wat je gebouwd hebt: hoe meer wensen
