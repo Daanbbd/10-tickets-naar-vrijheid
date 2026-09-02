@@ -151,7 +151,6 @@ var _nudge: Timer
 ## stilstaat, dan zou de suffix zonder deze cache verouderd blijven staan.
 var _prompt_tekst: String = ""
 var _prompt_world: StringName = &""
-var _prompt_verb: String = ""
 var _prompt_aan: bool = false
 
 
@@ -403,27 +402,22 @@ func _build_card(root: Control) -> void:
 ##
 ## De knoppenbalk staat in beeld met zijn werkwoord erop, dus die hoeft niet
 ## uitgelegd te worden. Wat onzichtbaar is: dat de stick overal in de
-## linkerhelft opkomt, en dat ver uitduwen rennen is. De toetsen staan op één
-## regel onderaan omdat ze precies dat zijn — een snellere weg naar dezelfde
-## knoppen, niet een tweede besturing.
+## linkerhelft opkomt, dat ver uitduwen rennen is, en dat je direct op een
+## oplichtend object kunt tikken in plaats van er een knop voor te zoeken.
 ##
-## Die toetsenregel verwijst naar een toetsenbord dat lang niet elk apparaat
-## heeft — op een telefoon (ook een webbuild in een mobiele browser, waar
-## `OS.has_feature("mobile")` niets zegt) is hij pure ruis over een sneltoets
-## die je toch nooit kunt indrukken. `Invoer` heeft bewust geen "is dit een
-## telefoon"-vraag meer voor de INDELING (zie invoer.gd), maar dit is geen
-## indeling — het is één regel tekst over een feature die op dit apparaat
-## simpelweg niet bestaat. Dezelfde aanraakscherm-detectie als
-## `Invoer.muis_als_vinger()` bepaalt dus alleen of deze ene regel meedoet.
+## Dit spel is mobile-only; er staat hier bewust geen toetsenregel meer. WASD/
+## E/Tab/Q blijven in de InputMap staan als stille sneltoetsen zodat jij tijdens
+## development nog met een toetsenbord kunt testen (zie `Invoer.muis_als_vinger()`
+## voor hetzelfde idee met de muis), maar een speler ziet er nooit iets van —
+## en een kaart die naar een toetsenbord verwijst hoort dus niet in een spel dat
+## er geen heeft, ook al was die regel al onzichtbaar op een echt toestel.
 func _kaartregels() -> Array[String]:
-	var regels: Array[String] = [
+	return [
 		"Duim links      lopen",
 		"Ver uitduwen    rennen",
+		"Tik op object   interactie",
 		"▤ ticketbord    ? hint",
 	]
-	if not DisplayServer.is_touchscreen_available():
-		regels.append("Toetsen  WASD Shift E Tab Q")
-	return regels
 
 
 ## Laat de kaart even zien en fade hem daarna weg. F1 haalt hem terug.
@@ -686,23 +680,20 @@ static func _waarheen(t: TicketDef) -> String:
 
 ## Wie dit ticket bezit hoort zichtbaar te zijn vóór de interactie, niet pas
 ## nadat de speler er vergeefs op E heeft gedrukt.
-func _on_prompt(text: String, shown: bool, world_id: StringName, verb: String) -> void:
+func _on_prompt(text: String, shown: bool, world_id: StringName, _verb: String) -> void:
 	_prompt_tekst = text
 	_prompt_aan = shown
 	_prompt_world = world_id
-	_prompt_verb = verb
 	_teken_prompt()
 
 
-## Het werkwoord staat op de actieknop in de balk, dus de prompt houdt over
-## waar je voor staat en wie daar iets mee kan. Hier stond eerder "E  praten
-## met Victor": dat verwees naar een toets die op de helft van de apparaten
-## niet bestaat, en het zei het werkwoord twee keer.
+## Er is geen actieknop meer die het werkwoord draagt — je tikt direct op het
+## object. Deze prompt is dus de enige plek die nog zegt wát een tik doet, dus
+## hij toont weer de volledige tekst inclusief werkwoord ("Praten met Victor"
+## i.p.v. alleen "Victor").
 func _teken_prompt() -> void:
 	_prompt.visible = _prompt_aan and not Session.input_locked
-	var rest := _prompt_tekst.substr(_prompt_verb.length()).strip_edges()
-	_prompt_label.text = "%s%s" % [rest if rest != "" else _prompt_verb,
-		_eigenaar_suffix(_prompt_world)]
+	_prompt_label.text = "%s%s" % [_prompt_tekst, _eigenaar_suffix(_prompt_world)]
 
 
 ## Sluit er iemand aan of loopt hij weg, dan verandert de doelregel, het bord én

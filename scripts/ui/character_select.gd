@@ -19,7 +19,13 @@ extends Control
 ## 28 en heeft die niet meer: `UiKit.KNOP_MIN_H` staat op 30 en is nu de enige
 ## plek waar die maat vandaan komt.
 
-const PODIUM_H := 96
+## Was 96. Zeven rijen in de lijst (RIJ_H=26, de duimondergrens — die mag niet
+## kleiner) plus alle vaste chrome eromheen pasten op het ideale 192x416-canvas
+## nog maar net, met een marge van een paar pixels. Zonder veilige-zone-marge
+## (zie `_ready()`) at een notch/gebaarbalk die marge stilletjes op, wat op
+## sommige toestellen de laatste rij (Koen) letterlijk onbereikbaar maakte. De
+## podiumstrook is puur decor, dus die levert de ruimte terug.
+const PODIUM_H := 84
 const RIJ_H := 26
 const SPRITE_SCHAAL := 2
 const WISSEL_TIJD := 0.25
@@ -41,6 +47,7 @@ var _stijl: Label
 var _blokjes: Array[ColorRect] = []
 var _wissel: Tween
 var _scroll: ScrollContainer
+var _scroll_hint: Label
 var _bezig_t: float = 0.0
 var _bezig_gedaan: bool = false
 
@@ -52,6 +59,12 @@ func _ready() -> void:
 	UiKit.full_rect(bg)
 	add_child(bg)
 
+	# Veilige zone: zonder dit eet een notch/gebaarbalk hoogte op die nergens
+	# teruggewonnen wordt — `Besturing` doet dit al voor de knoppenbalk, dit
+	# scherm deed het nooit. De achtergrond blijft wél schermvullend (zie
+	# `UiKit.veilige_laag()`'s eigen docstring): alleen de inhoud wijkt.
+	var veilig := UiKit.veilige_laag(self)
+
 	var root := VBoxContainer.new()
 	UiKit.full_rect(root)
 	root.offset_left = 4
@@ -59,7 +72,7 @@ func _ready() -> void:
 	root.offset_top = 3
 	root.offset_bottom = -3
 	root.add_theme_constant_override("separation", 2)
-	add_child(root)
+	veilig.add_child(root)
 
 	var kop := UiKit.label("WIE BEN JIJ VANDAAG", UiKit.FS_SUB, UiKit.BLUEBIRD_BRIGHT)
 	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -86,10 +99,18 @@ func _ready() -> void:
 	_stijl = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	root.add_child(_stijl)
 
+	# Een omhullende Control i.p.v. de ScrollContainer rechtstreeks in de
+	# VBox: zo kan de scroll-hint eroverheen liggen zonder zelf een extra rij
+	# hoogte te kosten — in deze krappe lijst is elke pixel die de hint zelf
+	# zou opeisen een pixel die de lijst niet meer heeft.
+	var scroll_laag := Control.new()
+	scroll_laag.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(scroll_laag)
+
 	_scroll = ScrollContainer.new()
-	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	UiKit.full_rect(_scroll)
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	root.add_child(_scroll)
+	scroll_laag.add_child(_scroll)
 	var scroll := _scroll
 	var lijst := VBoxContainer.new()
 	lijst.add_theme_constant_override("separation", 2)
@@ -99,6 +120,18 @@ func _ready() -> void:
 	for id: StringName in GameData.character_ids():
 		_ids.append(id)
 		lijst.add_child(_bouw_rij(GameData.character(id), _ids.size() - 1))
+
+	# Geen scrollbalk zichtbaar (ScrollContainer verbergt die tot je actief
+	# sleept), dus zonder dit ontdekt een speler een zevende rij nooit — hij
+	# vult het venster, sluit netjes af, en er is niets dat "er is meer"
+	# zegt. Alleen zichtbaar zolang er echt meer onder de vouw staat.
+	_scroll_hint = UiKit.label("▾", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
+	_scroll_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_scroll_hint.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_scroll_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	scroll_laag.add_child(_scroll_hint)
+	_scroll.get_v_scroll_bar().value_changed.connect(func(_v: float) -> void: _bijwerk_scroll_hint())
+	_bijwerk_scroll_hint.call_deferred()
 
 	# De enige bevestigende actie op dit scherm, dus de blauwe. De eigen hoogte
 	# van 28 is weg: die zat onder UiKit.KNOP_MIN_H en overschreef hem.
@@ -127,6 +160,10 @@ func _bouw_podium() -> Control:
 	_podium.custom_minimum_size = Vector2(0, PODIUM_H)
 	_podium.clip_contents = true
 	_podium.mouse_filter = Control.MOUSE_FILTER_STOP
+	# Op het podium zelf, niet op het hele scherm — dat stond eerder in een
+	# schermbrede _gui_input() die elke sleep overal ving, ook een sleep
+	# bedoeld om de lijst te scrollen. Zie _op_podium_sleep().
+	_podium.gui_input.connect(_op_podium_sleep)
 
 	var muur := ColorRect.new()
 	muur.color = UiKit.MUUR
@@ -288,6 +325,7 @@ func _kies(index: int, met_animatie: bool) -> void:
 	# beeld te staan, ook als je met het toetsenbord door de lijst loopt.
 	if _scroll != null and index < _rijen.size():
 		_scroll.ensure_control_visible(_rijen[index])
+		_bijwerk_scroll_hint()
 
 	_zet_sprite(c, met_animatie, index >= vorige)
 
@@ -335,12 +373,24 @@ func _zet_sprite(c: CharacterDef, met_animatie: bool, van_rechts: bool) -> void:
 	_wissel.chain().tween_callback(func() -> void: _sprite.play(&"idle_down"))
 
 
-## Swipen over het podium wisselt van collega.
-func _gui_input(event: InputEvent) -> void:
+## Swipen over het podium wisselt van collega. Begrensd tot het podium (zie
+## `_bouw_podium()`), zodat een sleep over de lijst altijd en alleen de
+## ScrollContainer bedient en nooit de keuze laat verspringen.
+func _op_podium_sleep(event: InputEvent) -> void:
 	if event is InputEventScreenDrag:
 		var d := (event as InputEventScreenDrag).relative.x
 		if absf(d) > 6.0:
 			_kies(wrapi(_index + (-1 if d > 0.0 else 1), 0, _ids.size()), true)
+
+
+## Of er nog een rij onder de vouw staat. Geen scrollbalk in beeld tenzij je
+## actief sleept, dus zonder dit is een zevende collega onvindbaar voor wie
+## niet toevallig gaat proberen te scrollen.
+func _bijwerk_scroll_hint() -> void:
+	if _scroll_hint == null or not is_instance_valid(_scroll):
+		return
+	var balk := _scroll.get_v_scroll_bar()
+	_scroll_hint.visible = balk.value < balk.max_value - balk.page - 1.0
 
 
 func _unhandled_input(event: InputEvent) -> void:
