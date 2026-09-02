@@ -14,8 +14,14 @@ OUT = os.path.join(ROOT, "assets", "sprites", "portraits")
 W, H = 32, 40
 COLORS = 24
 
+# Dirk Schrijver is geen collega maar een gerenderde avatar, en dat moet je zien.
+# Iedereen op de vloer krijgt 24 kleuren; hij krijgt er meer, plus een extra
+# gladstrijking. In een pixel-art game is een te vloeiend portret onmiddellijk
+# onbehaaglijk -- dat is precies het effect. Zie docs/CHARACTERS.md.
+GERENDERD = {"dirk": 64}
 
-def make(path):
+
+def make(path, colors=COLORS, smooth=False):
     im = Image.open(path).convert("RGB")
     w, h = im.size
     side = int(min(w, h) * 0.86)
@@ -25,7 +31,11 @@ def make(path):
     im = im.resize((W, H), Image.LANCZOS)
     im = ImageEnhance.Color(im).enhance(1.25)
     im = ImageEnhance.Contrast(im).enhance(1.15)
-    return im.quantize(colors=COLORS, method=Image.MEDIANCUT).convert("RGB")
+    if smooth:
+        # Geen extra scherpte en een ruimer palet: hij hoort niet getekend te
+        # lijken, maar gerenderd.
+        im = ImageEnhance.Sharpness(im).enhance(0.6)
+    return im.quantize(colors=colors, method=Image.MEDIANCUT).convert("RGB")
 
 
 def main():
@@ -35,9 +45,14 @@ def main():
         if not f.endswith(".png"):
             continue
         name = os.path.splitext(f)[0]
-        make(os.path.join(SRC, f)).save(os.path.join(OUT, f"{name}.png"))
+        kleuren = GERENDERD.get(name, COLORS)
+        make(os.path.join(SRC, f), kleuren, name in GERENDERD).save(
+            os.path.join(OUT, f"{name}.png"))
         made.append(name)
     print(f"portretten ({W}x{H}, {COLORS} kleuren):", ", ".join(made))
+    for n in made:
+        if n in GERENDERD:
+            print(f"  {n}: {GERENDERD[n]} kleuren, gladgestreken -- gerenderd, niet getekend")
     sheet = Image.new("RGB", (W * len(made), H), (20, 20, 26))
     for i, n in enumerate(made):
         sheet.paste(Image.open(os.path.join(OUT, f"{n}.png")), (i * W, 0))

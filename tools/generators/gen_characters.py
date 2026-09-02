@@ -394,9 +394,9 @@ def laag_facial(v, richting, p, variant):
 
 
 # =============================================================================
-# 6. accessory — bril, koptelefoon, pet, lanyard, doos, tas
+# 6. accessory — bril, koptelefoon, pet, lanyard, speldje, doos, tas
 # =============================================================================
-ACCESSORIES = ["bril", "koptelefoon", "pet", "lanyard", "doos", "tas"]
+ACCESSORIES = ["bril", "koptelefoon", "pet", "lanyard", "speldje", "doos", "tas"]
 
 
 def laag_accessory(v, richting, p, variant):
@@ -448,6 +448,14 @@ def laag_accessory(v, richting, p, variant):
         v.px(8, ROMP_TOP + 2 + bob, ACCENT)
         v.rect(7, ROMP_TOP + 3 + bob, 8, ROMP_TOP + 5 + bob, WIT)
         v.omlijn(7, ROMP_TOP + 3 + bob, 8, ROMP_TOP + 5 + bob, OUT_C)
+
+    elif variant == "speldje":
+        # Rond bedrijfsspeldje op de revers. Twee pixels: net genoeg dat je ziet
+        # dat er iets op zijn jasje zit, niet genoeg om te lezen wat.
+        if richting == 1:
+            return
+        v.px(6, ROMP_TOP + 2 + bob, ACCENT)
+        v.px(6, ROMP_TOP + 3 + bob, ACCENT_S)
 
     elif variant == "doos":
         # voor je uit gedragen, dus alleen zichtbaar van voren en opzij
