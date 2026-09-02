@@ -118,6 +118,11 @@ func _bouw_balk(ouder: Control) -> void:
 
 	_knop(rij, "▤", &"ticketboard", HULP_BREEDTE)
 	_knop(rij, "?", &"hint", HULP_BREEDTE)
+	# Pauze. Op een telefoon bestaat ESC niet, en het pauzemenu is de enige plek
+	# waar je het volume kunt zetten en de run kunt verlaten — dat mag geen
+	# functie zijn die alleen met een toetsenbord bereikbaar is. Sluiten gebeurt
+	# in het menu zelf: dan staat deze balk op pauze.
+	_knop(rij, "≡", &"cancel", HULP_BREEDTE)
 
 	# De actieknop draagt het werkwoord van waar je voor staat — "Openen",
 	# "Praten" — in plaats van een toetsnaam. Een knop die "E" heet verwijst

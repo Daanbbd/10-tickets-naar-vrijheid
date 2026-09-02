@@ -38,6 +38,7 @@ var _licht_tween: Tween = null
 
 var builder: WorldBuilder = WorldBuilder.new()
 var player: Player = null
+var _pauzemenu: Pauzemenu = null
 
 var _zone_id: StringName = &""
 ## Alleen voor de speelbeurt-harnas: hoeveel meldingen van De Klant er gevallen zijn.
@@ -84,6 +85,14 @@ func _ready() -> void:
 	besturing.name = "Besturing"
 	add_child(besturing)
 	besturing.setup()
+
+	# Het pauzemenu draait op PROCESS_MODE_ALWAYS en is dus het enige dat nog
+	# leeft zodra de wereld stilstaat. Eigen CanvasLayer (40): boven de telefoon,
+	# onder de minigame.
+	_pauzemenu = Pauzemenu.new()
+	_pauzemenu.name = "Pauzemenu"
+	add_child(_pauzemenu)
+	_pauzemenu.setup()
 
 	# De wereld is een pure functie van Session: speel alles opnieuw af.
 	mutator.replay_all()
@@ -326,6 +335,13 @@ func _qa_wacht_tot(voorwaarde: Callable, timeout: float) -> bool:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if Session.input_locked or Shell.minigame_active():
+		return
+
+	# Sluiten doet het menu zelf: zodra het openstaat ligt deze node op pauze en
+	# ziet hij geen invoer meer.
+	if event.is_action_pressed("cancel"):
+		get_viewport().set_input_as_handled()
+		_pauzemenu.open()
 		return
 
 	if event.is_action_pressed("interact"):
