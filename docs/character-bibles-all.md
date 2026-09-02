@@ -2,6 +2,32 @@
 
 > 8 collega-karakters + De Klant NPC | Versie 1.1 | Bron: Slack kanalen + groeps-DM + Suno-lyrics
 
+> **Wat dit document is.** De bronbeschrijving van de stemmen: waar ze vandaan
+> komen, hoe ze klinken, waar ze om lachen. Dit is de plek om te lezen *hoe*
+> iemand praat voordat je een regel voor hem schrijft.
+>
+> **Wat het niet is.** Geen bron van waarheid voor rollen, namen of casting.
+> Het spel wijkt daar op drie punten bewust van af, en `characters.json` wint:
+>
+> | | Bijbel (Slack) | Het spel |
+> |---|---|---|
+> | Daan | fullstack developer | **Product Owner** |
+> | Koen | frontend developer | **Backend / AI & automatisering** |
+> | Willem | account management | **Client Lead** |
+>
+> Zie [CHARACTERS.md](CHARACTERS.md), "Eén functietitel per collega": de rollen
+> stonden op drie plekken en weken van elkaar af. Daar staat ook **Dirk
+> Schrijver**, die hier niet in voorkomt omdat hij niet uit Slack komt — hij is
+> voor het spel bedacht.
+>
+> Voor de regels zoals ze daadwerkelijk in het spel staan: de stembijbel
+> [dialogue-content.md](dialogue-content.md), met de tics die
+> `_test_karakterstemmen()` afdwingt. Dit document beschrijft de stem, die
+> testsuite bewaakt hem.
+>
+> Er stond tot deze commit een byte-identieke tweede kopie in `assets/`. Die is
+> weg; dit is het enige exemplaar.
+
 ---
 
 ## JONATHAN RAMBELJE

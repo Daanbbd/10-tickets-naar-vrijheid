@@ -2,8 +2,15 @@ class_name DialogueController
 extends Node
 ## Draait dialoogbomen uit data/dialogue/*.json.
 ##
-## Beheert zijn eigen CanvasLayer en de input-grab. Staat bewust ná World in de
-## scene-boom zodat _unhandled_input de interactietoets als eerste ziet.
+## Beheert zijn eigen CanvasLayer en de input-grab.
+##
+## De invoer loopt hier langs twee kanten, en geen van beide is
+## `_unhandled_input` (dat stond hier lang beschreven, maar die methode bestaat
+## in dit bestand niet): een tik komt binnen via `_input()`, en de
+## bevestigingstoets wordt per frame gepolld in `_next_press()`. Pollen kan hier
+## omdat een dialoog toch al frame voor frame op de speler wacht, en het houdt
+## het wachten op één regel bij het wachten op een keuze -- die kan niet
+## event-gedreven, want daar drukt een Button.
 ##
 ## F5-a: dit grijpt zijn invoer via `Session.lock_input()`, niet via
 ## `get_tree().paused` — dat stond al zo vóórdat een minigame haar eigen pauze
@@ -116,6 +123,16 @@ func play(dialogue_id: StringName, fallback_label: String = "") -> StringName:
 ## voor een aanroeper die zelf al weet welk gezicht erbij hoort.
 func say(speaker: String, text: String, speaker_id: StringName = &"",
 		portret: Texture2D = null) -> void:
+	# Dezelfde wacht aan de deur als `play()` en `ask_choice()`. Die stond hier
+	# niet, en dat is de gevaarlijkste van de drie om te missen: `_play_single()`
+	# zet aan het eind onvoorwaardelijk `_active = false` en ontgrendelt de
+	# invoer, dus een `say()` binnen een lopend gesprek zou de vloer openzetten
+	# terwijl er nog tekst staat. Geen enkele aanroeper doet dat vandaag -- alle
+	# drie wachten netjes op elkaar -- maar dan hoort het ook hoorbaar te zijn
+	# als er ooit eentje bijkomt, in plaats van als een halve speelbeurt.
+	if _active:
+		push_error("DialogueController: say() tijdens een lopend gesprek: '%s'" % text)
+		return
 	await _play_single(speaker, text, speaker_id, portret)
 
 
