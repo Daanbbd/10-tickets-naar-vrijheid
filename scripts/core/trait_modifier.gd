@@ -35,7 +35,7 @@ const VOORDEEL := {
 	"scope":       "Jouw vakgebied. Twee punten meer ruimte.",
 	"standup":     "Jouw vakgebied. Je mag één keer extra afkappen.",
 	"uitlijnen":   "Jouw vakgebied. Eén pixel meer speling.",
-	"abtest":      "Jouw vakgebied. Je ziet vooraf wat een variant doet.",
+	"abtest":      "Jouw vakgebied. Je ziet vooraf de bandbreedte, niet het exacte effect.",
 	"pijplijn":    "Jouw vakgebied. Twintig credits extra.",
 }
 
@@ -160,11 +160,15 @@ static func _uitlijnen(c: Dictionary) -> void:
 	c["tolerantie"] = int(c.get("tolerantie", 2)) + EXTRA_SPELING
 
 
-## Geen ander getal maar andere informatie: een CRO'er weet vooraf ongeveer wat
-## een variant doet, en dat is precies wat deze minigame anders van je verlangt
-## (blind kiezen en dan de meting lezen). Zie `toon_effect` in mg_abtest.gd.
+## BBD-206/F4-a: eerst gaf dit `toon_effect: true`, en dat verwijderde Danny's
+## eigen minigame — de CRO'er was de enige speler die niet hoefde te meten,
+## want elke knop toonde meteen zijn exacte effectgetal. Omgedraaid: hij
+## krijgt een bandbreedte in plaats van het precieze getal, genoeg om een
+## duidelijke winnaar te herkennen, niet genoeg om de meting over te slaan bij
+## twee varianten die dicht bij elkaar liggen. Zie `toon_spreiding` en
+## `_spreiding_tekst()` in mg_abtest.gd.
 static func _abtest(c: Dictionary) -> void:
-	c["toon_effect"] = true
+	c["toon_spreiding"] = true
 
 
 static func _pijplijn(c: Dictionary) -> void:

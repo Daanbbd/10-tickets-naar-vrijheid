@@ -27,6 +27,7 @@ func _ready() -> void:
 	_test_wereld()
 	_test_karakterstemmen()
 	_test_traits()
+	_test_abtest_spreiding()
 	_test_urenstaat()
 	_test_klok()
 	_test_storingen()
@@ -1061,6 +1062,57 @@ func _test_traits() -> void:
 				_ok(TraitModifier.voordeel_tekst(t) != "",
 					"%s/%s: voordeel zonder uitleg aan de speler" % [cid, t.code])
 	_ok(gezien > 0, "geen enkel personage had een eigen minigame")
+
+
+## BBD-206/F4-a: "HOUDEN, TRAIT OMDRAAIEN." Danny's vakgebiedvoordeel gaf eerst
+## `toon_effect: true`, en dat verwijderde zijn eigen minigame — de CRO'er was
+## de enige speler die niet hoefde te meten, want elke knop toonde meteen zijn
+## exacte effectgetal. `_test_traits()` hierboven bewijst alleen dat de opgave
+## verandert; dit bewijst dat de vervanging (een bandbreedte) niet dezelfde
+## fout in een ander jasje is: geen exact getal meer op de knop, én smal genoeg
+## dat een duidelijke winnaar nog te herkennen is, maar breed genoeg dat twee
+## dicht bij elkaar liggende varianten nog steeds gemeten moeten worden.
+func _test_abtest_spreiding() -> void:
+	_kop("BBD-206: Danny's CRO-voordeel meet nog steeds")
+
+	var config: Dictionary = MinigameContent.get_config(&"mg_cro").duplicate(true)
+	TraitModifier._abtest(config)
+	_ok(not config.has("toon_effect"),
+		"TraitModifier._abtest() zet nog 'toon_effect' — het exacte effectgetal is niet weg")
+	_ok(bool(config.get("toon_spreiding", false)),
+		"TraitModifier._abtest() zet 'toon_spreiding' niet aan")
+
+	# Instantieer de node los van de scèneboom: `_variant_label()` en
+	# `_spreiding_bereik()` zijn pure stringmethodes die geen `_ready()` nodig
+	# hebben, dus dit hoeft geen scherm te openen om Danny's label te toetsen.
+	var mg: Node = load("res://scripts/minigames/mg_abtest.gd").new()
+	mg.set("_toon_spreiding", true)
+	mg.set("_eenheid", "%")
+
+	var label: String = mg.call("_variant_label", {"label": "Test", "effect": 0.5})
+	_ok(not label.contains("+0,5"),
+		"Danny's variant-label toont nog steeds het exacte effectgetal: %s" % label)
+	_ok(label.contains("tot"),
+		"Danny's variant-label toont geen bandbreedte: %s" % label)
+
+	# Twee varianten die dicht bij elkaar liggen (net als in de echte data,
+	# waar +0,1 en -0,1 in dezelfde ronde voorkomen) moeten overlappende
+	# bandbreedtes krijgen: dat is het bewijs dat het label ze niet uit elkaar
+	# trekt en de speler dus alsnog moet meten om de betere te vinden.
+	var bereik_a: Vector2 = mg.call("_spreiding_bereik", 0.1)
+	var bereik_b: Vector2 = mg.call("_spreiding_bereik", -0.1)
+	_ok(bereik_a.x <= bereik_b.y and bereik_b.x <= bereik_a.y,
+		"de bandbreedte trekt twee dicht bij elkaar liggende varianten (+0,1 en -0,1) toch al uit elkaar zonder te meten")
+
+	# Een duidelijke winnaar (+0,5 tegenover +0,1) moet wel als winnaar blijven
+	# lezen: anders is de bandbreedte zo breed dat het voordeel niets meer
+	# zegt.
+	var bereik_groot: Vector2 = mg.call("_spreiding_bereik", 0.5)
+	var bereik_klein: Vector2 = mg.call("_spreiding_bereik", 0.1)
+	_ok(bereik_groot.x > bereik_klein.y,
+		"de bandbreedte is zo breed dat een duidelijk betere variant (+0,5) niet meer als beter leest dan +0,1")
+
+	mg.free()
 
 
 func _test_urenstaat() -> void:
