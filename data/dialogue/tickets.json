@@ -648,7 +648,19 @@
     "nodes": {
       "start": {
         "speaker": "",
-        "text": "Op de wandmonitor staat de staging. Het paard staat boven de header.",
+        "variants": [
+          {
+            "when": {
+              "flags_all": [
+                "klant_wil_paard_links"
+              ]
+            },
+            "text": "Op de wandmonitor staat de staging. Het paard staat boven de header. Er ligt ook een appje van de klant: hij moet nog een stukje naar links."
+          },
+          {
+            "text": "Op de wandmonitor staat de staging. Het paard staat boven de header."
+          }
+        ],
         "next": "cta"
       },
       "cta": {

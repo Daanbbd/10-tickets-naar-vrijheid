@@ -8,10 +8,11 @@ extends CanvasLayer
 ## bestaat in plaats van een NPC: een klant die je kunt opzoeken is een collega,
 ## en een klant die je opzoekt kan wachten.
 ##
-## Dit is ook waar de spanningsboog zichtbaar wordt. De tien tickets staan
-## allemaal tegelijk open, dus er is geen ticketvolgorde die kan escaleren. Wat
-## wél oploopt is hoeveel je gedaan hebt, en zij meldt zich op 3, 5, 7 en 9.
-## Vier keer, steeds enthousiaster, steeds duurder.
+## Dit is ook waar de spanningsboog zichtbaar wordt. Wat oploopt is hoeveel je
+## gedaan hebt: zij meldt zich op elke drempel in `Gevolgen.DREMPELS`, steeds
+## enthousiaster, steeds duurder. Sommige van haar berichten doen ook iets: ze
+## ontgrendelen een ticket of veranderen er een, via de `effects`-array op de
+## variant die uiteindelijk getoond wordt.
 ##
 ## Wát ze stuurt hangt af van je keuzes: de varianten in
 ## `data/klant_berichten.json` staan achter gewone `when`-condities op de
@@ -47,6 +48,14 @@ var _gehad: Dictionary = {}
 ## overschreven slot klaagt niet.
 var _wachtrij: Array[StringName] = []
 var _open: bool = false
+
+## Eigen idempotentie-wacht voor de effects, los van `_gehad`. `_gehad[bid]`
+## wordt al gezet in `_op_ticket()` en `_qa_bericht()` — allebei vóórdat
+## `_toon()` ooit draait — dus die kan niet gebruikt worden om te zien of de
+## effects van dít bericht al gedraaid hebben. Zonder deze eigen wacht draaien
+## de effects opnieuw zodra `_toon()` een tweede keer wordt aangeroepen (een
+## save/load-replay, of `--klant=` terwijl de wachtrij al bezig was).
+var _effecten_gedaan: Dictionary = {}
 
 ## **Geen wachttijd bovenop het eerste stille frame.** Ik heb hier een rust van
 ## 0,35 s in gehad, en daarna een voorwaarde "niet terwijl er een ticketstroom
@@ -247,6 +256,14 @@ func _toon(bid: StringName) -> void:
 	# bestond al voor de paardenbugs; dit is dezelfde grap op een ander moment.
 	AudioDirector.play_ui(&"hinnik")
 	Bus.klant_bericht.emit(bid)
+
+	# Ná het signaal, niet ervoor: de speler moet het gevolg zien komen uit het
+	# bericht dat al op het scherm staat, niet uit een ticket dat al openging
+	# terwijl de telefoon nog trilde. Eigen wacht (`_effecten_gedaan`), want
+	# `_gehad[bid]` is hier al lang waar.
+	if not _effecten_gedaan.has(bid):
+		_effecten_gedaan[bid] = true
+		QuestEngine.run_effects(variant.get("effects", []) as Array)
 
 	# Omhoog schuiven zoals een melding hoort binnen te komen.
 	var eind := _toestel.offset_top

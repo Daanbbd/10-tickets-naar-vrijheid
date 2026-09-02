@@ -284,11 +284,16 @@ func _qa_playthrough() -> void:
 	await get_tree().create_timer(0.5).timeout
 	var start := Time.get_ticks_msec()
 
-	for tid: StringName in GameData.ticket_ids():
-		var t: TicketDef = GameData.ticket(tid)
-		if not await _qa_wacht_tot(func() -> bool: return Session.is_available(tid), 20.0):
-			printerr("[SPEELBEURT] %s werd nooit beschikbaar" % t.code)
+	# F3-a: de tickets komen niet meer allemaal tegelijk open, dus deze harnas
+	# kan niet meer star t01 t/m t10 op volgorde aflopen — t01 zit expres pas
+	# laat in de ontsluitingsketen en zou die vaste volgorde voor altijd laten
+	# wachten. In plaats daarvan vraagt elke stap gewoon wat er nu open ligt.
+	while not Session.all_done():
+		if not await _qa_wacht_tot(func() -> bool: return not QuestEngine.open_tickets().is_empty(), 20.0):
+			printerr("[SPEELBEURT] geen enkel ticket meer beschikbaar op %d/10" % Session.done_count())
 			break
+		var t: TicketDef = QuestEngine.open_tickets()[0]
+		var tid := t.id
 
 		# Kiezen wat we gaan doen. Zonder dit vraagt het scrumbord in de gang
 		# welk van de twee tickets we bedoelen, en dan blijft de speelbeurt op

@@ -7,6 +7,14 @@ extends Node
 var _fails: Array[String] = []
 var _checks: int = 0
 
+## De telefoon van De Klant mag maar een subset van QuestEngine.EFFECT_OPS
+## gebruiken — bewust kleiner, want een bericht dat gemist wordt (de bekende
+## `_wachtrij`-race) mag nooit iets breken dat verder gaat dan tekst, een
+## vlag, een teller in tijd, een item of een ontgrendeling.
+const KLANT_EFFECT_OPS: Array[String] = [
+	"unlock_ticket", "set_flag", "toast", "kost_tijd", "add_item",
+]
+
 
 func _ready() -> void:
 	print("\n=== 10 TICKETS NAAR VRIJHEID — testsuite ===\n")
@@ -23,6 +31,7 @@ func _ready() -> void:
 	_test_gevolgen()
 	_test_questketen_alle_personages()
 	_test_vrije_volgorde()
+	_test_geen_dood_punt()
 	_test_gedeelde_ankers()
 	_test_vinden()
 	_test_startroutes()
@@ -117,6 +126,23 @@ func _test_gevolgen() -> void:
 				for f: Variant in w.get(lijst, []):
 					_ok(StringName(f) in Gevolgen.VLAGGEN,
 						"%s: %s noemt vlag '%s', die Gevolgen nooit zet" % [bid, lijst, f])
+
+			# Effects draaien pas ná de melding op het scherm (telefoon.gd::_toon).
+			# De telefoon krijgt bewust een kleinere whitelist dan de volle
+			# EFFECT_OPS: een gemiste zin mag nooit een teller of een item stuk
+			# maken dat niemand hier verwacht.
+			var effects := d.get("effects", []) as Array
+			for e: Variant in effects:
+				var ed := e as Dictionary
+				if ed == null:
+					continue
+				var op := String(ed.get("op", ""))
+				_ok(op in KLANT_EFFECT_OPS,
+					"%s: effect-op '%s' staat niet op de whitelist voor de telefoon" % [bid, op])
+				if op == "unlock_ticket":
+					var doel := StringName(ed.get("ticket", ""))
+					_ok(doel in GameData.ticket_ids(),
+						"%s: unlock_ticket noemt '%s', en dat ticket bestaat niet" % [bid, doel])
 
 	# --- geen enkele gevolgvlag is een typefout ----------------------------
 	# Een verkeerd gespelde vlag in een `flags_all` is de vervelendste fout die
@@ -1169,23 +1195,38 @@ func _test_questketen_alle_personages() -> void:
 		print("   %-9s %d/10 tickets, %d eigen vakgebied" % [naam, Session.done_count(), eigen])
 
 
-## Alles staat tegelijk open, dus de belofte is: elk ticket kan het eerste zijn
-## dat je doet. Dat is niet af te leiden uit "de keten loopt door" — een fout in
-## available_when zou daar niet uit blijken maar hier wel.
+## Vier tickets staan meteen open (t02/t03/t04/t05 — west-cluster, vier
+## verschillende eigenaren); de andere vijf ontgrendelen tijdens de dag. De
+## oude belofte "elk ticket kan het eerste zijn" klopt dus niet meer. Wat
+## overeind blijft, in een nieuwe vorm:
+##
+##  1. de startstand zelf (precies deze vier, en alleen deze vier);
+##  2. elk van de vier startende tickets is zelfstandig oplosbaar als eerste;
+##  3. de haalbare eigendoms-garantie: het eigen ticket van elk personage zit
+##     in de eerste vier óf in de eerste ontsluitingsgolf, zodat niemand een
+##     hele dag begint met vier boodschappen van anderen;
+##  4. de finale blijft op slot tot 9/10.
+##
+## De echte vangrail — nooit een moment zonder open werk — staat niet hier maar
+## in `_test_geen_dood_punt()`, want die eist een andere aanpak (elke
+## bereikbare deelverzameling, niet elk eerste ticket).
 func _test_vrije_volgorde() -> void:
 	_kop("vrije volgorde")
 
+	const EERSTE_VIER: Array[StringName] = [&"t02", &"t03", &"t04", &"t05"]
+
 	QuestEngine.start_run(&"daan")
-	_ok(QuestEngine.open_tickets().size() == 9,
-		"bij de start staan er %d open, verwacht 9" % QuestEngine.open_tickets().size())
+	var open_bij_start := QuestEngine.open_tickets()
+	_ok(open_bij_start.size() == 4,
+		"bij de start staan er %d open, verwacht 4" % open_bij_start.size())
+	for t: TicketDef in open_bij_start:
+		_ok(t.id in EERSTE_VIER, "%s staat onverwacht open bij de start" % t.code)
 	_ok(Session.ticket_state(&"t10") == GameEnums.TicketState.LOCKED,
 		"t10 hoort dicht te zitten tot 9/10")
 	_ok(Session.discovered.is_empty(), "een verse sessie heeft al tickets gevonden")
 
-	# Elk van de negen als allereerste ticket van de dag.
-	for eerste: StringName in GameData.ticket_ids():
-		if eerste == &"t10":
-			continue
+	# Elk van de vier starttickets, los, als allereerste van de dag.
+	for eerste: StringName in EERSTE_VIER:
 		QuestEngine.start_run(&"daan")
 		var t: TicketDef = GameData.ticket(eerste)
 
@@ -1202,6 +1243,29 @@ func _test_vrije_volgorde() -> void:
 		_ok(Session.done_count() == 1,
 			"%s als eerste zette %d tickets klaar" % [t.code, Session.done_count()])
 
+	# De haalbare eigendoms-garantie. "Eerste ontsluitingsgolf" is hier
+	# concreet: rechtstreeks in de `unlocks`-lijst van een van de vier
+	# starttickets — dus ten hoogste één andere voltooiing verwijderd van de
+	# start, ongeacht welke van de vier de speler als eerste kiest.
+	var eerste_golf: Array[StringName] = []
+	for id: StringName in EERSTE_VIER:
+		for u: StringName in GameData.ticket(id).unlocks:
+			if not (u in eerste_golf):
+				eerste_golf.append(u)
+	for cid: StringName in GameData.character_ids():
+		var eigen: Array[StringName] = []
+		for id: StringName in GameData.ticket_ids():
+			if GameData.ticket(id).owner_character == cid:
+				eigen.append(id)
+		_ok(not eigen.is_empty(), "%s heeft geen eigen ticket" % cid)
+		var bereikt := false
+		for id: StringName in eigen:
+			if (id in EERSTE_VIER) or (id in eerste_golf):
+				bereikt = true
+		_ok(bereikt,
+			"%s: geen enkel eigen ticket zit in de eerste vier of de eerste ontsluitingsgolf (eigen: %s, golf: %s)"
+				% [cid, eigen, eerste_golf])
+
 	# De finale blijft de finale.
 	QuestEngine.start_run(&"daan")
 	Session.add_item(&"deploysleutel")
@@ -1214,11 +1278,73 @@ func _test_vrije_volgorde() -> void:
 	_ok(Session.is_available(&"t10"), "t10 gaat niet open bij 9/10")
 
 
+## De echte vangrail achter de nieuwe ontsluiting: nooit een moment zonder
+## open werk zolang er nog tickets liggen. Niet getest met een steekproef van
+## volgordes, maar exact: elke deelverzameling voltooide tickets die via een
+## geldige speelvolgorde bereikbaar is, wordt bezocht en gecontroleerd.
+##
+## Dat kan hier goedkoop, want de resulterende staat (welke tickets
+## LOCKED/AVAILABLE staan) hangt alleen af van wélke tickets al af zijn, niet
+## van de volgorde: elk reward_effect en elke unlock is onvoorwaardelijk en
+## draait precies een keer. Dus is een zoektocht over deelverzamelingen een
+## exacte dekking van élke speelvolgorde — inclusief de zeldzame die een
+## steekproef van 10! volgordes zou kunnen missen — in plaats van een
+## kansberekening.
+func _test_geen_dood_punt() -> void:
+	_kop("geen dood punt")
+
+	var bezocht: Dictionary = {}
+	var wachtrij: Array = [[]]
+	var tien_bereikt := false
+	var totaal := GameData.ticket_ids().size()
+
+	while not wachtrij.is_empty():
+		var pad: Array = wachtrij.pop_back()
+
+		var sleuteldelen: Array = pad.duplicate()
+		sleuteldelen.sort()
+		var sleutel := ""
+		for id: Variant in sleuteldelen:
+			sleutel += String(id) + ","
+		if bezocht.has(sleutel):
+			continue
+		bezocht[sleutel] = true
+
+		QuestEngine.start_run(&"daan")
+		for id: Variant in pad:
+			var t: TicketDef = GameData.ticket(StringName(id))
+			QuestEngine.complete(StringName(id), MinigameResult.make(t.minigame_id, GameEnums.Outcome.SUCCESS))
+		_ok(Session.done_count() == pad.size(),
+			"opbouw van pad %s klopt niet: %d/%d klaar" % [pad, Session.done_count(), pad.size()])
+
+		var open := QuestEngine.open_tickets()
+		if pad.size() < totaal:
+			_ok(not open.is_empty(), "dood punt na %d/%d tickets — pad: %s" % [pad.size(), totaal, pad])
+		else:
+			tien_bereikt = true
+
+		for t: TicketDef in open:
+			if not (t.id in pad):
+				var vervolg: Array = pad.duplicate()
+				vervolg.append(t.id)
+				wachtrij.append(vervolg)
+
+	_ok(tien_bereikt, "geen enkele bereikbare volgorde haalt %d/%d tickets" % [totaal, totaal])
+	# Vangnet: een test die per ongeluk niets doorzoekt keurt alles goed.
+	_ok(bezocht.size() > totaal,
+		"de zoektocht bezocht maar %d toestand(en); leest deze test de ontsluitingsketen wel?"
+			% bezocht.size())
+
+
 ## Het scrumbord in de gang draagt er twee. Zonder een resolver die dat ziet is
 ## het tweede ticket onbereikbaar zodra beide openstaan.
 func _test_gedeelde_ankers() -> void:
 	_kop("gedeelde ankers")
 	QuestEngine.start_run(&"daan")
+	# Dit gaat over de resolver, niet over de startstand (F3-a): ontgrendel
+	# alles zodat gedeelde ankers ook echt met twee open tickets getest worden.
+	for id: StringName in GameData.ticket_ids():
+		QuestEngine.unlock(id)
 
 	var ankers: Dictionary = {}
 	for id: StringName in GameData.ticket_ids():
@@ -1251,6 +1377,11 @@ func _test_gedeelde_ankers() -> void:
 func _test_vinden() -> void:
 	_kop("tickets vinden")
 	QuestEngine.start_run(&"daan")
+	# Dit gaat over de zone-plattegrond, niet over de startstand (F3-a):
+	# ontgrendel alles behalve de finale zodat elk ticket vindbaar getest wordt.
+	for id: StringName in GameData.ticket_ids():
+		if id != &"t10":
+			QuestEngine.unlock(id)
 
 	var zones: Array[StringName] = []
 	for id: StringName in GameData.ticket_ids():
@@ -1326,8 +1457,8 @@ func _test_startroutes() -> void:
 	_kop("startroutes")
 
 	QuestEngine.start_run(&"daan")
-	_ok(QuestEngine.open_tickets().size() == 9,
-		"start_run laat %d tickets open, verwacht 9" % QuestEngine.open_tickets().size())
+	_ok(QuestEngine.open_tickets().size() == 4,
+		"start_run laat %d tickets open, verwacht 4" % QuestEngine.open_tickets().size())
 
 	for pad: String in _gd_bestanden("res://scripts") + _gd_bestanden("res://autoload"):
 		if pad.ends_with("/quest_engine.gd") or pad.ends_with("/session.gd") \
