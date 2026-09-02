@@ -50,6 +50,13 @@ func _ready() -> void:
 	_panel.offset_top = -HOOGTE_MIN - MARGE_ONDER
 	_panel.offset_bottom = -MARGE_ONDER
 	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	# Naar bóven groeien, niet naar beneden. Een PanelContainer mag nooit kleiner
+	# worden dan zijn inhoud: meldt de inhoud meer dan wij hier neerzetten, dan
+	# rekt Godot hem op in de `grow_vertical`-richting, en die staat standaard op
+	# END. Dat is precies hoe het venster onderlangs het scherm uit schoof --
+	# de onderrand zat op 8px van de bodem, dus alles wat erbij kwam ging buiten
+	# beeld. Met BEGIN groeit hij het kantoor in, waar wel ruimte is.
+	_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	add_child(_panel)
 
 	var row := HBoxContainer.new()
@@ -136,15 +143,29 @@ func show_choices(options: Array[String]) -> void:
 ## Meet wat de inhoud nodig heeft en zet de bovenrand daarop. Eerst een frame
 ## wachten: containers weten hun minimum pas na een layout-pass.
 func _pas_hoogte_aan() -> void:
+	# Altijd mét fit_content meten. Staat die van een vorige, te lange regel nog
+	# uit, dan meldt het label 24px en meet deze regel de hoogte van de vorige.
+	_text.fit_content = true
+	_text.scroll_active = false
 	await get_tree().process_frame
 	if not is_instance_valid(_panel):
 		return
 	var nodig: float = _panel.get_combined_minimum_size().y
+
+	# HOOGTE_MAX was een clamp die niets klemde. `fit_content` laat het label
+	# zijn volledige teksthoogte als minimum melden, en een Control kan niet
+	# onder zijn minimum: het paneel werd alsnog zo hoog als de tekst, hoe laag
+	# we `offset_top` ook zetten. `scroll_active` alleen repareert dat niet --
+	# scrollen mag, maar zolang fit_content aanstaat vráágt het label de ruimte
+	# nog steeds op. Past het niet, dan gaat fit_content dus uit; pas dan zakt
+	# het minimum terug naar `custom_minimum_size` en klemt de clamp echt.
+	var past := nodig <= HOOGTE_MAX
+	_text.fit_content = past
+	_text.scroll_active = not past
+
 	var h: float = clampf(nodig, HOOGTE_MIN, HOOGTE_MAX)
 	_panel.offset_top = -h - MARGE_ONDER
 	_panel.offset_bottom = -MARGE_ONDER
-	# Past het echt niet, dan mag hij alsnog scrollen in plaats van klippen.
-	_text.scroll_active = nodig > HOOGTE_MAX
 
 
 func typing() -> bool:

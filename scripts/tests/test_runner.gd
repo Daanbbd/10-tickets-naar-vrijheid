@@ -58,6 +58,7 @@ func _ready() -> void:
 	_test_uitlijnen_perfect()
 	_test_wereldhandelingen()
 	_test_urenstaat_scherm()
+	await _test_dialoogvenster_past()
 	_rapport()
 
 
@@ -2910,3 +2911,83 @@ func _test_urenstaat_scherm() -> void:
 		"urenstaat: de echte flow boekt geen volle dag")
 
 	mg.queue_free()
+
+
+## Het dialoogvenster blijft binnen het scherm, hoe lang de regel ook is.
+##
+## `DialogueBox` zet het paneel vast aan de ONDERrand (anchor 1.0, onderkant op
+## MARGE_ONDER) en rekent de bovenrand terug uit de gemeten inhoud. Twee dingen
+## konden dat onderuithalen, en samen deden ze dat ook:
+##
+##   1. `grow_vertical` stond op de standaard END. Een Control kan niet kleiner
+##      dan zijn `get_combined_minimum_size()`; wordt hij opgerekt, dan gebeurt
+##      dat in de groeirichting. Naar beneden, vanaf 8px boven de bodem.
+##   2. `fit_content` bleef aan, ook boven HOOGTE_MAX. Het label meldde zijn
+##      volledige teksthoogte als minimum, dus de clamp op HOOGTE_MAX klemde
+##      niets: het paneel werd zo hoog als de tekst en schoof het beeld uit.
+##
+## Dit is een zichtbare bug zonder foutmelding -- de regel is er gewoon niet
+## meer -- en hij treft juist de langste teksten, die het spel bewust heeft
+## (Dirks urenstaatregels, de briefing van de eigenaar). Vandaar een meting op
+## de echte node in plaats van een constante-vergelijking.
+func _test_dialoogvenster_past() -> void:
+	_kop("het dialoogvenster past op het scherm")
+
+	var box := DialogueBox.new()
+	add_child(box)
+	await get_tree().process_frame
+
+	var vp: float = get_viewport().get_visible_rect().size.y
+	var paneel := box.get_child(0) as Control
+
+	# Van kort tot absurd. De laatste twee kunnen in het echte spel niet
+	# voorkomen; ze staan er zodat de rand van het gedrag gemeten wordt en niet
+	# alleen het geval dat toevallig nu past.
+	var gevallen := {
+		"korte regel": "Ik ben iets te vroeg. Dat doe ik altijd.",
+		"Dirk, volledig": "Hoi Daan, even een klein seintje. Er staat vandaag tot nu " +
+			"toe 0u geboekt, terwijl de verwachting rond de 4u ligt. Zou je je uren " +
+			"aanvullen als er nog wat mist? Alvast bedankt!",
+		"twee keer Dirk": ("Er staat vandaag tot nu toe 0u geboekt, terwijl de " +
+			"verwachting rond de 4u ligt. ").repeat(2),
+		"absurd lang": "Het logo mag groter, maar niet te groot. ".repeat(12),
+	}
+
+	for naam: String in gevallen:
+		var tekst := String(gevallen[naam])
+		box.show_line("Mevrouw P. Aardenmens", tekst, null)
+		# Twee frames: `_pas_hoogte_aan()` meet zelf pas ná een layout-pass.
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var top: float = paneel.global_position.y
+		var onder: float = top + paneel.size.y
+		_ok(onder <= vp + 0.5,
+			"dialoogvenster (%s, %d tekens) loopt %.0f px onder het scherm door" % [
+				naam, tekst.length(), onder - vp])
+		_ok(top >= -0.5,
+			"dialoogvenster (%s) begint %.0f px boven het scherm" % [naam, -top])
+		_ok(paneel.size.y <= DialogueBox.HOOGTE_MAX + 0.5,
+			"dialoogvenster (%s) is %.0f px hoog, HOOGTE_MAX zegt %.0f" % [
+				naam, paneel.size.y, DialogueBox.HOOGTE_MAX])
+
+	# En met keuzeknoppen erbij, want die groeien onder de tekst aan en lopen
+	# via dezelfde meting.
+	box.show_line("", String(gevallen["Dirk, volledig"]), null)
+	await get_tree().process_frame
+	box.show_choices(["Ik vul ze aan.", "Ik doe het morgen.", "Ik boek nu."] as Array[String])
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var onder_keuzes: float = paneel.global_position.y + paneel.size.y
+	_ok(onder_keuzes <= vp + 0.5,
+		"dialoogvenster met drie keuzes loopt %.0f px onder het scherm door" % (onder_keuzes - vp))
+
+	# De hoogte moet ook weer terug kunnen: een lange regel mag het venster niet
+	# permanent opgeblazen achterlaten voor de korte regel erna.
+	box.show_line("", "Done.", null)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_ok(paneel.size.y <= DialogueBox.HOOGTE_MIN + 0.5,
+		"na een lange regel blijft het venster %.0f px hoog voor 'Done.', HOOGTE_MIN is %.0f" % [
+			paneel.size.y, DialogueBox.HOOGTE_MIN])
+
+	box.queue_free()
