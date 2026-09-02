@@ -2,12 +2,19 @@ extends MinigameBase
 ## BBD-208 — De renderpijplijn. Koen wil alles in piepelienies gieten zodat het
 ## automatisch gaat; jij mag het eerst een minuut met de hand doen.
 ##
-## Vier stages onder elkaar, zes clips, en één plek waar het pijn doet: een clip
+## Drie stages onder elkaar, zes clips, en één plek waar het pijn doet: een clip
 ## die rijp is en in Render blijft staan verbrandt credits per seconde. Dat is
 ## ook waarom `kost` alleen op een *rijpe* clip drukt en niet op de hele
 ## renderduur — vijf clips maal vijf seconden maal zes credits is anderhalf keer
 ## het budget, en dan valt er niets te spelen. De druk hoort te zitten in laten
 ## staan, niet in renderen.
+##
+## Was vier stages (Prompt → Render → Review → Publish); Review kostte nooit
+## credits en voegde alleen een derde tik per clip toe zonder een nieuwe
+## afweging. Weg ermee: Render blijft de enige stap die pijn doet, en dat is nu
+## ook de enige rij waar je goed moet opletten. De statusregel bovenaan blijft
+## het enige tellertje — de losse "X/Y"-chip naast Publish is geschrapt, want
+## die herhaalde precies wat daar al stond.
 ##
 ## Al het rijpen, alle kosten en de hele klok lopen in één `_process` op deze
 ## node. Clips verdwijnen en verhuizen, dus een `_process` of een tween per
@@ -19,7 +26,6 @@ extends MinigameBase
 const _BLOK := Vector2(50, 34)
 const _CHIP := Vector2(12, 22)
 const _NAAM_BREED := 48.0
-const _TELLER_BREED := 26.0
 const _REGELS := 3
 
 ## Tempo waarmee Prompt zich vanzelf vult. Een lege eerste stage is dodelijk in
@@ -57,7 +63,6 @@ var _qa: bool = false
 
 var _knop: Button = null
 var _caption: Label = null
-var _teller: Label = null
 
 
 func _on_setup() -> void:
@@ -149,16 +154,6 @@ func _bouw_rij(i: int) -> PanelContainer:
 	vak.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(vak)
 	_vakken.append(vak)
-
-	if i == _laatste():
-		_teller = UiKit.label("", UiKit.FS_SMALL, UiKit.GROEN)
-		_teller.autowrap_mode = TextServer.AUTOWRAP_OFF
-		_teller.clip_text = true
-		_teller.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		_teller.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_teller.custom_minimum_size = Vector2(_TELLER_BREED, _CHIP.y)
-		_teller.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		h.add_child(_teller)
 
 	return rij
 
@@ -424,8 +419,6 @@ static func _plat(kleur: Color) -> StyleBoxFlat:
 func _update_status() -> void:
 	set_status("%d cr  ·  %d s  ·  %d/%d" % [
 		maxi(0, ceili(_credits)), maxi(0, ceili(_tijd)), _gepubliceerd, _doel])
-	if _teller != null:
-		_teller.text = "%d/%d" % [_gepubliceerd, _doel]
 	if _knop != null:
 		var over := _totaal - _volgende
 		_knop.disabled = over <= 0 or not _plek(0)

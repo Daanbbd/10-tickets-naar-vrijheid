@@ -600,13 +600,6 @@
     "kost": 6
    },
    {
-    "id": "review",
-    "label": "Review",
-    "capaciteit": 2,
-    "duur": 3.0,
-    "kost": 0
-   },
-   {
     "id": "publish",
     "label": "Publish",
     "capaciteit": 9,
