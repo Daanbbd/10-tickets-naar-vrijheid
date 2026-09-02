@@ -82,7 +82,8 @@ def rect(x0, y0, x1, y1, ch):
 #           oost       : De Gang, met het Vergaderhokje op x30-38 en de
 #                        grote tafel met planten op x55-92
 #   y14-24  De Vloer: vijf bureau-eilanden (8·4·4·4·4) en twee plantenkasten,
-#           met de voordeur op de westwand en het scrumbord ernaast
+#           met de voordeur op de westwand — direct onder het serverhok, met
+#           het trappenhuis eronder — en het scrumbord ernaast
 #   y25     buitenwand, raamzijde
 #
 # Wat hier veranderde t.o.v. de eerste opzet, en waarom:
@@ -150,8 +151,19 @@ rect(11, 0, 11, 0, 'H')       # prikbord met de losse mini-tickets
 rect(12, 0, 25, 0, 'k')       # "Kast (Blauw)"
 rect(26, 0, 40, 0, 'w')       # "RAAM"
 
-# ---- Voordeur op de westwand, in de bureauband: de wincondititie ----
-rect(0, 16, 0, 18, 'V')
+# ---- Voordeur op de westwand, direct onder het serverhok: de wincondititie ----
+# De tweede schets tekent trappenhuis en ingang strak tegen elkaar, meteen onder
+# het serverhok. Hij stond op y16-18, met y15 als lege tegelrij ertussen; dat gat
+# staat op geen enkele schets. Nu sluit de bovenste deurtegel aan op de zuidwand
+# van het Patchhok (y14).
+rect(0, 15, 0, 17, 'V')
+
+# ---- Trappenhuis: decor achter de ingang, per definitie niet te betreden ----
+# Hier komt iedereen normaal binnen, dus het hóórt in beeld te staan — maar het
+# ligt buiten deze verdieping. Vandaar geen kamer en geen deur: twee tegels in de
+# buitenwand zelf, direct onder de voordeur, waar je door een glazen pui tegen de
+# traptreden aan kijkt. Het kost geen vloer en kan dus ook geen route breken.
+rect(0, 18, 0, 19, 'X')
 
 # ---- Entree: geen balie. De receptie zit op een andere verdieping; deze
 # verdieping is puur kantoor. Een scherm, een bank, en verder is het gang.
@@ -201,9 +213,16 @@ rect(89, 3, 89, 5, 's')
 rect(81, 1, 84, 1, 'm')       # deploycomputer aan de noordwand
 
 # ---- De Gang: de blauwe tijger, het vergaderhokje en de grote tafel ----
-# De tijger staat in de open ruimte tussen de koffiecorner en Summit: het eerste
-# wat je ziet als je de gang in kijkt.
-rect(38, 4, 38, 4, 'Y')
+# De tijger staat in de open ruimte tussen de koffiecorner (accent tot x36) en de
+# westwand van Summit (x42): het eerste wat je ziet als je de gang in kijkt.
+#
+# Hij stond op y4 en was daar in het spel niet te zien. De camera klemt verticaal
+# volledig vast en de HUD dekt de bovenste vijf à zes tegelrijen af (zie
+# docs/TESTING.md); op een shot van --kijk=38,5 stak alleen de onderste strook
+# pixels onder de kompasstrip uit. y6 is de eerste rij die er helemaal onder
+# vandaan komt, ligt nog steeds in dezelfde open ruimte, en zet hem bovendien
+# tegen de gangmond op y7 aan in plaats van tegen de noordband.
+rect(38, 6, 38, 6, 'Y')
 
 # Vergaderhokje: vrijstaand blok in de gang, onder de koffiecorner. Hier ligt de
 # iPad van t08 — het anker, de zone en de accentvloer vallen nu samen.
@@ -283,6 +302,7 @@ LEGEND = {
     "=": {"kind": "glass", "solid": True},
     "V": {"kind": "exit",  "solid": True,  "prop": "voordeur"},
     "N": {"kind": "wall",  "solid": True,  "prop": "nooduitgang"},
+    "X": {"kind": "wall",  "solid": True,  "prop": "trappenhuis"},
     "B": {"kind": "prop",  "solid": True,  "prop": "balie"},
     "P": {"kind": "prop",  "solid": True,  "prop": "printer"},
     "T": {"kind": "prop",  "solid": True,  "prop": "ticketbord"},

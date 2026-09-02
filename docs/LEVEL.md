@@ -53,9 +53,27 @@ schets zijn het twee ruimtes op elkaar aan het westeinde: toilet boven
 daaronder**, in de bureauband — vandaar dat de Entree nu op y14–24 ligt en niet
 meer in de gang.
 
-Het trappenhuis is vervallen. Het vulde de noordwesthoek die nu het toilet is,
-het was per definitie niet te betreden, en de schets kent het niet. Legenda-teken
-`X` is daarmee weg.
+### Trappenhuis en ingang zitten strak tegen elkaar
+
+Een tweede, preciezere schets zet het label "Trappenhuis (niet toegankelijk,
+achter ingang)" pal naast "De ingang", met een deurzwaai ertussen, en beide
+meteen ónder het serverhok — zonder tussenruimte. Zo staat het nu ook:
+
+- De **voordeur** stond op x0, y16–18, met y15 als lege tegelrij tussen de
+  zuidwand van het Patchhok (y14) en de deur. Dat gat staat op geen enkele
+  schets. De deur staat nu op **x0, y15–17** en sluit dus aan op y14.
+- Het **trappenhuis** is terug als decor: **x0, y18–19**, direct onder de
+  voordeur. Legenda-teken `X` is daarmee weer in gebruik, maar met een andere
+  betekenis dan vroeger. Toen was het een kamer die je per definitie niet in
+  kon; nu is het geen kamer maar twee tegels in de buitenwand zelf, met een
+  glazen pui waar je tegen de traptreden aan kijkt. Dat is de eerlijke
+  weergave: hier komt iedereen normaal binnen, maar de trap ligt buiten deze
+  verdieping. Het kost geen vloer, dus het kan ook geen route breken.
+
+`SPAWN` (`[2, 17]`) en het `voordeur`-object in `objects.json` (`[1, 17]`)
+liggen nog steeds tegen de deur aan — y17 is de onderste deurtegel — en zijn
+daarom niet mee verplaatst. Het spawnpunt naar het midden (`[2, 16]`) trekken
+kan niet: daar staat de `bezorger`.
 
 ### De koffiecorner is een eiland, geen kamer
 
@@ -76,6 +94,21 @@ lagen ook `hokje_ipad` (het **anker van t08**), `hokje_telefoon` en
 `samen_bingo_poster`. Het anker lag dus buiten de zone die het ontdekt. Het
 hokje staat nu op x30–38, y8–11 waar de schets het zet; anker, zone en
 accentvloer vallen daarmee weer samen.
+
+### De blauwe tijger stond achter de HUD
+
+Hij hoort in de open ruimte tussen de koffiecorner (accent tot x36) en de
+westwand van Summit (x42), en dat klopte: x38. De **hoogte** klopte niet. Hij
+stond op y4, en de camera klemt verticaal volledig vast terwijl de HUD de
+bovenste vijf à zes tegelrijen afdekt (zie `docs/TESTING.md`). Op een shot van
+`--kijk=38,5` stak alleen de onderste strook pixels onder de kompasstrip uit —
+het landmark van de gang was in het spel praktisch onzichtbaar.
+
+Hij staat nu op **x38, y6**: dezelfde open ruimte, maar de eerste rij die
+helemaal onder de HUD vandaan komt, en pal boven de gangmond op y7. Het
+`blauwe_tijger`-object in `objects.json` verhuisde mee van `[38, 5]` naar
+`[38, 7]` — de begaanbare tegel er direct onder, waar de speler staat als hij
+hem onderzoekt.
 
 ## Zones (11)
 
@@ -145,7 +178,10 @@ met bank · `w` raam · `z` speaker. Alle drie staan ze óók in `CHARS` in
 `gen_tiles.py` — zonder atlas-coördinaat rendert een nieuw teken stil als
 gewone vloer.
 
-En met de diepteronde: `F` muur met face · `1`/`2`/`3` raamlicht. Plus twee
+En met de diepteronde: `F` muur met face · `1`/`2`/`3` raamlicht. Daarna `X`
+trappenhuis — geen eigen kunststijl, maar `draw_wall()` met een glazen pui
+erin; de traptreden liggen op een veelvoud van 4 px zodat twee van die tegels
+op elkaar één doorlopende trap vormen. Plus twee
 tegels die wél een atlas-coördinaat hebben maar géén legenda-letter zijn, omdat
 ze nooit in het grid staan: `,` en `;`, de vloervarianten die `world_builder`
 zelf kiest.

@@ -3,7 +3,7 @@
 ## Status (bijgewerkt 2 september 2026)
 
 **F0, F1 en F2 zijn klaar en gemerged in `main`.** Testsuite staat op
-**16.872 controles, 0 fout, ALLES GOED** (baseline bij de start van dit plan
+**16.873 controles, 0 fout, ALLES GOED** (baseline bij de start van dit plan
 was 16.658). F3 t/m F6 zijn nog niet begonnen.
 
 | Fase | Status | Noot |
@@ -12,7 +12,7 @@ was 16.658). F3 t/m F6 zijn nog niet begonnen.
 | F0-b kapotte layouts | ✅ Klaar | Ook `ui_kit.gd`/`mg_slotboard.gd`'s dode minimum-overrides meegepakt |
 | F0-c dode data/code | ✅ Klaar | Zie "Afwijkingen" hieronder — groter dan de briefing beschreef |
 | F0-d losse eindjes | 🟡 Klaar, één blokkade | Dirks portret kan niet: `assets/personen/dirk.png` (bronfoto) ontbreekt — heeft een foto van jou nodig |
-| F1-a vloer herontwerp | 🟡 Klaar, met een openstaand correctiepunt | Zie "Openstaande beslissingen" — de toilet/serverhok/ingang-hoek moet nog herzien worden |
+| F1-a vloer herontwerp | ✅ Klaar | Beide correcties uit de tweede schets zijn doorgevoerd — zie "Correcties uit de tweede schets" |
 | F1-b 40% vloer belonen | ⬜ Geen eigen actie | Realiseert zichzelf via F3-a (toilet) en F4-b (paardenbugs) — nog te doen als onderdeel daarvan |
 | F1-c prop-art en diepte | ✅ Klaar | Vond en repareerde de y-sort-bug zelf; ontdekte dat HUD+balk ~6,5 tegelrijen permanent afdekken (gedocumenteerd in `docs/TESTING.md`) |
 | F2-a typografie | ✅ Klaar | Fonts gedownload, geen fallback nodig |
@@ -25,21 +25,24 @@ was 16.658). F3 t/m F6 zijn nog niet begonnen.
 | F5 Wereld van pause af | ⬜ Nog te doen | — |
 | F6 Verificatie en docs | ⬜ Nog te doen | — |
 
-### Openstaande beslissingen (niet acteren zonder overleg)
+### Correcties uit de tweede schets (afgehandeld)
 
 Uit een tweede, preciezere schets kwamen twee correcties naar boven op wat
-F1-a al bouwde. **Vastgelegd, bewust nog niet doorgevoerd:**
+F1-a al bouwde. **Beide zijn nu doorgevoerd**, details in `docs/LEVEL.md`:
 
-1. **Trappenhuis + de ingang-hoek.** F1-a heeft het trappenhuis volledig
-   verwijderd (onbereikbaar, stond niet op de eerdere schets). De nieuwe
-   schets toont het juist als zichtbaar-maar-niet-toegankelijk decor vlak bij
-   de ingang — en onthult dat de huidige plaatsing van toilet + serverhok
-   t.o.v. de ingang niet klopt (mensen komen daar normaliter binnen). Dit
-   raakt de westhoek van de vloer opnieuw en moet in samenhang worden
-   herzien, niet als los patchje.
-2. **"Blauwe tijger."** Een bestaand asset in het spel dat op de nieuwe
-   schets omcirkeld staat tussen de kastenwand en Summit — moet daar correct
-   geplaatst worden. Nog te doen.
+1. **Trappenhuis + de ingang-hoek.** ✅ De voordeur stond op x0, y16–18 met een
+   lege tegelrij (y15) tussen zichzelf en de zuidwand van het Patchhok; de
+   schets tekent trappenhuis en ingang strak tegen elkaar, meteen onder het
+   serverhok. De deur staat nu op **x0, y15–17** en sluit dus aan op y14. Het
+   trappenhuis is terug als **decor op x0, y18–19**: geen kamer, maar twee
+   tegels in de buitenwand zelf met een glazen pui waar je tegen de traptreden
+   aan kijkt. Legenda-teken `X` is daarmee weer in gebruik. Het kost geen
+   vloer, dus bereikbaarheid blijft 0 onbereikbaar.
+2. **"Blauwe tijger."** ✅ De x klopte (x38, tussen koffiecorner en Summit), de
+   y niet: op y4 zat hij achter de HUD, die de bovenste vijf à zes tegelrijen
+   afdekt. Hij staat nu op **x38, y6** — dezelfde open ruimte, eerste rij die
+   er helemaal onder vandaan komt. Het `blauwe_tijger`-object verhuisde mee
+   van `[38, 5]` naar `[38, 7]`.
 3. De bureau-eiland-indeling (8·4·4·4·4) is **bevestigd correct** zoals
    F1-a hem bouwde — geen actie nodig.
 

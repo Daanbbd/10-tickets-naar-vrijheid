@@ -13,7 +13,7 @@ T = 16
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # volgorde bepaalt de atlas-kolom
-CHARS = (list(".D#=VNBPTbtcKfxSAWmpo") + list("EOLGI") + list("H")
+CHARS = (list(".D#=VNXBPTbtcKfxSAWmpo") + list("EOLGI") + list("H")
          + list("uRnljYJqsr") + list("C") + list("kwz") + list("_")
          + list("F") + list("123") + list(",;"))
 
@@ -141,6 +141,20 @@ def build(ch):
         d.rectangle([2, 3, T - 3, T - 2], fill=rgba("groen_donker"))
         d.line([(2, 7), (T - 3, 10)], fill=rgba("geel"))
         d.line([(2, 10), (T - 3, 7)], fill=rgba("geel"))
+    elif ch == "X":  # trappenhuis achter de ingang — decor, niet te betreden
+        # Geen eigen kunststijl: dit is dezelfde muur als overal (`draw_wall`),
+        # met een glazen pui erin waar je tegen de traptreden aan kijkt. De kap
+        # van de onderste tegel leest daarbij als het bordes tussen twee steken,
+        # dus twee van deze tegels op elkaar geven een trap en geen twee losse
+        # hokjes.
+        draw_wall(d)
+        d.rectangle([1, 3, T - 2, T - 2], fill=rgba("schaduw"))
+        for y in range(4, T - 2, 4):
+            d.line([(2, y), (T - 3, y)], fill=rgba("lichtgrijs"))
+            d.line([(2, y + 1), (T - 3, y + 1)], fill=rgba("grijs"))
+        d.line([(T - 4, 3), (T - 4, T - 2)], fill=rgba("bluebird_licht"))  # leuning
+        d.rectangle([1, 3, T - 2, T - 2], outline=rgba("glas_rand", 200))
+        d.line([(1, 3), (T - 2, 3)], fill=rgba("glas", 120))
     elif ch == "B":  # receptiebalie
         furn(d, "hout", "hout_licht")
         d.rectangle([2, 1, T - 3, 3], fill=rgba("bluebird"))
