@@ -48,6 +48,10 @@ var _doelwit: Node2D = null
 ## Alleen voor de speelbeurt-harnas: hoeveel meldingen van De Klant er gevallen zijn.
 var _klant_meldingen: int = 0
 
+## De tik-ring op het huidige interactable, of null. Eigenaarschap hier, net
+## als bij `_doelwit`/`ObjectiveMarker`: er leeft er maximaal één.
+var _tikmarker: TapMarker = null
+
 ## Zolang de intro loopt houdt de vloer zijn tickets vast. Zonder dit vuurt
 ## _report_tile() op physics-frame 1 al een toast af over BBD-203: boven de
 ## infade, voordat het spel het woord "ticket" heeft gezegd, en zonder dat de
@@ -102,6 +106,9 @@ func _ready() -> void:
 	mutator.replay_all()
 
 	_spawn_player()
+	# Besturing.setup() draaide hierboven al, vóórdat de speler bestond — de
+	# tik-hit-test heeft player.probe nodig, dus die referentie komt pas nu.
+	besturing.set_speler(player)
 	npc_layer.spawn_initial()
 	camera.setup(player, builder.world_rect())
 	# Generaliseert Dirk: welke collega's langskomen, wat er stukgaat, staat in
@@ -115,6 +122,13 @@ func _ready() -> void:
 	Bus.follower_joined.connect(func(_a: StringName) -> void: _refresh_marker())
 	Bus.follower_released.connect(func(_a: StringName) -> void: _refresh_marker())
 	Bus.flag_changed.connect(func(_a: StringName, _b: bool) -> void: _refresh_marker())
+	Bus.interaction_prompt_changed.connect(_op_tik_doel_veranderd)
+	# Verbergen, niet vernietigen: InteractionProbe.refresh() wordt nergens
+	# aangeroepen, dus na een dialoog/minigame vuurt interaction_prompt_changed
+	# niet opnieuw als het doelwit ondertussen niet veranderd is.
+	Bus.input_lock_changed.connect(func(locked: bool) -> void:
+		if is_instance_valid(_tikmarker):
+			_tikmarker.visible = not locked)
 	_refresh_marker()
 	Bus.game_started.emit()
 	AudioDirector.set_base(&"kantoor")
@@ -184,6 +198,22 @@ func _mark_node(n: Node2D) -> void:
 	m.meter_per_px = builder.meters_per_pixel()
 	n.add_child(m)
 	_doelwit = n
+
+
+## Volgt hetzelfde signaal als de HUD-prompt en de (voormalige) actieknop: het
+## huidige interactable van de speler. Alleen kern-objecten die nog nooit
+## aangetikt zijn krijgen de ring — zie `Interactable.should_show_tik_marker()`.
+func _op_tik_doel_veranderd(_text: String, shown: bool, _world_id: StringName, _verb: String) -> void:
+	if is_instance_valid(_tikmarker):
+		_tikmarker.queue_free()
+	_tikmarker = null
+	if not shown:
+		return
+	var it := player.probe.current()
+	if it == null or not it.should_show_tik_marker():
+		return
+	_tikmarker = TapMarker.new()
+	it.add_child(_tikmarker)
 
 
 ## De kompasstrip in de HUD: waar sta jij, waar staat je doel, op ware schaal.
@@ -482,6 +512,8 @@ func _interact_with(it: Interactable) -> void:
 	# knopbalk geeft een TIK zodra je hem raakt, dit is de bevestiging dat er
 	# aan de andere kant ook echt iets stond.
 	Haptiek.tril(Haptiek.Sterkte.STOOT)
+	if it.is_core_kind():
+		it.markeer_getikt()
 	match it.kind:
 		Interactable.Kind.TICKET:
 			tickets.handle(it.ticket_id, it)

@@ -10,7 +10,13 @@ extends CanvasLayer
 ## spellen met dezelfde inhoud, en van die twee werd de mobiele helft nooit
 ## gespeeld maar alleen bekeken — alle QA-shots stonden op `--touch` terwijl er
 ## met een toetsenbord getest werd. Nu is de balk er altijd en zijn toetsen
-## sneltoetsen: WASD, E, Tab en Q doen precies wat de stick en de knoppen doen.
+## sneltoetsen: WASD, E, Tab en Q doen precies wat de stick, de knoppen en een
+## tik op een interactable doen.
+##
+## **Geen actieknop meer.** Die volgde alleen passief welk object het
+## dichtstbij was en bleef, leeg en uitgegrijsd, altijd ruimte in de balk
+## innemen. Tikken op het object zelf is directer én scheelt de plek: zie
+## `_probeer_tik()`.
 ##
 ## Deze laag maakt geen eigen invoerbegrip. Hij drukt de bestaande acties in
 ## (`move_*`, `sprint`, `interact`, `ticketboard`, `hint`), zodat player.gd en
@@ -26,8 +32,9 @@ const SPRINT_DREMPEL := 0.82  ## verder uitduwen dan dit is rennen
 
 const MARGE := 4
 
-## De twee hulpknoppen dragen een glyph en hoeven niet mee te groeien; de
-## actieknop krijgt de rest van de balk.
+## De drie hulpknoppen dragen een glyph en hoeven niet mee te groeien; de balk
+## krimpt tot precies hun breedte plus de tussenruimte — er is geen actieknop
+## meer die de rest opeist.
 const HULP_BREEDTE := 26
 
 ## Wat een knop hier werkelijk hoog is.
@@ -64,13 +71,31 @@ const BALK_RUIMTE := MARGE + BALK_HOOGTE + 2
 const ZONE_BREEDTE := 0.5
 const ZONE_TOP := 0.38
 
+## Voorbij dit punt (canvaspixels) is een druk-en-loslaat een sleep, geen tik.
+## Ook wat de joystick zelf mag uitwijken voordat loslaten niet meer als tik
+## telt — zie `_input()`.
+const TIK_DREMPEL := 8.0
+
+## Hoe dicht een tik bij de schermprojectie van het huidige interactable moet
+## vallen om te gelden. Dezelfde, al gevalideerde duimmaat als de knoppen —
+## zie `KNOP_HOOGTE` hierboven voor waar dat getal vandaan komt.
+const TIK_STRAAL := UiKit.KNOP_MIN_H
+
 var _stick: Control
 var _balk: PanelContainer
-var _actieknop: Button = null
 var _vinger: int = -1
 var _midden: Vector2 = Vector2.ZERO
 var _uitslag: Vector2 = Vector2.ZERO
 var _ingedrukt: Array[StringName] = []
+
+## Vingerindex van een kandidaat-tik, los van de joystick-vinger. Blijft -99
+## zolang er geen kandidaat is; een echte vingerindex is nooit negatief.
+var _tik_index: int = -99
+var _tik_start: Vector2 = Vector2.ZERO
+
+## Voor `_probeer_tik()`: main.gd zet dit ná het spawnen van de speler, want
+## `setup()` hieronder draait daarvóór.
+var _speler: Player = null
 
 
 func setup() -> void:
@@ -92,24 +117,26 @@ func setup() -> void:
 	_bouw_balk(UiKit.veilige_laag(root))
 
 	Bus.input_lock_changed.connect(_on_input_lock)
-	Bus.interaction_prompt_changed.connect(_on_prompt)
+
+
+## Main.gd roept dit aan ná het spawnen van de speler — die bestaat nog niet
+## als `setup()` hierboven draait.
+func set_speler(p: Player) -> void:
+	_speler = p
 
 
 # --- De balk --------------------------------------------------------------
 
-## Eén paneel over de volle breedte in plaats van drie losse knoppen die op
-## 82% dekking boven het kantoor zweefden. Dat zweven was het probleem: het
-## las als drie stickers op de ruit en niet als de rand van het spel. Een balk
-## met een eigen ondergrond is chrome — je kijkt eroverheen naar het kantoor,
-## niet ernaar.
+## Eén paneel dat om zijn drie knoppen sluit, tegen de linkerkant. Stond
+## eerder over de volle breedte omdat de actieknop de rest opeiste; zonder
+## die knop is een balk die toch de volle breedte blijft claimen alleen nog
+## een lege plak achtergrond — dode ruimte in plaats van chrome.
 func _bouw_balk(ouder: Control) -> void:
 	_balk = PanelContainer.new()
 	_balk.add_theme_stylebox_override("panel",
 		UiKit.panel_krap(UiKit.PANEL_DARK, UiKit.INK))
-	_balk.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_balk.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	_balk.offset_left = MARGE
-	_balk.offset_right = -MARGE
-	_balk.offset_top = -MARGE - BALK_HOOGTE
 	_balk.offset_bottom = -MARGE
 	# Als de inhoud ooit toch meer nodig heeft, groeit hij omhoog de wereld in.
 	# Standaard groeit een Control naar END, en dat is hier de onderrand van het
@@ -129,17 +156,11 @@ func _bouw_balk(ouder: Control) -> void:
 	# in het menu zelf: dan staat deze balk op pauze.
 	_knop(rij, "≡", &"cancel", HULP_BREEDTE)
 
-	# De actieknop draagt het werkwoord van waar je voor staat — "Openen",
-	# "Praten" — in plaats van een toetsnaam. Een knop die "E" heet verwijst
-	# naar een toetsenbord dat er niet altijd is; een knop die "Openen" heet
-	# vertelt je wat er gebeurt als je hem indrukt.
-	#
-	# Hij verdwijnt niet als er niets in bereik is, want dan valt er een gat in
-	# de balk en verspringt de rest. Hij gaat op slot en bleekt uit: dezelfde
-	# plek, zichtbaar leeg. Zie de `disabled`-stijl in UiKit.button().
-	_actieknop = _knop(rij, "", &"interact", 0)
-	_actieknop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_actieknop.disabled = true
+	# Horizontaal anchor_left == anchor_right (BOTTOM_LEFT), dus de breedte komt
+	# uitsluitend uit deze size-toewijzing; get_combined_minimum_size() is een
+	# zuivere optelling over de zojuist toegevoegde knoppen, geen deferred
+	# layout-pas nodig.
+	_balk.size = _balk.get_combined_minimum_size()
 
 
 func _knop(rij: HBoxContainer, tekst: String, actie: StringName, breedte: int) -> Button:
@@ -154,16 +175,6 @@ func _knop(rij: HBoxContainer, tekst: String, actie: StringName, breedte: int) -
 	return b
 
 
-## De actieknop volgt exact dezelfde melding als de prompt in de HUD, zodat er
-## nooit een werkwoord staat voor iets wat niet in bereik is.
-func _on_prompt(_text: String, shown: bool, _world_id: StringName, verb: String) -> void:
-	if _actieknop == null:
-		return
-	var aan := shown and not Session.input_locked
-	_actieknop.disabled = not aan
-	_actieknop.text = verb if aan else ""
-
-
 ## Een echte InputEventAction, geen Input.action_press: main.gd leest deze
 ## acties in _unhandled_input, en dat ziet alleen gebeurtenissen die door de
 ## invoerpijplijn komen.
@@ -176,7 +187,7 @@ func _actie(actie: StringName, ingedrukt: bool) -> void:
 	Input.parse_input_event(ev)
 
 
-# --- Joystick -------------------------------------------------------------
+# --- Joystick + tikken ------------------------------------------------------
 
 ## De muis mag de joystick aandrijven zolang er geen aanraakscherm is; de
 ## afweging daarachter staat bij `Invoer.muis_als_vinger()`. Een eigen index,
@@ -187,6 +198,7 @@ const MUIS_INDEX := -2
 func _input(event: InputEvent) -> void:
 	if Session.input_locked or Shell.minigame_active():
 		_los()
+		_tik_index = -99
 		return
 
 	# Beide soorten gebeurtenissen naar dezelfde drie waarden brengen, zodat de
@@ -224,6 +236,10 @@ func _input(event: InputEvent) -> void:
 			_uitslag = (positie - _midden).limit_length(STRAAL)
 			_stuur(_uitslag / STRAAL)
 			_stick.queue_redraw()
+		elif index == _tik_index and positie.distance_to(_tik_start) > TIK_DREMPEL:
+			# Te ver gesleept om nog een tik te zijn — gewoon een vinger die
+			# over lege wereld beweegt.
+			_tik_index = -99
 	elif neer:
 		if _vinger == -1 and _in_zone(positie):
 			_vinger = index
@@ -231,18 +247,55 @@ func _input(event: InputEvent) -> void:
 			_stuur(Vector2.ZERO)
 			_stick.visible = true
 			_stick.queue_redraw()
+		elif _tik_index == -99 and not _op_balk(positie):
+			_tik_index = index
+			_tik_start = positie
 	elif index == _vinger:
+		# Nauwelijks uitgeweken: dit was eerder een tik dan een sleepgebaar,
+		# ook al viel de neergaande druk toevallig in de joystickzone. Zo hoeft
+		# een object daar niet apart behandeld te worden.
+		var was_tik := _uitslag.length() <= TIK_DREMPEL
 		_los()
+		if was_tik:
+			_probeer_tik(positie)
+	elif index == _tik_index:
+		_tik_index = -99
+		_probeer_tik(positie)
+
+
+## Bevestigt een tik: proximity (`InteractionProbe`) blijft de enige bron van
+## waarheid voor óf een interactie kan, dit doet geen eigen raycast of
+## Area2D-picking. De tik moet alleen ergens op de schermprojectie van het al
+## toegestane interactable vallen. Buiten beeld of achter UI werkt vanzelf:
+## de projectie valt dan simpelweg buiten TIK_STRAAL.
+func _probeer_tik(scherm_positie: Vector2) -> void:
+	if _speler == null:
+		return
+	var it := _speler.probe.current()
+	if it == null:
+		return
+	var vp := get_viewport()
+	if vp == null:
+		return
+	var canvas_pos: Vector2 = vp.get_canvas_transform() * it.global_position
+	if canvas_pos.distance_to(scherm_positie) > TIK_STRAAL:
+		return
+	_actie(&"interact", true)
+	_actie(&"interact", false)
 
 
 ## `_input` loopt vóór de GUI-verwerking, dus een tik op ▤ komt hier ook langs.
 ## Zonder deze uitzondering zou het ticketbord openen én een stick achterlaten
 ## in de linkerhoek van de balk. De balk uitrekenen in plaats van een marge
 ## raden: dan blijft dit kloppen als de balk van hoogte verandert.
+func _op_balk(p: Vector2) -> bool:
+	return _balk != null and _balk.get_global_rect().has_point(p)
+
+
 func _in_zone(p: Vector2) -> bool:
-	var r := _stick.get_viewport_rect().size
-	if _balk != null and _balk.get_global_rect().has_point(p):
+	if _op_balk(p):
 		return false
+	var r := _stick.get_viewport_rect().size
 	return p.x < r.x * ZONE_BREEDTE and p.y > r.y * ZONE_TOP
 
 

@@ -39,6 +39,30 @@ func is_available() -> bool:
 	return _enabled and visible and Conditions.check(available_when)
 
 
+## Draagt dit object bij aan het spel (een ticket, een deur, een collega, een
+## bord) of is het puur sfeer (`EXAMINE` — posters, de blauwe tijger, alles
+## wat je alleen leest)? Bepaalt of `TapMarker` mag oplichten; tikken-om-te-
+## interacten werkt voor beide even goed, zie `Besturing._probeer_tik()`.
+func is_core_kind() -> bool:
+	return kind != Kind.EXAMINE
+
+
+## Of de tik-ring hoort te tonen: alleen kern-objecten, en alleen zolang de
+## speler dit object nog nooit heeft aangetikt. Daarna blijft het gewoon
+## aanspreekbaar, maar de ring is geen "nieuw"-signaal meer.
+func should_show_tik_marker() -> bool:
+	return is_core_kind() and not Session.get_flag(_gezien_vlag())
+
+
+## main.gd roept dit aan bij elke geslaagde interactie met een kern-object.
+func markeer_getikt() -> void:
+	Session.set_flag(_gezien_vlag(), true)
+
+
+func _gezien_vlag() -> StringName:
+	return StringName("tik_gezien_%s" % world_id)
+
+
 func set_enabled(v: bool) -> void:
 	_enabled = v
 
