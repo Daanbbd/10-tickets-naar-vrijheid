@@ -291,8 +291,9 @@ func _kies(index: int, met_animatie: bool) -> void:
 	if met_animatie:
 		AudioDirector.play_ui(&"klik")
 		# Mobiel speelt vaak zonder geluid, dus het onderscheid mag daar niet
-		# alleen aan hangen.
-		Input.vibrate_handheld(20)
+		# alleen aan hangen. Via Haptiek, want die kent de duur van een TIK en
+		# houdt zijn mond op alles wat geen telefoon is.
+		Haptiek.tril(Haptiek.Sterkte.TIK)
 
 
 func _zet_sprite(c: CharacterDef, met_animatie: bool, van_rechts: bool) -> void:
@@ -355,7 +356,9 @@ func _portrait_for(c: CharacterDef) -> Texture2D:
 
 
 func _start() -> void:
-	Input.vibrate_handheld(45)
+	# Zwaarder dan het doorlopen van de lijst: dit is de keuze die de hele
+	# speelbeurt vastlegt, en wisselen kan niet.
+	Haptiek.tril(Haptiek.Sterkte.STOOT)
 	AudioDirector.play_ui(&"klik")
 	QuestEngine.start_run(_ids[_index])
 	Shell.goto_game()

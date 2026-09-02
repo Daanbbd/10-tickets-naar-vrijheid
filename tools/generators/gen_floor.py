@@ -8,7 +8,12 @@ import json, heapq, os, sys
 
 W, H = 130, 26
 TILE = 16
-WALK_SPEED_TILES = 6.0     # 96 px/s bij 16px tiles — zie player.gd WALK_SPEED
+# Alleen voor de looptijden die dit script print. De echte snelheid staat in
+# player.gd (WALK_SPEED = 96 px/s bij 16px tiles); dit getal moet daarmee
+# meebewegen. Bewust NIET in floor.json: daar stond het jaren als tweede
+# waarheid die niemand las, en een dode kopie van een constante is erger dan
+# geen kopie — hij nodigt uit om hem te veranderen zonder dat er iets gebeurt.
+WALK_SPEED_TILES = 6.0
 
 # ---- schaal ----------------------------------------------------------------
 # Ankermaat van Daan: de verdieping is over de korte as 12 meter breed. Die as
@@ -340,7 +345,6 @@ def main():
         "size": [W, H],
         "tile_size": TILE,
         "spawn": SPAWN,
-        "walk_speed_tiles_per_sec": WALK_SPEED_TILES,
         "props": PROPS,
         "grid": ["".join(row) for row in g],
         "legend": LEGEND,

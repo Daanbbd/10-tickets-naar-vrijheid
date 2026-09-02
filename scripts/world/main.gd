@@ -347,6 +347,10 @@ func _interact_with(it: Interactable) -> void:
 		return
 
 	AudioDirector.play_sfx(&"interactie")
+	# Een interactie die aankomt voelt anders dan een knop die je indrukt: de
+	# knopbalk geeft een TIK zodra je hem raakt, dit is de bevestiging dat er
+	# aan de andere kant ook echt iets stond.
+	Haptiek.tril(Haptiek.Sterkte.STOOT)
 	match it.kind:
 		Interactable.Kind.TICKET:
 			tickets.handle(it.ticket_id, it)
@@ -414,6 +418,12 @@ func _spawn_objects() -> void:
 		var t: Array = d.get("tile", [0, 0])
 		wo.position = builder.tile_to_world(Vector2i(int(t[0]), int(t[1])))
 		objects_layer.add_child(wo)
+
+		# Optioneel beeld op het object zelf. Vandaag zet geen enkel object dit,
+		# dus dit is een no-op — maar zodra de vloer echte propsprites aan een
+		# world_id hangt, is dit de plek waar ze binnenkomen, en werkt
+		# `set_modulate` op dat object meteen mee.
+		wo.set_sprite(String(d.get("sprite", "")))
 
 		var area := Interactable.new()
 		area.name = "Interactable"

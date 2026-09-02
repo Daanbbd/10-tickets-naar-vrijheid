@@ -2,7 +2,7 @@
   {
     "id": "daan",
     "name": "Daan",
-    "role": "Fullstack developer",
+    "role": "Product Owner",
     "tagline": "Bewaakt de scope. Verliest de scope.",
     "description": "Jij vertaalt wensen naar user stories. Iedereen denkt dat jij beslist. Jij denkt dat de klant beslist. De klant denkt dat jij het al gebouwd hebt.",
     "traits": [
@@ -77,8 +77,8 @@
   {
     "id": "victor",
     "name": "Victor",
-    "role": "Frontend / design systemen",
-    "tagline": "Het staat scheef en hij ziet het altijd.",
+    "role": "Frontend developer",
+    "tagline": "Design systemen. En het staat scheef.",
     "description": "Jij bouwt wat anderen bedenken. Je vraagt niet of iets kan, je vraagt of iemand het heeft nagedacht. Meestal niet.",
     "traits": [
       "technisch",
@@ -150,7 +150,7 @@
   {
     "id": "willem",
     "name": "Willem",
-    "role": "Account management",
+    "role": "Client Lead",
     "tagline": "Regelt het. Vraag niet hoe.",
     "description": "Jij praat met de klant zodat niemand anders dat hoeft. Je zegt zelden nee, maar je zegt het net zo lang ja tot het iets anders betekent.",
     "traits": [
@@ -186,8 +186,8 @@
   {
     "id": "bastiaan",
     "name": "Bastiaan",
-    "role": "Frontend / Shopify",
-    "tagline": "Vindt altijd nog één ding.",
+    "role": "Frontend developer",
+    "tagline": "Shopify. Vindt altijd nog één ding.",
     "description": "Jij ziet wat er niet klopt voordat iemand het gebouwd heeft. Dat is handig. Het is ook vermoeiend.",
     "traits": [
       "technisch",
@@ -222,7 +222,7 @@
   {
     "id": "koen",
     "name": "Koen",
-    "role": "Frontend developer",
+    "role": "Backend / AI & automatisering",
     "tagline": "Heeft er waarschijnlijk al iets voor.",
     "description": "Jij lost het op met iets wat vorige maand nog niet bestond. Meestal werkt het. Uitleggen doe je onderweg.",
     "traits": [

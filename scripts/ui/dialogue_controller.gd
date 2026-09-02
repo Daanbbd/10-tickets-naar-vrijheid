@@ -18,10 +18,19 @@ func setup() -> void:
 	_box = DialogueBox.new()
 	_layer.add_child(_box)
 	_box.choice_picked.connect(_on_choice_picked)
+	# Een gesprek grijpt de invoer af: je loopt niet meer, je leest. Op mobiel is
+	# dat de enige aankondiging die er is, want het venster schuift stil in beeld.
+	# Op het signaal en niet bij de drie emits, zodat een losse regel, een
+	# keuzevraag en een hele dialoogboom hetzelfde aanvoelen.
+	Bus.dialogue_started.connect(_op_dialoog_start)
 
 
 func is_active() -> bool:
 	return _active
+
+
+func _op_dialoog_start(_dialogue_id: StringName, _speaker_id: StringName) -> void:
+	Haptiek.tril(Haptiek.Sterkte.STOOT)
 
 
 ## Speelt een dialoogboom af en geeft de outcome van de eindnode terug.

@@ -4,13 +4,13 @@
 
 | Personage | Rol | Traits | Lost zelf op | Finale |
 |---|---|---|---|---|
-| **Daan** | Fullstack developer | proces, commercieel | BBD-201, BBD-202 | SCOPE NOT APPROVED |
+| **Daan** | Product Owner | proces, commercieel | BBD-201, BBD-202 | SCOPE NOT APPROVED |
 | **Danny** | CRO-specialist | data, commercieel | BBD-206, BBD-207 | CHECKOUT CONVERSION CRITICAL |
-| **Victor** | Frontend / design systemen | technisch, detail | BBD-204 | FRONTEND BUILD FAILED |
+| **Victor** | Frontend developer | technisch, detail | BBD-204 | FRONTEND BUILD FAILED |
 | **Jonathan** | Backend developer | technisch, data | BBD-205 | PRODUCTION DATABASE CONNECTION FAILED |
-| **Willem** | Account management | commercieel, sociaal | BBD-203 | CLIENT APPROVAL REQUIRED |
-| **Bastiaan** | Frontend / Shopify | technisch, detail | BBD-209 | VISUAL REGRESSION DETECTED |
-| **Koen** | Frontend developer | technisch, sociaal | BBD-208 | AI OUTPUT NOT REVIEWED |
+| **Willem** | Client Lead | commercieel, sociaal | BBD-203 | CLIENT APPROVAL REQUIRED |
+| **Bastiaan** | Frontend developer | technisch, detail | BBD-209 | VISUAL REGRESSION DETECTED |
+| **Koen** | Backend / AI & automatisering | technisch, sociaal | BBD-208 | AI OUTPUT NOT REVIEWED |
 
 Alleen Daan en Danny bezitten twee tickets; de rest één. Bij Willem staat
 daar de inhoudelijk rijkste finale tegenover (hij moet daadwerkelijk akkoord halen
@@ -21,13 +21,15 @@ ticket hun vakgebied is. Wat dat oplevert staat in
 [MINIGAMES.md](MINIGAMES.md): de eigenaar geeft je vóór zijn minigame één waar
 feit over zijn eigen ticket, in zijn eigen stem.
 
-> **De rollen kwamen niet uit de character bible.** Daan heette "Product Owner"
-> — dat is de titel van Danny — Koen "Backend developer" terwijl hij frontender
-> is, en Willem "Client Lead" in plaats van accountmanagement. Ze stonden
-> bovendien twee keer in de data, in `characters.json` én op elk ticket, en
-> beide kopieën weken af. `data/characters.json` is nu de enige bron; een ticket
-> erft de rol van zijn eigenaar bij het laden, en `_test_briefings()`
-> controleert dat die twee gelijk blijven.
+> **Eén functietitel per collega.** De rollen stonden op drie plekken —
+> `characters.json`, `npcs.json` en elk ticket — en die weken van elkaar af:
+> vijf van de zeven hadden er twee, Koen drie. Daan is Product Owner (elke
+> dialoogregel behandelt hem al zo), Willem is Client Lead, Koen is Backend /
+> AI & automatisering. Victor en Bastiaan zijn allebei gewoon frontend
+> developer; hun specialisme (design systemen, Shopify) staat in de tagline.
+> `data/characters.json` is de enige bron: een ticket erft de rol van zijn
+> eigenaar bij het laden, en `_test_briefings()` controleert dat het ticket én
+> de NPC dezelfde titel dragen.
 
 > Bastiaan en Koen zijn speelbaar sinds commit `9da2cf2`. Het eigenaarschap van
 > BBD-208 en BBD-209 verhuisde toen van Victor en Jonathan naar hen; de dialoog
