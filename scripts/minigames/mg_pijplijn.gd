@@ -99,7 +99,7 @@ func _on_setup() -> void:
 	_caption.custom_minimum_size = Vector2(0, 14)
 	body.add_child(_caption)
 
-	_knop = UiKit.button("Nieuwe clip", UiKit.FS_SMALL)
+	_knop = UiKit.knop_primair("Nieuwe clip", UiKit.FS_SMALL)
 	_knop.custom_minimum_size = Vector2(0, 26)
 	_knop.focus_mode = Control.FOCUS_NONE
 	_knop.pressed.connect(_haal_clip)

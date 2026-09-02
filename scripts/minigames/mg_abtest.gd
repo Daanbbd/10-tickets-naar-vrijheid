@@ -159,7 +159,7 @@ func _rect(kleur: Color) -> ColorRect:
 
 
 func _bouw_volgende() -> Button:
-	var b := UiKit.button("Volgende", UiKit.FS_SMALL)
+	var b := UiKit.knop_primair("Volgende", UiKit.FS_SMALL)
 	b.custom_minimum_size = Vector2(0, 26)
 	b.add_theme_stylebox_override("disabled", UiKit.panel(UiKit.NEUTRAAL_TINT, UiKit.LINE))
 	b.add_theme_color_override("font_disabled_color", UiKit.GRIJS)

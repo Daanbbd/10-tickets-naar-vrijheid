@@ -32,16 +32,21 @@ const HULP_BREEDTE := 26
 
 ## Wat een knop hier werkelijk hoog is.
 ##
-## `UiKit.KNOP_MIN_H` (24) is de ondergrens die we van een duim eisen, maar
-## niet de maat die eruit komt: een Button meldt zelf regelhoogte plus de
-## marges van zijn stijl, en dat is 14 + 2 x 6 = 26. Die 26 wint dus van de 24.
+## Twee getallen strijden hier: `UiKit.KNOP_MIN_H` is de duimondergrens, en een
+## Button meldt daarnaast zijn eigen regelhoogte plus de marges van zijn stijl.
+## De hoogste wint.
+##
+## Stond op 26, en dat was de gemeten kant die won: FS_BODY was 10, dus
+## 14 + 2 x 6 = 26 tegen een ondergrens van 24. Sinds FS_BODY 12 is en
+## KNOP_MIN_H 30, wint de ondergrens — precies zoals bedoeld, want een
+## duimmaat die altijd verliest stuurt niets aan.
 ##
 ## Gemeten in een echt frame en niet uit de bron gerekend: de eerste versie
 ## hiervan rekende met 24, waardoor de balk twee pixels van zijn ondermarge
 ## opat en de HUD twee pixels te laag hing. `_test_balkmaat()` in de testsuite
 ## controleert dit getal, zodat een ander font of een andere stijlmarge het
 ## breekt in plaats van het stil te verschuiven.
-const KNOP_HOOGTE := 26
+const KNOP_HOOGTE := 30
 
 ## De balk is precies één knop hoog plus de krappe panelmarge (2 px boven en
 ## onder).

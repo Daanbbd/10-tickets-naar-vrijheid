@@ -102,7 +102,7 @@ func _speel() -> void:
 	slot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(slot)
 
-	var terug := UiKit.button("Terug naar het begin", UiKit.FS_SMALL)
+	var terug := UiKit.knop_primair("Terug naar het begin", UiKit.FS_SMALL)
 	terug.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	terug.anchor_left = 0.5; terug.anchor_right = 0.5
 	terug.anchor_top = 1.0; terug.anchor_bottom = 1.0

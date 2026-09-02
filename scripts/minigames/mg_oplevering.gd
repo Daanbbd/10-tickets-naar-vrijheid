@@ -134,10 +134,10 @@ func _bouw(c: Dictionary) -> void:
 
 	# De knop die de finale afsluit hoort buiten de scroll: hij mag nooit onder de
 	# lijst keuzes wegzakken, want dan is de finale niet af te maken.
-	_deploy = UiKit.button(String(c.get("deploy_label", "DEPLOYEN")), UiKit.FS_BODY)
-	_deploy.add_theme_stylebox_override("normal",
-		UiKit.panel(UiKit.BLUEBIRD_TINT, UiKit.BLUEBIRD_INK))
-	_deploy.custom_minimum_size = Vector2(0, 26)
+	# Dit was de enige knop in het spel met een eigen blauwe stijl; die stijl is
+	# nu UiKit.knop_primair() en staat op elke bevestigende actie. De eigen
+	# hoogte van 26 mocht mee weg: die zat onder UiKit.KNOP_MIN_H.
+	_deploy = UiKit.knop_primair(String(c.get("deploy_label", "DEPLOYEN")), UiKit.FS_BODY)
 	_deploy.focus_mode = Control.FOCUS_NONE
 	_deploy.pressed.connect(_op_deploy)
 	chrome_footer().add_child(_deploy)

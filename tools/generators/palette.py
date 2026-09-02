@@ -43,6 +43,13 @@ P = {
     "ui_rood":            (224, 82, 99),   # #e05263 — game-only utility, BBD heeft geen foutkleur
     "ui_oranje":          (244, 162, 89),  # #f4a259 — verzadigd derivaat van bb_orange, leesbaar op 8-10px
     "ui_neutraal_tint":   (228, 228, 228), # #e4e4e4 — letterlijk --color-line, voor niet-accent states (bv. LOCKED)
+    # ui_oranje droeg vier betekenissen tegelijk: doel, vastgezet ticket,
+    # overwerk en net-geboekte tijd. Vier dingen in één kleur is geen kleurcode
+    # meer. Het doel houdt ui_oranje; de andere drie krijgen hieronder een
+    # eigen kleur, elk gekozen op de ondergrond waar hij echt op staat.
+    "ui_vastgezet":       (155, 93, 229),  # #9b5de5 — game-only utility: rand om een vastgeprikt ticket. Paars botst met geen enkel postit-papier (geel/roze/blauw/groen/oranje) en niet met de blauwe primaire knop
+    "ui_overwerk":        (233, 76, 130),  # #e94c82 — verzadigd derivaat van bb_pink: de klok na vijven. Overwerk gaat over mensen, en bb-pink is bij BBD de mensen/cultuur-kleur
+    "ui_geboekt":         (109, 205, 214), # #6dcdd6 — game-only utility: de "+45 min" die net geboekt is. Een registratie-cue, geen waarschuwing, dus koel en niet warm
     # post-its — tickets zijn briefjes op het scrumbord, geen tabelrijen.
     # De randkleur is een donkerder versie van het papier zelf: een zwarte lijn
     # op 10 px maakt er een formulierveld van.
