@@ -35,6 +35,7 @@ var _licht_tween: Tween = null
 @onready var dialogue: DialogueController = $DialogueController
 @onready var hud: Hud = $HUD
 @onready var licht: CanvasModulate = $Licht
+@onready var storingen: Storingen = $Storingen
 
 var builder: WorldBuilder = WorldBuilder.new()
 var player: Player = null
@@ -103,6 +104,10 @@ func _ready() -> void:
 	_spawn_player()
 	npc_layer.spawn_initial()
 	camera.setup(player, builder.world_rect())
+	# Generaliseert Dirk: welke collega's langskomen, wat er stukgaat, staat in
+	# data/storingen.json in plaats van in een naam-check. Na de speler en de
+	# NPC's, want de node moet ze allebei kunnen aanspreken.
+	storingen.setup(npc_layer, mutator, player)
 
 	Bus.ticket_completed.connect(_on_ticket_completed)
 	Bus.ticket_state_changed.connect(func(_a: StringName, _b: GameEnums.TicketState) -> void: _refresh_marker())
@@ -110,11 +115,6 @@ func _ready() -> void:
 	Bus.follower_joined.connect(func(_a: StringName) -> void: _refresh_marker())
 	Bus.follower_released.connect(func(_a: StringName) -> void: _refresh_marker())
 	Bus.flag_changed.connect(func(_a: StringName, _b: bool) -> void: _refresh_marker())
-	# Dirk moet wegwandelen op het moment dat je geboekt hebt, niet pas bij het
-	# volgende ticket.
-	Bus.flag_changed.connect(func(f: StringName, _b: bool) -> void:
-		if f == &"uren_geboekt":
-			_dirk_bijwerken())
 	_refresh_marker()
 	Bus.game_started.emit()
 	AudioDirector.set_base(&"kantoor")
@@ -277,84 +277,44 @@ func _qa_auto() -> void:
 		_interact_with(it)
 
 
-## QA: loopt alle tien de tickets in volgorde af in de echte runtime, inclusief
-## dialogen, minigames en wereldveranderingen. Bewijst dat de hele dag speelbaar
-## is zonder dat iemand de toetsen aanraakt.
+## QA: loopt alle tien de tickets af in de echte runtime, inclusief dialogen,
+## minigames en wereldveranderingen. Bewijst dat de hele dag speelbaar is
+## zonder dat iemand de toetsen aanraakt.
+##
+## Geen vaste eenmalige doorloop van t01..t10 meer: sinds F3-c mag een storing
+## een opgelost ticket terugzetten naar TO DO ("iets gaat stuk"), en dan hoort
+## de harnas het net als een speler gewoon nog een keer op te pakken in plaats
+## van vast te lopen op 9/10 omdat zijn beurt al voorbij was. Vandaar de
+## buitenste while: die blijft ronden draaien tot alles klaar is, vastloopt,
+## of geen enkel ticket in een hele ronde meer vooruit kwam.
 func _qa_playthrough() -> void:
 	await get_tree().create_timer(0.5).timeout
 	var start := Time.get_ticks_msec()
 
-	# F3-a: de tickets komen niet meer allemaal tegelijk open, dus deze harnas
-	# kan niet meer star t01 t/m t10 op volgorde aflopen — t01 zit expres pas
-	# laat in de ontsluitingsketen en zou die vaste volgorde voor altijd laten
-	# wachten. In plaats daarvan vraagt elke stap gewoon wat er nu open ligt.
-	while not Session.all_done():
-		if not await _qa_wacht_tot(func() -> bool: return not QuestEngine.open_tickets().is_empty(), 20.0):
-			printerr("[SPEELBEURT] geen enkel ticket meer beschikbaar op %d/10" % Session.done_count())
-			break
-		var t: TicketDef = QuestEngine.open_tickets()[0]
-		var tid := t.id
-
-		# Kiezen wat we gaan doen. Zonder dit vraagt het scrumbord in de gang
-		# welk van de twee tickets we bedoelen, en dan blijft de speelbeurt op
-		# een dialoogvenster wachten dat niemand wegklikt.
-		if "--geen-pin" not in OS.get_cmdline_user_args():
-			Session.pin(tid)
-
-		# De collega echt ophalen, niet de vlag zetten. Dit is de route die een
-		# speler neemt, en juist daar zat de bug: werven veranderde niets
-		# zichtbaars. Alleen als de NPC onvindbaar is valt de speelbeurt terug
-		# op de vlag, zodat een spawn-probleem niet als questfout leest.
-		if not QuestEngine.is_own_expertise(tid):
-			var helper_id := QuestEngine.required_helper(tid)
-			var helper := npc_layer.find_npc(helper_id)
-			if helper == null:
-				printerr("[SPEELBEURT] %s: collega '%s' staat niet op de vloer" % [t.code, helper_id])
-				QuestEngine.mark_helper_present(tid)
-			else:
-				player.global_position = builder.tile_to_world(
-					builder.nearest_walkable(builder.world_to_tile(helper.global_position)))
-				camera.global_position = player.global_position
-				camera.reset_smoothing()
-				await get_tree().create_timer(0.3).timeout
-				tickets.handle_npc_talk(helper.interactable)
-				if not await _qa_wacht_tot(func() -> bool: return helper.is_following(), 30.0):
-					printerr("[SPEELBEURT] %s: %s liep niet mee" % [t.code, helper_id])
-					break
-				print("[SPEELBEURT] %s: %s opgehaald, doel staat op %s" % [
-					t.code, helper.def.name, Session.pinned_ticket])
-		# benodigde items simuleren (de deploysleutel uit het magazijn)
-		for item: Variant in (t.requirements.get("has_item", []) as Array):
-			if not Session.has_item(StringName(item)):
-				Session.add_item(StringName(item))
-
-		var wo := registry.get_by_id(t.anchor)
-		if wo == null:
-			printerr("[SPEELBEURT] %s: anker '%s' ontbreekt" % [t.code, t.anchor])
-			break
-		player.global_position = builder.tile_to_world(
-			builder.nearest_walkable(builder.world_to_tile(wo.global_position)))
-		camera.global_position = player.global_position
-		camera.reset_smoothing()
-		await get_tree().create_timer(0.3).timeout
-
-		var it := wo.get_node_or_null("Interactable") as Interactable
-		_interact_with(it)
-
-		if await _qa_wacht_tot(func() -> bool: return Session.is_done(tid), 90.0):
-			print("[SPEELBEURT] %s opgelost  (%d/10)" % [t.code, Session.done_count()])
-			# `is_done` valt vóór de urenrol en de afrondingsdialoog, dus de
-			# stroom loopt op dit punt nog. Zonder deze wacht racet de harnas het
-			# volgende ticket in, en dan weigert `handle_npc_talk()` stil op zijn
-			# `_busy`-guard: de collega loopt niet mee en dertig seconden later
-			# meldt de speelbeurt "liep niet mee" zonder oorzaak. Dat was geen
-			# spelbug — een speler kan zijn eigen dialoog niet inhalen — maar de
-			# harnas kan dat wel, en dan test hij iets wat niet bestaat.
-			if not await _qa_wacht_tot(func() -> bool: return not tickets.bezig(), 30.0):
-				printerr("[SPEELBEURT] %s: de ticketstroom kwam niet tot rust" % t.code)
+	var vastgelopen := false
+	var max_rondes := GameData.ticket_ids().size() * 3
+	var ronde := 0
+	while not Session.all_done() and ronde < max_rondes and not vastgelopen:
+		ronde += 1
+		var vooruitgang_deze_ronde := false
+		for tid: StringName in GameData.ticket_ids():
+			# Synchrone check, geen wachttijd: refresh_availability() draait
+			# al binnen QuestEngine.complete(), dus een ticket dat deze ronde
+			# nog niet beschikbaar is, wordt dat niet door hier op te wachten.
+			# Een LOCKED ticket dat nooit losraakt levert straks een lege
+			# ronde op, en dát is de foutmelding.
+			if Session.is_done(tid) or not Session.is_available(tid):
+				continue
+			vooruitgang_deze_ronde = true
+			if not await _qa_doe_ticket(tid):
+				vastgelopen = true
 				break
-		else:
-			printerr("[SPEELBEURT] %s liep vast" % t.code)
+		if not vooruitgang_deze_ronde and not Session.all_done():
+			var vast: Array[String] = []
+			for tid2: StringName in GameData.ticket_ids():
+				if not Session.is_done(tid2):
+					vast.append(GameData.ticket(tid2).code)
+			printerr("[SPEELBEURT] vastgelopen: %s werd(en) nooit beschikbaar" % ", ".join(vast))
 			break
 
 	if Session.all_done():
@@ -381,6 +341,83 @@ func _qa_playthrough() -> void:
 	if "--quit-when-done" in OS.get_cmdline_user_args():
 		await get_tree().create_timer(1.0).timeout
 		get_tree().quit(0 if Session.all_done() else 1)
+
+
+## Eén ticket van _qa_playthrough(): kiezen, ophalen, oplossen. Eigen functie
+## en geen inline blok in de ronde-lus hierboven, want dit stuk verandert niet
+## door de F3-c-herbalancering — alleen hóé vaak en in welke volgorde het
+## aangeroepen wordt, veranderde.
+func _qa_doe_ticket(tid: StringName) -> bool:
+	var t: TicketDef = GameData.ticket(tid)
+
+	# Kiezen wat we gaan doen. Zonder dit vraagt het scrumbord in de gang
+	# welk van de twee tickets we bedoelen, en dan blijft de speelbeurt op
+	# een dialoogvenster wachten dat niemand wegklikt.
+	if "--geen-pin" not in OS.get_cmdline_user_args():
+		Session.pin(tid)
+
+	# De collega echt ophalen, niet de vlag zetten. Dit is de route die een
+	# speler neemt, en juist daar zat de bug: werven veranderde niets
+	# zichtbaars. Alleen als de NPC onvindbaar is valt de speelbeurt terug
+	# op de vlag, zodat een spawn-probleem niet als questfout leest.
+	#
+	# Was die vlag al gezet (een storing zette dit ticket terug naar TO DO
+	# ná de eerste keer ophalen), dan verwacht `_ticket_waiting_for()` in
+	# ticket_controller.gd geen tweede keer — precies zoals een speler ook
+	# niet nog eens naar Jonathan hoeft te lopen om hem te herinneren aan
+	# hulp die hij al gaf.
+	if not QuestEngine.is_own_expertise(tid) and not Session.get_flag(QuestEngine.helper_flag(tid)):
+		var helper_id := QuestEngine.required_helper(tid)
+		var helper := npc_layer.find_npc(helper_id)
+		if helper == null:
+			printerr("[SPEELBEURT] %s: collega '%s' staat niet op de vloer" % [t.code, helper_id])
+			QuestEngine.mark_helper_present(tid)
+		else:
+			player.global_position = builder.tile_to_world(
+				builder.nearest_walkable(builder.world_to_tile(helper.global_position)))
+			camera.global_position = player.global_position
+			camera.reset_smoothing()
+			await get_tree().create_timer(0.3).timeout
+			tickets.handle_npc_talk(helper.interactable)
+			if not await _qa_wacht_tot(func() -> bool: return helper.is_following(), 30.0):
+				printerr("[SPEELBEURT] %s: %s liep niet mee" % [t.code, helper_id])
+				return false
+			print("[SPEELBEURT] %s: %s opgehaald, doel staat op %s" % [
+				t.code, helper.def.name, Session.pinned_ticket])
+	# benodigde items simuleren (de deploysleutel uit het magazijn)
+	for item: Variant in (t.requirements.get("has_item", []) as Array):
+		if not Session.has_item(StringName(item)):
+			Session.add_item(StringName(item))
+
+	var wo := registry.get_by_id(t.anchor)
+	if wo == null:
+		printerr("[SPEELBEURT] %s: anker '%s' ontbreekt" % [t.code, t.anchor])
+		return false
+	player.global_position = builder.tile_to_world(
+		builder.nearest_walkable(builder.world_to_tile(wo.global_position)))
+	camera.global_position = player.global_position
+	camera.reset_smoothing()
+	await get_tree().create_timer(0.3).timeout
+
+	var it := wo.get_node_or_null("Interactable") as Interactable
+	_interact_with(it)
+
+	if not await _qa_wacht_tot(func() -> bool: return Session.is_done(tid), 90.0):
+		printerr("[SPEELBEURT] %s liep vast" % t.code)
+		return false
+
+	print("[SPEELBEURT] %s opgelost  (%d/10)" % [t.code, Session.done_count()])
+	# `is_done` valt vóór de urenrol en de afrondingsdialoog, dus de stroom
+	# loopt op dit punt nog. Zonder deze wacht racet de harnas het volgende
+	# ticket in, en dan weigert `handle_npc_talk()` stil op zijn `_busy`-guard:
+	# de collega loopt niet mee en dertig seconden later meldt de speelbeurt
+	# "liep niet mee" zonder oorzaak. Dat was geen spelbug — een speler kan
+	# zijn eigen dialoog niet inhalen — maar de harnas kan dat wel, en dan
+	# test hij iets wat niet bestaat.
+	if not await _qa_wacht_tot(func() -> bool: return not tickets.bezig(), 30.0):
+		printerr("[SPEELBEURT] %s: de ticketstroom kwam niet tot rust" % t.code)
+		return false
+	return true
 
 
 func _qa_wacht_tot(voorwaarde: Callable, timeout: float) -> bool:
@@ -713,26 +750,6 @@ func _on_ticket_completed(id: StringName, _r: MinigameResult) -> void:
 		var n := npc_layer.find_npc(helper)
 		if n != null and n.is_following():
 			n.stop_following(true)
-
-	_dirk_bijwerken()
-
-
-## Dirk komt naar jou toe. Zodra hij verschijnt loopt hij mee, en hij blijft
-## meelopen tot je je uren geboekt hebt — dan gaat hij terug naar zijn plek.
-##
-## Hij blokkeert nooit iets: je kunt hem de hele dag negeren en de game gewoon
-## uitspelen. Dat hij dan de hele dag achter je aan loopt is de grap.
-func _dirk_bijwerken() -> void:
-	var dirk := npc_layer.find_npc(&"dirk")
-	if dirk == null:
-		return
-	if Session.get_flag(&"uren_geboekt"):
-		if dirk.is_following():
-			dirk.stop_following(true)
-		return
-	if not dirk.is_following():
-		dirk.start_following(player)
-		Bus.toast_requested.emit("Dirk Schrijver wil je even spreken", &"tijd")
 
 
 ## Tien van de tien: de deur klikt open en de dag zit erop.

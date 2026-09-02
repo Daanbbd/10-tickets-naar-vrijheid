@@ -1,0 +1,67 @@
+[
+  {
+    "id": "storing_dirk",
+    "soort": "npc_komt_langs",
+    "npc": "dirk",
+    "trigger": { "min_tickets_done": 1 },
+    "when": { "flags_none": ["uren_geboekt"] },
+    "dialogue": "Dirk Schrijver wil je even spreken"
+  },
+  {
+    "id": "storing_dennis",
+    "soort": "npc_komt_langs",
+    "npc": "dennis",
+    "trigger": { "min_tickets_done": 2 },
+    "when": { "tickets_not_done": ["t08"] },
+    "dialogue": "Dennis wil een statusje voor het bord"
+  },
+  {
+    "id": "storing_backend_crash",
+    "soort": "iets_gaat_stuk",
+    "trigger": { "min_tickets_done": 6 },
+    "when": { "tickets_done": ["t05"] },
+    "dialogue": "Het serverrack piept weer. De backend ligt er opnieuw uit.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "BBD-205 staat weer open. De backend hapert opnieuw.",
+        "icon": "tijd"
+      },
+      {
+        "op": "reopen_ticket",
+        "ticket": "t05"
+      }
+    ],
+    "world_changes": [
+      {
+        "op": "set_text",
+        "target": "serverrack_a",
+        "value": "productservice: 500"
+      },
+      {
+        "op": "set_modulate",
+        "target": "serverrack_a",
+        "value": "#c94f4f"
+      }
+    ]
+  },
+  {
+    "id": "storing_weekend_lawaai",
+    "soort": "afleiding",
+    "trigger": { "zone": "z10_weekend" },
+    "when": {},
+    "dialogue": "Het lawaai van hiernaast kost je even je concentratie.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "Al dat weekendlawaai kost je vijf minuten concentratie.",
+        "icon": "tijd"
+      },
+      {
+        "op": "kost_tijd",
+        "minuten": 5,
+        "reden": "afleiding"
+      }
+    ]
+  }
+]

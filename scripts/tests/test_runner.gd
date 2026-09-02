@@ -28,6 +28,8 @@ func _ready() -> void:
 	_test_karakterstemmen()
 	_test_traits()
 	_test_urenstaat()
+	_test_klok()
+	_test_storingen()
 	_test_gevolgen()
 	_test_questketen_alle_personages()
 	_test_vrije_volgorde()
@@ -2201,3 +2203,159 @@ func _test_briefings() -> void:
 		if label != "" and brief_pj.contains(label):
 			_ok(int(stg.get("capaciteit", 99)) == kleinste,
 				"de pijplijn-briefing noemt '%s' als knelpunt, maar die heeft niet de kleinste capaciteit" % label)
+
+
+## F3-c: Dirk is gegeneraliseerd naar data/storingen.json. Deze test bewaakt
+## de data-integriteit op dezelfde manier als _test_verwijzingen() dat voor
+## tickets doet, en daarna de harde regel uit het faalbeleid: een storing kost
+## tijd en informatie, nooit voortgang.
+func _test_storingen() -> void:
+	_kop("storingen")
+	var defs := Storingen.laad()
+	_ok(not defs.is_empty(), "data/storingen.json bevat geen enkele storing")
+
+	var gezien_ids: Array[String] = []
+	var soorten_gezien: Array[String] = []
+	for d: Dictionary in defs:
+		var id := String(d.get("id", ""))
+		_ok(id != "", "storing zonder id")
+		_ok(not (id in gezien_ids), "storing-id '%s' komt dubbel voor" % id)
+		gezien_ids.append(id)
+
+		var soort := String(d.get("soort", ""))
+		_ok(not Storingen.unknown_soort(soort), "storing '%s': onbekende soort '%s'" % [id, soort])
+		if not (soort in soorten_gezien):
+			soorten_gezien.append(soort)
+
+		var trig := d.get("trigger", {}) as Dictionary
+		var bad_trig := Storingen.unknown_trigger_keys(trig)
+		_ok(bad_trig.is_empty(), "storing '%s': onbekende trigger-key %s" % [id, bad_trig])
+
+		var when := d.get("when", {}) as Dictionary
+		var bad_when := Conditions.unknown_keys(when)
+		_ok(bad_when.is_empty(), "storing '%s': onbekende conditie-key %s in 'when'" % [id, bad_when])
+
+		var effects := d.get("effects", []) as Array
+		var bad_fx := QuestEngine.unknown_effect_ops(effects)
+		_ok(bad_fx.is_empty(), "storing '%s': onbekende effect-op %s" % [id, bad_fx])
+
+		var wc := d.get("world_changes", []) as Array
+		var bad_wc := WorldMutator.unknown_ops(wc)
+		_ok(bad_wc.is_empty(), "storing '%s': onbekende world_change-op %s" % [id, bad_wc])
+		for raw: Variant in wc:
+			var c := raw as Dictionary
+			var target := StringName(c.get("target", ""))
+			if target != &"":
+				_ok(GameData.has_world_id(target),
+					"storing '%s': world_change wijst naar onbekende id '%s'" % [id, target])
+
+		if soort == "npc_komt_langs":
+			var npc_id := StringName(d.get("npc", ""))
+			_ok(npc_id != &"", "storing '%s': npc_komt_langs zonder 'npc'-veld" % id)
+			_ok(GameData.npc(npc_id) != null,
+				"storing '%s': npc '%s' staat niet in npcs.json" % [id, npc_id])
+
+		# reopen_ticket en unlock_ticket zijn de enige toegestane
+		# state-mutaties op een ticket vanuit een storing, en allebei wijzen
+		# ze altijd vooruit (naar AVAILABLE) — nooit terug naar LOCKED.
+		for raw: Variant in effects:
+			var e := raw as Dictionary
+			var op := String(e.get("op", ""))
+			if op == "reopen_ticket" or op == "unlock_ticket":
+				var tid := StringName(e.get("ticket", ""))
+				_ok(GameData.ticket(tid) != null,
+					"storing '%s': %s wijst naar onbekend ticket '%s'" % [id, op, tid])
+
+	_ok(gezien_ids.size() >= 3,
+		"minder dan drie storingen: het plan vraagt om meerdere soorten (%d gevonden)" % gezien_ids.size())
+	_ok("npc_komt_langs" in soorten_gezien, "geen enkele storing van het type 'npc_komt_langs'")
+	_ok("iets_gaat_stuk" in soorten_gezien, "geen enkele storing van het type 'iets_gaat_stuk'")
+
+	# --- de harde regel, uitgevoerd: elke storing die vuurt mag het geheel-
+	# bereikbaar-blijven-invariant niet breken --------------------------------
+	# Elk ticket staat al open, opgehaald en van zijn items voorzien; alles
+	# staat daarna hard op DONE. Zo raakt reopen_ticket altijd een ticket dat
+	# ook echt weer op te lossen is, in plaats van toevallig een ticket dat
+	# nog LOCKED stond — en zo test dit precies de eigen state-mutatie van de
+	# storing, los van of `trigger`/`when` hem ooit echt zouden laten afgaan.
+	for d: Dictionary in defs:
+		var id := String(d.get("id", ""))
+		QuestEngine.start_run(&"daan")
+		for tid: StringName in GameData.ticket_ids():
+			QuestEngine.unlock(tid)
+			QuestEngine.mark_helper_present(tid)
+			var t: TicketDef = GameData.ticket(tid)
+			for raw: Variant in (t.requirements.get("has_item", []) as Array):
+				Session.add_item(StringName(raw))
+		for tid: StringName in GameData.ticket_ids():
+			Session.ticket_states[tid] = GameEnums.TicketState.DONE
+			if not (tid in Session.done_order):
+				Session.done_order.append(tid)
+
+		QuestEngine.run_effects(d.get("effects", []) as Array)
+
+		for tid: StringName in GameData.ticket_ids():
+			var st := Session.ticket_state(tid)
+			_ok(st != GameEnums.TicketState.LOCKED,
+				"storing '%s' zet %s naar LOCKED — storingen mogen nooit voortgang blokkeren" % [id, tid])
+			if st == GameEnums.TicketState.AVAILABLE or st == GameEnums.TicketState.ACTIVE:
+				_ok(QuestEngine.requirements_met(tid),
+					"storing '%s': %s staat open maar is niet op te lossen na de storing" % [id, tid])
+		_ok(Session.is_done(&"t10") or QuestEngine.requirements_met(&"t10"),
+			"storing '%s': de finale (t10) is niet meer haalbaar na de storing" % id)
+
+
+## F3-d: de klok tikt door met de speeltijd. Bewaakt dat dit (a) het spel niet
+## onwinbaar kan maken, ongeacht hoe lang iemand blijft rondlopen, en (b) de
+## `overwerk`-conditie daadwerkelijk bereikbaar maakt binnen een sessie van de
+## bedoelde lengte, in plaats van alleen in theorie te bestaan.
+func _test_klok() -> void:
+	_kop("de klok")
+
+	# --- de harde regel: een volle dag klok-tikken mag het spel niet
+	# onwinbaar maken, net als de 10000-minuten-boeking in _test_urenstaat()
+	# hierboven, maar dan via precies het pad waarlangs de klok zelf tikt. ---
+	QuestEngine.start_run(&"daan")
+	for tid: StringName in GameData.ticket_ids():
+		QuestEngine.unlock(tid)
+		QuestEngine.mark_helper_present(tid)
+		var t: TicketDef = GameData.ticket(tid)
+		for raw: Variant in (t.requirements.get("has_item", []) as Array):
+			Session.add_item(StringName(raw))
+	for _i in range(1440):
+		Session.book_time(1, &"verloop")
+	_ok(Session.worked_minutes >= 1440, "1440 klok-tikken van 1 minuut leveren geen 1440 minuten op")
+	_ok(Urenstaat.is_overwerk(), "een dag van 24 uur klok-tikken is geen overwerk")
+	for tid: StringName in GameData.ticket_ids():
+		_ok(QuestEngine.requirements_met(tid),
+			("%s is niet meer op te lossen na een volle dag klok-tikken; de klok mag het spel " +
+			"nooit onwinbaar maken") % GameData.ticket(tid).code)
+	_ok(Session.is_available(&"t10") or Session.is_done(&"t10"),
+		"de finale (t10) is niet meer bereikbaar na een volle dag klok-tikken")
+
+	# --- de klok maakt overwerk ook echt bereikbaar binnen een sessie van de
+	# bedoelde lengte, niet pas na freewheelen. Bij 1 in-game minuut per
+	# Klok.TICK_SEC seconden duurt het BUDGET_MIN minuten om voorbij de acht
+	# uur te komen; dat hoort ruim binnen de ~25 minuten reëel uit het plan te
+	# vallen (en de eerste tickets boeken zelf ook al mee, dus in de praktijk
+	# eerder). ------------------------------------------------------------
+	var sec_tot_overwerk: float = float(Urenstaat.BUDGET_MIN) * Klok.TICK_SEC
+	_ok(sec_tot_overwerk <= 25.0 * 60.0,
+		("overwerk duurt %.0f reële seconden pure klok-tikken om te bereiken — dat past niet " +
+		"meer binnen een speelsessie van orde-grootte 25 minuten") % sec_tot_overwerk)
+
+	# --- en de vier dialoogvarianten die op 'overwerk' letten, zijn dan ook
+	# geen dode data (zie _test_geen_dode_data() voor het bredere principe):
+	# als de klok nooit voorbij BUDGET_MIN komt zonder dat de speler zelf
+	# blijft freewheelen, valt geen van deze varianten ooit. -----------------
+	var overwerk_varianten := 0
+	for key: Variant in GameData.dialogues.keys():
+		var def: DialogueDef = GameData.dialogue(StringName(key))
+		for nid: Variant in def.nodes.keys():
+			var node := def.node(StringName(nid))
+			for raw: Variant in (node.get("variants", []) as Array):
+				var v := raw as Dictionary
+				if bool((v.get("when", {}) as Dictionary).get("overwerk", false)):
+					overwerk_varianten += 1
+	_ok(overwerk_varianten >= 4,
+		"verwacht minstens vier dialoogvarianten die op 'overwerk' letten, gevonden %d" % overwerk_varianten)
