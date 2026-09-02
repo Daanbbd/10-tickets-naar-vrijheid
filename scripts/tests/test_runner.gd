@@ -2897,7 +2897,25 @@ func _test_urenstaat_scherm() -> void:
 
 		# Dirk accepteert per code toch alles, maar zijn regel mag op geen van
 		# de drie combinaties leeg blijven of crashen.
-		_ok(TicketController._dirk_oordeel(v) != "", "urenstaat/%s: Dirk heeft niets te zeggen" % id)
+		var oordeel := TicketController._dirk_oordeel(v)
+		_ok(oordeel != "", "urenstaat/%s: Dirk heeft niets te zeggen" % id)
+		# En hij moet er ook als Dirk klinken. Deze vier regels stonden als
+		# string in ticket_controller.gd en waren daarmee de enige tekst in het
+		# spel die _test_karakterstemmen() niet las -- drie van de vier droegen
+		# geen enkele van zijn tics. Nu komen ze uit `dirk_urenstaat`, en deze
+		# controle houdt ze daar.
+		var klinkt_als_dirk := false
+		for t: Variant in (TICS["dirk"] as Array):
+			if String(t) in oordeel.to_lower():
+				klinkt_als_dirk = true
+				break
+		_ok(klinkt_als_dirk,
+			"urenstaat/%s: Dirks slotregel draagt geen enkele van zijn tics: \"%s\"" % [id, oordeel])
+		# {naam} blijft hier bewust staan: die vult DialogueController.vul_in()
+		# vlak voor het renderen. Deze twee komen uit de payload en horen hier
+		# al weg te zijn.
+		_ok(not oordeel.contains("{rest}") and not oordeel.contains("{aantal}"),
+			"urenstaat/%s: onvervangen payload-token in Dirks slotregel: \"%s\"" % [id, oordeel])
 
 	# En de echte weg: een tik op een keuze moet via de echte MinigameResult
 	# dezelfde drie sleutels opleveren, niet alleen de rekenfunctie op zich.

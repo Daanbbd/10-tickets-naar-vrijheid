@@ -480,24 +480,42 @@ func _urenstaat(npc: Npc) -> void:
 	var p := result.payload
 	Session.book_hours(int(p.get("geboekt_min", 0)))
 	AudioDirector.play_sfx(&"ticket_klaar")
-	await _line("%s: \"%s\"" % [npc.def.name, _dirk_oordeel(p)])
+	# Als spreker en niet als verteltekst: zo krijgt hij zijn naamregel, zijn
+	# portret zodra dat bestaat, en beweegt zijn mond mee (npc.gd luistert op
+	# `dialogue_started` en vergelijkt op id).
+	await _dialogue.say(npc.def.name, _dirk_oordeel(p), npc.npc_id)
 
 
 ## Zijn slotregel hangt af van waar je de uren hebt weggeschreven. Nooit een
 ## verwijt, altijd een observatie met een getal erin.
+##
+## De keuze staat hier, de tekst niet. Welke van de vier regels het wordt hangt
+## af van de payload van de minigame (`op_rest`, `lege_tickets`) -- getallen die
+## `Conditions` niet kent, dus dat kan geen dialoogvariant zijn. Wat hij zégt
+## hoort wel in de data: stond het hier als string, dan is het de enige stem in
+## het spel die `_test_karakterstemmen()` niet leest, en precies daar liep hij
+## zijn eigen tics mis.
 static func _dirk_oordeel(p: Dictionary) -> String:
 	var rest := int(p.get("op_rest", 0))
 	var leeg := int(p.get("lege_tickets", 0))
+
+	var nid := &"rest"
 	if rest >= 4 * 60:
-		return ("Dank je! Ik zie %s op overige posten staan. Ik zet er een "
-			+ "vraagteken bij, dan kijkt Dennis er nog even naar.") % Urenstaat.formatteer_duur(rest)
-	if leeg > 0:
-		return ("Dank je! Er staan nog %d tickets op nul. Dan is daar niet aan "
-			+ "gewerkt, klopt dat?") % leeg
-	if rest == 0:
-		return "Dank je! Helemaal op het werk zelf geboekt. Dat is netjes."
-	return ("Dank je! %s op overig. Dat kan gebeuren. "
-		+ "Alvast bedankt!") % Urenstaat.formatteer_duur(rest)
+		nid = &"veel_rest"
+	elif leeg > 0:
+		nid = &"lege_tickets"
+	elif rest == 0:
+		nid = &"alles_geboekt"
+
+	var def: DialogueDef = GameData.dialogue(&"dirk_urenstaat")
+	if def == null:
+		push_error("TicketController: dialoogboom 'dirk_urenstaat' ontbreekt")
+		return ""
+	# {naam} en de klok vult DialogueController.vul_in() zelf in; deze twee
+	# staan alleen in de payload van de minigame.
+	return String(def.node(nid).get("text", "")) \
+		.replace("{rest}", Urenstaat.formatteer_duur(rest)) \
+		.replace("{aantal}", str(leeg))
 
 
 ## Het open ticket waarvoor deze NPC de eigenaar is. Danny bezit er twee en Daan
