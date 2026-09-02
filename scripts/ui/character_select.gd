@@ -71,6 +71,14 @@ func _ready() -> void:
 	_tagline.clip_text = true
 	root.add_child(_tagline)
 
+	# De balk is anders ongelabeld: tien blokjes die niemand als "de tickets van
+	# vandaag" herkent zonder een kop erboven.
+	var balkkop := UiKit.label("DE TIEN TICKETS VAN VANDAAG", UiKit.FS_SMALL, UiKit.GRIJS)
+	balkkop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	balkkop.autowrap_mode = TextServer.AUTOWRAP_OFF
+	balkkop.clip_text = true
+	root.add_child(balkkop)
+
 	root.add_child(_bouw_ticketbalk())
 
 	_stijl = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
@@ -99,8 +107,11 @@ func _ready() -> void:
 	go.grab_focus()
 
 	# QA: `--scherm=select --autostart` doorloopt de normale startroute.
+	# Ruim na de infade van Shell: die duurt 0.35s en zolang hij loopt weigert
+	# `_change_scene` een tweede overgang. Bij 0.3s klikte de QA-start dus in
+	# het niets en bleef de testroute op dit scherm hangen.
 	if "--autostart" in OS.get_cmdline_user_args():
-		await get_tree().create_timer(0.3).timeout
+		await get_tree().create_timer(0.9).timeout
 		_start()
 
 
@@ -346,8 +357,7 @@ func _portrait_for(c: CharacterDef) -> Texture2D:
 func _start() -> void:
 	Input.vibrate_handheld(45)
 	AudioDirector.play_ui(&"klik")
-	Session.start_new(_ids[_index])
-	Bus.character_selected.emit(_ids[_index])
+	QuestEngine.start_run(_ids[_index])
 	Shell.goto_game()
 
 

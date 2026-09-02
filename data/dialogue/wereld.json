@@ -14,7 +14,7 @@
             "text": "De deur staat open. Buiten is het nog licht."
           },
           {
-            "text": "De deur zit op slot. Boven de klink hangt een briefje: 'Nog even.'"
+            "text": "De deur zit op slot. Het briefje van vanmorgen hangt er nog: TIEN TICKETS. Daaronder een ouder briefje: 'Nog even.'"
           }
         ],
         "next": "tweede"
@@ -116,6 +116,23 @@
           },
           {
             "text": "Ze staan allemaal links. Links betekent hier: nog niets van waar."
+          }
+        ],
+        "next": "derde"
+      },
+      "derde": {
+        "speaker": "",
+        "variants": [
+          {
+            "when": {
+              "tickets_not_done": [
+                "t01"
+              ]
+            },
+            "text": "Daar wacht iemand tot iemand beslist wat we bouwen."
+          },
+          {
+            "text": ""
           }
         ]
       }
@@ -331,6 +348,38 @@
             "text": "Jouw bureau. Het toetsenbord ligt evenwijdig aan de rand. Zo hoort dat."
           },
           {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Twee schermen op precies dezelfde hoogte. Jij zou er niet aan durven komen."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "Op een geeltje staat: 4px. Jij ziet er zeven en je zegt niets."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Twee schermen op precies dezelfde hoogte. Moet zeggen, knap werk."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Twee schermen op precies dezelfde hoogte. Daar heeft nog nooit een klant naar gevraagd."
+          },
+          {
             "text": "Op een geeltje staat: 4px. Ik weet dat je het ziet."
           }
         ]
@@ -347,7 +396,19 @@
       },
       "tweede": {
         "speaker": "",
-        "text": "Op het scherm staat een componentbibliotheek. Vier knoppen die er hetzelfde uitzien."
+        "variants": [
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "Jouw bureau. Vier knoppen die er hetzelfde uitzien. Jij weet welke drie fout zijn."
+          },
+          {
+            "text": "Op het scherm staat een componentbibliotheek. Vier knoppen die er hetzelfde uitzien."
+          }
+        ]
       }
     }
   },
@@ -369,6 +430,38 @@
               ]
             },
             "text": "Jouw bureau. Je weet nog precies wanneer je hier voor het laatst hebt gezeten."
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Op een geeltje: meningen zijn geen data. Jij vindt dat wel meevallen."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "Op een geeltje: meningen zijn geen data. Jij hebt er drie."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Drie dashboards, drie verschillende fonts. Dat kan geen toeval zijn."
+          },
+          {
+            "when": {
+              "character": [
+                "willem"
+              ]
+            },
+            "text": "Drie dashboards. Jij kunt de klant door twee ervan heen praten zonder dat hij het merkt."
           },
           {
             "text": "Op een geeltje: meningen zijn geen data. In zijn eigen handschrift."
@@ -454,6 +547,30 @@
       "tweede": {
         "speaker": "",
         "variants": [
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Jouw rack. Jij weet waar die ene kabel heen gaat. Je hebt het nooit verteld."
+          },
+          {
+            "when": {
+              "character": [
+                "jonathan"
+              ]
+            },
+            "text": "Het tweede rack. Ben benieuwd wat daar allemaal nog op draait."
+          },
+          {
+            "when": {
+              "character": [
+                "victor"
+              ]
+            },
+            "text": "Het label hangt een halve graad scheef. Jij hebt het al gezien."
+          },
           {
             "when": {
               "trait": [
@@ -615,128 +732,6 @@
       }
     }
   },
-  "intro": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Woensdag. 9:12. Je bent binnen. De voordeur klikt achter je in het slot.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "speler",
-        "variants": [
-          {
-            "when": {
-              "character": [
-                "daan"
-              ]
-            },
-            "text": "Puur uit interesse: doet hij dat normaal ook?"
-          },
-          {
-            "when": {
-              "character": [
-                "danny"
-              ]
-            },
-            "text": "biem. dicht."
-          },
-          {
-            "when": {
-              "character": [
-                "victor"
-              ]
-            },
-            "text": "manmanman. Op slot?"
-          },
-          {
-            "when": {
-              "character": [
-                "jonathan"
-              ]
-            },
-            "text": "Op slot. Ben benieuwd."
-          },
-          {
-            "when": {
-              "character": [
-                "willem"
-              ]
-            },
-            "text": "Dat is weeeel bijzonder."
-          },
-          {
-            "text": "Dat doet hij normaal niet."
-          }
-        ],
-        "next": "derde"
-      },
-      "derde": {
-        "speaker": "",
-        "text": "Op de klink hangt een briefje. TIEN TICKETS. DAN MAG JE NAAR BUITEN. Er staat geen naam onder.",
-        "next": "vierde"
-      },
-      "vierde": {
-        "speaker": "speler",
-        "variants": [
-          {
-            "when": {
-              "character": [
-                "daan"
-              ]
-            },
-            "text": "Tien. Puur uit interesse: wie heeft dat bepaald?"
-          },
-          {
-            "when": {
-              "character": [
-                "danny"
-              ]
-            },
-            "text": "psies. komen we maar op 1 manier achter dat het werkt"
-          },
-          {
-            "when": {
-              "character": [
-                "victor"
-              ]
-            },
-            "text": "Godver. Tien."
-          },
-          {
-            "when": {
-              "character": [
-                "jonathan"
-              ]
-            },
-            "text": "Tien tickets. Moet zeggen dat dat er veel zijn."
-          },
-          {
-            "when": {
-              "character": [
-                "willem"
-              ]
-            },
-            "text": "Tien. Absoluta."
-          },
-          {
-            "text": "Tien tickets. Het is woensdag. Dat kan."
-          }
-        ],
-        "next": "vijfde"
-      },
-      "vijfde": {
-        "speaker": "",
-        "text": "Door de deur ligt de gang. Achter het glas de vergaderruimte. Daar wacht iemand tot iemand beslist wat we bouwen.",
-        "next": "zesde"
-      },
-      "zesde": {
-        "speaker": "",
-        "text": "Loop naar iemand of iets toe en druk op E. Dat is het hele spel."
-      }
-    }
-  },
   "plantenkast": {
     "start": "start",
     "nodes": {
@@ -869,6 +864,22 @@
               ]
             },
             "text": "Jouw hok. Je herkent de deuk in het bureaublad."
+          },
+          {
+            "when": {
+              "character": [
+                "koen"
+              ]
+            },
+            "text": "Jij belt hier weleens vanaf. Niemand weet dat en zo houden we het."
+          },
+          {
+            "when": {
+              "character": [
+                "bastiaan"
+              ]
+            },
+            "text": "Op het toestel zit een geeltje met een telefoonnummer. Het hangt scheef."
           },
           {
             "text": "Op het toestel zit een geeltje met één telefoonnummer. Geen naam."

@@ -41,9 +41,9 @@ func _ready() -> void:
 	v.add_child(quit)
 
 	start.grab_focus()
-	AudioDirector.play_music(&"titel")
+	AudioDirector.set_base(&"intro")
 
 
 func _on_start() -> void:
 	AudioDirector.play_ui(&"klik")
-	Shell.goto_character_select()
+	Shell.goto_intro_uitleg()
