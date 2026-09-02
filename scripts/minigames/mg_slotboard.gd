@@ -179,7 +179,7 @@ func _on_setup() -> void:
 		_pool.add_child(DragCard.new(String(cd.get("id", "")), String(cd.get("text", "")),
 			UiKit.PANEL, self, kw, kh))
 
-	var check := UiKit.button(String(c.get("knop", "Controleren")), UiKit.FS_BODY)
+	var check := UiKit.knop_primair(String(c.get("knop", "Controleren")), UiKit.FS_BODY)
 	check.pressed.connect(_check)
 	body.add_child(check)
 

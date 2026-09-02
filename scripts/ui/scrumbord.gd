@@ -42,7 +42,7 @@ func bouw() -> void:
 	v.add_theme_constant_override("separation", 2)
 	paneel.add_child(v)
 
-	_titel = UiKit.label("JOUW TICKETS", UiKit.FS_BODY, UiKit.INK)
+	_titel = UiKit.label("JOUW TICKETS", UiKit.FS_SUB, UiKit.INK)
 	v.add_child(_titel)
 	_onder = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)
 	v.add_child(_onder)
@@ -160,9 +160,12 @@ func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
 	if st == GameEnums.TicketState.DONE:
 		# opgelost wijkt terug: die kolom is een archief, geen keuze
 		kleur = kleur.lerp(UiKit.WIT, 0.45)
-	# Het gekozen briefje krijgt de oranje rand van de doelwijzer, zodat "dit is
-	# waar ik mee bezig ben" er op het bord net zo uitziet als in de wereld.
-	var rand := UiKit.ORANJE if Session.is_pinned(t.id) else kleur.darkened(0.30)
+	# Het gekozen briefje krijgt een paarse rand. Dat wás de oranje van de
+	# doelwijzer, maar oranje betekende toen ook overwerk en net-geboekte tijd,
+	# en een kleur die vier dingen zegt zegt niets. Paars is hier bovendien de
+	# enige tint die tegen álle vijf de papierkleuren afsteekt — geel, roze,
+	# blauw, groen en oranje papier.
+	var rand := UiKit.VASTGEZET if Session.is_pinned(t.id) else kleur.darkened(0.30)
 	p.add_theme_stylebox_override("panel", UiKit.postit(kleur, rand))
 	p.mouse_filter = Control.MOUSE_FILTER_STOP
 	p.tooltip_text = t.title
@@ -250,7 +253,7 @@ static func _korte_eigenaar(t: TicketDef) -> String:
 
 
 ## Twee regels, meer niet: wat het is en waar je heen moet. De code staat al op
-## het briefje, de oranje rand zegt al dat het gekozen is, en de hint staat
+## het briefje, de paarse rand zegt al dat het gekozen is, en de hint staat
 ## achter de hintknop én wordt door de wijzer in de wereld aangewezen. Dat drie
 ## keer herhalen onder aan een telefoonscherm maakt er geen keuzescherm van maar
 ## een lap tekst waar niemand iets mee doet.

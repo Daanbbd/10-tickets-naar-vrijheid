@@ -314,7 +314,7 @@ func _bouw_voet(body: VBoxContainer) -> void:
 	pad.add_child(_pijl("▼", Vector2i(0, 1)))
 	pad.add_child(_pijl("▶", Vector2i(1, 0)))
 
-	_klaar = UiKit.button("Klaar", UiKit.FS_BODY)
+	_klaar = UiKit.knop_primair("Klaar", UiKit.FS_BODY)
 	_klaar.pressed.connect(_afronden)
 	voet.add_child(_klaar)
 

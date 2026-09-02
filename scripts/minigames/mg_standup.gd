@@ -119,7 +119,7 @@ func _bouw_vast(_body: VBoxContainer) -> void:
 	_balk_vak.add_child(_balk)
 	chrome_header().add_child(_balk_vak)
 
-	_knop = UiKit.button("Afkappen", UiKit.FS_BODY)
+	_knop = UiKit.knop_primair("Afkappen", UiKit.FS_BODY)
 	# Dit is de enige actie in de hele minigame en hij moet onder je duim liggen,
 	# dus hij mag ruimer zijn dan de 24 px die UiKit als bodem aanhoudt.
 	_knop.custom_minimum_size = Vector2(0, 32)

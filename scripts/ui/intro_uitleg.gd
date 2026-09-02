@@ -53,7 +53,7 @@ func _ready() -> void:
 
 	v.add_child(UiKit.spacer(6))
 
-	var verder := UiKit.button("Begrepen", UiKit.FS_BODY)
+	var verder := UiKit.knop_primair("Begrepen", UiKit.FS_BODY)
 	verder.pressed.connect(_on_verder)
 	v.add_child(verder)
 

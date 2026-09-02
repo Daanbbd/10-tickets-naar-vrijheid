@@ -100,7 +100,7 @@ func setup() -> void:
 
 	# "+45 min", drijft omhoog vlak onder de klok. Hangt los van de balk zodat
 	# hij eroverheen kan zweven.
-	_plus = UiKit.label("", UiKit.FS_SMALL, UiKit.ORANJE)
+	_plus = UiKit.label("", UiKit.FS_SMALL, UiKit.GEBOEKT)
 	_plus.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_plus.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_plus.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -328,13 +328,13 @@ func toon_nieuw_briefje(t: TicketDef, duur: float = BRIEFJE_ZICHTBAAR) -> void:
 
 # --- De urenstaat ---------------------------------------------------------
 
-## De klok, en na vijven in oranje. Los van _refresh() gehouden — zie daar.
+## De klok, en na vijven in de overwerkkleur. Los van _refresh() gehouden — zie daar.
 func _refresh_klok() -> void:
 	if _klok == null:
 		return
 	_klok.text = Urenstaat.formatteer(Urenstaat.START_MIN + _klok_min)
 	_klok.add_theme_color_override("font_color",
-		UiKit.ORANJE if _klok_min >= Urenstaat.BUDGET_MIN else UiKit.WIT)
+		UiKit.OVERWERK if _klok_min >= Urenstaat.BUDGET_MIN else UiKit.WIT)
 
 
 ## De boeking is de trigger van de rol, niet het opgeloste ticket: anders staat

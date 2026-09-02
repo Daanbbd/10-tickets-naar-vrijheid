@@ -202,7 +202,7 @@ func _bouw_voet(_body: VBoxContainer) -> void:
 	# de vinger van de speler op en neer laten springen.
 	_hint.custom_minimum_size = Vector2(0, 12)
 	voet.add_child(_hint)
-	_vastleg = UiKit.button("Vastleggen", UiKit.FS_BODY)
+	_vastleg = UiKit.knop_primair("Vastleggen", UiKit.FS_BODY)
 	_vastleg.pressed.connect(_vastleggen)
 	voet.add_child(_vastleg)
 

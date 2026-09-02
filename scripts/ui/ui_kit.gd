@@ -21,7 +21,10 @@ const BLUEBIRD_TINT    := Color("#dbe9ff")  # bb_light_blue — letterlijk bb-li
 const GROEN            := Color("#3fae6e")  # ui_groen — derivaat van bb-green, leesbaar op 8-10px
 const GROEN_TINT       := Color("#d8ffe0")  # bb_green — letterlijk bb-green
 const ROOD             := Color("#e05263")  # ui_rood — game-only utility — BBD heeft geen foutkleur
-const ORANJE           := Color("#f4a259")  # ui_oranje — derivaat van bb-orange, leesbaar op 8-10px
+const ORANJE           := Color("#f4a259")  # ui_oranje — derivaat van bb-orange, leesbaar op 8-10px — alleen nog 'doel'
+const VASTGEZET        := Color("#9b5de5")  # ui_vastgezet — rand om een vastgeprikt ticket
+const OVERWERK         := Color("#e94c82")  # ui_overwerk — de klok voorbij het urenbudget
+const GEBOEKT          := Color("#6dcdd6")  # ui_geboekt — tijd die zojuist geboekt is
 const ORANJE_TINT      := Color("#f7d6c2")  # bb_orange — letterlijk bb-orange
 const ROZE_TINT        := Color("#ffcee3")  # bb_pink — letterlijk bb-pink — gereserveerd voor mensen/cultuur
 const NEUTRAAL_TINT    := Color("#e4e4e4")  # ui_neutraal_tint — letterlijk --color-line — voor niet-accent states
@@ -31,22 +34,61 @@ const POSTIT_LEEG      := Color("#dedad0")  # postit_leeg — lege plek op het b
 const POSTIT_LEEG_RAND := Color("#c4bfb4")  # postit_leeg_rand — rand van een lege plek
 # --- GEGENEREERD UIT palette.py, NIET HANDMATIG BEWERKEN — EINDE ---
 
-# Ark Pixel is ontworpen op 10 px. Alleen hele veelvouden blijven scherp, dus
-# de ladder is 10 / 20 / 30. Klein onderscheid gaat via kleur, niet via 8 px:
-# een pixelfont onder zijn ontwerpmaat wordt onleesbaar.
-const FS_SMALL := 10
-const FS_BODY := 10
-const FS_HEAD := 20
-const FS_TITLE := 30
+# --- Typografie -----------------------------------------------------------
+#
+# Ark Pixel wordt per ontwerpmaat als eigen snit uitgeleverd. Dat is de hele
+# reden dat deze ladder kan bestaan: `font_size` op één TTF *schaalt* die snit,
+# dus een 10px-snit op 12 px is geen 12px-letter maar een uitgerekte 10px-letter
+# met halve pixels. 12 en 16 vragen dus een eigen bestand; 20 en 30 zijn hele
+# veelvouden van 10 en blijven op de 10px-snit scherp.
+#
+# Waarom dit moest. FS_SMALL en FS_BODY waren allebei 10, dus élk teken in het
+# spel was even groot en de hele hiërarchie liep via kleur. Daardoor moest één
+# kleur (ORANJE) vier dingen tegelijk betekenen. Grootte draagt nu het verschil
+# tussen bijschrift, lopende tekst en kop; kleur draagt alleen nog betekenis.
+const FONT_10 := preload("res://assets/fonts/ark-pixel-10px-proportional-latin.ttf")
+const FONT_12 := preload("res://assets/fonts/ark-pixel-12px-proportional-latin.ttf")
+const FONT_16 := preload("res://assets/fonts/ark-pixel-16px-proportional-latin.ttf")
+
+const FS_SMALL := 10   ## bijschrift, legenda, secundaire regel
+const FS_BODY := 12    ## lopende tekst, knoplabels
+const FS_SUB := 16     ## tussenkop, het cijfer waar een minigame om draait
+const FS_HEAD := 20    ## schermkop
+const FS_TITLE := 30   ## alleen het titelscherm
+
+## Welke snit bij welke maat hoort. 20 en 30 staan bewust op FONT_10: dat is
+## 2x en 3x, en een pixelfont op een heel veelvoud blijft scherp.
+##
+## Er is geen `Theme`-resource in dit project — de globale font staat als los
+## bestand in project.godot — dus er is geen plek waar Godot dit vanzelf per
+## maat oppakt. Elke constructor hieronder zet daarom zelf zowel de font als de
+## font-grootte. Vergeet je de font, dan krijg je een geschaalde 10px-snit en
+## ziet niemand dat het mis is, alleen dat het wazig is.
+const FONTS := {
+	10: FONT_10, 12: FONT_12, 16: FONT_16, 20: FONT_10, 30: FONT_10,
+}
+
+
+## De snit die bij `size` hoort. Een maat buiten de ladder valt terug op de
+## 10px-snit; dat is de enige snit waarvan we weten dat hij op elk veelvoud
+## klopt.
+static func font_voor(size: int) -> FontFile:
+	return FONTS.get(size, FONT_10)
+
 
 ## Minimumhoogte van een knop, in canvaspixels. Een duimmaat, geen designkeuze:
-## op een 1080-brede telefoon schaalt dit canvas 5x, dus 24 px is ~9 mm en dat
-## is wat Android als 48 dp vraagt. Daaronder wordt een knop een mikpunt.
+## op een 1080-brede telefoon schaalt dit canvas 5x, dus 30 px is ~11 mm. Android
+## vraagt 48 dp (~9 mm) als ondergrens; dit zit daar bewust boven, want 48 dp is
+## de grens waaronder het misgaat en niet de maat waarop het prettig wordt.
+##
+## Stond op 24. Dat was krap genoeg dat de knop zijn eigen minimum nooit haalde:
+## een Button meldt regelhoogte plus stijlmarges, en dat was al 26. Een
+## ondergrens die altijd verliest van de gemeten hoogte stuurt niets aan.
 ##
 ## Staat hier en niet in de knoppenbalk omdat de balk zijn eigen hoogte hieruit
 ## afleidt en de HUD zijn onderste regels daar weer boven hangt: één getal, drie
 ## lezers.
-const KNOP_MIN_H := 24
+const KNOP_MIN_H := 30
 
 
 static func panel(bg: Color = PANEL, border: Color = INK, width: int = 1) -> StyleBoxFlat:
@@ -100,6 +142,7 @@ static func label(text: String, size: int = FS_BODY, color: Color = INK) -> Labe
 	var l := Label.new()
 	l.text = text
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.add_theme_font_override("font", font_voor(size))
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
 	return l
@@ -110,6 +153,8 @@ static func rich(size: int = FS_BODY, color: Color = INK) -> RichTextLabel:
 	r.bbcode_enabled = true
 	r.fit_content = false
 	r.scroll_active = false
+	r.add_theme_font_override("normal_font", font_voor(size))
+	r.add_theme_font_override("bold_font", font_voor(size))
 	r.add_theme_font_size_override("normal_font_size", size)
 	r.add_theme_font_size_override("bold_font_size", size)
 	r.add_theme_color_override("default_color", color)
@@ -146,6 +191,7 @@ static func button(text: String, size: int = FS_BODY) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(0, KNOP_MIN_H)
+	b.add_theme_font_override("font", font_voor(size))
 	b.add_theme_font_size_override("font_size", size)
 	b.add_theme_color_override("font_color", INK)
 	b.add_theme_color_override("font_hover_color", BLUEBIRD_INK)
@@ -161,6 +207,37 @@ static func button(text: String, size: int = FS_BODY) -> Button:
 	b.add_theme_stylebox_override("disabled", panel(NEUTRAAL_TINT, GRIJS))
 	b.add_theme_color_override("font_disabled_color", GRIJS)
 	b.focus_mode = Control.FOCUS_ALL
+	return b
+
+
+## De knop die het scherm afmaakt: blauw gevuld, één per scherm.
+##
+## Dit is het antwoord op schermen waar elke knop er hetzelfde uitzag.
+## "Beginnen" en "Afsluiten" op het titelscherm waren pixelidentiek, en dan is
+## de gevaarlijke knop even uitnodigend als de goede. Een gevulde knop in
+## bb-blue leest van een afstand als "hier klik je", en al het andere op dat
+## scherm wordt daarmee vanzelf secundair — juist doordat het níet verandert.
+##
+## Gebruik hem voor de bevestigende actie: doorgaan, starten, opleveren,
+## vastleggen. Niet voor weglopen, annuleren of sluiten; die horen de gewone
+## `button()` te houden, anders is er weer geen verschil.
+##
+## De vulling is BLUEBIRD_INK met witte letters. Niet BLUEBIRD_TINT met zwarte:
+## die tint is zo licht dat hij naast PANEL nauwelijks opvalt, en dat was
+## precies het probleem bij DEPLOYEN — de enige "primaire" knop die het spel
+## had, en je zag hem alsnog over het hoofd.
+static func knop_primair(text: String, size: int = FS_BODY) -> Button:
+	var b := button(text, size)
+	b.add_theme_color_override("font_color", WIT)
+	b.add_theme_color_override("font_hover_color", WIT)
+	b.add_theme_color_override("font_focus_color", WIT)
+	b.add_theme_color_override("font_pressed_color", WIT)
+	b.add_theme_stylebox_override("normal", panel(BLUEBIRD_INK, BLUEBIRD_INK))
+	b.add_theme_stylebox_override("hover", panel(BLUEBIRD_BRIGHT, BLUEBIRD_INK))
+	# Ingedrukt gaat donkerder, niet lichter: de knop zakt weg onder je duim.
+	b.add_theme_stylebox_override("pressed", panel(BLUEBIRD_INK.darkened(0.35), INK))
+	# De focusrand moet leesbaar zijn óp het blauw, dus wit en niet blauw.
+	b.add_theme_stylebox_override("focus", panel(BLUEBIRD_BRIGHT, WIT, 2))
 	return b
 
 

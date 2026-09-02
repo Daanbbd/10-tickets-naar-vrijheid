@@ -62,11 +62,11 @@ func _bouw() -> void:
 	v.add_theme_constant_override("separation", 4)
 	_paneel.add_child(v)
 
-	var kop := UiKit.label("PAUZE", UiKit.FS_BODY, UiKit.BLUEBIRD_INK)
+	var kop := UiKit.label("PAUZE", UiKit.FS_SUB, UiKit.BLUEBIRD_INK)
 	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(kop)
 
-	var door := UiKit.button("Doorgaan", UiKit.FS_BODY)
+	var door := UiKit.knop_primair("Doorgaan", UiKit.FS_BODY)
 	door.pressed.connect(sluit)
 	v.add_child(door)
 

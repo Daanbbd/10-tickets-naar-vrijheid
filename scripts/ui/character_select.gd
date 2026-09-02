@@ -14,8 +14,10 @@ extends Control
 ## docs/GAME_DESIGN.md in één beweging, zonder er een zin over te schrijven.
 ##
 ## Mobiel is de randvoorwaarde: op een telefoon van 1080 breed is één logische
-## px ongeveer 0,34 mm, dus 48 dp komt uit op 26 px. Vandaar rijen van 26 en een
-## knop van 28. Aantikbare dingen kleiner dan dat zijn er niet.
+## px ongeveer 0,34 mm, dus 48 dp komt uit op 26 px. Vandaar rijen van 26.
+## Aantikbare dingen kleiner dan dat zijn er niet. De knop had hier een eigen
+## 28 en heeft die niet meer: `UiKit.KNOP_MIN_H` staat op 30 en is nu de enige
+## plek waar die maat vandaan komt.
 
 const PODIUM_H := 96
 const RIJ_H := 26
@@ -59,7 +61,7 @@ func _ready() -> void:
 	root.add_theme_constant_override("separation", 2)
 	add_child(root)
 
-	var kop := UiKit.label("WIE BEN JIJ VANDAAG", UiKit.FS_BODY, UiKit.BLUEBIRD_BRIGHT)
+	var kop := UiKit.label("WIE BEN JIJ VANDAAG", UiKit.FS_SUB, UiKit.BLUEBIRD_BRIGHT)
 	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(kop)
 
@@ -98,8 +100,9 @@ func _ready() -> void:
 		_ids.append(id)
 		lijst.add_child(_bouw_rij(GameData.character(id), _ids.size() - 1))
 
-	var go := UiKit.button("Aan het werk", UiKit.FS_BODY)
-	go.custom_minimum_size = Vector2(0, 28)
+	# De enige bevestigende actie op dit scherm, dus de blauwe. De eigen hoogte
+	# van 28 is weg: die zat onder UiKit.KNOP_MIN_H en overschreef hem.
+	var go := UiKit.knop_primair("Aan het werk", UiKit.FS_BODY)
 	go.pressed.connect(_start)
 	root.add_child(go)
 

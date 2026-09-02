@@ -96,7 +96,11 @@ func build_chrome(title: String, intro: String) -> VBoxContainer:
 	# Titel en status onder elkaar, niet naast elkaar: op 192 px is een kop op
 	# FS_HEAD naast een statusregel breder dan het scherm, en een Container
 	# groeit buiten zijn ankers om zijn kinderen te laten passen.
-	var t := UiKit.label(title, UiKit.FS_BODY, UiKit.INK)
+	#
+	# FS_SUB en niet FS_BODY: dit is de kop van het scherm en die hoorde groter
+	# te zijn dan de tekst eronder. Hij stond op FS_BODY omdat FS_HEAD (20) niet
+	# paste en er daartussen niets bestond — precies het gat dat 16 nu vult.
+	var t := UiKit.label(title, UiKit.FS_SUB, UiKit.INK)
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(t)
 	_status = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS)

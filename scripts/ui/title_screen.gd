@@ -32,7 +32,15 @@ func _ready() -> void:
 
 	v.add_child(UiKit.spacer(10))
 
-	var start := UiKit.button("Beginnen", UiKit.FS_BODY)
+	# Precies één blauwe knop per scherm, en dat is dezelfde knop die de focus
+	# krijgt — zie de regel onderaan: wie een dag heeft openstaan wil die
+	# afmaken, en anders begin je een nieuwe. "Beginnen" en "Afsluiten" waren
+	# hiervoor pixelidentiek, dus stoppen met spelen zag er even uitnodigend uit
+	# als beginnen.
+	var heeft_save := Session.has_saved_run()
+
+	var start := (UiKit.button("Beginnen", UiKit.FS_BODY) if heeft_save
+		else UiKit.knop_primair("Beginnen", UiKit.FS_BODY))
 	start.pressed.connect(_on_start)
 	v.add_child(start)
 
@@ -42,8 +50,8 @@ func _ready() -> void:
 	# enkele lezer, en een half uur spelen was op een telefoon onherstelbaar weg
 	# terwijl het bestand er gewoon stond.
 	var verder: Button = null
-	if Session.has_saved_run():
-		verder = UiKit.button("Doorgaan", UiKit.FS_BODY)
+	if heeft_save:
+		verder = UiKit.knop_primair("Doorgaan", UiKit.FS_BODY)
 		verder.pressed.connect(_on_doorgaan)
 		v.add_child(verder)
 
