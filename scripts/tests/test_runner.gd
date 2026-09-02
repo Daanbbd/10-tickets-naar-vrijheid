@@ -47,6 +47,7 @@ func _ready() -> void:
 	_test_briefings()
 	_test_intro()
 	_test_save_ronde()
+	_test_uitlijnen_perfect()
 	_rapport()
 
 
@@ -2384,3 +2385,55 @@ func _test_klok() -> void:
 					overwerk_varianten += 1
 	_ok(overwerk_varianten >= 4,
 		"verwacht minstens vier dialoogvarianten die op 'overwerk' letten, gevonden %d" % overwerk_varianten)
+
+
+## BBD-204 · `mg_uitlijnen`: bewijst de datafix, niet alleen dat de suite
+## toevallig doorloopt. De bug zat hierin: de stapgrootte (`raster`) en de
+## `afwijking` van elk blok deelden geen rest, dus geen enkel blok kon via
+## hele rasterstappen exact op nul uitkomen en `perfect` viel nooit — Victors
+## enige gevolg was dood. Dit draait de echte minigame, sleept elk blok met de
+## eigen `_op_aanraking()`/`_op_sleep()`/`_op_los()`-handlers (dezelfde route
+## als een speler met een vinger) precies naar zijn rasterpunt, en toetst dan
+## `rest()` zelf — de exacte functie waarmee `_afronden()` `perfect` bepaalt —
+## in plaats van er alleen op te vertrouwen dat de puzzel "voelt" als opgelost.
+func _test_uitlijnen_perfect() -> void:
+	_kop("uitlijnen: een exacte sleep maakt perfect haalbaar")
+
+	var packed: PackedScene = load("res://scenes/minigames/mg_uitlijnen.tscn")
+	var mg: MinigameBase = packed.instantiate() as MinigameBase
+	mg.minigame_id = &"mg_frontend_fix"
+	add_child(mg)
+	mg.setup({})
+
+	var raster: int = int(mg.get("_raster"))
+	var volgorde: Array = mg.get("_volgorde")
+	var blokken: Dictionary = mg.get("_blokken")
+	_ok(not volgorde.is_empty(), "mg_frontend_fix: geen elementen geladen voor de testronde")
+
+	for id: Variant in volgorde:
+		var blok: Object = blokken[id]
+		var thuis: Vector2 = blok.get("thuis")
+		var vooraf: Vector2 = blok.call("rest", raster)
+		_ok(not vooraf.is_zero_approx(),
+			"%s: begint al op nul, dus deze ronde bewijst niets over de datafix" % id)
+
+		# Eén doorlopende aanraking, precies zoals een vinger op het scherm: neer
+		# op het midden van het blok (de blokken staan nog op hun scheve
+		# beginplek en overlappen elkaar daar deels, dus een hoekpunt kan
+		# per ongeluk het verkeerde blok raken), dan naar zijn rasterpunt
+		# (`thuis`) met dezelfde grip en los. Met een consistente grip valt
+		# `_greep` weg uit de som, dus het slepunt bepaalt de uitkomst direct.
+		var midden: Vector2 = blok.get("maat") / 2.0
+		var vanaf: Vector2 = (blok.get("position") as Vector2) + midden
+		mg.call("_op_aanraking", vanaf)
+		mg.call("_op_sleep", thuis + midden)
+		mg.call("_op_los")
+
+		var na: Vector2 = blok.call("rest", raster)
+		_ok(na.is_zero_approx(),
+			"%s: een exacte sleep laat %s over in plaats van (0, 0) — perfect valt nog steeds nooit" % [
+				id, na])
+		_ok(bool(blok.get("vast")),
+			"%s: staat na een exacte sleep niet 'vast', terwijl de rest al op nul staat" % id)
+
+	mg.queue_free()

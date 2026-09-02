@@ -6,16 +6,24 @@ extends MinigameBase
 ## raster eronder is de waarheid waar je naartoe werkt. Vervang alle blokken
 ## door grijze vlakken en je ziet nog steeds dat dit iets anders is dan de rest.
 ##
-## De besturing zijn vier richtingsknoppen. Slepen mag ook, maar het is de
-## bijroute: de fout die je herstelt is kleiner dan de vinger waarmee je hem
-## aanwijst, dus een knop die precies één rasterstap doet komt verder dan een
-## duim op een blok van zestien pixels.
+## Slepen is de hoofdroute: een vinger op een blok van zestien pixels is groter
+## dan de fout die je herstelt, dus vrij pixel-voor-pixel schuiven zou nooit
+## precies uitkomen. `_op_sleep()` rondt daarom bij elke beweging af op de
+## dichtstbijzijnde rasterstap — de precisie zit in het slepen zelf, niet in
+## een aparte "vastklik"-actie erna. De vier richtingsknoppen blijven bestaan
+## als secundaire invoer: één knop is één rasterstap, handig voor de laatste
+## correctie of voor wie niet kan slepen, maar niet meer de manier waarop je
+## deze minigame speelt.
 ##
-## De stapgrootte (4) en de afwijkingen uit de data delen nooit een rest: geen
-## enkel blok komt via hele stappen exact op nul uit. De tolerantie van twee
-## pixels is dus geen vriendelijkheid maar de reden dat het oplosbaar is — en
-## precies waarom `perfect` in de payload vrijwel altijd false blijft. Victor
-## zou zeggen dat het nog wat meer uitgelijnd kan.
+## De stapgrootte (4, `raster` in de data) en elke `afwijking` moeten dezelfde
+## rest delen — in de praktijk: elke afwijking is een veelvoud van het raster —
+## anders komt geen enkel blok via hele stappen exact op nul uit en valt
+## `perfect` in de payload nooit, wat Victors enige gevolg onbereikbaar maakt.
+## Dat was precies de databug (elke `afwijking` in `data/minigame_content.json`
+## deelde géén rest met het raster); de data is gerepareerd, niet de rekenwijze.
+## De tolerantie van twee pixels blijft daarnaast bestaan, en betekent nu wat
+## hij belooft: de marge waarbinnen een blok al "vast" oogt terwijl je nog
+## sleept, niet de enige reden dat de puzzel oplosbaar is.
 
 
 ## Vaste plek en maat van elk blok op het vel, in canvaspixels en op het raster.
