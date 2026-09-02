@@ -725,7 +725,18 @@ func _refresh_klok() -> void:
 		UiKit.ROOD if _klok_resterend <= KLOK_ALARM else UiKit.ORANJE)
 
 
-## De wereld staat gepauzeerd, dus een gewone timer loopt hier nooit af.
+## F5-a: dit was `process_always = true` omdat de wereld gepauzeerd stond
+## zolang deze minigame liep, en anders nooit was afgelopen. Dat is niet meer
+## zo tijdens een gewone speelbeurt — maar backgrounden (`Shell._naar_achtergrond()`)
+## pauzeert de tree nog altijd wél, onvoorwaardelijk, ook tijdens deze
+## minigame. Blijft dit op `true` staan, dan tikt `_klok_loop()` hierboven
+## door terwijl de speler in een andere app zit — precies hetzelfde als elke
+## niet-geflagde timer in `main.gd` vandaag al doet (`create_timer()` staat
+## standaard al op `process_always = true` in Godot zelf). Dat is dus geen
+## nieuwe aanname van deze functie, maar een bestaande eigenschap van de hele
+## codebase, en die in zijn geheel herzien hoort niet bij F5. Blijft daarom
+## bewust op `true` staan, in plaats van hier alleen deze ene minigame anders
+## te laten gedragen dan de rest.
 func _pauze(t: float) -> void:
 	await get_tree().create_timer(t, true, false, true).timeout
 

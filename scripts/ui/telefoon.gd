@@ -223,10 +223,17 @@ func _op_ticket(_id: StringName, _result: MinigameResult) -> void:
 ## een afsluitende dialoog, en daar bovenop vallen is precies het moment waarop
 ## een speler op de verkeerde knop drukt. Dus wachten we tot de vloer weer stil
 ## is: geen gesprek, geen minigame, geen invoerslot.
+##
+## `Shell.minigame_active()` staat er sinds F5-a expliciet bij in plaats van
+## impliciet mee te liften op `Session.input_locked`: `Shell.run_minigame()`
+## zet tegenwoordig ook `Session.lock_input()`, dus die ene voorwaarde dekt een
+## minigame vandaag toevallig al mee — maar deze laag (30) mag sowieso nooit
+## over een minigame (50) heen vallen (zie `LAAG` hierboven), dus die aanname
+## staat hier hard neergezet in plaats van er terloops van te profiteren.
 func _process(_delta: float) -> void:
 	if _wachtrij.is_empty() or _open:
 		return
-	if Session.input_locked or get_tree().paused:
+	if Session.input_locked or get_tree().paused or Shell.minigame_active():
 		return
 	_toon(_wachtrij.pop_front())
 

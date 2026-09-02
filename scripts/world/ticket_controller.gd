@@ -161,8 +161,13 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 
 	# F4-b: vier tickets lossen op dóór in de wereld te handelen — een gesprek,
 	# een keuze bij een object, een collega aanspreken — in plaats van door een
-	# afgesloten, wereld-pauzerende minigame. `Shell.run_minigame()` pauzeert
-	# `get_tree()`; dat is precies wat hier niet mag gebeuren.
+	# afgesloten minigame-overlay. `Shell.run_minigame()` bouwt precies zo'n
+	# schermvullende, muis-blokkerende chrome (`MinigameLayer`); dat is precies
+	# wat hier niet mag gebeuren, want een wereldhandeling moet de speler juist
+	# in de zichtbare wereld laten blijven klikken en lopen. (Vóór F5-a
+	# pauzeerde `run_minigame()` ook `get_tree()`, en was dát de reden dit pad
+	# apart te houden; sinds F5-a doet het dat niet meer, maar de overlay zelf
+	# blijft even ongeschikt voor dit soort tickets.)
 	var result: MinigameResult
 	if t.wereldhandeling:
 		result = await _resolve_wereldhandeling(t, mg_config.get("inhoud", {}) as Dictionary, via_npc)
@@ -223,7 +228,7 @@ func _briefing(t: TicketDef) -> void:
 
 # --- Wereldhandelingen (F4-b) ----------------------------------------------
 #
-# Vier tickets kregen geen afgesloten, wereld-pauzerende minigame meer, maar
+# Vier tickets kregen geen afgesloten minigame-overlay meer, maar
 # lossen op dóór in de wereld te handelen: een gesprek, een keuze bij een
 # object, een collega aanspreken. `content` is hier altijd al de config zoals
 # de oude minigame hem zou hebben gekregen — inclusief het TraitModifier-

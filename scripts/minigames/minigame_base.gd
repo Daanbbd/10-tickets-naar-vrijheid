@@ -1,8 +1,10 @@
 class_name MinigameBase
 extends Control
-## Root van elke minigame. Draait als overlay op Shell/MinigameLayer terwijl de
-## wereld gepauzeerd is. Mag Session LEZEN, nooit schrijven: de uitkomst gaat
-## uitsluitend via finish() terug naar de TicketController.
+## Root van elke minigame. Draait als overlay op Shell/MinigameLayer, met
+## `Session.input_locked` aan (`Shell.run_minigame()` zet dat) zodat de speler
+## niet weg kan lopen — de wereld eromheen staat sinds F5-a niet meer stil.
+## Mag Session LEZEN, nooit schrijven: de uitkomst gaat uitsluitend via
+## finish() terug naar de TicketController.
 
 signal finished(result: MinigameResult)
 
@@ -73,6 +75,8 @@ var _status: Label = null
 var _intro: Label = null
 var _banner: PanelContainer = null
 var _banner_label: Label = null
+var _storing_paneel: PanelContainer = null
+var _storing_label: Label = null
 
 
 ## Bouwt het venster en geeft de VBox terug waar de minigame zijn eigen UI in zet.
@@ -223,6 +227,31 @@ func set_status(text: String) -> void:
 		_status.text = text
 
 
+## F5-b: een storing landt hier, niet als overlay erboven. De telefoon (laag
+## 30) en de HUD-toast (laag 10) liggen allebei onder de minigame (laag 50),
+## dus onzichtbaar zolang dit scherm openstaat — `Storingen` roept dit aan op
+## `Shell.active_minigame()` in plaats van de gewone wereldmelding te tonen.
+##
+## `kosten` is aan de minigame: een seconde van de klok, een mislukte
+## handeling, een bug erbij. Deze basisklasse doet er niets mee — hij toont
+## alleen de tekst in `chrome_header()`, wat het contract al vervult ("moet
+## minstens visueel landen"). Een minigame die `kosten` wél wil verwerken
+## overschrijft dit en roept `super.storing(tekst, kosten)` aan zodat de strook
+## blijft verschijnen.
+func storing(tekst: String, _kosten: Dictionary) -> void:
+	var strook := chrome_header()
+	if _storing_paneel == null:
+		_storing_paneel = PanelContainer.new()
+		_storing_paneel.add_theme_stylebox_override("panel", UiKit.panel(UiKit.ROOD, UiKit.INK))
+		_storing_label = UiKit.label("", UiKit.FS_SMALL, UiKit.INK)
+		_storing_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_storing_paneel.add_child(_storing_label)
+		strook.add_child(_storing_paneel)
+	_storing_label.text = tekst
+	AudioDirector.play_ui(&"fout")
+	Haptiek.tril(Haptiek.Sterkte.STOOT)
+
+
 ## Toont de uitslag en sluit daarna af.
 func finish_with_banner(ok: bool, text: String, score: int = 0, payload: Dictionary = {}) -> void:
 	if _done:
@@ -237,6 +266,15 @@ func finish_with_banner(ok: bool, text: String, score: int = 0, payload: Diction
 	# uit en zit het scherm halverwege achter een duim. De trilling draagt hier
 	# dezelfde uitslag: lang voor gelukt, kort en hard voor mislukt.
 	Haptiek.tril(Haptiek.Sterkte.GELUKT if ok else Haptiek.Sterkte.SLAG)
+	# F5-a: `process_always = true` was hier nodig zolang de wereld gepauzeerd
+	# stond terwijl deze minigame liep. Dat geldt sinds F5-a niet meer voor een
+	# gewone speelbeurt, maar backgrounden pauzeert de tree nog altijd wél,
+	# ongeacht of er een minigame loopt (zie `Shell._naar_achtergrond()`).
+	# Blijft op `true` staan: dat is ook Godot's eigen standaard voor
+	# `create_timer()`, en elke ongeflagde timer in `main.gd` gedraagt zich nu
+	# al zo. Dit hier anders laten gedragen dan de rest van de codebase is geen
+	# scope van F5 — zie dezelfde afweging bij `Shell._qa_shot()` en
+	# `mg_oplevering.gd::_pauze()`.
 	await get_tree().create_timer(1.9 if ok else 1.6, true).timeout
 	if ok:
 		succeed(score, payload)

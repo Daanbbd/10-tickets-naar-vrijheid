@@ -16,6 +16,15 @@ static func gevraagd() -> bool:
 	return "--autoplay" in OS.get_cmdline_user_args()
 
 
+## F5-a-verificatie: dit stond al op ALWAYS om door te tikken tijdens de oude
+## wereldpauze van een minigame. Nu de wereld tijdens een minigame doorloopt
+## (`Shell.run_minigame()` gebruikt `Session.lock_input()`, niet meer
+## `get_tree().paused`), draaien de wereld-`_process()`s (spelerbeweging,
+## `Klok`, NPC's) voortaan óók tijdens een minigame — maar dat verandert niets
+## aan hoe vaak DEZE node tikt: `_process()` hieronder werd al elke frame
+## aangeroepen, gepauzeerd of niet (dat is precies wat ALWAYS betekent), en telt
+## zelf zijn interval af (`_t -= delta`) onafhankelijk van wat er verder in de
+## boom gebeurt. Eén tik per `INTERVAL`, ongewijzigd — geen dubbele aansturing.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
