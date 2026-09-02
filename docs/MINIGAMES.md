@@ -127,7 +127,21 @@ toestand `process_always` nodig: `get_tree().create_timer(t, true, false, true)`
 
 `build_chrome(titel, intro)` levert kop, statusregel, intro, een scrollbare
 body en op een aanraakscherm een Stoppen-knop. Wat *niet* mag wegscrollen —
-een meter, een klok, de enige actieknop — hoort buiten die scroll.
+een meter, een klok, de enige actieknop — hoort buiten die scroll, via
+`chrome_header()` of `chrome_footer()`.
+
+De chrome is een **donker** oppervlak (`UiKit.SCHERM_NACHT`), dezelfde
+ondergrond als het titel- en uitlegscherm: kop op `FS_HEAD` in
+`BLUEBIRD_BRIGHT`, statusregel en intro in `GRIJS_OP_DONKER`. Wat een minigame
+zelf in de body zet staat dus op donker tenzij het in een eigen licht paneel
+zit (`PAPIER`, `WIT`, een post-it). Een label rechtstreeks op de chrome hoort
+`WIT` of `GRIJS_OP_DONKER` te zijn, en nooit `INK`, `GRIJS_OP_LICHT` of
+`BLUEBIRD_INK` — die drie verdwijnen daar in de achtergrond.
+
+Eén blauwe `UiKit.knop_primair()` per scherm, en die hoort in
+`chrome_footer()`. Alles wat secundair is — Stoppen, richtingsknoppen,
+keuzerijen — houdt de gewone knopstijl. `mg_whack` en `mg_choicescene` hebben
+er bewust nul: daar *is* de keuze de handeling.
 
 ESC breekt af. Afbreken laat het ticket op ACTIVE staan; opnieuw praten is
 opnieuw proberen. Falen kost nooit voortgang.

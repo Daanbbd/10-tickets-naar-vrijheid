@@ -81,8 +81,18 @@ func build_chrome(title: String, intro: String) -> VBoxContainer:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(UiKit.dimmer(0.72))
 
+	# Donker oppervlak, net als de rest van de shell. Dit was een crème
+	# `UiKit.panel()`, en dat maakte de minigames het enige lichte scherm in een
+	# spel waarvan het titelscherm, het uitlegscherm, de karakterselectie en de
+	# HUD allemaal donker zijn. Je speelt tien keer per beurt zo'n scherm; de
+	# flits bij het openen was daarmee het meest voorkomende beeld van het spel.
+	#
+	# SCHERM_NACHT en niet PANEL_DARK: dit is een scherm en geen paneeltje in de
+	# HUD, en het is dezelfde ondergrond als het uitlegscherm en het titelscherm.
+	# De rand blijft LINE, zodat het venster nog leest als iets dat bovenop de
+	# gedimde wereld ligt in plaats van als de wereld zelf.
 	var frame := PanelContainer.new()
-	frame.add_theme_stylebox_override("panel", UiKit.panel())
+	frame.add_theme_stylebox_override("panel", UiKit.panel(UiKit.SCHERM_NACHT, UiKit.LINE))
 	UiKit.full_rect(frame)
 	frame.offset_left = 4; frame.offset_right = -4
 	frame.offset_top = 4; frame.offset_bottom = -4
@@ -97,18 +107,20 @@ func build_chrome(title: String, intro: String) -> VBoxContainer:
 	# FS_HEAD naast een statusregel breder dan het scherm, en een Container
 	# groeit buiten zijn ankers om zijn kinderen te laten passen.
 	#
-	# FS_SUB en niet FS_BODY: dit is de kop van het scherm en die hoorde groter
-	# te zijn dan de tekst eronder. Hij stond op FS_BODY omdat FS_HEAD (20) niet
-	# paste en er daartussen niets bestond — precies het gat dat 16 nu vult.
-	var t := UiKit.label(title, UiKit.FS_SUB, UiKit.INK)
+	# FS_HEAD is de schermkop van de ladder, en dit is een scherm. Dat een titel
+	# van twee woorden hier over twee regels valt is de prijs; de inhoud eronder
+	# zit in een ScrollContainer en vangt dat op. Kleur en maat komen van het
+	# uitlegscherm: BLUEBIRD_BRIGHT op FS_HEAD, want bb-blue zelf is op een
+	# donkere ondergrond niet te lezen.
+	var t := UiKit.label(title, UiKit.FS_HEAD, UiKit.BLUEBIRD_BRIGHT)
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(t)
-	_status = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+	_status = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(_status)
 
 	if intro != "":
-		_intro = UiKit.label(intro, UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+		_intro = UiKit.label(intro, UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 		_intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		col.add_child(_intro)
 

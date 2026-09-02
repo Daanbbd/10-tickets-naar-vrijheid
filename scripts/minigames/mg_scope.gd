@@ -156,7 +156,7 @@ func _on_setup() -> void:
 	_bouw_meters(body)
 	_sprint_kop = _bouw_kop(body, "IN DE SPRINT")
 	_sprint = _bouw_lijst(body)
-	_sprint_leeg = UiKit.label("Nog niets. Zij wacht.", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+	_sprint_leeg = UiKit.label("Nog niets. Zij wacht.", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	body.add_child(_sprint_leeg)
 	_rest_kop = _bouw_kop(body, "NIET DEZE SPRINT")
 	_rest = _bouw_lijst(body)
@@ -214,10 +214,12 @@ func _bouw_kop(body: VBoxContainer, tekst: String) -> Label:
 	var rij := HBoxContainer.new()
 	rij.add_theme_constant_override("separation", 2)
 	body.add_child(rij)
-	var l := UiKit.label(tekst, UiKit.FS_SMALL, UiKit.INK)
+	# De koppen en de legenda staan op de chrome en niet op een briefje, dus op
+	# het donkere oppervlak.
+	var l := UiKit.label(tekst, UiKit.FS_SMALL, UiKit.WIT)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rij.add_child(l)
-	var legenda := UiKit.label("pnt blij", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+	var legenda := UiKit.label("pnt blij", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	legenda.autowrap_mode = TextServer.AUTOWRAP_OFF
 	legenda.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	rij.add_child(legenda)

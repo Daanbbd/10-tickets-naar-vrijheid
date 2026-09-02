@@ -160,9 +160,11 @@ func _on_setup() -> void:
 		slot_row.add_child(s)
 		_slots.append(s)
 
+	# Deze regel staat op de chrome zelf en niet op een briefje, dus op het
+	# donkere oppervlak: GRIJS_OP_DONKER en niet GRIJS_OP_LICHT.
 	body.add_child(UiKit.label(
 		String(c.get("uitleg", "Tik een uur aan en tik dan de regel waar het op moet.")),
-		UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT))
+		UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER))
 
 	_pool = HFlowContainer.new()
 	_pool.add_theme_constant_override("h_separation", 3)
@@ -179,9 +181,14 @@ func _on_setup() -> void:
 		_pool.add_child(DragCard.new(String(cd.get("id", "")), String(cd.get("text", "")),
 			UiKit.PANEL, self, kw, kh))
 
+	# In de vaste voetstrook en niet in de scroll. Acht regels plus acht uurblokjes
+	# vullen een portretcanvas helemaal, en de knop stond als laatste kind achter
+	# een `_pool` met EXPAND_FILL: die at alle resterende hoogte op en liet een
+	# blauwe streep van een paar pixels over. De enige bevestigende knop van dit
+	# scherm was daarmee niet te raken. `chrome_footer()` bestaat precies hiervoor.
 	var check := UiKit.knop_primair(String(c.get("knop", "Controleren")), UiKit.FS_BODY)
 	check.pressed.connect(_check)
-	body.add_child(check)
+	chrome_footer().add_child(check)
 
 	_update_status()
 

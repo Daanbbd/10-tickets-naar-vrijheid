@@ -121,8 +121,10 @@ func _bouw(c: Dictionary) -> void:
 	_bouw_dashboard()
 	_bouw_foutbalk()
 
+	# Op de chrome zelf en niet op het witte dashboard, dus de donkere-ondergrond
+	# tint. Diezelfde regel wisselt van kleur via `_zeg()`; die kleuren staan daar.
 	_regel = UiKit.label("Hoeveel bugs erin zitten weet je niet. Testen vertelt het je.",
-		UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+		UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	# Twee regels reserveren: de reactie op een handeling verschijnt hier, en een
 	# lijst keuzes die bij elke tik een paar pixels opschuift is niet te raken.
 	_regel.custom_minimum_size = Vector2(0, 26)
@@ -277,7 +279,7 @@ func _kies(o: Dictionary) -> void:
 		_flits(onthult, false)
 
 	_pas_effect(o.get("effect", {}) as Dictionary)
-	_zeg(String(o.get("regel", "")), UiKit.BLUEBIRD_INK)
+	_zeg(String(o.get("regel", "")), UiKit.BLUEBIRD_BRIGHT)
 	AudioDirector.play_ui(&"klik")
 	_bouw_keuzes()
 	_status_regel()
@@ -388,7 +390,7 @@ func _deployen() -> void:
 	_fase = Fase.HERSTELLEN
 	_bezig = false
 
-	_zeg("Twee handelingen. Daarna gaat hij live, wat je ook doet.", UiKit.INK)
+	_zeg("Twee handelingen. Daarna gaat hij live, wat je ook doet.", UiKit.WIT)
 	_bouw_keuzes()
 	_refresh()
 	_status_regel()

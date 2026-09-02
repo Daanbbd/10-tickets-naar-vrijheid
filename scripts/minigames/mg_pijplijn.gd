@@ -92,7 +92,7 @@ func _on_setup() -> void:
 
 	# De volle clipnaam past nergens in een blokje van 50 px. Hier onder staat
 	# welke clip je net verzette — dat is ook de plek waar de grap zit.
-	_caption = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+	_caption = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	_caption.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_caption.clip_text = true
 	_caption.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
