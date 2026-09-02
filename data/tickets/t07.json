@@ -1,6 +1,8 @@
 {
   "available_when": {
-    "flags_all": ["_never_"]
+    "tickets_done": [
+      "t04"
+    ]
   },
   "requirements": {},
   "dialogue_ids": {

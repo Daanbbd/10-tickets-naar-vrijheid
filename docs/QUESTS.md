@@ -1,8 +1,20 @@
 # De tien tickets
 
-**Er is geen volgorde.** Negen van de tien tickets staan vanaf minuut één open;
-je kiest zelf waar je begint. Alleen BBD-210 (Naar productie) wacht tot de
-andere negen klaar zijn — dat is de wincondititie, geen afhankelijkheid.
+**Er is geen vaste volgorde, maar wel een keten.** Vier tickets staan vanaf
+minuut één open (BBD-202 t/m BBD-205) en je kiest zelf waar je begint. Elk van
+die vier maakt er één vrij, BBD-208 maakt BBD-201 vrij, en BBD-210 (Naar
+productie) wacht tot de andere negen klaar zijn plus de deploysleutel.
+
+Die afhankelijkheid staat op het **kind**, in zijn eigen `available_when`
+(`{"tickets_done": ["t08"]}`), en niet als `unlocks` op de ouder. Dat is geen
+stijlkeuze: zo is beschikbaarheid afgeleide state, en herstelt
+`refresh_availability()` de hele keten na het laden van een save. Een `unlocks`
+is een gebeurtenis, en die kan na het laden niet opnieuw worden afgespeeld —
+een ticket achter een al-opgeleverd ticket bleef daardoor eeuwig LOCKED.
+
+`unlock_ticket` bestaat nog wél als effect-op, en `data/klant_berichten.json`
+gebruikt hem voor BBD-207 en BBD-201: De Klant trekt tijdens de dag werk naar
+voren. Dat is een tweede, bewuste route naast de keten.
 
 Wat wél groeit is je **inventaris**: een ticket komt erin zodra je de ruimte
 binnenloopt waar het hangt. Verkennen levert werk op; niets zit achter iets
@@ -145,7 +157,8 @@ de plantenkast, onder het speelgoedpaard.
 
 | Begrip | Waar het leeft | Wat het betekent |
 |---|---|---|
-| open | `available_when` in `data/tickets/` | mag gedaan worden; negen staan open vanaf de start |
+| open | `available_when` in `data/tickets/` | mag gedaan worden; vier staan open vanaf de start |
+| op slot | `available_when` klopt nog niet | bestaat, maar wacht op ander werk; `QuestEngine.locked_count()` |
 | gevonden | `Session.discovered` | zit in je inventaris, want je bent in die ruimte geweest |
 | gekozen | `Session.pinned_ticket` | jouw doel; stuurt doelregel, hint en wijzer |
 

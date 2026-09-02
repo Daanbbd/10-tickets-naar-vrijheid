@@ -8,6 +8,14 @@ extends Resource
 
 @export var id: StringName = &""
 @export var code: String = ""              ## "BBD-201", getoond in de UI
+## Narratieve nummering, **niet** de volgorde waarin je ze kunt spelen. Bepaalt
+## alleen de leesvolgorde van het bord, de inventaris en de hint.
+##
+## Sinds de ticketketen erin zit lopen de twee uiteen: BBD-201 ("Wat moeten we
+## eigenlijk bouwen?") heeft `order: 1` en gaat pas open ná BBD-208 — dat is de
+## grap, want pas als de video klaar is blijkt dat niemand de user story heeft
+## opgeschreven. Wie wil weten wat er nú open kan, moet `available_when` lezen
+## of `QuestEngine.open_tickets()` gebruiken, niet dit veld.
 @export var order: int = 0
 @export var title: String = ""
 @export var summary: String = ""

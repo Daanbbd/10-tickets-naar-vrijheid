@@ -202,7 +202,19 @@
       },
       "tweede": {
         "speaker": "",
-        "text": "Bovenaan hangt een hart-sticker naast een briefje: 'Wie heeft mijn koffiemok'."
+        "variants": [
+          {
+            "when": {
+              "has_item": [
+                "planning"
+              ]
+            },
+            "text": "Tussen de briefjes hangt de planning van vandaag. Iemand heeft er al een vraagteken bij gezet."
+          },
+          {
+            "text": "Bovenaan hangt een hart-sticker naast een briefje: 'Wie heeft mijn koffiemok'."
+          }
+        ]
       }
     }
   },
@@ -231,6 +243,14 @@
         "variants": [
           {
             "when": {
+              "has_item": [
+                "klantfeedback"
+              ]
+            },
+            "text": "Op het scherm staat de nieuwe tekst. Precies zoals de klant hem drie keer anders wilde."
+          },
+          {
+            "when": {
               "tickets_done": [
                 "t08"
               ]
@@ -255,6 +275,14 @@
       "tweede": {
         "speaker": "",
         "variants": [
+          {
+            "when": {
+              "has_item": [
+                "audiobestand"
+              ]
+            },
+            "text": "Uit de speaker komt de nieuwe merksound. Iemand heeft het volume alweer lager gezet."
+          },
           {
             "when": {
               "min_tickets_done": 3
@@ -380,6 +408,14 @@
             "text": "Twee schermen op precies dezelfde hoogte. Daar heeft nog nooit een klant naar gevraagd."
           },
           {
+            "when": {
+              "flags_all": [
+                "frontend_ok"
+              ]
+            },
+            "text": "Op het scherm staat de webshop. Alles ligt op één lijn. Victor heeft er niets over gezegd."
+          },
+          {
             "text": "Op een geeltje staat: 4px. Ik weet dat je het ziet."
           }
         ]
@@ -464,6 +500,14 @@
             "text": "Drie dashboards. Jij kunt de klant door twee ervan heen praten zonder dat hij het merkt."
           },
           {
+            "when": {
+              "flags_all": [
+                "cro_ok"
+              ]
+            },
+            "text": "Op het middelste dashboard loopt een groene lijn. Danny heeft er een geeltje op geplakt: KIJK."
+          },
+          {
             "text": "Op een geeltje: meningen zijn geen data. In zijn eigen handschrift."
           }
         ]
@@ -504,6 +548,14 @@
             "text": "Er ontbreekt een HDMI-adapter. Er ontbreekt altijd een HDMI-adapter."
           },
           {
+            "when": {
+              "has_item": [
+                "productdata"
+              ]
+            },
+            "text": "Op de muur staat de productlijst geprojecteerd. Vier supplementen, met prijzen erbij."
+          },
+          {
             "text": "Op de muur staat het bureaublad van iemand anders geprojecteerd."
           }
         ]
@@ -532,7 +584,19 @@
       },
       "tweede": {
         "speaker": "",
-        "text": "In de hoek staat NIET UITVEGEN. Dat staat er zo lang dat niemand meer weet waarom."
+        "variants": [
+          {
+            "when": {
+              "has_item": [
+                "user_story"
+              ]
+            },
+            "text": "Naast NIET UITVEGEN staat nu de user story. In je tas zit dezelfde tekst, uitgeprint."
+          },
+          {
+            "text": "In de hoek staat NIET UITVEGEN. Dat staat er zo lang dat niemand meer weet waarom."
+          }
+        ]
       }
     }
   },
@@ -578,6 +642,14 @@
               ]
             },
             "text": "Er loopt één kabel naar buiten waarvan niemand het einde kent."
+          },
+          {
+            "when": {
+              "flags_all": [
+                "backend_ok"
+              ]
+            },
+            "text": "Het rack ernaast is stil sinds vanmiddag. Je hoort nu alleen deze nog zoemen."
           },
           {
             "text": "Het zoemt op een andere toon dan het rack ernaast."
@@ -654,7 +726,19 @@
       },
       "tweede": {
         "speaker": "",
-        "text": "Er hangt nog een proefdruk. Een logo, twee keer zo groot als nodig. Toen ook al."
+        "variants": [
+          {
+            "when": {
+              "has_item": [
+                "videobestand"
+              ]
+            },
+            "text": "Naast de proefdruk hangt een still uit de video. Op grootformaat, want dat kon."
+          },
+          {
+            "text": "Er hangt nog een proefdruk. Een logo, twee keer zo groot als nodig. Toen ook al."
+          }
+        ]
       }
     }
   },

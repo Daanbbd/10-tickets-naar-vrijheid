@@ -63,6 +63,10 @@ func _ready() -> void:
 	_test_werving_begint_met_de_vraag()
 	_test_klant_is_een_persoon()
 	await _test_dialoogvenster_past()
+	_test_dialoog_speelt_niet_zijn_eigen_id()
+	_test_teller_daalt_niet_binnen_complete()
+	_test_tweede_oplevering_betaalt_niet_opnieuw()
+	_test_keten_is_bereikbaar_en_afgeleid()
 	_rapport()
 
 
@@ -1462,14 +1466,27 @@ func _test_vrije_volgorde() -> void:
 			"%s als eerste zette %d tickets klaar" % [t.code, Session.done_count()])
 
 	# De haalbare eigendoms-garantie. "Eerste ontsluitingsgolf" is hier
-	# concreet: rechtstreeks in de `unlocks`-lijst van een van de vier
-	# starttickets — dus ten hoogste één andere voltooiing verwijderd van de
-	# start, ongeacht welke van de vier de speler als eerste kiest.
+	# concreet: ten hoogste één andere voltooiing verwijderd van de start,
+	# ongeacht welke van de vier de speler als eerste kiest.
+	#
+	# Leest de keten uit `available_when.tickets_done` op het kind en niet meer
+	# uit `unlocks` op de ouder. Die rand is omgedraaid zodat beschikbaarheid
+	# afgeleide state werd (`refresh_availability()` herstelt hem dan gratis na
+	# het laden); `unlocks` bleef bestaan als effect-op maar staat niet meer in
+	# de ticketdata, dus de oude lezing leverde een lege golf op en deze test
+	# viel om op drie personages. `unlocks` blijft meegenomen voor het geval een
+	# ticket ooit weer langs die route opengaat.
 	var eerste_golf: Array[StringName] = []
 	for id: StringName in EERSTE_VIER:
 		for u: StringName in GameData.ticket(id).unlocks:
 			if not (u in eerste_golf):
 				eerste_golf.append(u)
+	for id: StringName in GameData.ticket_ids():
+		var wacht_op: Array = GameData.ticket(id).available_when.get("tickets_done", [])
+		if wacht_op.size() != 1:
+			continue
+		if StringName(wacht_op[0]) in EERSTE_VIER and not (id in eerste_golf):
+			eerste_golf.append(id)
 	for cid: StringName in GameData.character_ids():
 		var eigen: Array[StringName] = []
 		for id: StringName in GameData.ticket_ids():
@@ -3262,3 +3279,162 @@ func _test_klant_is_een_persoon() -> void:
 			"de klant noemt haar %s nergens in de entree" % wie)
 		_ok(telefoon.contains(wie),
 			"de klant noemt haar %s nergens op de telefoon" % wie)
+
+
+# --- Ticketstroom-audit: vier controles op de gaten die groen bleven ------
+#
+# De suite stond groen terwijl een opgelost ticket letterlijk "t01_done" in de
+# dialoogbox zette en elke doorloop elf oplossingen kostte voor tien tickets.
+# Deze vier dekken die gaten.
+
+
+## Elke dialoog-id die de speler kan raken hoort een dialoog te *spelen* en niet
+## als tekst geprint te worden.
+##
+## `_test_dialoog()` controleert al dat elke gerefereerde id bestáát. Dat was
+## precies het gat: `TicketController._dlg()` geeft een id terug zodra de sleutel
+## bestaat, en `_line()` zette dat rechtstreeks in de box. Alle tien de
+## `done`-sleutels bestaan, dus alle tien de tickets printten hun eigen id.
+func _test_dialoog_speelt_niet_zijn_eigen_id() -> void:
+	_kop("dialoog-ids worden gespeeld, niet geprint")
+
+	# Commentaarregels eruit, anders vindt deze controle de uitleg erboven —
+	# waarin het foute patroon met opzet geciteerd staat — en faalt hij op zijn
+	# eigen documentatie.
+	var code := ""
+	for regel: String in FileAccess.get_file_as_string(
+			"res://scripts/world/ticket_controller.gd").split("\n"):
+		if not regel.strip_edges().begins_with("#"):
+			code += regel + "\n"
+
+	# `_play_or_line(_dlg(` eerst wegstrepen: die naam eindigt op `_line(_dlg(`,
+	# dus een kale substring-zoektocht vindt juist de góede aanroep.
+	code = code.replace("_play_or_line(_dlg(", "OK(")
+
+	_ok(not code.contains("_line(_dlg("),
+		"ticket_controller.gd geeft een _dlg()-id aan _line(); dat print de id als tekst — gebruik _play_or_line()")
+	for sleutel: String in ["done", "locked", "fetch", "blocked"]:
+		_ok(not code.contains('_line(_dlg(t, &"%s"' % sleutel),
+			"de '%s'-regel gaat nog via _line() en print dus zijn dialoog-id" % sleutel)
+
+
+## `done_count()` mag binnen één `complete()` nooit dalen.
+##
+## Dat gebeurde wel: een storing hangt aan `Bus.flag_changed`, `time_booked` en
+## `ticket_completed`, en die vuren alle drie *binnen* `complete()`. De storing
+## riep dan `reopen()` aan met zijn `done_order.erase()` terwijl `complete()` nog
+## halverwege was. In een echte doorloop stond de teller na BBD-207 nog op 5, en
+## werd BBD-205 later een tweede keer opgelost.
+func _test_teller_daalt_niet_binnen_complete() -> void:
+	_kop("de teller daalt niet tijdens een oplevering")
+
+	# Meet niet op `ticket_state_changed` — dat signaal valt in `complete()`
+	# vóór de `done_order.append()`, dus op dat moment staat de teller
+	# legitiem nog op de oude waarde. Wat de bug wél kenmerkt is dat een ánder
+	# ticket zijn DONE verliest tijdens de oplevering, en dat de teller met
+	# meer of minder dan precies één opschuift.
+	QuestEngine.start_run(&"daan")
+
+	for id: StringName in GameData.ticket_ids():
+		if not Session.is_available(id):
+			continue
+		var voor := Session.done_count()
+		var was_done: Array[StringName] = Session.done_order.duplicate()
+
+		QuestEngine.complete(id, MinigameResult.make(
+			GameData.ticket(id).minigame_id, GameEnums.Outcome.SUCCESS))
+
+		_ok(Session.done_count() == voor + 1,
+			"%s: teller ging van %d naar %d in plaats van naar %d — er is tijdens de oplevering iets heropend"
+				% [GameData.ticket(id).code, voor, Session.done_count(), voor + 1])
+		for eerder: StringName in was_done:
+			_ok(Session.is_done(eerder),
+				"%s: het opleveren van %s zette %s terug naar open"
+					% [GameData.ticket(id).code, GameData.ticket(id).code,
+						GameData.ticket(eerder).code])
+
+
+## Een tweede oplevering van hetzelfde ticket deelt de beloning niet opnieuw uit.
+##
+## `complete()` bewaakt met `is_done()`, en die staat na een `reopen()` weer op
+## false — dus `run_effects()` draaide een tweede keer en elke doorloop eindigde
+## met `productdata` op aantal 2. `kost_tijd` en de presentatie-ops horen juist
+## wél opnieuw te draaien.
+func _test_tweede_oplevering_betaalt_niet_opnieuw() -> void:
+	_kop("heropleveren betaalt niet twee keer")
+
+	QuestEngine.start_run(&"daan")
+	var t: TicketDef = GameData.ticket(&"t05")
+	var resultaat := MinigameResult.make(t.minigame_id, GameEnums.Outcome.SUCCESS)
+
+	QuestEngine.complete(&"t05", resultaat)
+	var na_eerste := Session.item_count(&"productdata")
+	_ok(na_eerste == 1,
+		"eerste oplevering van BBD-205 gaf %d productdata in plaats van 1" % na_eerste)
+	_ok(&"t05" in Session.beloond, "BBD-205 staat na oplevering niet in Session.beloond")
+
+	QuestEngine.reopen(&"t05")
+	_ok(not Session.is_done(&"t05"), "reopen() zette BBD-205 niet terug naar open")
+	_ok(&"t05" in Session.beloond, "reopen() wiste de beloningsregistratie van BBD-205")
+
+	var uren_voor := Session.worked_minutes
+	QuestEngine.complete(&"t05", resultaat)
+	_ok(Session.item_count(&"productdata") == na_eerste,
+		"tweede oplevering van BBD-205 deelde productdata opnieuw uit (%d)"
+			% Session.item_count(&"productdata"))
+	_ok(Session.worked_minutes > uren_voor,
+		"tweede oplevering van BBD-205 kostte geen tijd; opnieuw werken hoort opnieuw tijd te kosten")
+
+
+## De ticketketen is bereikbaar en volledig afgeleid uit `available_when`.
+##
+## `unlocks` was een gebeurtenis: hij draaide één keer bij het opleveren en werd
+## na het laden nooit herspeeld, terwijl `world_changes` dat wél worden. Een
+## ticket achter een al-opgeleverd ticket stond na het laden dus permanent op
+## LOCKED en `all_done()` was onhaalbaar — zonder crash of waarschuwing.
+func _test_keten_is_bereikbaar_en_afgeleid() -> void:
+	_kop("de ticketketen is bereikbaar en afgeleid")
+
+	for id: StringName in GameData.ticket_ids():
+		var aw: Dictionary = GameData.ticket(id).available_when
+		for f: Variant in (aw.get("flags_all", []) as Array):
+			_ok(not String(f).begins_with("_"),
+				"%s hangt op de sentinelvlag '%s' in plaats van op een echte conditie"
+					% [GameData.ticket(id).code, f])
+		for nodig: Variant in (aw.get("tickets_done", []) as Array):
+			var n := StringName(nodig)
+			_ok(GameData.ticket(n) != null,
+				"%s wacht op onbekend ticket '%s'" % [GameData.ticket(id).code, n])
+			_ok(n != id, "%s wacht op zichzelf" % GameData.ticket(id).code)
+
+	QuestEngine.start_run(&"daan")
+	var ronde := 0
+	while not Session.all_done() and ronde < GameData.ticket_ids().size() * 2:
+		ronde += 1
+		for id: StringName in GameData.ticket_ids():
+			if Session.is_done(id) or not Session.is_available(id):
+				continue
+			if id == &"t10":
+				Session.add_item(&"deploysleutel")
+			QuestEngine.complete(id, MinigameResult.make(
+				GameData.ticket(id).minigame_id, GameEnums.Outcome.SUCCESS))
+	_ok(Session.all_done(),
+		"de keten liep vast op %d/%d" % [Session.done_count(), Session.total_tickets()])
+
+	# En nu de kern: de hele keten herbouwen uit niets dan `done_order`. Dat is
+	# wat er na het laden van een save gebeurt.
+	var bewaard := Session.done_order.duplicate()
+	QuestEngine.start_run(&"daan")
+	for id: StringName in bewaard:
+		if id == &"t10":
+			continue
+		Session.ticket_states[id] = GameEnums.TicketState.DONE
+		if not (id in Session.done_order):
+			Session.done_order.append(id)
+	QuestEngine.refresh_availability()
+	_ok(Session.is_available(&"t10"),
+		"na het herbouwen uit done_order is de finale niet beschikbaar")
+	for id: StringName in GameData.ticket_ids():
+		_ok(Session.is_done(id) or Session.is_available(id),
+			"%s bleef LOCKED na het herbouwen uit done_order — de keten is niet afgeleid"
+				% GameData.ticket(id).code)

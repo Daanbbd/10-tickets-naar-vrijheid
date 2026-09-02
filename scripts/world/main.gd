@@ -133,8 +133,8 @@ func _ready() -> void:
 		# of alle vier de drempels gevallen zijn.
 		Bus.klant_bericht.connect(func(bid: StringName) -> void:
 			_klant_meldingen += 1
-			print("[SPEELBEURT] De Klant meldt zich: %s  (bij %d/10)" % [
-				bid, Session.done_count()]))
+			print("[SPEELBEURT] De Klant meldt zich: %s  (bij %d/%d)" % [
+				bid, Session.done_count(), Session.total_tickets()]))
 		_qa_playthrough()
 	else:
 		_qa_kijk()
@@ -318,7 +318,7 @@ func _qa_playthrough() -> void:
 			break
 
 	if Session.all_done():
-		print("[SPEELBEURT] 10/10 — naar de voordeur")
+		print("[SPEELBEURT] %d/%d — naar de voordeur" % [Session.done_count(), Session.total_tickets()])
 		var gemist := Gevolgen.DREMPELS.size() - _klant_meldingen
 		if gemist > 0:
 			printerr("[SPEELBEURT] %d van de %d klantmeldingen zijn nooit gevallen" % [
@@ -329,7 +329,7 @@ func _qa_playthrough() -> void:
 		await get_tree().create_timer(0.5).timeout
 		_verlaat_kantoor()
 	else:
-		printerr("[SPEELBEURT] MISLUKT op %d/10" % Session.done_count())
+		printerr("[SPEELBEURT] MISLUKT op %d/%d" % [Session.done_count(), Session.total_tickets()])
 
 	print("[SPEELBEURT] duur: %.1fs" % ((Time.get_ticks_msec() - start) / 1000.0))
 	# De urenstaat hoort altijd over de acht uur te gaan; dit is de plek waar een
@@ -424,7 +424,7 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 		printerr("[SPEELBEURT] %s liep vast" % t.code)
 		return false
 
-	print("[SPEELBEURT] %s opgelost  (%d/10)" % [t.code, Session.done_count()])
+	print("[SPEELBEURT] %s opgelost  (%d/%d)" % [t.code, Session.done_count(), Session.total_tickets()])
 	# `is_done` valt vóór de urenrol en de afrondingsdialoog, dus de stroom
 	# loopt op dit punt nog. Zonder deze wacht racet de harnas het volgende
 	# ticket in, en dan weigert `handle_npc_talk()` stil op zijn `_busy`-guard:

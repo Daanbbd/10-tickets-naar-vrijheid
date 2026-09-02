@@ -125,7 +125,10 @@ func vul() -> void:
 		if st != GameEnums.TicketState.DONE and (eerste == null or Session.is_pinned(id)):
 			eerste = t
 
-	_titel.text = "JOUW TICKETS   %d/10" % Session.done_count()
+	# `total_tickets()` en niet een hardgecodeerde 10, net als de HUD-teller.
+	# Stond hier als "%d/10", en een elfde ticket maakte daarmee van het bord
+	# een leugenaar en van de HUD niet.
+	_titel.text = "JOUW TICKETS   %d/%d" % [Session.done_count(), Session.total_tickets()]
 	_onder.text = _restregel()
 	_onder.visible = true
 
@@ -139,15 +142,26 @@ func vul() -> void:
 
 ## Hoeveel er nog liggen, en in de close-up ook waar je staat. Dit is de reden
 ## om het kantoor in te lopen, dus het staat direct onder de kop.
+##
+## `op slot` is het tweede onbekende getal: `undiscovered_count()` telt alleen
+## wat al opengesteld is, dus zonder die tweede helft zei deze regel "Alles
+## gevonden." terwijl er zes tickets achter ander werk wachtten.
 func _restregel() -> String:
 	var rest := QuestEngine.undiscovered_count()
+	var op_slot := QuestEngine.locked_count()
 	if Session.all_done():
 		return "Klaar. Naar de voordeur."
-	if rest <= 0:
-		return "Alles gevonden."
 	# Kort houden: op 192 px breed breekt een langere regel over twee regels en
-	# duwt hij de briefjes uit beeld.
-	return "Nog %s op de vloer." % ("één" if rest == 1 else str(rest))
+	# duwt hij de briefjes uit beeld. Vandaar "wacht" en niet "wachten nog op
+	# ander werk".
+	if rest <= 0:
+		if op_slot > 0:
+			return "Alles gevonden. Nog %d wacht op ander werk." % op_slot
+		return "Alles gevonden."
+	var regel := "Nog %s op de vloer." % ("één" if rest == 1 else str(rest))
+	if op_slot > 0:
+		regel += " %d wacht nog." % op_slot
+	return regel
 
 
 static func _kolom_van(st: GameEnums.TicketState) -> int:
