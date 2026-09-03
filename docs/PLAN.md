@@ -1,10 +1,12 @@
 # PLAN — 10 Tickets naar Vrijheid — van "goed geschreven" naar "leuk"
 
-## Status (bijgewerkt 2 september 2026)
+## Status (bijgewerkt 3 september 2026)
 
-**F0 t/m F5 zijn klaar en gemerged in `main`.** Testsuite staat op
-**17.489 controles, 0 fout, ALLES GOED** (baseline bij de start van dit plan
-was 16.658). Alleen F6 (verificatie/docs) is nog niet begonnen.
+**F0 t/m F5 zijn klaar en gemerged in `main`,** en daarbovenop is een
+auditronde gelopen — zie "Auditronde" hieronder. Testsuite staat op
+**20.619 controles, 0 fout, ALLES GOED** (17.489 bij het eind van F5, 16.658
+als baseline bij de start van dit plan). Alleen F6 (verificatie/docs) is nog
+niet als fase begonnen, al is er in de auditronde flink aan docs gewerkt.
 
 | Fase | Status | Noot |
 |---|---|---|
@@ -120,6 +122,67 @@ F1-a al bouwde. **Beide zijn nu doorgevoerd**, details in `docs/LEVEL.md`:
 - De vier oude minigame-scenes (`mg_choicescene`, `mg_cableboard`,
   `mg_tagpicker`, `mg_whack`) zijn **niet verwijderd**, alleen niet meer
   aangeroepen voor hun tickets — opruimen was expliciet buiten scope.
+
+## Auditronde (2–3 september 2026)
+
+Na F5 is er een speelaudit gedaan met één vraag: is dit spel leuk,
+begrijpelijk en samenhangend voor een casual speler, of ligt de oorspronkelijke
+essentie begraven onder wat er sindsdien bovenop is gebouwd. Het rapport staat
+in [`docs/AUDIT.md`](AUDIT.md), met de gerenderde frames in `docs/audit-shots/`
+en de deelaudit van de questmotor in
+[`docs/AUDIT-TICKETSTROOM.md`](AUDIT-TICKETSTROOM.md).
+
+Uit die audit liepen zes werkstromen parallel, elk op een eigen branch. Alle
+zes zijn gemerged in `main`.
+
+| Werkstroom | Wat erin zit |
+|---|---|
+| Dialoogaudit | Getoetst aan de character bible; het dialoogvenster blijft binnen het scherm; De Klant is weer één persoon (schoonzus én neef, in de entree én op de telefoon); Dirks slotregel komt uit de data |
+| Cast versus foto's | De `look`-velden gevalideerd tegen `assets/personen/` — Koen had een bril die hij niet heeft, Victor een koptelefoon die hij nooit draagt. Drie nieuwe laagvarianten (`fade`, `kuif`, `sik`) en een test die elke look-waarde tegen de sheets op schijf legt |
+| Questmotor | Elf van twaalf bevindingen: de ticketketen wordt afgeleid uit `available_when` i.p.v. een `unlocks`-lijst, en een opgelost ticket zegt niet meer letterlijk "t01_done" |
+| Collectielus | Zes bevindingen: de storing valt niet meer midden in een afronding, de wijzer stuurt je eerst naar wat je nog moet ophalen, en afsluiten bewaart de dag |
+| Mobiel | Tikken op waar je voor staat i.p.v. een vaste actieknop, Koen weer bereikbaar in de personagekeuze, en geen toetsenbordverwijzingen op een aanraakscherm |
+| Minigame-intro | Een wat/waarom/Starten-scherm vóór alle elf minigames, los van de personagestem. Slaat zichzelf over onder `--autoplay` |
+
+Daarna nog één losse toevoeging: **De Klant klopt eerst.** Haar eerste
+pushbericht kon koud binnenvallen, want `Gevolgen.DREMPELS` begint op 1 en `k1`
+valt dus al bij één opgelost ticket — mogelijk vóór de speler ooit in de entree
+is geweest waar zij staat. Nu komt haar melding in twee stappen: een
+meldingsscherm met haar naam en één knop `Openen`, dan het bericht. Geen
+sluitknop, en de `effects` draaien pas bij het openen — een bericht dat de
+speler niet gelezen heeft mag de wereld niet veranderd hebben.
+
+### Wat de auditronde niet heeft opgelost
+
+Dit staat hier expliciet, want het is bewust open gelaten en niet vergeten.
+
+- **Mag een storing voortgang afpakken?** `storingen.gd` schrijft de invariant
+  op: een storing kost tijd en informatie, *nooit* voortgang. Maar `reopen()`
+  haalt het ticket uit `done_order`, en dat ís voortgang. De volgorde en de
+  timing zijn gefixt, die regelbreuk niet. Dit is een ontwerpvraag en geen bug;
+  hij hangt samen met de eenrichtingsvlag `alle_tickets_klaar` tegenover het
+  tweerichtingsfeit `all_done()` — de voordeur leest live en gaat weer dicht,
+  maar zes dialoogvarianten lezen de vlag en blijven beweren dat de dag klaar
+  is.
+- **Drie dingen die een headless suite niet kan zien** en die met eigen ogen
+  gecontroleerd moeten worden: de mobiele balklayout, de personagekeuze-scroll
+  en de tik-ring; de drie nieuwe laagvarianten (de test bewijst dat de sheet
+  bestáát, niet dat het personage op de foto lijkt); en `_refresh_marker()`,
+  dat de wijzer nu eerst naar een ontbrekend vereist item stuurt en dus een
+  ander object kan aanwijzen dan voorheen.
+- **Het QA-harnas vuurt interacties af zonder te wachten.** `_qa_doe_ticket()`
+  roept `_interact_with()` aan zonder `await` en gaat daarna pollen, waarmee
+  het langs het invoerslot gaat dat een speler wél tegenhoudt. Gevolg: op het
+  BBD-203-pad worden drie geschreven dialoogregels in de doorloop stil
+  overgeslagen, met een `push_error` erbij. Een speler kan dit niet uitlokken
+  (`_unhandled_input()` stopt op `Session.input_locked`, en `handle()` heeft
+  daarbovenop `_busy`), dus het is een tekortkoming van het harnas en geen
+  regressie in het spel. Er staan drie zulke aanroepen in `main.gd`; de fix
+  hoort daar.
+- **`zone_entered` als trigger voor de backend-storing** zou eerlijker fictie
+  zijn dan een wachttijd: je loopt langs het serverrack en het is weer stuk.
+  Niet urgent — de wachttijd telt inmiddels verstreken minuten en kan daardoor
+  niet meer in de afrondingsdialoog vallen.
 
 ### Afwijkingen t.o.v. de oorspronkelijke briefing (F5)
 
