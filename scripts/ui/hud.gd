@@ -495,10 +495,14 @@ func _build_card(root: Control) -> void:
 
 ## Eén kaart, en die noemt alleen wat je niet kunt zien.
 ##
-## De knoppenbalk staat in beeld met zijn werkwoord erop, dus die hoeft niet
-## uitgelegd te worden. Wat onzichtbaar is: dat de stick overal in de
-## rechterhelft opkomt, dat ver uitduwen rennen is, en dat je direct op een
-## oplichtend object kunt tikken in plaats van er een knop voor te zoeken.
+## De contextknop bij een object staat in beeld met zijn werkwoord erop
+## ("Praten", "Openen"), dus die hoeft niet uitgelegd te worden. ▤, ? en ≡
+## zijn dat niet: drie pure symbolen zonder tekst, en ≡ stond hier tot P3 niet
+## bij — een hamburgermenu leest voor wie het kent als "meer", maar zegt zelf
+## nergens dat het specifiek naar pauze/volume/stoppen leidt. Wat verder
+## onzichtbaar is: dat de stick overal in de rechterhelft opkomt, dat ver
+## uitduwen rennen is, en dat je direct op een oplichtend object kunt tikken
+## in plaats van er een knop voor te zoeken.
 ##
 ## Dit spel is mobile-only; er staat hier bewust geen toetsenregel meer. WASD/
 ## E/Tab/Q blijven in de InputMap staan als stille sneltoetsen zodat jij tijdens
@@ -512,6 +516,7 @@ func _kaartregels() -> Array[String]:
 		"Ver uitduwen    rennen",
 		"Tik op object   interactie",
 		"▤ ticketbord    ? hint",
+		"≡ pauze, volume, stoppen",
 	]
 
 
