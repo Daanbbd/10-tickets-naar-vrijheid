@@ -225,6 +225,27 @@ arrangementen en worden bij het genereren meegeprint.
   Op iOS is er geen weg naar echte fullscreen in een Safari-tab: iOS heeft daar
   geen Fullscreen API. Dat kan alleen via "Zet op beginscherm", en daarvoor staat
   `apple-mobile-web-app-capable` al in de Web-preset (zie `docs/TESTING.md`).
+- **`Control.size` zetten gooit je verankering weg.** `Besturing._bouw_balk()`
+  zette `offset_bottom = -MARGE` en sloot af met
+  `_balk.size = _balk.get_combined_minimum_size()` om de breedte te bepalen —
+  het commentaar erboven zei dat ook zo. Maar `set_size()` rekent **alle vier**
+  de offsets opnieuw uit de gevraagde maat, dus die ene regel overschreef de
+  ondermarge: de balk landde op y408 in een viewport van 416. Van elke knop van
+  30 px stonden er 24 onder het scherm, en op een telefoon zag je van ▤ ? ≡ nog
+  net de bovenrand.
+
+  Wil je één as zetten en de andere aan de ankers laten, zet dan de offset van
+  die ene as (`offset_right = MARGE + breedte`) en niet `size`. Er is geen
+  `set_width()`.
+
+  Waarom dit maanden bleef staan: `_test_balkmaat()` legt de *hoogte* van de
+  balk vast en `_test_hudband()` wat de HUD bovenin afdekt, maar geen van beide
+  vroeg wáár de balk terechtkomt. Op een QA-shot is het te zien, maar het zit in
+  de onderste acht pixels van een beeld van 416 hoog en daar kijkt niemand.
+  `_test_wereldchrome_past()` en `_test_schermen_passen()` stellen die vraag nu
+  wel — voor elke `PanelContainer` en elke `Button`, tegen `get_visible_rect()`,
+  en met een uitzondering voor wat in een klemmende ouder hangt (de
+  personagerijen staan in een `ScrollContainer` en horen eronderuit te lopen).
 - **Vier minigames leunen op `emulate_mouse_from_touch`.** `mg_scope`,
   `mg_cableboard`, `mg_uitlijnen` en `mg_pijplijn` lezen in hun `_gui_input()`
   een `InputEventMouseButton`. Dat werkt op een telefoon omdat Godot standaard

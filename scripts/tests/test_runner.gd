@@ -67,6 +67,8 @@ func _ready() -> void:
 	_test_klant_is_een_persoon()
 	await _test_dialoogvenster_past()
 	await _test_schermen_passen()
+	await _test_wereldchrome_past()
+	await _test_wijzer_wijkt_voor_tikkaartje()
 	await _test_klant_melding_voor_bericht()
 	_test_dialoog_speelt_niet_zijn_eigen_id()
 	_test_teller_daalt_niet_binnen_complete()
@@ -4013,3 +4015,156 @@ func _controls(root: Node) -> Array[Control]:
 	for kind: Node in root.get_children():
 		uit.append_array(_controls(kind))
 	return uit
+
+
+## De chrome in de wereld past op het canvas — de knoppenbalk vooral.
+##
+## Dit is de test die er niet was toen het misging. `_test_balkmaat()` legt de
+## hóógte van de balk vast en `_test_hudband()` wat hij bovenin afdekt, maar
+## niemand vroeg wáár de balk landde. Hij landde op y408 in een viewport van
+## 416: van elke knop van 30 px stonden er 24 onder het scherm, en op een
+## telefoon zag je van ▤ ? ≡ nog net de bovenrand. Oorzaak was
+## `_balk.size = get_combined_minimum_size()` in `Besturing._bouw_balk()` —
+## `Control.set_size()` rekent alle vier de offsets opnieuw uit, dus die ene
+## regel gooide de verankering aan de onderrand weg die er twee regels eerder
+## was gezet.
+##
+## Op een screenshot van de viewport is dat wél te zien, in tegenstelling tot
+## een afgekapt OS-venster — maar niemand kijkt naar de onderste acht pixels
+## van een shot van 416 hoog. Vandaar een getal in plaats van een oog.
+func _test_wereldchrome_past() -> void:
+	_kop("de chrome in de wereld past op het canvas")
+
+	var besturing := Besturing.new()
+	add_child(besturing)
+	besturing.setup()
+
+	var hud := Hud.new()
+	add_child(hud)
+	hud.setup()
+	# De besturingsuitleg is een modaal venster met een knop erin, en die knop
+	# hoort net zo binnen het canvas te vallen als de balk.
+	hud.show_controls_card()
+
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	_meet_schermvulling(besturing.get_child(0) as Control, "de knoppenbalk")
+	_meet_schermvulling(hud.get_child(0) as Control, "de HUD")
+
+	# En de balk hoort de ruimte te pakken die de HUD voor hem vrijhoudt: één
+	# getal, twee lezers. Loopt dat uit elkaar, dan hangen de onderste
+	# HUD-regels over de knoppen of blijft er een strook dode ruimte tussen.
+	var vp := get_viewport().get_visible_rect()
+	var balk := _vind_balk(besturing)
+	_ok(balk != null, "geen knoppenbalk gevonden in Besturing")
+	if balk != null:
+		var onder := vp.end.y - balk.get_global_rect().end.y
+		_ok(is_equal_approx(onder, float(Besturing.MARGE)),
+			"de balk staat %.0f px van de onderrand, MARGE zegt %d" % [
+				onder, Besturing.MARGE])
+		_ok(balk.get_global_rect().size.y <= float(Besturing.BALK_RUIMTE),
+			"de balk is %.0f px hoog en past niet in BALK_RUIMTE (%d)" % [
+				balk.get_global_rect().size.y, Besturing.BALK_RUIMTE])
+
+	# `free()` en niet `queue_free()`, om dezelfde reden als in
+	# `_test_hudband()`: beide nodes hangen aan de Bus en zouden anders met de
+	# rest van de suite meelopen.
+	remove_child(hud)
+	hud.free()
+	remove_child(besturing)
+	besturing.free()
+
+
+## De knoppenbalk is de PanelContainer met de drie knoppen erin. Op vorm
+## gezocht en niet op kindpad, net als `_vind_knop()`.
+func _vind_balk(root: Node) -> PanelContainer:
+	if root is PanelContainer:
+		var knoppen := 0
+		for c: Control in _controls(root):
+			if c is Button:
+				knoppen += 1
+		if knoppen >= 3:
+			return root as PanelContainer
+	for kind: Node in root.get_children():
+		var g := _vind_balk(kind)
+		if g != null:
+			return g
+	return null
+
+
+## De doelwijzer gaat niet over het bijschrift van waar je voor staat.
+##
+## Twee kaartjes die niets van elkaar wisten, en de situatie waarin dat misgaat
+## is de gewone: je staat voor een collega ("Praten Willem") terwijl je doel
+## elders in het gebouw ligt, dus de pijl klemt zich tegen de schermrand op de
+## hoogte van dat doel. De vloer is één lange strook, dus "dezelfde hoogte" is
+## eerder regel dan uitzondering — en dan lag "Entree 23 m" over "Praten
+## Willem" heen.
+##
+## Van die twee wijkt de wijzer; het tikkaartje hoort bij het ding waar je vlak
+## voor staat en heeft de vaste plek. Zie
+## `ObjectiveMarker._wijk_voor_tikkaartje()`.
+func _test_wijzer_wijkt_voor_tikkaartje() -> void:
+	_kop("de doelwijzer wijkt voor het tikkaartje")
+
+	# De wijzer vraagt `Hud.vrije_band()` op; zonder HUD is er geen band en
+	# meet deze test iets anders dan het spel doet.
+	var hud := Hud.new()
+	add_child(hud)
+	hud.setup()
+
+	var wereld := Node2D.new()
+	add_child(wereld)
+
+	# Het doel ligt rechts buiten het zichtbare stuk wereld, dus de pijl klemt
+	# zich tegen de rechterrand — de enige stand waarin hij een kaartje draagt.
+	var doel := Node2D.new()
+	doel.position = Vector2(400.0, 200.0)
+	wereld.add_child(doel)
+	var wijzer := ObjectiveMarker.new()
+	wijzer.plek = "Entree"
+	wijzer.meter_per_px = 0.1
+	doel.add_child(wijzer)
+
+	# En het tikkaartje op diezelfde hoogte, tegen die rand aan.
+	var anker := Node2D.new()
+	anker.position = Vector2(150.0, 206.0)
+	wereld.add_child(anker)
+	var tik := TapMarker.new()
+	anker.add_child(tik)
+	tik.zet("Praten Willem", true)
+
+	# Drie frames: `_wijk_voor_tikkaartje()` rekent met de maat die
+	# `_zet_kaartje()` het frame ervoor heeft gezet, dus de uitwijking valt op
+	# zijn vroegst in het tweede frame.
+	for _i: int in 3:
+		await get_tree().process_frame
+
+	var a := tik.kaartje_rect()
+	var b := _kaartje_rect_van(wijzer)
+	_ok(a.size != Vector2.ZERO, "het tikkaartje heeft geen maat; meet deze test iets?")
+	_ok(b.size != Vector2.ZERO, "het doelkaartje heeft geen maat; klemt de pijl wel?")
+
+	# Zonder deze controle zou "geen overlap" ook waar zijn als de twee
+	# kaartjes gewoon naast elkaar liggen, en dan bewijst de test niets.
+	_ok(a.position.x < b.end.x and b.position.x < a.end.x,
+		"de twee kaartjes overlappen horizontaal niet (%s en %s); dan is er geen conflict om te ontwijken" % [a, b])
+
+	_ok(not a.intersects(b),
+		"het doelkaartje %s ligt over het tikkaartje %s" % [b, a])
+
+	remove_child(wereld)
+	wereld.free()
+	remove_child(hud)
+	hud.free()
+
+
+## Het bijschrift van een wereldmarker, in wereldcoördinaten. Op vorm gezocht en
+## niet op kindpad; `ObjectiveMarker` houdt zijn kaartje privé.
+func _kaartje_rect_van(n: Node2D) -> Rect2:
+	for k: Node in n.get_children():
+		if k is PanelContainer and (k as PanelContainer).visible:
+			var p := k as PanelContainer
+			return Rect2(n.global_position + p.position, p.size)
+	return Rect2()

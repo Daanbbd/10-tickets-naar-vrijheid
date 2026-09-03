@@ -168,6 +168,17 @@ func _bouw_balk(ouder: Control) -> void:
 		UiKit.panel_krap(UiKit.PANEL_DARK, UiKit.INK))
 	_balk.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	_balk.offset_left = MARGE
+	# Boven- én onderrand uit constanten, niet één van de twee. Dit stond alleen
+	# op `offset_bottom`, en de `size`-toewijzing onderaan deze functie
+	# overschreef die weer: `Control.set_size()` rekent alle vier de offsets
+	# opnieuw uit de gevraagde maat, dus de bovenrand won en de balk landde op
+	# y408 in een viewport van 416 — 24 van de 30 px van elke knop stonden onder
+	# het scherm. Op een telefoon zag je van ▤ ? ≡ nog net de bovenrand.
+	#
+	# `BALK_HOOGTE` is hier de maat en niet alleen een ondergrens; datzelfde
+	# getal legt `_test_balkmaat()` vast tegen de gemeten knophoogte, dus een
+	# ander font laat die test vallen in plaats van deze balk stil verschuiven.
+	_balk.offset_top = -MARGE - BALK_HOOGTE
 	_balk.offset_bottom = -MARGE
 	# Als de inhoud ooit toch meer nodig heeft, groeit hij omhoog de wereld in.
 	# Standaard groeit een Control naar END, en dat is hier de onderrand van het
@@ -189,10 +200,14 @@ func _bouw_balk(ouder: Control) -> void:
 	_knop(rij, "≡", &"cancel", HULP_BREEDTE)
 
 	# Horizontaal anchor_left == anchor_right (BOTTOM_LEFT), dus de breedte komt
-	# uitsluitend uit deze size-toewijzing; get_combined_minimum_size() is een
-	# zuivere optelling over de zojuist toegevoegde knoppen, geen deferred
-	# layout-pas nodig.
-	_balk.size = _balk.get_combined_minimum_size()
+	# uitsluitend hiervandaan; get_combined_minimum_size() is een zuivere
+	# optelling over de zojuist toegevoegde knoppen, geen deferred layout-pas
+	# nodig.
+	#
+	# Via `offset_right` en niet via `size`: dat laatste zet de hoogte mee en
+	# gooide daarmee de verankering aan de onderrand weg. Alleen de breedte
+	# hoort hier vandaan te komen.
+	_balk.offset_right = MARGE + _balk.get_combined_minimum_size().x
 
 
 func _knop(rij: HBoxContainer, tekst: String, actie: StringName, breedte: int) -> Button:
