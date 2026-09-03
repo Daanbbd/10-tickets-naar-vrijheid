@@ -68,6 +68,7 @@ func _ready() -> void:
 	_test_klant_is_een_persoon()
 	await _test_dialoogvenster_past()
 	await _test_schermen_passen()
+	await _test_tagline_niet_afgekapt()
 	await _test_wereldchrome_past()
 	await _test_wijzer_wijkt_voor_tikkaartje()
 	await _test_klant_melding_voor_bericht()
@@ -4000,6 +4001,43 @@ func _test_wijzer_kiest_het_dichtste() -> void:
 ## waar niets meer is. Twee frames per scherm, want een Container legt zijn
 ## kinderen pas in de layout-pass neer — zelfde reden als bij
 ## `_test_dialoogvenster_past()`.
+## P3: de tagline stond op AUTOWRAP_OFF + clip_text — bij het smalle
+## portretcanvas (192 px, min de marges) knipte dat een lange tagline gewoon
+## midden in een woord af. AUTOWRAP_WORD lost dat af per definitie op (Godots
+## TextServer breekt in die modus nooit een woord door), maar een tagline die
+## daardoor over twee regels gaat mag de rest van het scherm niet wegduwen —
+## dat test dit, voor alle zeven personages en niet alleen de standaardkeuze.
+func _test_tagline_niet_afgekapt() -> void:
+	_kop("de tagline breekt op een woord, niet midden in een woord")
+
+	var scherm: Control = (load("res://scenes/boot/character_select.tscn") as PackedScene).instantiate()
+	add_child(scherm)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var tagline := scherm.get("_tagline") as Label
+	_ok(tagline != null, "character_select: geen _tagline gevonden")
+	if tagline != null:
+		_ok(tagline.autowrap_mode == TextServer.AUTOWRAP_WORD,
+			"_tagline staat niet op AUTOWRAP_WORD — een lange tagline kan weer midden in een woord afknippen")
+		_ok(not tagline.clip_text,
+			"_tagline.clip_text staat weer aan — dat knipt een gewrapte tweede regel gewoon weg")
+
+	var ids: Array = scherm.get("_ids")
+	for i: int in ids.size():
+		scherm.call("_kies", i, false)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		if tagline != null:
+			_ok(tagline.get_line_count() <= 2,
+				"%s: tagline breekt over %d regels — dat past niet meer op het portretcanvas" %
+				[ids[i], tagline.get_line_count()])
+		_meet_schermvulling(scherm, "character_select (%s)" % ids[i])
+
+	scherm.queue_free()
+	await get_tree().process_frame
+
+
 func _test_schermen_passen() -> void:
 	_kop("de boot-schermen passen op het canvas")
 

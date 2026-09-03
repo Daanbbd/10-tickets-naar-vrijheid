@@ -82,8 +82,11 @@ func _ready() -> void:
 
 	_tagline = UiKit.label("", UiKit.FS_SMALL, UiKit.WIT)
 	_tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_tagline.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_tagline.clip_text = true
+	# P3: stond op AUTOWRAP_OFF + clip_text, en knipte dus midden in een woord
+	# af zodra een tagline niet paste — bij 192 px breed en de langste taglines
+	# (Koen: "Heeft er waarschijnlijk al iets voor.") gebeurde dat echt.
+	# Woordafbreking kost een tweede regel, nooit een afgekapt woord.
+	_tagline.autowrap_mode = TextServer.AUTOWRAP_WORD
 	root.add_child(_tagline)
 
 	# De balk is anders ongelabeld: tien blokjes die niemand als "de tickets van
