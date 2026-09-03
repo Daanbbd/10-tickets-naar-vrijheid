@@ -13,7 +13,18 @@ class NodeBtn extends PanelContainer:
 	func _init(id: String, label: String, b: Node) -> void:
 		node_id = id
 		board = b
-		custom_minimum_size = Vector2(96, 22)
+		# Geen eigen breedte meer: hij deelt de rij met zijn buren.
+		#
+		# Dit stond op 96 px, en met vier kolommen naast elkaar meet dat bord
+		# 4 x 96 + 3 x 4 = 396 px op een canvas van 192 (168 binnen de
+		# chromemarges). De HBox groeide daarmee 114 px buiten élke rand —
+		# `UiKit.full_rect()` zet `GROW_DIRECTION_BOTH` — en dus stonden de
+		# buitenste twee kolommen volledig buiten beeld: Webshop links,
+		# Database en de Google Sheet rechts. De opdracht is "verbind de
+		# webshop weer met de database", en precies die twee waren onzichtbaar.
+		# Deze minigame was daarmee niet op te lossen.
+		custom_minimum_size = Vector2(0, 22)
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		add_theme_stylebox_override("panel", UiKit.panel(UiKit.PANEL, UiKit.LINE))
 		var l := UiKit.label(label, UiKit.FS_SMALL, UiKit.INK)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -69,7 +80,16 @@ func _on_setup() -> void:
 	stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(stack)
 
-	var cols := HBoxContainer.new()
+	# Lagen als rijen, niet als kolommen.
+	#
+	# Vier kolommen tekstlabels naast elkaar is de verkeerde vorm voor een
+	# portretcanvas van 192 px: elk knooppunt houdt dan ~39 px over, en een
+	# label als "Excel van de klant (definitief_v4)" past daar niet in — zie
+	# `NodeBtn._init()` voor wat dat aanrichtte. Als rijen krijgt elke laag de
+	# volle breedte en delen ten hoogste twee knooppunten die. De kabels lopen
+	# daarmee van boven naar beneden in plaats van van links naar rechts, en
+	# dat is voor "van de webshop naar de database" net zo goed te lezen.
+	var cols := VBoxContainer.new()
 	UiKit.full_rect(cols)
 	cols.add_theme_constant_override("separation", 4)
 	stack.add_child(cols)
@@ -85,7 +105,9 @@ func _on_setup() -> void:
 	var keys := by_col.keys()
 	keys.sort()
 	for k: Variant in keys:
-		var v := VBoxContainer.new()
+		# Eén laag = één rij. De knooppunten erin delen de breedte (elk
+		# `SIZE_EXPAND_FILL`), dus twee naast elkaar krijgen er elk 82 px.
+		var v := HBoxContainer.new()
 		v.alignment = BoxContainer.ALIGNMENT_CENTER
 		v.add_theme_constant_override("separation", 4)
 		v.size_flags_vertical = Control.SIZE_EXPAND_FILL

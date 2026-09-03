@@ -35,12 +35,34 @@ func _on_setup() -> void:
 	flow.add_theme_constant_override("v_separation", 3)
 	body.add_child(flow)
 
+	# Breed genoeg voor de langste tag, in plaats van een vaste 46.
+	#
+	# Die 46 paste drie knoppen per rij, en dan is er voor het woord zelf ~34 px
+	# over — negen tekens op FS_SMALL. "emotioneel", "hardstyle" en
+	# "middeleeuws" passen daar niet in, en `AUTOWRAP_WORD_SMART` breekt een
+	# woord dat helemaal niet past alsnog middenin af: er stond letterlijk
+	# "emotione / el" en "middelee / uws" op de knoppen. Gemeten in plaats van
+	# geraden, want de tags staan in `data/minigame_content.json` en het
+	# volgende woord dat iemand daar bij zet is precies het woord dat weer
+	# breekt. HFlowContainer legt er vervolgens zelf twee per rij als dat nodig
+	# is.
+	var breedste := 0.0
+	var snit: FontFile = UiKit.font_voor(UiKit.FS_SMALL)
+	for raw: Variant in c.get("tags", []):
+		var label := String((raw as Dictionary).get("label", (raw as Dictionary).get("id", "")))
+		breedste = maxf(breedste, snit.get_string_size(
+			label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, UiKit.FS_SMALL).x)
+	# 6 px contentmarge links en rechts (`UiKit.panel()`) plus de 1 px rand aan
+	# beide kanten, en één pixel lucht zodat afronding nooit de laatste kolom
+	# van een teken afsnijdt.
+	var knop_breed := ceili(breedste) + 2 * 6 + 2 * 1 + 1
+
 	for raw: Variant in c.get("tags", []):
 		var t := raw as Dictionary
 		var id := String(t.get("id", ""))
 		var b := UiKit.keuzeknop(String(t.get("label", id)), UiKit.FS_SMALL)
 		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(46, 26)
+		b.custom_minimum_size = Vector2(knop_breed, 26)
 		b.toggled.connect(_on_toggle.bind(id))
 		flow.add_child(b)
 		_buttons[id] = b

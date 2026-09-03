@@ -84,6 +84,7 @@ func _ready() -> void:
 	_test_dialoogplan_ronde_c()
 	_test_finale_heeft_team()
 	_test_glyphdekking()
+	await _test_minigames_passen()
 	_rapport()
 
 
@@ -4512,3 +4513,110 @@ func _test_glyphdekking() -> void:
 				_ok(font.has_char(cp),
 					"font %spx heeft geen glyph voor U+%04X ('%s') uit \"%s\" — dat wordt een tofu-vakje"
 						% [maat, cp, String.chr(cp), stuk])
+
+
+## Elke minigame past op het canvas.
+##
+## Dit is de tweede test die er niet was toen het misging. `mg_backend_fix`
+## legde zijn vier lagen als vier kolommen naast elkaar met een knooppunt van
+## minimaal 96 px breed: 4 x 96 + 3 x 4 = 396 px op een canvas van 192, en
+## `UiKit.full_rect()` zet `GROW_DIRECTION_BOTH`, dus dat bord groeide 114 px
+## buiten élke rand. Webshop stond links buiten beeld, Database en de Google
+## Sheet rechts — en "verbind de webshop weer met de database" is precies wat
+## die minigame vraagt. Hij was niet op te lossen, in geen enkele build, en
+## niets sloeg alarm.
+##
+## `_test_schermen_passen()` dekte alleen de vier bootschermen. De elf
+## minigames zijn samen de helft van het spel en hingen buiten elke meting; de
+## enige QA erop waren screenshots, en die maakt niemand op het moment dat hij
+## een `custom_minimum_size` verhoogt.
+##
+## `_meet_schermvulling()` doet het echte werk: hij loopt de boom af en klaagt
+## over elke `PanelContainer` of `Button` die buiten het canvas valt, tenzij die
+## in een klemmende ouder (een `ScrollContainer`) hangt.
+func _test_minigames_passen() -> void:
+	_kop("de minigames passen op het canvas")
+
+	# Sommige minigames lezen hun opgave via de trait van het personage
+	# (`TraitModifier`) of via de stand van de dag (`Gevolgen`), dus er moet een
+	# echte run staan. Daan: hij bezit twee minigames, dus zijn trait raakt er
+	# meteen twee.
+	QuestEngine.start_run(&"daan")
+
+	for raw_id: Variant in GameData.minigames.keys():
+		var mg_id := StringName(raw_id)
+		var pad := GameData.minigame_scene_path(mg_id)
+		_ok(pad != "" and ResourceLoader.exists(pad),
+			"minigame '%s' heeft geen scene" % mg_id)
+		if pad == "" or not ResourceLoader.exists(pad):
+			continue
+
+		var mg := (load(pad) as PackedScene).instantiate() as MinigameBase
+		_ok(mg != null, "%s erft niet van MinigameBase" % pad)
+		if mg == null:
+			continue
+		# Zoals `Shell.run_minigame()` het doet: id vóór setup, want een
+		# minigame leest zijn eigen inhoud op basis daarvan.
+		mg.minigame_id = mg_id
+		add_child(mg)
+		mg.setup({})
+		# Twee frames: één om de containers hun minimum te laten melden, één om
+		# dat minimum in echte rects te laten landen.
+		await get_tree().process_frame
+		await get_tree().process_frame
+		_meet_schermvulling(mg, String(mg_id))
+		_meet_horizontale_overloop(mg, String(mg_id))
+		mg.queue_free()
+		await get_tree().process_frame
+
+
+## Niets mag breder zijn dan de scroll waar het in hangt.
+##
+## `_meet_schermvulling()` kan dit niet zien, en dat is precies waarom
+## `mg_backend_fix` er langs kwam: `build_chrome()` zet de inhoud van elke
+## minigame in een `ScrollContainer` met `horizontal_scroll_mode` op DISABLED.
+## Die klemt (`clip_contents`), dus `_wordt_geklemd()` sluit al zijn kinderen
+## uit van de meting — terecht, want verticaal uitsteken is waar scrollen voor
+## is. Horizontaal is er geen scroll, en dan is te breed niet "je moet scrollen"
+## maar "dit is weg": het kabelbord was 396 px breed in een venster van 168 en
+## de buitenste twee kolommen waren onbereikbaar, geklemd en dus ook niet als
+## overlopend te meten.
+##
+## Gemeten aan de echte rects en niet aan `get_combined_minimum_size()` van de
+## scroll-inhoud. Die optelling loopt hier dood: het kabelbord hangt zijn
+## kolommen via `UiKit.full_rect()` in een kale `Control`, en een kale Control
+## meldt de minima van zijn kinderen niet aan zijn ouder — de scroll rapporteerde
+## 108 px terwijl de knooppunten 196 px opeisten. Wat er wél klopt is waar de
+## knooppunten na de layoutronde daadwerkelijk staan, tegen de rand van het vlak
+## dat ze klemt.
+func _meet_horizontale_overloop(root: Control, naam: String) -> void:
+	for c: Control in _controls(root):
+		if not (c is PanelContainer or c is Button):
+			continue
+		if not c.is_visible_in_tree() or c.size == Vector2.ZERO:
+			continue
+		var klem := _klemmende_ouder(c, root)
+		if klem == null:
+			continue
+		# Alleen horizontaal: verticaal uitsteken in een scroll is waar scrollen
+		# voor is, en dat mag.
+		var eigen := c.get_global_rect()
+		var buiten := klem.get_global_rect()
+		_ok(eigen.position.x >= buiten.position.x - 0.5
+				and eigen.end.x <= buiten.end.x + 0.5,
+			"%s: '%s' loopt van x%d tot x%d in een klem van x%d tot x%d — dat deel is weggeklemd en niet aan te tikken"
+				% [naam, c.name, roundi(eigen.position.x), roundi(eigen.end.x),
+					roundi(buiten.position.x), roundi(buiten.end.x)])
+
+
+## Het naaste vlak boven `c` dat zijn inhoud afknipt, of null. Stopt bij `root`,
+## zodat het scherm zelf niet meetelt.
+func _klemmende_ouder(c: Control, root: Control) -> Control:
+	var n := c.get_parent()
+	while n != null:
+		if n is Control and (n as Control).clip_contents:
+			return n as Control
+		if n == root:
+			return null
+		n = n.get_parent()
+	return null

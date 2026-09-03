@@ -2,8 +2,8 @@
  "mg_user_story": {
   "type": "scope",
   "briefing": "{capaciteit} punten past erin, en zij wil er {tevreden_min} blij van worden. Van de {wensen} dingen die ze noemt zijn er {zwaar} geen wens maar een project. Als ze 'een app' zegt: sorry wat.",
-  "intro": "Het is een lijst. Er past niet alles in de sprint, en dat weet zij niet.",
-  "waarom": "Een scope die te ruim is ingeschat, kom je later in de sprint weer tegen.",
+  "intro": "Zij noemt {wensen} dingen. Er past {capaciteit} punten in de sprint, en ze moet op {tevreden_min} punten blij zijn.",
+  "waarom": "Van die {wensen} zijn er {zwaar} geen wens maar een project. Wat je nu belooft, bouw je vandaag — of kom je later tegen.",
   "capaciteit": 13,
   "tevreden_min": 10,
   "eenheid": "punten",
@@ -327,7 +327,7 @@
    },
    {
     "id": "excel",
-    "label": "Excel van de klant (definitief_v4)",
+    "label": "Excel van de klant definitief_v4",
     "kolom": 2
    },
    {
