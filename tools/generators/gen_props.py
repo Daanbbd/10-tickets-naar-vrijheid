@@ -482,7 +482,10 @@ def main():
     meubels["boardroomtafel_7x2.png"] = boardroomtafel(7)
     meubels["monitorwand_4x1.png"] = monitorwand(4)
     meubels["tribune_10x2.png"] = tribune(10)
-    meubels["keukenblok_5x2.png"] = keukenblok(5, 2)
+    # keukenblok_5x2.png stond hier ook: §4 van de overdracht (het dubbele
+    # keukenblok in de koffiecorner) haalde hem uit gen_floor.py, dus hij is nu
+    # een dood asset. Zelfde lot als balie_5x1.png hieronder (P4), maar dat is
+    # een aparte, oudere dode-asset-vondst en geen onderdeel van dit besluit.
     meubels["balie_5x1.png"] = balie(5)
     meubels["serverrack_2x4.png"] = serverrack(2, 4)
     # Elk meubel krijgt zijn contactschaduw hier, niet in zijn eigen functie:

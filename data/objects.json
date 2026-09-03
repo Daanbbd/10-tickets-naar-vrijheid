@@ -132,7 +132,7 @@
  {
   "world_id": "koffiemachine",
   "tile": [
-   16,
+   18,
    4
   ],
   "kind": "examine",

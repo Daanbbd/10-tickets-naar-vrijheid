@@ -211,9 +211,11 @@ prop("serverrack", 3, 9, 4, 12)
 prop("serverrack", 6, 9, 7, 12)
 rect(8, 12, 8, 12, 'P')        # printer, net binnen de deur
 
-# ---- Koffiecorner: vrijstaand blok, loopruimte rondom ----------------------
-# y1 vrij boven, y4-7 vrij onder, x11-12 vrij west, x28 vrij oost.
-prop("keukenblok", 12, 2, 16, 3)
+# ---- Koffiecorner: de tribune plus koelkast, geen los keukenblok meer -----
+# Stond hier ook op prop("keukenblok", 12, 2, 16, 3): twee blokken in dezelfde
+# hoek, en Daan koos expliciet "keukenblok eruit, tribune wordt de corner" —
+# "Het witte keukenblok verdwijnt helemaal." x12-16 is nu gewone vloer, wat
+# de loopruimte oplevert waarmee de vloersessie de bredere variant afwees.
 rect(17, 2, 17, 3, 'f')        # koelkast, aan het eind van het aanrecht
 prop("tribune", 18, 2, 27, 3)
 rect(27, 4, 27, 4, 'z')        # de speaker van t07, onder het eind van de tribune
