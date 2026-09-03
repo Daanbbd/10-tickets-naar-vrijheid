@@ -200,20 +200,32 @@ arrangementen en worden bij het genereren meegeprint.
   hierin is dus alleen met een echte schermafbeelding te zien, niet met de
   QA-shots.
 - **De schaal binnen de letterbox is breukig, en dat is een keuze die je niet in
-  `project.godot` terugvindt.** `stretch/scale_mode` stond op `"integer"`, en op
-  een telefoon in de browser kost dat een vijfde van het beeld. De rekensom: het
-  canvas is 192x416 en een iPhone 390x844, dus in echte fullscreen komt daar
-  factor 6 uit en past het bijna exact (6,09). Maar Safari's URL-balk eet de
-  onderkant weg en Godot krijgt dan ~390x664 CSS-pixels. 664 / 416 = 4,79, en
-  integer rondt dat af naar **4**: ~20% lineair kleiner, ~36% minder oppervlak,
-  met zwarte balken aan alle vier de kanten. Dat leest als een spel dat het
-  scherm niet gebruikt, en het is nergens aan te zien dat een afronding de
-  oorzaak is.
+  `project.godot` terugvindt.** `stretch/scale_mode` stond op `"integer"`. De
+  schaal is `min(breedte / 192, hoogte / 416)`, en integer rondt die naar
+  beneden af op een heel getal — dus wat het kost hangt er volledig van af hoe
+  dicht je net *onder* een grens uitkomt. Gemeten met
+  `get_viewport().get_screen_transform()`:
+
+  | venster | verhouding | integer | breukig |
+  |---|---|---|---|
+  | 390x844 (fullscreen) | 2,029 | 2,0 — balken 3 x 6 | 2,026 — balken 1 x 0 |
+  | 390x664 (Safari met URL-balk) | 1,596 | **1,0** — balken 99 x 124 | 1,594 — balken 42 x 0 |
+
+  Die tweede regel is het hele punt. Met de URL-balk in beeld valt de
+  verhouding net onder 2, en dan tekent integer het spel op **1x**: 192x416
+  midden in een venster van 390x664, met bijna honderd pixels zwart aan
+  weerszijden. Dat leest als een spel dat het scherm niet gebruikt, en het is
+  nergens aan te zien dat een afronding de oorzaak is. Breukig haalt daar 1,594
+  uit — de volle hoogte, en alleen links en rechts nog een band.
+
+  Fullscreen verandert er vrijwel niets, en dat is de andere helft van het
+  verhaal: het canvas 192x416 (0,4615) is bewust vlak bij de verhouding van een
+  telefoon (390x844 is 0,4621), dus daar zát integer al goed. De winst zit
+  volledig in het geval waar de speler feitelijk in zit.
 
   Wat het kost is ongelijke pixels op een niet-heel veelvoud
-  (`default_texture_filter=0`, dus nearest). Precies in het geval waar de
-  afronding het duurst is — 4,79 — is dat de betere ruil, en in echte fullscreen
-  is de factor zo dicht bij 6 dat er niets te zien valt.
+  (`default_texture_filter=0`, dus nearest). Bij 1,594 tegenover 1,0 is dat de
+  betere ruil; bij 2,026 tegenover 2,0 is het verschil niet te zien.
 
   **En er staat geen regel in `project.godot` die dit vasthoudt.** `"fractional"`
   is de engine-default, en de export gooit default-waarden eruit (zie de
