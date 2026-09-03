@@ -26,6 +26,12 @@ extends CanvasLayer
 ## Een vaste stick zou op 192 px breed een kwart van het kantoor afdekken en
 ## dwingt je duim naar één plek. Deze verschijnt onder je duim en verdwijnt
 ## weer, dus hij kost alleen ruimte terwijl je loopt.
+## Gaat af zodra er een stick onder een duim ontstaat. `main.gd` laat de
+## besturingskaart hierop verdwijnen: die kaart legt uit hoe je loopt, dus
+## zodra je lóópt heeft hij zijn werk gedaan en hoort hij niet meer over de
+## duimzone te liggen.
+signal stick_begonnen
+
 const STRAAL := 20.0        ## uitslag van de stick in canvaspixels
 const KNOP_STRAAL := 6.0
 const SPRINT_DREMPEL := 0.82  ## verder uitduwen dan dit is rennen
@@ -64,10 +70,14 @@ const BALK_HOOGTE := KNOP_HOOGTE + 4
 ## enige lezer buiten deze klasse.
 const BALK_RUIMTE := MARGE + BALK_HOOGTE + 2
 
-## De stick mag alleen in de linkerhelft van de onderste tweederde opkomen.
+## De stick mag alleen in de rechterhelft van de onderste tweederde opkomen.
 ## Daarboven zit de doelregel en de ticketteller: daar wil je kunnen tikken
 ## zonder dat er een stick onder je duim ontstaat. De balk zelf is apart
 ## uitgesloten — zie `_in_zone()`.
+##
+## Rechts en niet links: de knoppenbalk (▤ ? ≡) staat linksonder, en een
+## duimzone die daar bovenop ligt laat de twee om dezelfde pixels vechten.
+## Rechtsonder is voor de meeste mensen ook simpelweg waar de duim al ligt.
 const ZONE_BREEDTE := 0.5
 const ZONE_TOP := 0.38
 
@@ -335,6 +345,7 @@ func _input(event: InputEvent) -> void:
 			_stuur(Vector2.ZERO)
 			_stick.visible = true
 			_stick.queue_redraw()
+			stick_begonnen.emit()
 		elif _tik_index == -99 and not _op_chrome(positie):
 			_tik_index = index
 			_tik_start = positie
@@ -397,7 +408,7 @@ func _in_zone(p: Vector2) -> bool:
 	if _op_chrome(p):
 		return false
 	var r := _stick.get_viewport_rect().size
-	return p.x < r.x * ZONE_BREEDTE and p.y > r.y * ZONE_TOP
+	return p.x > r.x * (1.0 - ZONE_BREEDTE) and p.y > r.y * ZONE_TOP
 
 
 func _los() -> void:
