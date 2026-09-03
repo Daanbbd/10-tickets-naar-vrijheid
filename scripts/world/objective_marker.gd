@@ -27,6 +27,13 @@ const SNELHEID := 3.2
 ## Hoe ver de geklemde pijl van de schermrand blijft staan.
 const RANDMARGE := 12.0
 
+## Hoe ver het kaartje onder de pijl hangt, en hoe ver het zijwaarts van de pijl
+## af staat. Constanten en geen losse getallen in `_zet_kaartje()`, want
+## `_wijk_voor_tikkaartje()` rekent met dezelfde maten: twee plekken die dit
+## apart intypen lopen bij de eerste verschuiving uit elkaar.
+const KAARTJE_ONDER := 6.0
+const KAARTJE_ZIJ := 4.0
+
 ## Waarvandaan de afstand gemeten wordt. `main.gd` zet dit; zonder speler valt
 ## hij terug op zijn eigen positie en klopt de afstand nog steeds ongeveer.
 var speler: Node2D = null
@@ -101,7 +108,8 @@ func _process(delta: float) -> void:
 	# binnenlopen een halve ruimte. Maar niet achter de HUD: de hele noordelijke
 	# strook van het kantoor ligt op schermhoogte van de ticketteller.
 	var x := zicht.position.x + RANDMARGE if kant < 0 else zicht.end.x - RANDMARGE
-	global_position = Vector2(x, _geklemde_y(doel.y - HOOGTE) + deining)
+	var y := _wijk_voor_tikkaartje(x, _geklemde_y(doel.y - HOOGTE), kant)
+	global_position = Vector2(x, y + deining)
 	_zet_kaartje(doel, kant)
 
 
@@ -109,18 +117,85 @@ func _process(delta: float) -> void:
 ## wereldcoördinaten; de HUD antwoordt in canvaspixels, dus de canvastransform
 ## zit ertussen — dat is dezelfde omrekening die `UiKit.veilige_insets()` doet.
 func _geklemde_y(wens: float) -> float:
+	var band := _band()
+	if band.y <= band.x:
+		return band.x
+	return clampf(wens, band.x, band.y)
+
+
+## De band waarin de geklemde pijl mag staan, in wereldcoördinaten. Boven de
+## HUD-chips vandaan, onder de knoppenbalk vandaan.
+##
+## Een lege band (y <= x) betekent "er is geen ruimte"; de aanroeper valt dan
+## terug op de bovengrens.
+func _band() -> Vector2:
 	var vp := get_viewport()
 	if vp == null:
-		return wens
+		return Vector2(-1e9, 1e9)
 	var band := _hud.vrije_band() if is_instance_valid(_hud) else Vector2.ZERO
 	var terug := vp.get_canvas_transform().affine_inverse()
 	# Ruimte voor het kaartje eronder: dat hangt zes pixels lager en is er
 	# ongeveer twintig hoog.
-	var boven := (terug * Vector2(0.0, band.x)).y + 8.0
-	var onder := (terug * Vector2(0.0, band.y)).y - 28.0
-	if onder <= boven:
-		return boven
-	return clampf(wens, boven, onder)
+	return Vector2((terug * Vector2(0.0, band.x)).y + 8.0,
+		(terug * Vector2(0.0, band.y)).y - 28.0)
+
+
+## Niet bovenop het bijschrift van `TapMarker` gaan staan.
+##
+## Die twee kaartjes wisten niets van elkaar, en dat gaat mis in het geval dat
+## juist vaak voorkomt: je staat voor een collega ("Praten Willem") terwijl je
+## doel elders in het gebouw ligt, dus deze pijl klemt zich tegen de schermrand
+## op de hoogte van dat doel. Ligt dat doel op dezelfde tegelrij als waar je
+## staat — en de vloer is één lange strook, dus dat is de normale situatie —
+## dan komen de twee panelen over elkaar heen.
+##
+## Deze pijl wijkt en het tikkaartje niet: dat hoort bij het ding waar je vlak
+## voor staat en heeft de vaste plek. Hij gaat naar boven of naar onder, welke
+## van de twee het dichtst bij de gewenste hoogte blijft en nog binnen de band
+## past. Past geen van beide, dan blijft hij staan — de band weegt zwaarder dan
+## de overlap, want achter de HUD is hij helemaal niet te zien.
+func _wijk_voor_tikkaartje(x: float, y: float, kant: int) -> float:
+	var tik := get_tree().get_first_node_in_group(&"tap_marker") as TapMarker
+	if tik == null:
+		return y
+	var bezet := tik.kaartje_rect()
+	if bezet.size == Vector2.ZERO:
+		return y
+	# Het eigen kaartje meet zichzelf in `_zet_kaartje()`, dus deze maat is die
+	# van het vorige frame. In het eerste frame is hij nul en gebeurt er niets;
+	# een frame later staat hij goed.
+	var maat := _kaartje.size
+	if maat == Vector2.ZERO:
+		return y
+	if not _eigen_rect(x, y, maat, kant).intersects(bezet):
+		return y
+
+	# `AMPLITUDE` erbij als lucht: de pijl deint op en neer en het kaartje deint
+	# met hem mee, dus een uitwijking die exact aansluit zou de overlap elke
+	# halve seconde terugbrengen.
+	var band := _band()
+	var kandidaten: Array[float] = [
+		bezet.position.y - KAARTJE_ONDER - maat.y - AMPLITUDE,
+		bezet.end.y - KAARTJE_ONDER + AMPLITUDE,
+	]
+	var beste := y
+	var afstand := INF
+	for k: float in kandidaten:
+		if band.y > band.x and (k < band.x or k > band.y):
+			continue
+		if _eigen_rect(x, k, maat, kant).intersects(bezet):
+			continue
+		if absf(k - y) < afstand:
+			afstand = absf(k - y)
+			beste = k
+	return beste
+
+
+## Waar het eigen kaartje komt te liggen als de pijl op (`x`, `y`) staat.
+## Zelfde som als `_zet_kaartje()`, en daarom uit dezelfde constanten.
+func _eigen_rect(x: float, y: float, maat: Vector2, kant: int) -> Rect2:
+	var dx := KAARTJE_ZIJ if kant < 0 else -maat.x - KAARTJE_ZIJ
+	return Rect2(Vector2(x + dx, y + KAARTJE_ONDER), maat)
 
 
 ## Het zichtbare stuk wereld, in wereldcoördinaten. Uit de canvastransform en
@@ -140,7 +215,7 @@ func _zet_kaartje(doel: Vector2, kant: int) -> void:
 	# Naar binnen toe uitklappen: aan de rechterrand hangt het kaartje links van
 	# de pijl, anders staat de helft ervan buiten beeld.
 	_kaartje.position = Vector2(
-		4.0 if kant < 0 else -_kaartje.size.x - 4.0, 6.0)
+		KAARTJE_ZIJ if kant < 0 else -_kaartje.size.x - KAARTJE_ZIJ, KAARTJE_ONDER)
 	_kaartje.visible = true
 
 

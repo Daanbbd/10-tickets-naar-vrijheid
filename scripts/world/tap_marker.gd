@@ -39,6 +39,11 @@ var _hud: Hud = null
 
 
 func _ready() -> void:
+	# Via een groep en niet via een verwijzing, net als `ObjectiveMarker` en de
+	# HUD: `main.gd` gooit deze node weg zodra je een stap opzij zet, en de
+	# doelwijzer hoort niet te weten wie hem gemaakt heeft. Die wijzer vraagt
+	# hier `kaartje_rect()` op om er niet bovenop te gaan staan.
+	add_to_group(&"tap_marker")
 	z_index = 60
 	# Iets boven het object, zodat de ring niet over de tegelkunst zelf ligt.
 	position = Vector2(0.0, -6.0)
@@ -75,6 +80,19 @@ func zet(tekst: String, ring: bool) -> void:
 		_kaartje_label.text = tekst
 		_kaartje.visible = tekst != ""
 	queue_redraw()
+
+
+## Waar het bijschrift staat, in wereldcoördinaten. Leeg als er niets staat.
+##
+## Voor `ObjectiveMarker`: die klemt zich tegen de schermrand en kwam daarmee
+## naast dit kaartje terecht — "Entree 23 m" over "Praten Willem" heen, precies
+## op het moment dat je voor iemand staat en je doel elders ligt. Van die twee
+## wijkt de doelwijzer, want dit kaartje hoort bij het ding waar je vlak voor
+## staat en hoort dus niet te bewegen.
+func kaartje_rect() -> Rect2:
+	if _kaartje == null or not _kaartje.visible or not visible:
+		return Rect2()
+	return Rect2(global_position + _kaartje.position, _kaartje.size)
 
 
 func _op_input_slot(op_slot: bool) -> void:
