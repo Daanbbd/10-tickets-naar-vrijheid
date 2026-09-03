@@ -79,6 +79,7 @@ func _ready() -> void:
 	_test_hokjedak_dekt_de_zone()
 	_test_wijzer_kiest_het_dichtste()
 	_test_aanduidingen_kloppen()
+	_test_dialoogplan_ronde_c()
 	_rapport()
 
 
@@ -534,16 +535,38 @@ func _test_dialoog() -> void:
 				var laatste := variants[variants.size() - 1] as Dictionary
 				_ok(not laatste.has("when") or (laatste["when"] as Dictionary).is_empty(),
 					"dialoog '%s' node '%s': laatste variant heeft een 'when' (geen fallback)" % [key, nid])
+				for v: Variant in variants:
+					var vd := v as Dictionary
+					var vbad := Conditions.unknown_keys(vd.get("when", {}) as Dictionary)
+					_ok(vbad.is_empty(),
+						"dialoog '%s' node '%s': variant heeft onbekende conditie-key %s" % [key, nid, vbad])
 			var nxt := StringName(node.get("next", ""))
 			if nxt != &"":
 				_ok(def.has_node_id(nxt), "dialoog '%s' node '%s': next '%s' bestaat niet" % [key, nid, nxt])
-			for raw: Variant in node.get("choices", []):
-				var ch := raw as Dictionary
-				var cn := StringName(ch.get("next", ""))
-				if cn != &"":
-					_ok(def.has_node_id(cn), "dialoog '%s' node '%s': keuze-next '%s' bestaat niet" % [key, nid, cn])
-				var bad := QuestEngine.unknown_effect_ops(ch.get("effects", []) as Array)
-				_ok(bad.is_empty(), "dialoog '%s': onbekende effect-op %s" % [key, bad])
+			var choices: Array = node.get("choices", [])
+			# Ronde C, dialoogplan: `filter_choices()` kan alle keuzes wegfilteren
+			# als ze allemaal een 'when' hebben, en `dialogue_controller.gd` valt
+			# dan door naar `node.next` — meestal "", dus het gesprek stopt stil
+			# zonder foutmelding. Variants hebben deze eis al (hierboven); keuzes
+			# hadden hem niet, en dat was precies de valkuil die `--when`-gating
+			# van een keuzemenu levensgevaarlijk maakt zonder deze test.
+			if not choices.is_empty():
+				var altijd := false
+				for raw: Variant in choices:
+					var ch := raw as Dictionary
+					if not ch.has("when") or (ch["when"] as Dictionary).is_empty():
+						altijd = true
+					var cn := StringName(ch.get("next", ""))
+					if cn != &"":
+						_ok(def.has_node_id(cn), "dialoog '%s' node '%s': keuze-next '%s' bestaat niet" % [key, nid, cn])
+					var bad := QuestEngine.unknown_effect_ops(ch.get("effects", []) as Array)
+					_ok(bad.is_empty(), "dialoog '%s': onbekende effect-op %s" % [key, bad])
+					var cbad := Conditions.unknown_keys(ch.get("when", {}) as Dictionary)
+					_ok(cbad.is_empty(),
+						"dialoog '%s' node '%s': keuze '%s' heeft onbekende conditie-key %s" % [
+							key, nid, ch.get("text", ""), cbad])
+				_ok(altijd, "dialoog '%s' node '%s': elke keuze heeft een 'when' — zonder fallback " % [key, nid]
+					+ "kan het menu leeg vallen en valt het gesprek stil door op node.next")
 			var bad2 := QuestEngine.unknown_effect_ops(node.get("effects", []) as Array)
 			_ok(bad2.is_empty(), "dialoog '%s': onbekende effect-op %s" % [key, bad2])
 
@@ -4236,3 +4259,81 @@ func _test_aanduidingen_kloppen() -> void:
 	if bas != null and bas.plek != &"":
 		_ok(Hud._aanduiding(bas.zone, bas.plek).contains("Team"),
 			"Bastiaan krijgt '%s' en niet zijn eiland" % Hud._aanduiding(bas.zone, bas.plek))
+
+
+## Ronde C, het dialoogplan: drie regressiewachters voor drie van de vier
+## mechanismen die keuzes tot dan toe onzichtbaar maakten. `_test_dialoog()`
+## bewaakt al de generieke when-dekking (typefouten, de fallback-plicht per
+## keuzenode); dit bewaakt de specifieke bugs zelf, zodat een latere edit ze
+## niet stilletjes terugzet. Het vierde mechanisme (vlaggen die alleen in hun
+## eigen boom gelezen worden) is geen toestand die een test kan afkeuren —
+## dat is een verhaalkeuze, geen correctheidsfout.
+func _test_dialoogplan_ronde_c() -> void:
+	_kop("dialoogplan (Ronde C)")
+
+	# Mechanisme 1: geen keuze mag rechtstreeks op een lege stub-node landen.
+	# `{"speaker": ""}` zonder tekst, variants of choices produceert nul
+	# output — de speler kiest iets en het gesprek sluit stil, zoals danny's
+	# "Ga door." vóór deze ronde deed.
+	for key: Variant in GameData.dialogues.keys():
+		var def: DialogueDef = GameData.dialogue(StringName(key))
+		for nid: Variant in def.nodes.keys():
+			var node := def.node(StringName(nid))
+			for raw: Variant in node.get("choices", []):
+				var ch := raw as Dictionary
+				var cn := StringName(ch.get("next", ""))
+				if cn == &"":
+					continue
+				var doel := def.node(cn)
+				var leeg := String(doel.get("speaker", "")) == "" \
+					and String(doel.get("text", "")) == "" \
+					and (doel.get("variants", []) as Array).is_empty() \
+					and (doel.get("choices", []) as Array).is_empty()
+				_ok(not leeg, "dialoog '%s' node '%s': keuze '%s' -> '%s' is een lege stub, nul output" % [
+					key, nid, ch.get("text", ""), cn])
+
+	# Mechanisme 3: Bastiaans reactie op een gevolg-vlag mag niet begraven
+	# liggen onder zijn eigen "nog steeds hier"-fallback. Conditions.pick_variant()
+	# kiest de eerste match, dus de vlag-specifieke variant moet vóór de kale
+	# bastiaan_bezocht-variant staan (die verder geen enkele extra eis heeft).
+	var bas_def: DialogueDef = GameData.dialogue(&"collega_bastiaan")
+	if bas_def != null:
+		var variants: Array = bas_def.node(bas_def.start_node).get("variants", [])
+		var idx_comicsans := -1
+		var idx_kaal := -1
+		for i: int in variants.size():
+			var w := (variants[i] as Dictionary).get("when", {}) as Dictionary
+			var flags: Array = w.get("flags_all", [])
+			if "gevolg_comicsans_beloofd" in flags:
+				idx_comicsans = i
+			elif flags == ["bastiaan_bezocht"] and not w.has("min_tickets_done"):
+				idx_kaal = i
+		_ok(idx_comicsans >= 0, "collega_bastiaan/start: gevolg_comicsans_beloofd-variant is weg")
+		_ok(idx_kaal >= 0, "collega_bastiaan/start: de kale bastiaan_bezocht-fallback is weg")
+		if idx_comicsans >= 0 and idx_kaal >= 0:
+			_ok(idx_comicsans < idx_kaal,
+				("collega_bastiaan/start: gevolg_comicsans_beloofd staat ná de kale bezocht-fallback " +
+					"en is dus na de eerste keer onbereikbaar (Conditions.pick_variant pakt de eerste match)"))
+
+	# Mechanisme 4: elk van de acht "wat vertel je?"-nodes moet minstens één
+	# optie met een 'when' hebben, anders is het menu weer identiek op
+	# ticket 1 en ticket 9. `_test_dialoog()` eist al minstens één optie
+	# ZONDER 'when' per node (de verplichte fallback); dit eist het omgekeerde.
+	var moet_varieren := [
+		["dennis", "vraag"], ["collega_daan", "slot"], ["collega_danny", "slot"],
+		["collega_victor", "slot"], ["collega_jonathan", "slot"],
+		["collega_willem", "slot"], ["collega_bastiaan", "slot"], ["collega_koen", "slot"],
+	]
+	for paar: Array in moet_varieren:
+		var d2: DialogueDef = GameData.dialogue(StringName(paar[0]))
+		_ok(d2 != null, "dialoog '%s' ontbreekt" % paar[0])
+		if d2 == null:
+			continue
+		var node2 := d2.node(StringName(paar[1]))
+		var gated := false
+		for raw: Variant in node2.get("choices", []):
+			if not ((raw as Dictionary).get("when", {}) as Dictionary).is_empty():
+				gated = true
+				break
+		_ok(gated, "%s/%s: geen enkele optie heeft een 'when' — het menu is weer identiek op elk moment" % [
+			paar[0], paar[1]])
