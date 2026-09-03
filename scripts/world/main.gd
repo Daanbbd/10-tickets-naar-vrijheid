@@ -171,7 +171,9 @@ func _ready() -> void:
 		# ticketstand blijkt: als De Klant zich nooit meldt, ziet een speelbeurt
 		# er precies hetzelfde uit en valt de hele escalatie stil zonder fout.
 		# Daarom logt de harnas haar meldingen, en controleert hij aan het eind
-		# of alle vier de drempels gevallen zijn.
+		# of alle drempels uit `Gevolgen.DREMPELS` gevallen zijn. Dat waren er
+		# vier; sinds F3-b (klant_berichten.json groeide van vier naar zes
+		# beats) zijn het er zes, dus dit leest de lijst en telt niet hard "4".
 		Bus.klant_bericht.connect(func(bid: StringName) -> void:
 			_klant_meldingen += 1
 			print("[SPEELBEURT] De Klant meldt zich: %s  (bij %d/%d)" % [

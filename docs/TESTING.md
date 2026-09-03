@@ -99,9 +99,11 @@ wereldveranderingen, de voordeur en het eindscherm. De autopilot stuurt echte
 
 Exitcode 0 alleen bij 10/10. Status per ticket komt op stdout.
 
-**Laatste run:** alle **zeven** personages exit 0, 10/10, vier van de vier
-klantmeldingen, nul parse- of scriptfouten. Daan en Danny komen uit op 8u30
-(uit om 17:42), de andere vijf op 9u (18:12).
+**Laatste run:** alle **zeven** personages exit 0, 10/10, zes van de zes
+klantmeldingen (`Gevolgen.DREMPELS` is sinds F3-b zes drempels, niet vier —
+zie het commentaar bij de aanroep in `main.gd`), nul parse- of scriptfouten.
+Daan komt uit op 9u45 (uit om 18:57), Danny op 9u47 (18:59), Jonathan op 10u02
+(19:14), Victor/Koen/Bastiaan/Willem op 10u17 (19:29).
 
 Deze doorloop was tot voor kort een muntworp. Hij wachtte op
 `Session.is_done(tid)`, en die valt vóór de urenrol en de afrondingsdialoog —

@@ -13,8 +13,9 @@ verkennen -> ruimte binnenlopen, ticket komt in je inventaris
    -> minigame -> ticket opgelost -> wereld verandert -> weer kiezen
 ```
 
-Negen van de tien tickets staan vanaf minuut één open. Er is dus geen "volgende
-ticket", alleen een volgende keuze. Wat groeit is je inventaris: wat je gevonden
+Vier van de tien tickets staan vanaf minuut één open (`available_when` in
+`data/tickets/`, zie QUESTS.md). Er is dus geen "volgende ticket", alleen een
+volgende keuze. Wat groeit is je inventaris: wat je gevonden
 hebt. Alleen de deploy wacht op 9/10 — zie QUESTS.md.
 
 ## De eerste minuut
@@ -30,7 +31,7 @@ vóór `Shell.goto_character_select()`.
 1. **Tien tickets, dan mag je naar buiten.** De wincondititie.
 2. **Ze liggen verspreid; een ruimte binnenlopen levert er een op.** Zonder dit
    leest "verkennen" niet als de manier om werk te vinden.
-3. **Het ticketbord is je inventaris en waar je kiest.** Negen van de tien staan
+3. **Het ticketbord is je inventaris en waar je kiest.** Vier van de tien staan
    vanaf minuut één open — er is geen volgorde, alleen een keuze.
 4. **Niet je vakgebied? Dan haal je er iemand bij.** De centrale spanning
    hierboven.
@@ -68,10 +69,11 @@ de finale zijn personagespecifiek.
 
 ## De boog: vrije volgorde, oplopende druk
 
-Negen tickets staan vanaf minuut één open en dat blijft zo. Maar de tien
-tickets zijn geen tien losse sketches: het is één dag die verder uit de hand
-loopt. Die twee dingen botsen alleen als je de escalatie aan de *volgorde*
-hangt, en dat doet dit spel niet — hij hangt aan je **voortgang** en aan je
+Vier tickets staan vanaf minuut één open; de rest ontgrendelt naarmate je
+vordert (`available_when` in `data/tickets/`). Maar de tien tickets zijn geen
+tien losse sketches: het is één dag die verder uit de hand loopt. Die twee
+dingen botsen alleen als je de escalatie aan de *volgorde* hangt, en dat doet
+dit spel niet — hij hangt aan je **voortgang** en aan je
 **keuzes**.
 
 | Wat | Waar het aan hangt |
