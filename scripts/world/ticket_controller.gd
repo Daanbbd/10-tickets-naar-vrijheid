@@ -54,9 +54,13 @@ func handle(ticket_id: StringName, source: Interactable) -> void:
 ## Volgorde: eerst een ticket waar je nu iets mee kunt, dan een geblokkeerd
 ## ticket (voor de 'nog niet'-regel), anders het laatst opgeloste.
 ##
-## Draagt dit object er meer dan één die openstaat, dan kiest de speler. Dat
-## gebeurt precies op één plek in het spel — het scrumbord in de gang — maar
-## zonder deze vraag zou het tweede ticket daar onbereikbaar zijn.
+## Draagt dit object er meer dan één die openstaat, dan kiest de speler.
+## `scrumbord_gang` is het enige anker met twee tickets (t02 en t09), maar t09
+## is gated op `tickets_done: [t02]` — t02 is dus altijd al dicht tegen de tijd
+## dat t09 opengaat, en `open.size() > 1` hieronder valt daardoor nooit voor.
+## P1-10: dit is dus vandaag dode code, geen actieve "welke bedoel je?"-vraag.
+## Hij blijft staan als vangnet voor een toekomstig anker met wél twee
+## gelijktijdig open tickets — verwijder deze tak niet zonder dat na te gaan.
 func _ticket_for_anchor(world_id: StringName, fallback: StringName) -> TicketDef:
 	var open := QuestEngine.tickets_at_anchor(world_id)
 	if open.size() > 1:
