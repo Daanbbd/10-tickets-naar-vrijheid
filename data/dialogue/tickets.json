@@ -2571,7 +2571,12 @@
       },
       "slot": {
         "speaker": "",
-        "text": "Achter je is het stil geworden. Iedereen staat te kijken."
+        "text": "Achter je is het stil geworden. Iedereen staat te kijken.",
+        "next": "dennis"
+      },
+      "dennis": {
+        "speaker": "dennis",
+        "text": "Los maar op. Ik zeg toch niks."
       }
     }
   },
@@ -2685,6 +2690,11 @@
       "kantoor": {
         "speaker": "",
         "text": "Niemand juicht. Iemand zet koffie. Hier is dat hetzelfde.",
+        "next": "dennis"
+      },
+      "dennis": {
+        "speaker": "dennis",
+        "text": "Mooi. Dan schat ik de volgende sprint maar weer in.",
         "next": "deur"
       },
       "deur": {

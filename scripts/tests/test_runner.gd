@@ -80,6 +80,7 @@ func _ready() -> void:
 	_test_wijzer_kiest_het_dichtste()
 	_test_aanduidingen_kloppen()
 	_test_dialoogplan_ronde_c()
+	_test_finale_heeft_team()
 	_rapport()
 
 
@@ -4337,3 +4338,30 @@ func _test_dialoogplan_ronde_c() -> void:
 				break
 		_ok(gated, "%s/%s: geen enkele optie heeft een 'when' — het menu is weer identiek op elk moment" % [
 			paar[0], paar[1]])
+
+
+## P2-11: t10_offer en t10_complete eindigden allebei op een anonieme regel —
+## `speaker: ""` of `speaker: "speler"` — nooit een collega die iets zegt.
+## "Iedereen staat te kijken" en "iemand zet koffie" bleven zo naamloos, en dat
+## is precies het patroon dat `Briefing` elders al signaleerde: een naamloze
+## "iemand" is een sleutel, geen mens. Dennis is de enige die hier veilig kan
+## spreken zonder een `when`-tak nodig te hebben: hij is nooit de speler.
+##
+## t10_fail slaat bewust over: "Achter je zegt niemand iets. Dat is hier een
+## vorm van steun." is zélf al de pointe — een stem toevoegen zou die stilte
+## juist ontkrachten in plaats van "team-loos" oplossen.
+func _test_finale_heeft_team() -> void:
+	_kop("de finale heeft een team")
+	for tree_id: StringName in [&"t10_offer", &"t10_complete"]:
+		var def: DialogueDef = GameData.dialogue(tree_id)
+		_ok(def != null, "dialoog '%s' ontbreekt" % tree_id)
+		if def == null:
+			continue
+		var iemand_spreekt := false
+		for nid: Variant in def.nodes.keys():
+			var node := def.node(StringName(nid))
+			var spreker := String(node.get("speaker", ""))
+			if spreker != "" and spreker != "speler" and String(node.get("text", "")) != "":
+				iemand_spreekt = true
+				break
+		_ok(iemand_spreekt, "%s: geen enkele node heeft een naamloze collega aan het woord — de finale is nog steeds team-loos" % tree_id)
