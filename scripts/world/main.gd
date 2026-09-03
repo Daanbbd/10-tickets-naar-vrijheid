@@ -263,10 +263,45 @@ func _mark_node(n: Node2D) -> void:
 	# zijn ouder. Dus krijgt hij ze hier mee, van de enige plek die de speler,
 	# de vloer en het doel tegelijk in handen heeft.
 	m.speler = player
-	m.plek = String(builder.zone_at(builder.world_to_tile(n.global_position)).get("name", ""))
+	m.plek = _wijzer_plek(n)
 	m.meter_per_px = builder.meters_per_pixel()
 	n.add_child(m)
 	_doelwit = n
+
+
+## Wat er op de wijzer staat: de ruimte zolang je er nog niet bent, en het ding
+## zelf zodra je er staat.
+##
+## Er stond altijd de ruimtenaam, en dat leverde "De Werkvloer 7 m" op terwijl
+## je midden op de werkvloer stond. Een ruimtenaam beantwoordt "welke kant op";
+## sta je er al, dan is de vraag "wat zoek ik", en dan is het scrumbord een
+## beter antwoord dan de vloer waar je op staat.
+func _wijzer_plek(n: Node2D) -> String:
+	var z := builder.zone_at(builder.world_to_tile(n.global_position))
+	if StringName(z.get("id", "")) != _zone_id:
+		return String(z.get("name", ""))
+	# Zelfde ruimte. Een object draagt zijn label op zijn Interactable, een
+	# collega zijn naam op zijn NpcDef.
+	var it := n.get_node_or_null("Interactable") as Interactable
+	if it != null and it.label != "":
+		return it.label
+	var def: Variant = n.get("def")
+	if def is NpcDef and (def as NpcDef).name != "":
+		return (def as NpcDef).name
+	# Niets bruikbaars: dan alleen de meters, dat is nog steeds informatie.
+	return ""
+
+
+## De wijzer noemt de ruimte of het ding, en welke van de twee hangt af van waar
+## de speler staat. `_refresh_marker()` draait op ticketwijzigingen en niet op
+## beweging, dus het oversteken van een zonegrens moet dit zelf bijwerken.
+func _werk_wijzer_plek_bij() -> void:
+	if not is_instance_valid(_doelwit):
+		return
+	for m: Node in _doelwit.get_children():
+		var wijzer := m as ObjectiveMarker
+		if wijzer != null:
+			wijzer.plek = _wijzer_plek(_doelwit)
 
 
 ## Volgt het huidige interactable van de speler, en draagt sinds kort ook de
@@ -940,6 +975,7 @@ func _on_player_tile(t: Vector2i) -> void:
 		# als een storing en niet als een ruimte.
 		AudioDirector.set_ruimte(zid, 0.0 if eerste else AudioDirector.RUIMTE_FADE)
 		Bus.zone_entered.emit(zid, _zone_naam)
+		_werk_wijzer_plek_bij()
 		_meld_vondst(_vind_werk(zid), _zone_naam)
 	if zid == &"z10_weekend":
 		_weekend_duwt_terug()
