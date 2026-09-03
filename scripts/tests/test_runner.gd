@@ -65,6 +65,7 @@ func _ready() -> void:
 	_test_werving_begint_met_de_vraag()
 	_test_klant_is_een_persoon()
 	await _test_dialoogvenster_past()
+	await _test_klant_melding_voor_bericht()
 	_test_dialoog_speelt_niet_zijn_eigen_id()
 	_test_teller_daalt_niet_binnen_complete()
 	_test_tweede_oplevering_betaalt_niet_opnieuw()
@@ -95,6 +96,23 @@ func _vind_knop(root: Node, voorvoegsel: String) -> Button:
 		return root as Button
 	for kind: Node in root.get_children():
 		var gevonden := _vind_knop(kind, voorvoegsel)
+		if gevonden != null:
+			return gevonden
+	return null
+
+
+## De tegenhanger van `_vind_knop()` voor gewone tekst: staat `stuk` ergens in
+## een Label of RichTextLabel onder `root`? Om te controleren dat een naam of
+## regel echt op het scherm terechtkomt, en niet alleen in de data staat.
+func _vind_label(root: Node, stuk: String) -> Node:
+	if root == null:
+		return null
+	if root is Label and (root as Label).text.contains(stuk):
+		return root
+	if root is RichTextLabel and (root as RichTextLabel).text.contains(stuk):
+		return root
+	for kind: Node in root.get_children():
+		var gevonden := _vind_label(kind, stuk)
 		if gevonden != null:
 			return gevonden
 	return null
@@ -3536,3 +3554,92 @@ func _object_tiles() -> Dictionary:
 		if wid != &"" and tile.size() == 2:
 			out[wid] = Vector2i(int(tile[0]), int(tile[1]))
 	return out
+
+
+## De melding vóór het bericht van De Klant.
+##
+## Twee dingen worden hier gemeten die geen van beide uit een losse constructie
+## van het scherm blijken. Ten eerste: er gebeurt niets in de wereld zolang je
+## niet geopend hebt. Het effect van k1 is `unlock_ticket t07`, en t07 staat op
+## `available_when: {tickets_done: [t04]}` — dus op slot bij een verse run. Dat
+## is de meetlat: een bericht dat de speler nog niet gelezen heeft mag de wereld
+## niet al veranderd hebben.
+##
+## Ten tweede: er is precies één uitweg. Haar berichten dragen effects, dus een
+## tweede knop of een ESC die de melding wegtikt zou een ticket kunnen
+## ontgrendelen dat de speler nooit heeft zien langskomen.
+func _test_klant_melding_voor_bericht() -> void:
+	_kop("de melding vóór het bericht van De Klant")
+
+	QuestEngine.start_run(&"daan")
+	_ok(not Session.is_available(&"t07"),
+		"vervuilde staat: t07 stond al open vóór deze test")
+
+	var tel := Telefoon.new()
+	tel.name = "TelefoonTest"
+	add_child(tel)
+	tel.setup()
+	await get_tree().process_frame
+
+	# --- stap 1: de melding, en verder niets ------------------------------
+	tel.call(&"_toon", &"k1")
+	await get_tree().process_frame
+	_ok(tel.is_open(), "_toon(k1): de telefoon staat niet open")
+	_ok(not bool(tel.get(&"_bericht_zichtbaar")),
+		"_toon(k1): het bericht staat er meteen, de melding is overgeslagen")
+
+	var melding := tel.get(&"_meldingvak") as CanvasItem
+	var bericht := tel.get(&"_berichtvak") as CanvasItem
+	_ok(melding != null and melding.visible, "_toon(k1): het meldingsvak staat niet aan")
+	_ok(bericht != null and not bericht.visible, "_toon(k1): het berichtvak staat al aan")
+
+	# Haar naam, uit de data. Niet "De Klant" en niet de naam van de manege:
+	# dit is het moment waarop de speler wil weten wie er belt.
+	var klant := GameData.npc(&"klant")
+	_ok(klant != null, "npc 'klant' ontbreekt, dus de melding kan geen naam tonen")
+	if klant != null:
+		_ok(_vind_label(melding, klant.name) != null,
+			"de melding noemt '%s' niet" % klant.name)
+
+	# Eén uitweg, en niet twee.
+	_ok(_vind_knop(melding, "Openen") != null, "de melding heeft geen Openen-knop")
+	for verboden: String in ["Sluiten", "Later", "Weg", "Terug", "Negeren"]:
+		_ok(_vind_knop(melding, verboden) == null,
+			"de melding heeft een tweede uitweg ('%s') en hoort er maar één te hebben"
+				% verboden)
+
+	_ok(not Session.is_available(&"t07"),
+		"k1: t07 ging al open terwijl het bericht nog niet gelezen was")
+
+	# ESC hoort de melding niet weg te tikken. Dit is de guard in `_input()`:
+	# die kijkt naar `_bericht_zichtbaar` en niet naar `_open`.
+	var esc := InputEventAction.new()
+	esc.action = &"cancel"
+	esc.pressed = true
+	tel.call(&"_input", esc)
+	await get_tree().process_frame
+	_ok(tel.is_open() and not bool(tel.get(&"_bericht_zichtbaar")),
+		"ESC op de melding legde de telefoon weg: het bericht en zijn effects werden overgeslagen")
+	_ok(not Session.is_available(&"t07"),
+		"ESC op de melding: t07 ging alsnog open")
+
+	# --- stap 2: openen ---------------------------------------------------
+	var openen := _vind_knop(melding, "Openen")
+	if openen != null:
+		openen.pressed.emit()
+		await get_tree().process_frame
+	_ok(bool(tel.get(&"_bericht_zichtbaar")), "Openen: het bericht kwam niet op het scherm")
+	_ok(melding != null and not melding.visible, "Openen: de melding bleef staan")
+	_ok(bericht != null and bericht.visible, "Openen: het berichtvak kwam niet aan")
+	var tekst := tel.get(&"_tekst") as RichTextLabel
+	_ok(tekst != null and tekst.text != "", "Openen: er staat geen berichttekst op het scherm")
+	_ok(Session.is_available(&"t07"), "Openen: het effect van k1 draaide niet")
+
+	# --- wegleggen mag nu wél ---------------------------------------------
+	tel.call(&"_weg")
+	await get_tree().process_frame
+	_ok(not tel.is_open(), "_weg(): de telefoon bleef open")
+	_ok(not Session.input_locked, "_weg(): het invoerslot bleef dicht")
+
+	tel.queue_free()
+	await get_tree().process_frame

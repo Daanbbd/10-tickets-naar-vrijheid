@@ -2,11 +2,19 @@ class_name Telefoon
 extends CanvasLayer
 ## Het telefoonscherm van De Klant.
 ##
-## Zij komt niet in het kantoor. Ze heeft geen sprite, geen bureau en geen
-## standplaats — ze bestaat uitsluitend als melding die aankomt op een moment
-## dat je iets anders aan het doen was. Dat is de hele reden dat dit scherm
-## bestaat in plaats van een NPC: een klant die je kunt opzoeken is een collega,
-## en een klant die je opzoekt kan wachten.
+## Zij is één persoon op twee plekken. In de entree staat ze als NPC `klant`
+## (`data/npcs.json`, zone `z1_entree`) met een uitgeprinte screenshot voor
+## BBD-203; hier op je telefoon meldt ze zich op een moment dat je iets anders
+## aan het doen was. Dat tweede is wat dit scherm bestaat te doen: een klant die
+## je kunt opzoeken kan wachten, een klant die jóu opzoekt niet.
+##
+## Daarom komt haar melding in twee stappen. Eerst een meldingsscherm met haar
+## naam en één knop, dan het bericht zelf. Zonder die eerste stap valt haar
+## eerste push koud binnen: `Gevolgen.DREMPELS` begint op 1, dus k1 kan al vallen
+## voordat de speler ooit in de entree is geweest, en dan staat er een vreemde
+## tekst op het scherm zonder dat iemand haar heeft geïntroduceerd. De melding
+## heeft bewust geen sluitknop — haar berichten dragen `effects` en horen niet
+## weggetikt te kunnen worden vóór je ze gelezen hebt.
 ##
 ## Dit is ook waar de spanningsboog zichtbaar wordt. Wat oploopt is hoeveel je
 ## gedaan hebt: zij meldt zich op elke drempel in `Gevolgen.DREMPELS`, steeds
@@ -48,6 +56,19 @@ var _gehad: Dictionary = {}
 ## overschreven slot klaagt niet.
 var _wachtrij: Array[StringName] = []
 var _open: bool = false
+## Staat het bericht zélf op het scherm, of nog de melding ervoor? Los van
+## `_open`, want tussen die twee zit een knopdruk: `_open` dekt beide stappen
+## (zodat `_process()` er geen tweede melding bovenop legt), deze alleen de
+## tweede. `_input()` mag pas wegleggen als deze waar is.
+var _bericht_zichtbaar: bool = false
+## Welk bericht de melding aankondigt. Nodig omdat `_toon()` en het openen nu
+## twee losse momenten zijn en de knop moet weten wat hij opent.
+var _huidig: StringName = &""
+## De variant die bij de melding gekozen is, bewaard tot het openen. Niet
+## opnieuw kiezen achter de knop: tussen aankondiging en druk kan een
+## `when`-conditie omgaan, en dan draaien de effects van een ander bericht dan
+## dat de speler leest.
+var _huidig_variant: Dictionary = {}
 
 ## Eigen idempotentie-wacht voor de effects, los van `_gehad`. `_gehad[bid]`
 ## wordt al gezet in `_op_ticket()` en `_qa_bericht()` — allebei vóórdat
@@ -76,6 +97,9 @@ var _kop: Label = null
 var _tijd: Label = null
 var _paard: TextureRect = null
 var _puntjes: Label = null
+var _meldingvak: VBoxContainer = null
+var _berichtvak: VBoxContainer = null
+var _openen: Button = null
 var _paard_tween: Tween = null
 var _punt_tween: Tween = null
 var _schuif_tween: Tween = null
@@ -89,10 +113,13 @@ func setup() -> void:
 	_qa_bericht()
 
 
-## QA: `-- --klant=2` legt bericht k2 klaar zonder dat je er vijf tickets voor
-## hoeft op te lossen. De enige manier om haar vier schermen visueel na te
-## kijken; de gevolgvlaggen die de variant kiezen zet je met de gewone
+## QA: `-- --klant=2` legt bericht k2 klaar zonder dat je er drie tickets voor
+## hoeft op te lossen. De enige manier om haar schermen visueel na te kijken; de
+## gevolgvlaggen die de variant kiezen zet je met de gewone
 ## `--ticket=`/`--gedaan=`-vlaggen.
+##
+## De bovengrens komt uit `Gevolgen.DREMPELS` en niet uit een eigen getal, dus
+## een drempel erbij werkt hier meteen. Dat zijn er nu zes.
 func _qa_bericht() -> void:
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--klant="):
@@ -142,8 +169,10 @@ func _bouw() -> void:
 	kolom.add_theme_constant_override("separation", 3)
 	_toestel.add_child(kolom)
 
-	# Kopregel: haar merk, niet haar naam. In de canon is haar profielfoto het
-	# logo van de manege — je hebt haar nog nooit gezien.
+	# Kopregel: haar merk en niet haar naam, zoals een zakelijk gesprek in een
+	# chat-app zijn bedrijfsnaam bovenaan draagt. Haar eigen naam staat in de
+	# melding ervóór — dat is de plek waar je wil weten wie er belt, en dit is
+	# de plek waar je al weet met wie je in gesprek bent.
 	var balk := HBoxContainer.new()
 	balk.add_theme_constant_override("separation", 3)
 	kolom.add_child(balk)
@@ -168,6 +197,57 @@ func _bouw() -> void:
 	streep.custom_minimum_size = Vector2(0, 1)
 	kolom.add_child(streep)
 
+	# --- stap 1: de melding ------------------------------------------------
+	#
+	# Wat hier moet landen is niet de inhoud maar de afzender: dit is een
+	# telefoon, en er staat iemand op die jij kent uit de entree. Vandaar haar
+	# naam groot en haar rol eronder, en niet alvast een stuk tekst.
+	_meldingvak = VBoxContainer.new()
+	_meldingvak.add_theme_constant_override("separation", 2)
+	_meldingvak.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# Gecentreerd, want de melding is drie regels en een knop op een toestel van
+	# 210 px hoog. Boven aan uitgelijnd gaapt er een leeg vlak onder de knop en
+	# ziet het scherm er half afgebouwd uit.
+	_meldingvak.alignment = BoxContainer.ALIGNMENT_CENTER
+	kolom.add_child(_meldingvak)
+
+	_meldingvak.add_child(UiKit.label("1 nieuw bericht", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER))
+
+	# Naam en rol uit `data/npcs.json` en niet hier ingetypt: zij staat als NPC
+	# `klant` in de entree, en een tweede plek waar "Mevrouw P. Aardenmens"
+	# letterlijk staat gaat bij de eerste naamswijziging stil uit elkaar lopen.
+	var klant: NpcDef = GameData.npc(&"klant")
+	var naam := "De Klant" if klant == null else klant.name
+	# Alleen het stuk vóór de komma: haar `role` is "Klant, Manege De Vrije
+	# Teugel", en de kopbalk hierboven draagt die manege al — daar stond hij
+	# zelfs afgekapt als "Manege De Vrije Teu…". Twee keer dezelfde bedrijfsnaam
+	# op 150 px breed, waarvan één met een ellips, is precies de rommel die dit
+	# scherm moest wegnemen.
+	var rol := "" if klant == null else klant.role.split(",")[0].strip_edges()
+	var naamlabel := UiKit.label(naam, UiKit.FS_BODY, UiKit.WIT)
+	naamlabel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_meldingvak.add_child(naamlabel)
+	if not rol.is_empty():
+		var rollabel := UiKit.label(rol, UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
+		rollabel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_meldingvak.add_child(rollabel)
+
+	_meldingvak.add_child(UiKit.spacer(8))
+
+	# Eén knop en geen tweede. Haar berichten dragen `effects` — een ticket dat
+	# opengaat, een vlag die omgaat — dus wegleggen vóór lezen mag niet kunnen.
+	# Dit is ook wat de autopilot nodig heeft: `Autopilot._process()` drukt op
+	# de knop met focus, dus de doorloop komt hier langs zonder eigen uitzondering.
+	_openen = UiKit.knop_primair("Openen", UiKit.FS_BODY)
+	_openen.pressed.connect(_open_bericht)
+	_meldingvak.add_child(_openen)
+
+	# --- stap 2: het bericht ----------------------------------------------
+	_berichtvak = VBoxContainer.new()
+	_berichtvak.add_theme_constant_override("separation", 3)
+	_berichtvak.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	kolom.add_child(_berichtvak)
+
 	# Het paard. In de canon lóópt haar GIF; hij stopt nooit. Een bewegende
 	# afbeelding in een pixel-art game van 16 px is niet te doen, dus hij
 	# deint — en hij deint door, ook als er niets gebeurt.
@@ -176,21 +256,21 @@ func _bouw() -> void:
 	_paard.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_paard.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_paard.custom_minimum_size = Vector2(0, 34)
-	kolom.add_child(_paard)
+	_berichtvak.add_child(_paard)
 
 	_tekst = UiKit.rich(UiKit.FS_SMALL, UiKit.WIT)
 	_tekst.fit_content = true
 	_tekst.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	kolom.add_child(_tekst)
+	_berichtvak.add_child(_tekst)
 
 	# De typing-indicator knippert ook als ze niets stuurt. Dat is geen
 	# animatiefoutje maar het punt: er komt altijd nog iets.
 	_puntjes = UiKit.label("...", UiKit.FS_BODY, UiKit.GRIJS_OP_DONKER)
-	kolom.add_child(_puntjes)
+	_berichtvak.add_child(_puntjes)
 
 	var voet := UiKit.label("tik om weg te leggen", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	voet.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	kolom.add_child(voet)
+	_berichtvak.add_child(voet)
 
 
 ## Eigen behuizing in plaats van `UiKit.panel()`: een telefoon heeft ronde
@@ -251,26 +331,27 @@ func _toon(bid: StringName) -> void:
 		return
 
 	_open = true
+	_bericht_zichtbaar = false
+	_huidig = bid
+	_huidig_variant = variant
 	Session.lock_input()
+	# De tekst staat al klaar maar hangt in een vak dat nog onzichtbaar is: de
+	# variant wordt hier gekozen en niet bij het openen, want tussen de melding
+	# en de knopdruk kan een `when`-conditie omgaan (een effect van een storing,
+	# de klok) en dan zou je een ander bericht lezen dan er aangekondigd werd.
 	_tekst.text = String(variant.get("text", ""))
 	_tijd.text = String(b.get("tijd", ""))
+	_meldingvak.visible = true
+	_berichtvak.visible = false
 
 	var root := _scrim.get_parent() as Control
 	root.visible = true
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
 
-	# Gehinnik. Haar GIF is een paard, dus haar melding is een paard. De cue
-	# bestond al voor de paardenbugs; dit is dezelfde grap op een ander moment.
+	# Gehinnik op de melding en niet op het bericht: dít is het moment dat je
+	# telefoon om je aandacht vraagt. Haar GIF is een paard, dus haar melding is
+	# een paard — de cue bestond al voor de paardenbugs.
 	AudioDirector.play_ui(&"hinnik")
-	Bus.klant_bericht.emit(bid)
-
-	# Ná het signaal, niet ervoor: de speler moet het gevolg zien komen uit het
-	# bericht dat al op het scherm staat, niet uit een ticket dat al openging
-	# terwijl de telefoon nog trilde. Eigen wacht (`_effecten_gedaan`), want
-	# `_gehad[bid]` is hier al lang waar.
-	if not _effecten_gedaan.has(bid):
-		_effecten_gedaan[bid] = true
-		QuestEngine.run_effects(variant.get("effects", []) as Array)
 
 	# Omhoog schuiven zoals een melding hoort binnen te komen.
 	var eind := _toestel.offset_top
@@ -284,6 +365,34 @@ func _toon(bid: StringName) -> void:
 	_schuif_tween.tween_property(_toestel, "offset_bottom", eind + HOOGTE, 0.26) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_schuif_tween.tween_property(_toestel, "modulate:a", 1.0, 0.16)
+
+	# Focus op de enige knop. Dubbel nodig: een speler met een toetsenbord kan
+	# zo openen zonder de muis te pakken, en `Autopilot` drukt op precies de
+	# knop met focus — daarmee loopt de `--playthrough` hier zonder eigen
+	# uitzondering langs, in plaats van dat de melding hem laat hangen.
+	_openen.grab_focus()
+
+
+## Stap 2. Alles wat een gevolg heeft gebeurt hier en niet op de melding: de
+## speler hoort het gevolg te zien komen uit een bericht dat hij gelezen heeft,
+## niet uit een naam op een meldingsscherm.
+func _open_bericht() -> void:
+	if not _open or _bericht_zichtbaar:
+		return
+	_bericht_zichtbaar = true
+	_meldingvak.visible = false
+	_berichtvak.visible = true
+	AudioDirector.play_ui(&"klik")
+
+	Bus.klant_bericht.emit(_huidig)
+
+	# Ná het signaal, niet ervoor: de speler moet het gevolg zien komen uit het
+	# bericht dat al op het scherm staat, niet uit een ticket dat al openging
+	# terwijl de telefoon nog trilde. Eigen wacht (`_effecten_gedaan`), want
+	# `_gehad[bid]` is hier al lang waar.
+	if not _effecten_gedaan.has(_huidig):
+		_effecten_gedaan[_huidig] = true
+		QuestEngine.run_effects(_huidig_variant.get("effects", []) as Array)
 
 	_deinen()
 	_knipperen()
@@ -326,6 +435,9 @@ func _weg() -> void:
 	if not _open:
 		return
 	_open = false
+	_bericht_zichtbaar = false
+	_huidig = &""
+	_huidig_variant = {}
 	for t: Tween in [_paard_tween, _punt_tween]:
 		if t != null and t.is_valid():
 			t.kill()
@@ -339,8 +451,13 @@ func _weg() -> void:
 ## Elke tik en elke bevestigingstoets legt hem weg. Op een telefoon is er geen
 ## andere uitweg dan het scherm zelf, dus die moet altijd werken — ook als de
 ## tik naast het toestel valt.
+##
+## Maar pas zodra het bericht er echt staat. Op de melding is de knop de enige
+## uitweg: een tik naast het toestel zou daar precies het weggooien zijn dat de
+## melding moet voorkomen, en `cancel` (ESC) zou het bericht met zijn `effects`
+## overslaan. Vandaar `_bericht_zichtbaar` en niet `_open`.
 func _input(event: InputEvent) -> void:
-	if not _open:
+	if not _bericht_zichtbaar:
 		return
 	var raak := event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed
 	raak = raak or (event is InputEventMouseButton and (event as InputEventMouseButton).pressed)
@@ -348,6 +465,22 @@ func _input(event: InputEvent) -> void:
 	if raak:
 		get_viewport().set_input_as_handled()
 		_weg()
+
+
+## Op de melding opent de bevestigingstoets het bericht, in plaats van niets te
+## doen. `interact` is E, spatie én enter (zie `[input]` in project.godot), maar
+## alleen die laatste twee zijn ook `ui_accept` en drukken dus zelf de knop met
+## focus in. Een speler die de hele dag met E heeft gepraat drukt hier op E, en
+## dan hoort er iets te gebeuren — er ís geen andere uitweg op dit scherm.
+##
+## `_unhandled_input` en niet `_input`: een echte klik op de knop moet eerst
+## door de GUI heen kunnen, anders vangt deze functie hem af vóór de Button.
+func _unhandled_input(event: InputEvent) -> void:
+	if not _open or _bericht_zichtbaar:
+		return
+	if event.is_action_pressed("interact"):
+		get_viewport().set_input_as_handled()
+		_open_bericht()
 
 
 func is_open() -> bool:
