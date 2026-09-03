@@ -337,7 +337,14 @@ func _volgende() -> void:
 		# De markering van een vorige spreker mag niet blijven hangen op het
 		# regelnummer van de volgende — anders licht bij Willem toevallig
 		# dezelfde regel op als bij Jonathan, zonder dat het iets betekent.
-		_regels[i].remove_theme_color_override("font_color")
+		#
+		# Terugzetten op INK, niet `remove_theme_color_override()`. Dat laatste
+		# stond hier en haalde de kleur weg die `UiKit.label()` zélf als
+		# override zet — er is geen thema-kleur die eronder vandaan komt, dus
+		# de Label viel terug op zijn ingebouwde wit. Op de lichte kaart
+		# (PANEL, #f3f3f3) was daarmee elke sprekersregel onleesbaar, de hele
+		# minigame lang: alleen de groen gemarkeerde regel was nog te lezen.
+		_regels[i].add_theme_color_override("font_color", UiKit.INK)
 	_nuttig_regel_getoond = false
 	_werk_regels_bij()
 	_werk_wachtrij_bij()
@@ -442,8 +449,22 @@ func _werk_wachtrij_bij() -> void:
 	_meer.text = "+%d" % (komend - toon) if komend > toon else ""
 
 
+## De hele beslissing op één regel: past de rest van de stand-up nog in de klok?
+##
+## Hier stond "nog 29 sec praten", en dat was het halve getal. De andere helft
+## (de klok) staat rechtsboven in de statusregel, en de speler moest die twee
+## zelf van elkaar aftrekken terwijl er iemand aan het praten was. Niemand doet
+## dat. Nu staat het tekort er als één getal, in de kleur die zegt wat je
+## ermee moet: rood is "er moet iemand af", groen is "je haalt het, laat ze
+## uitpraten". Dat is precies de afweging waar de minigame om vraagt.
 func _werk_rest_bij() -> void:
-	_rest.text = "nog %d sec praten" % maxi(0, ceili(_rest_spreektijd()))
+	var tekort := _rest_spreektijd() - _tijd
+	if tekort > 0.0:
+		_rest.text = "%d sec te veel" % maxi(1, ceili(tekort))
+		_rest.add_theme_color_override("font_color", UiKit.ROOD_OP_LICHT)
+	else:
+		_rest.text = "past — %d sec speling" % maxi(0, floori(-tekort))
+		_rest.add_theme_color_override("font_color", UiKit.GROEN_OP_LICHT)
 
 
 # Onder welk aandeel resterende tijd de balk begint te knipperen — hetzelfde

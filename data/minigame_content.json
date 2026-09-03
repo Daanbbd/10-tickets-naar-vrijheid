@@ -70,9 +70,9 @@
  },
  "mg_planning": {
   "type": "standup",
-  "briefing": "{tijd} seconden, en je mag {ingrepen} keer iemand afkappen. Let op {belangrijk}: die kap je niet af.",
-  "intro": "Iedereen staat. Je mag {ingrepen} keer iemand afkappen.",
-  "waarom": "Iedereen wil wat kwijt, maar de tijd is krap: blijf je te lang bij iemand hangen, dan passen niet alle sprekers er meer in.",
+  "briefing": "Er staat {praattijd} seconden aan verhaal en de stand-up mag er {tijd}. Let op {belangrijk}: die kap je niet af.",
+  "intro": "Jij bewaakt de klok. Er staat {praattijd} seconden aan verhaal, en de stand-up mag er {tijd} duren.",
+  "waarom": "Het past dus niet. Kap {ingrepen} keer iemand af en je haalt het — maar twee van hen melden iets dat later stukgaat, en dat hoor je dan niet.",
   "tijd": 30.0,
   "ingrepen": 3,
   "kap_regel": "Je kapt hem af. Hij knikt.",
@@ -156,10 +156,10 @@
     ]
    }
   ],
-  "success": "De stand-up is klaar binnen de tijd. Dennis zegt: done.",
+  "success": "Binnen de tijd. Dennis: done.",
   "failure": "Drieentwintig minuten. Victor kijkt je aan zonder iets te zeggen.",
-  "gemist": "Je hebt iemand afgekapt die iets wist.",
-  "nuttig": "Nuttige info voor de sprint."
+  "gemist": "Afgekapt. Dat had je moeten horen.",
+  "nuttig": "Dit komt nog terug."
  },
  "mg_klantfeedback": {
   "type": "choicescene",
