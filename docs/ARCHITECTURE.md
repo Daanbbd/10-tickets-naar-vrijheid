@@ -199,6 +199,32 @@ arrangementen en worden bij het genereren meegeprint.
   zien, ook wanneer het venster op het scherm afgekapt wordt. Een layoutbug
   hierin is dus alleen met een echte schermafbeelding te zien, niet met de
   QA-shots.
+- **De schaal binnen de letterbox is breukig, en dat is een keuze die je niet in
+  `project.godot` terugvindt.** `stretch/scale_mode` stond op `"integer"`, en op
+  een telefoon in de browser kost dat een vijfde van het beeld. De rekensom: het
+  canvas is 192x416 en een iPhone 390x844, dus in echte fullscreen komt daar
+  factor 6 uit en past het bijna exact (6,09). Maar Safari's URL-balk eet de
+  onderkant weg en Godot krijgt dan ~390x664 CSS-pixels. 664 / 416 = 4,79, en
+  integer rondt dat af naar **4**: ~20% lineair kleiner, ~36% minder oppervlak,
+  met zwarte balken aan alle vier de kanten. Dat leest als een spel dat het
+  scherm niet gebruikt, en het is nergens aan te zien dat een afronding de
+  oorzaak is.
+
+  Wat het kost is ongelijke pixels op een niet-heel veelvoud
+  (`default_texture_filter=0`, dus nearest). Precies in het geval waar de
+  afronding het duurst is — 4,79 — is dat de betere ruil, en in echte fullscreen
+  is de factor zo dicht bij 6 dat er niets te zien valt.
+
+  **En er staat geen regel in `project.godot` die dit vasthoudt.** `"fractional"`
+  is de engine-default, en de export gooit default-waarden eruit (zie de
+  waarschuwing in `tools/deploy_web.sh`), dus een expliciete regel zou bij de
+  eerstvolgende deploy stil verdwijnen. Het ontbreken van de regel *is* de
+  instelling. Zet iemand `"integer"` terug, dan blijft die er wel staan — en dan
+  is dit de plek waar staat waarom dat een verslechtering is.
+
+  Op iOS is er geen weg naar echte fullscreen in een Safari-tab: iOS heeft daar
+  geen Fullscreen API. Dat kan alleen via "Zet op beginscherm", en daarvoor staat
+  `apple-mobile-web-app-capable` al in de Web-preset (zie `docs/TESTING.md`).
 - **Vier minigames leunen op `emulate_mouse_from_touch`.** `mg_scope`,
   `mg_cableboard`, `mg_uitlijnen` en `mg_pijplijn` lezen in hun `_gui_input()`
   een `InputEventMouseButton`. Dat werkt op een telefoon omdat Godot standaard
