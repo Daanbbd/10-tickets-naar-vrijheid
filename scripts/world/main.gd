@@ -69,6 +69,13 @@ func _ready() -> void:
 
 	builder.populate(ground, solid)
 	_spawn_props()
+	# Na de props: het dak hoort er bovenop en niet ertussen. Eigen node en geen
+	# regel in floor.json, want het moet doorzichtig worden zodra je binnenstaat
+	# — zie hokje_dak.gd.
+	var dak := HokjeDak.new()
+	dak.name = "HokjeDak"
+	objects_layer.add_child(dak)
+	dak.setup(builder)
 	_spawn_objects()
 
 	npc_layer.setup(builder)

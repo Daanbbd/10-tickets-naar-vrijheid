@@ -280,6 +280,38 @@ def boardroomtafel(tw=7, th=2):
     return img
 
 
+def hokjedak(tw=7, th=4):
+    """Het dak op het vergaderhokje: planken, met een donkere rand als dakrand.
+
+    Het hokje is dicht van boven en je gaat er alleen aan de noordzijde in. Dit
+    dak hoort dus boven de speler te liggen en niet in de y-sortering mee te
+    doen — `HokjeDak` zet er een z_index op en tweent hem doorzichtig zolang je
+    binnen staat, want t08's anker (`hokje_ipad`) ligt erin en onzichtbaar met
+    een ticket praten is geen optie.
+
+    Krijgt bewust geen `slagschaduw()`: een contactschaduw hoort bij een meubel
+    dat op de vloer staat, en dit ding hangt erboven.
+    """
+    img, d = _canvas(tw, th)
+    W, H = img.width, img.height
+    d.rectangle([0, 0, W - 1, H - 1], fill=rgba("hout"))
+    # Planken oost-west, want het hokje is breder dan diep.
+    for y in range(0, H, 5):
+        d.line([(0, y), (W - 1, y)], fill=rgba("hout_donker"))
+        d.line([(0, y + 1), (W - 1, y + 1)], fill=rgba("hout_licht"))
+    # Naden tussen de planken, met een vast maar onregelmatig ritme zodat het
+    # geen raster wordt.
+    for i, x in enumerate(range(T // 2, W, T)):
+        d.line([(x, 0), (x, H - 1)], fill=rgba("hout_donker", 90))
+        if i % 2:
+            d.line([(x + 1, 0), (x + 1, H - 1)], fill=rgba("hout_licht", 60))
+    # Dakrand: lichter aan de noordkant waar het licht op valt, donker rondom.
+    d.rectangle([0, 0, W - 1, H - 1], outline=rgba("hout_donker"))
+    d.line([(1, 1), (W - 2, 1)], fill=rgba("hout_licht"))
+    d.line([(1, H - 2), (W - 2, H - 2)], fill=rgba("zwart", 120))
+    return img
+
+
 def tribune(tw=10, th=2):
     """Teal traptrede-bank met kussens, de Jura en de DIA-awards. Eén trap, geen
     rij losse bankjes. Zie assets/nieuwe assets/koffiecorner.jpeg."""
@@ -434,7 +466,8 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     items = {"paard_bug.png": horse(True), "paard_klant.png": horse(False),
              "gat.png": hole(), "vogel.png": logo(),
-             "schaduw_karakter.png": schaduw_karakter()}
+             "schaduw_karakter.png": schaduw_karakter(),
+             "hokjedak_7x4.png": hokjedak(7, 4)}
     # meubelcomposieten: naam moet exact matchen met PROPS uit gen_floor.py
     # gedraaide eilanden: 4 tegels breed, hoogte bepaalt het aantal werkplekken
     meubels = {}

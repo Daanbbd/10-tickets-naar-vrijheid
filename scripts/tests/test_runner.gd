@@ -73,6 +73,7 @@ func _ready() -> void:
 	_test_keten_is_bereikbaar_en_afgeleid()
 	_test_duimzone_rechts()
 	await _test_weggevallen_regel_telt()
+	_test_hokjedak_dekt_de_zone()
 	_rapport()
 
 
@@ -3797,3 +3798,41 @@ func _test_weggevallen_regel_telt() -> void:
 
 	remove_child(dc)
 	dc.free()
+
+
+## Het dak op het vergaderhokje moet de zone precies dekken.
+##
+## Het dak is geen regel in `floor.json` maar een eigen node, dus `_test_wereld()`
+## — dat elke prop uit de vloerdata tegen zijn PNG legt — ziet hem niet. En de
+## vloer is al een keer van 130 naar 80 tegels gegaan: verschuift `z8_hokje`
+## nog eens, dan hangt er zonder deze test een dak naast een kamer, en dat merk
+## je alleen door er toevallig naar te kijken.
+func _test_hokjedak_dekt_de_zone() -> void:
+	_kop("het dak past op het vergaderhokje")
+
+	var rect: Array = []
+	for z: Variant in GameData.floor_data.get("zones", []) as Array:
+		var d := z as Dictionary
+		if StringName(d.get("id", "")) == HokjeDak.ZONE:
+			rect = d.get("rect", []) as Array
+			break
+	_ok(rect.size() == 4, "zone '%s' heeft geen rect in floor.json" % HokjeDak.ZONE)
+	if rect.size() != 4:
+		return
+
+	var tegel := int(GameData.floor_data.get("tile_size", 16))
+	var verwacht := Vector2(
+		float(int(rect[2]) - int(rect[0]) + 1), float(int(rect[3]) - int(rect[1]) + 1)) * tegel
+
+	_ok(ResourceLoader.exists(HokjeDak.SPRITE),
+		"%s bestaat niet (of mist zijn .import)" % HokjeDak.SPRITE)
+	if not ResourceLoader.exists(HokjeDak.SPRITE):
+		return
+	var tex: Texture2D = load(HokjeDak.SPRITE)
+	_ok(tex.get_size() == verwacht,
+		"%s is %v, maar zone %s vraagt %v" % [
+			HokjeDak.SPRITE, tex.get_size(), HokjeDak.ZONE, verwacht])
+
+	# En hij moet boven de speler liggen, anders loop je ervoor langs in plaats
+	# van eronder — dat is het hele punt van een dak.
+	_ok(HokjeDak.Z_DAK > 0, "Z_DAK is %d en ligt daarmee niet boven de wereld" % HokjeDak.Z_DAK)
