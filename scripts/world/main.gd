@@ -928,10 +928,17 @@ func _on_player_tile(t: Vector2i) -> void:
 	var z := builder.zone_at(t)
 	var zid := StringName(z.get("id", ""))
 	if zid != _zone_id and zid != &"":
+		# De allereerste zone is geen overgang: daar kwam je niet vandaan.
+		var eerste := _zone_id == &""
 		_zone_id = zid
 		_zone_mood = String(z.get("light", "neutraal"))
 		_zone_naam = String(z.get("name", ""))
 		_tint_zone(_zone_mood)
+		# Elke ruimte klonk hetzelfde. `_tint_zone()` geeft ze al een eigen
+		# licht; dit geeft ze een eigen akoestiek, uit dezelfde gebeurtenis.
+		# Bij het spawnen meteen zetten: een filtersweep over de infade hoor je
+		# als een storing en niet als een ruimte.
+		AudioDirector.set_ruimte(zid, 0.0 if eerste else AudioDirector.RUIMTE_FADE)
 		Bus.zone_entered.emit(zid, _zone_naam)
 		_meld_vondst(_vind_werk(zid), _zone_naam)
 	if zid == &"z10_weekend":

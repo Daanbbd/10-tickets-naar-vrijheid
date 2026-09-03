@@ -85,6 +85,7 @@ func _ready() -> void:
 	_test_finale_heeft_team()
 	_test_glyphdekking()
 	await _test_minigames_passen()
+	_test_ruimteakoestiek()
 	_rapport()
 
 
@@ -4633,3 +4634,75 @@ func _klemmende_ouder(c: Control, root: Control) -> Control:
 			return null
 		n = n.get_parent()
 	return null
+
+
+## Elke zone uit floor.json heeft een akoestiek, en die is niet onzin.
+##
+## `AudioDirector.RUIMTES` is een tweede lijst naast `floor.json`, en twee
+## lijsten lopen uit elkaar zodra iemand er een zone bij zet. De terugval is
+## onbewerkt, dus een gemiste zone maakt niets stuk — hij klinkt alleen als de
+## gang, en dat merk je nooit. Vandaar deze test in plaats van vertrouwen.
+func _test_ruimteakoestiek() -> void:
+	_kop("elke ruimte heeft een eigen akoestiek")
+
+	var zones: Array = GameData.floor_data.get("zones", [])
+	_ok(not zones.is_empty(), "floor.json heeft geen zones")
+
+	for raw: Variant in zones:
+		var z := raw as Dictionary
+		var zid := StringName(z.get("id", ""))
+		_ok(AudioDirector.RUIMTES.has(zid),
+			"zone '%s' staat niet in AudioDirector.RUIMTES en klinkt dus als de gang" % zid)
+		if not AudioDirector.RUIMTES.has(zid):
+			continue
+		var r: Dictionary = AudioDirector.RUIMTES[zid]
+		var hz := float(r.get("hz", 0.0))
+		var db := float(r.get("db", 0.0))
+		# 500 Hz is al bijna onverstaanbaar dof; boven 20000 doet een
+		# laagdoorlaatfilter niets meer. Buiten die band is het een typefout.
+		_ok(hz >= 500.0 and hz <= 20000.0,
+			"zone '%s' heeft cutoff %.0f Hz; dat is geen ruimte maar een typefout" % [zid, hz])
+		# Harder dan de referentie mag, maar niet zo hard dat de muziek over de
+		# dialoog heen gaat staan; en niet zo zacht dat hij wegvalt.
+		_ok(db >= -12.0 and db <= 3.0,
+			"zone '%s' staat op %.1f dB; buiten het bereik dat nog als dezelfde dag klinkt" % [zid, db])
+
+	# De twee referentieruimtes moeten onbewerkt blijven: als díe gefilterd
+	# raken, is er geen ruimte meer om het verschil aan te horen.
+	for ref: StringName in [&"z9_vloer", &"z11_gang"]:
+		var r: Dictionary = AudioDirector.RUIMTES.get(ref, {})
+		_ok(float(r.get("hz", 0.0)) >= 20000.0 and is_equal_approx(float(r.get("db", 1.0)), 0.0),
+			"%s is de referentie en hoort onbewerkt te zijn" % ref)
+
+	# En dan de machinerie zelf: een tabel die klopt is nutteloos als de bus
+	# niet bestaat of het filter er niet op zit. `fade = 0` zet meteen, dus dit
+	# is synchroon te meten.
+	var bus := AudioServer.get_bus_index(AudioDirector.MUZIEKBUS)
+	_ok(bus >= 0, "er is geen '%s'-bus; de ruimtes doen dan niets" % AudioDirector.MUZIEKBUS)
+	if bus < 0:
+		return
+	var effect := AudioServer.get_bus_effect(bus, 0) as AudioEffectLowPassFilter
+	_ok(effect != null, "de muziekbus heeft geen laagdoorlaatfilter als eerste effect")
+	if effect == null:
+		return
+
+	AudioDirector.set_ruimte(&"z2_toilet", 0.0)
+	var toilet_hz := effect.cutoff_hz
+	var toilet_db := AudioServer.get_bus_volume_db(bus)
+	AudioDirector.set_ruimte(&"z9_vloer", 0.0)
+	var vloer_hz := effect.cutoff_hz
+	var vloer_db := AudioServer.get_bus_volume_db(bus)
+
+	_ok(toilet_hz < vloer_hz,
+		"de toiletten (%.0f Hz) klinken niet doffer dan de werkvloer (%.0f Hz)" % [
+			toilet_hz, vloer_hz])
+	_ok(toilet_db < vloer_db,
+		"de toiletten (%.1f dB) klinken niet zachter dan de werkvloer (%.1f dB)" % [
+			toilet_db, vloer_db])
+
+	# Een zone die niet in de tabel staat mag niets kapotmaken.
+	AudioDirector.set_ruimte(&"z99_bestaat_niet", 0.0)
+	_ok(is_equal_approx(effect.cutoff_hz, vloer_hz),
+		"een onbekende zone valt niet terug op onbewerkt")
+
+	AudioDirector.set_ruimte(&"z9_vloer", 0.0)

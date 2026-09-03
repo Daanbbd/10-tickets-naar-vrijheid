@@ -52,6 +52,7 @@ var sfx_volume: float = 0.9
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
+	_maak_muziekbus()
 	_actief = _make_player(true)
 	_vorige = _make_player(true)
 	for i: int in VOICES:
@@ -71,8 +72,96 @@ func _ready() -> void:
 func _make_player(always: bool) -> AudioStreamPlayer:
 	var p := AudioStreamPlayer.new()
 	p.process_mode = Node.PROCESS_MODE_ALWAYS if always else Node.PROCESS_MODE_PAUSABLE
+	if always and _muziekbus >= 0:
+		p.bus = MUZIEKBUS
 	add_child(p)
 	return p
+
+
+# --- De ruimte waar je in staat ---------------------------------------------
+#
+# Elke ruimte klonk hetzelfde, en dat is wat een verdieping van acht ruimtes
+# vlak maakt: je loopt van de toiletten naar de koffiecorner en er verandert
+# niets aan wat je hoort. Er is één kantoorstuk (`kantoor.ogg`) en er komen er
+# vanavond geen bij, dus dit doet het met wat er is: een laagdoorlaatfilter en
+# een volumeverschil per zone. Dat is precies wat je hoort als je een deur door
+# loopt — de hoge tonen blijven achter, de rest wordt zachter.
+#
+# Alleen de muziekspelers gaan door dit filter. SFX (voetstappen, klikken,
+# deuren) blijven op Master: die maak jíj, in de ruimte waar je staat, en die
+# horen dus niet gedempt te worden.
+
+const MUZIEKBUS := &"Muziek"
+
+## Cutoff in Hz en volumeverschil in dB per zone-id. 20000 Hz is "geen filter";
+## het filter zit altijd in de keten, dus er is geen tak die soms wel en soms
+## niet gefilterd is.
+##
+## De getallen zijn conservatief gekozen: het verschil moet hoorbaar zijn als je
+## een deur door loopt, niet opvallen als je stilstaat. Wil je eraan draaien,
+## dan is dit de enige plek. `De Werkvloer` en `De Gang` zijn de referentie en
+## staan bewust op onbewerkt.
+const RUIMTES: Dictionary = {
+	&"z1_entree":       {"hz": 8000.0, "db": -1.0},
+	&"z2_toilet":       {"hz": 1400.0, "db": -7.0},   # deur dicht, tegels
+	&"z3_patchhok":     {"hz": 3200.0, "db": -3.0},   # klein, vol apparatuur
+	&"z4_koffiecorner": {"hz": 20000.0, "db": 1.0},   # de luidste ruimte
+	&"z5_summit":       {"hz": 4500.0, "db": -3.0},   # glas, vergaderstilte
+	&"z6_basecamp":     {"hz": 4500.0, "db": -3.0},
+	&"z7_birdhouse":    {"hz": 5000.0, "db": -2.0},   # de grootste zaal
+	&"z8_hokje":        {"hz": 2400.0, "db": -5.0},   # een belhokje
+	&"z9_vloer":        {"hz": 20000.0, "db": 0.0},   # referentie
+	&"z10_weekend":     {"hz": 6000.0, "db": -2.0},   # het bureau hiernaast
+	&"z11_gang":        {"hz": 20000.0, "db": 0.0},   # referentie
+}
+
+const RUIMTE_FADE := 0.45
+
+var _muziekbus: int = -1
+var _filter: AudioEffectLowPassFilter = null
+var _ruimte_tween: Tween = null
+
+
+## Een eigen bus met één filter erop, in code en niet als `.tres`: er is in dit
+## project geen buslayout-bestand, en er één introduceren voor één effect maakt
+## een asset die je in de editor moet openen om te snappen.
+func _maak_muziekbus() -> void:
+	_muziekbus = AudioServer.bus_count
+	AudioServer.add_bus(_muziekbus)
+	AudioServer.set_bus_name(_muziekbus, MUZIEKBUS)
+	AudioServer.set_bus_send(_muziekbus, &"Master")
+	_filter = AudioEffectLowPassFilter.new()
+	_filter.cutoff_hz = 20000.0
+	AudioServer.add_bus_effect(_muziekbus, _filter)
+
+
+## De ruimte waar de speler nu staat. Onbekende zone valt terug op onbewerkt,
+## zodat een nieuwe zone in `floor.json` stil niets kapotmaakt.
+func set_ruimte(zone_id: StringName, fade: float = RUIMTE_FADE) -> void:
+	if _filter == null or _muziekbus < 0:
+		return
+	var r: Dictionary = RUIMTES.get(zone_id, {"hz": 20000.0, "db": 0.0})
+	var hz := float(r["hz"])
+	var db := float(r["db"])
+	if _ruimte_tween != null and _ruimte_tween.is_running():
+		_ruimte_tween.kill()
+	# Meteen zetten in plaats van tweenen. Twee aanroepers willen dit: de eerste
+	# zone bij het spawnen (een sweep over de infade hoor je als een storing,
+	# niet als een ruimte) en de testsuite, die geen frames heeft om op te
+	# wachten.
+	if fade <= 0.0:
+		_filter.cutoff_hz = hz
+		AudioServer.set_bus_volume_db(_muziekbus, db)
+		return
+	# Op de SceneTree en niet op deze node: een autoload leeft langer dan elke
+	# scene, maar `create_tween()` op een node die pauzeert loopt niet door
+	# tijdens een pauzemenu — en dan blijft de vorige ruimte hangen.
+	_ruimte_tween = get_tree().create_tween().set_parallel(true)
+	_ruimte_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_ruimte_tween.tween_property(_filter, "cutoff_hz", hz, fade)
+	_ruimte_tween.tween_method(
+		func(v: float) -> void: AudioServer.set_bus_volume_db(_muziekbus, v),
+		AudioServer.get_bus_volume_db(_muziekbus), db, fade)
 
 
 # --- SFX ------------------------------------------------------------------
