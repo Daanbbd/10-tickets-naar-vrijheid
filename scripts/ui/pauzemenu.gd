@@ -82,6 +82,7 @@ func _bouw() -> void:
 	_volume.value = AudioDirector.master_volume
 	_volume.custom_minimum_size = Vector2(0, UiKit.KNOP_MIN_H)
 	_volume.value_changed.connect(_op_volume)
+	_stijl_volume()
 	v.add_child(_volume)
 	_toon_volume(AudioDirector.master_volume)
 
@@ -97,6 +98,40 @@ func _bouw() -> void:
 	var uitleg := UiKit.label("Je dag wordt bewaard.", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	uitleg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(uitleg)
+
+
+## P3: de volumeslider draaide op Godots kale standaardthema — de enige plek
+## in het spel zonder UiKit-stijl, in een menu vol UiKit-knoppen eromheen.
+## Groef en vulling zijn gewone `UiKit.panel()`-styleboxen; de greep is een
+## losse afbeelding, want `Slider` wil daar een `Texture2D` voor en geen
+## stylebox. Eén platte rechthoek in `BLUEBIRD_INK` — dezelfde kleur als de
+## "Doorgaan"-knop erboven — past bij de rest van dit blokkerige, kleurvlakke
+## thema beter dan een ronde grip zou doen.
+func _stijl_volume() -> void:
+	var groef := UiKit.panel(UiKit.NEUTRAAL_TINT, UiKit.LINE, 1)
+	groef.content_margin_top = 3
+	groef.content_margin_bottom = 3
+	var vulling := UiKit.panel(UiKit.BLUEBIRD_INK, UiKit.BLUEBIRD_INK, 1)
+	vulling.content_margin_top = 3
+	vulling.content_margin_bottom = 3
+	_volume.add_theme_stylebox_override("slider", groef)
+	_volume.add_theme_stylebox_override("grabber_area", vulling)
+	_volume.add_theme_stylebox_override("grabber_area_highlight", vulling)
+
+	var greep := _blok(UiKit.BLUEBIRD_INK, 8, UiKit.KNOP_MIN_H - 6)
+	_volume.add_theme_icon_override("grabber", greep)
+	_volume.add_theme_icon_override("grabber_highlight", greep)
+	_volume.add_theme_icon_override("grabber_disabled", greep)
+
+
+## Eén effen rechthoek als texture. `Slider` theming vraagt hier een icoon en
+## geen `StyleBox`, en dit spel heeft verder nergens een los grip-asset nodig
+## — een `Image` van één kleur is goedkoper dan een PNG erbij importeren voor
+## exact één knopje.
+func _blok(kleur: Color, w: int, h: int) -> ImageTexture:
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	img.fill(kleur)
+	return ImageTexture.create_from_image(img)
 
 
 # --- Openen en sluiten ----------------------------------------------------

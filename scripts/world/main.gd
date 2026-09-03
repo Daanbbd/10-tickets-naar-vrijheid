@@ -167,6 +167,7 @@ func _ready() -> void:
 	_qa_kaart()
 	_qa_hint()
 	_qa_briefing()
+	_qa_pauze()
 
 	if Autopilot.gevraagd():
 		add_child(Autopilot.new())
@@ -857,6 +858,16 @@ func _qa_kaart() -> void:
 		return
 	await get_tree().create_timer(0.5).timeout
 	hud.show_controls_card()
+
+
+## QA: `--pauze` opent het pauzemenu meteen. Zonder dit is de volumeslider —
+## het enige besturingselement in het spel dat geen `UiKit`-stijl draagt —
+## alleen te zien door zelf ≡ te drukken, en dat kan `qa_shot.py` niet.
+func _qa_pauze() -> void:
+	if "--pauze" not in OS.get_cmdline_user_args():
+		return
+	await get_tree().create_timer(0.5).timeout
+	_pauzemenu.open()
 
 
 func _on_player_tile(t: Vector2i) -> void:
