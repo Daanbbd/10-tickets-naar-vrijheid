@@ -86,15 +86,23 @@ const BALK_HOOGTE := KNOP_HOOGTE + 4
 ## enige lezer buiten deze klasse.
 const BALK_RUIMTE := MARGE + BALK_HOOGTE + 2
 
-## De stick mag alleen in de rechterhelft van de onderste tweederde opkomen.
+## De stick mag in de onderste tweederde opkomen, links zowel als rechts.
 ## Daarboven zit de doelregel en de ticketteller: daar wil je kunnen tikken
-## zonder dat er een stick onder je duim ontstaat. De balk zelf is apart
-## uitgesloten — zie `_in_zone()`.
+## zonder dat er een stick onder je duim ontstaat. De knoppenbalk en de
+## HUD-chips zijn apart uitgesloten — zie `_in_zone()` en `_op_chrome()`.
 ##
-## Rechts en niet links: de knoppenbalk (▤ ? ☰) staat linksonder, en een
-## duimzone die daar bovenop ligt laat de twee om dezelfde pixels vechten.
-## Rechtsonder is voor de meeste mensen ook simpelweg waar de duim al ligt.
-const ZONE_BREEDTE := 0.5
+## **Hier stond `ZONE_BREEDTE := 0.5`: alleen de rechterhelft.** De reden
+## daarvoor was dat de knoppenbalk (▤ ? ☰) linksonder staat en de twee anders
+## om dezelfde pixels vechten. Maar die balk is 86 bij 30 pixels in een hoek,
+## en `_op_chrome()` sluit hem al precies uit — de hele linkerhelft opofferen
+## voor drie knoppen kost veel meer dan het oplevert.
+##
+## Wat het wél kostte: wie het spel met links vasthoudt zette zijn duim neer en
+## er gebeurde niets. Geen stick, geen beweging, geen melding. Dat leest niet
+## als "verkeerde helft" maar als "de besturing doet het niet", en de README
+## zei bovendien jarenlang "duim links om te lopen" — precies de helft die niet
+## werkte. Op een echt toestel is dat het verschil tussen een spel dat start en
+## een spel dat stuk lijkt.
 const ZONE_TOP := 0.38
 
 ## Voorbij dit punt (canvaspixels) is een druk-en-loslaat een sleep, geen tik.
@@ -447,7 +455,7 @@ func _in_zone(p: Vector2) -> bool:
 	if _op_chrome(p):
 		return false
 	var r := _stick.get_viewport_rect().size
-	return p.x > r.x * (1.0 - ZONE_BREEDTE) and p.y > r.y * ZONE_TOP
+	return p.y > r.y * ZONE_TOP
 
 
 func _los() -> void:

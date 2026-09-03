@@ -354,7 +354,7 @@
  {
   "world_id": "bureau_bastiaan",
   "tile": [
-   11,
+   14,
    18
   ],
   "kind": "examine",
@@ -385,7 +385,7 @@
   "world_id": "paardenkostuum",
   "tile": [
    43,
-   23
+   19
   ],
   "kind": "examine",
   "label": "Paardenkostuum",

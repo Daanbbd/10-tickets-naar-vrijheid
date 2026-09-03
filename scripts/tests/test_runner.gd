@@ -3828,7 +3828,7 @@ func _test_klant_melding_voor_bericht() -> void:
 
 
 func _test_duimzone_rechts() -> void:
-	_kop("de duimzone ligt rechtsonder, weg van de knoppenbalk")
+	_kop("de duimzone werkt met beide handen, maar niet op de chrome")
 
 	var b := Besturing.new()
 	add_child(b)
@@ -3842,19 +3842,32 @@ func _test_duimzone_rechts() -> void:
 	var links := Vector2(r.x * 0.2, y)
 	var rechtsboven := Vector2(r.x * 0.8, r.y * 0.1)
 
-	# Rechtsonder is waar de duim ligt; linksonder staat de knoppenbalk (▤ ? ☰)
-	# en die mag niet met de stick om dezelfde pixels vechten. Deze test staat
-	# er omdat het een ergonomische keuze is die je bij het lezen van
-	# `_in_zone()` per ongeluk omdraait: één `<` in plaats van `>`.
+	# **Beide helften.** Dit stond op alleen-rechts, met de knoppenbalk
+	# linksonder als reden. Maar die balk is 86 bij 30 px in een hoek en
+	# `_op_chrome()` sluit hem al precies uit, terwijl de regel de hele
+	# linkerhelft doodmaakte: wie zijn telefoon met links vasthoudt zette zijn
+	# duim neer en er gebeurde niets. Geen stick, geen melding, niets — dat
+	# leest als "de besturing is stuk", en zo is het op een echt toestel ook
+	# gemeld. De README zei bovendien "duim links om te lopen".
 	_ok(b._in_zone(rechts),
-		"rechtsonder (%.0f,%.0f) maakt geen stick; ligt de duimzone weer links?" % [
-			rechts.x, rechts.y])
-	_ok(not b._in_zone(links),
-		"linksonder (%.0f,%.0f) maakt een stick, boven op de knoppenbalk" % [
+		"rechtsonder (%.0f,%.0f) maakt geen stick" % [rechts.x, rechts.y])
+	_ok(b._in_zone(links),
+		"linksonder (%.0f,%.0f) maakt geen stick; is de zone weer alleen-rechts?" % [
 			links.x, links.y])
 	_ok(not b._in_zone(rechtsboven),
 		"rechtsbóven (%.0f,%.0f) maakt een stick; daar zit de doelregel" % [
 			rechtsboven.x, rechtsboven.y])
+
+	# De knoppenbalk zelf blijft uitgezonderd: dáár mag geen stick opkomen,
+	# anders vechten ▤ ? ☰ en de joystick om dezelfde pixels. Dat is wat de
+	# oude alleen-rechts-regel probeerde te bereiken, en wat `_op_chrome()`
+	# preciezer doet.
+	var balk := b.bord_knop_rect()
+	_ok(balk.size != Vector2.ZERO, "de ▤-knop heeft geen rect om op te meten")
+	if balk.size != Vector2.ZERO:
+		_ok(not b._in_zone(balk.get_center()),
+			"midden op de ▤-knop (%.0f,%.0f) komt een stick op" % [
+				balk.get_center().x, balk.get_center().y])
 
 	# Zelfde reden als in `_test_hudband()`: synchrone suite, dus meteen vrijgeven.
 	remove_child(b)

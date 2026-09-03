@@ -25,10 +25,11 @@ Open het project in Godot en druk op play, of vanaf de command line:
 praten, onderzoeken, gebruiken · **TAB** je tickets · **Q** hint · **ESC**
 pauzemenu, en een minigame afbreken.
 
-**Besturing (telefoon)** — duim rechts om te lopen, ver uitduwen is rennen ·
+**Besturing (telefoon)** — zet je duim ergens in de onderste tweederde van het
+scherm en er komt een joystick op, links of rechts; ver uitduwen is rennen ·
 tik op een object om ermee te doen wat er bij staat · **▤** je tickets · **?**
-hint · **☰** pauze. Deze drie knoppen staan linksonder; de joystick komt op
-waar je duim landt in de rechterhelft.
+hint · **☰** pauze. Die drie knoppen staan linksonder en zijn de enige plek
+waar geen joystick opkomt.
 
 Met een muis komt er geen joystick op — daar loop je met WASD en klik je op een
 object waar je naast staat.
