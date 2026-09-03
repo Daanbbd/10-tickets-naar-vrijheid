@@ -1,6 +1,6 @@
 {
  "size": [
-  130,
+  80,
   26
  ],
  "tile_size": 16,
@@ -12,117 +12,135 @@
   {
    "prop": "serverrack_2x4",
    "rect": [
-    2,
-    9,
     3,
+    9,
+    4,
     12
    ]
   },
   {
    "prop": "serverrack_2x4",
    "rect": [
-    5,
-    9,
     6,
+    9,
+    7,
     12
    ]
   },
   {
    "prop": "keukenblok_5x2",
    "rect": [
-    18,
+    12,
     2,
-    22,
+    16,
     3
    ]
   },
   {
    "prop": "tribune_10x2",
    "rect": [
-    24,
+    18,
     2,
-    33,
+    27,
     3
+   ]
+  },
+  {
+   "prop": "vergadertafel_6x2",
+   "rect": [
+    33,
+    3,
+    38,
+    4
    ]
   },
   {
    "prop": "monitorwand_4x1",
    "rect": [
-    61,
+    45,
     1,
-    64,
+    48,
     1
    ]
   },
   {
-   "prop": "tafel_lang_38x2",
+   "prop": "boardroomtafel_7x2",
    "rect": [
-    55,
+    56,
+    3,
+    62,
+    4
+   ]
+  },
+  {
+   "prop": "tafel_lang_27x2",
+   "rect": [
+    37,
     10,
-    92,
+    63,
     11
    ]
   },
   {
    "prop": "bureau_4x8",
    "rect": [
-    5,
     15,
-    8,
+    15,
+    18,
     22
    ]
   },
   {
    "prop": "bureau_4x4",
    "rect": [
-    24,
+    30,
     15,
-    27,
+    33,
     18
    ]
   },
   {
    "prop": "bureau_4x4",
    "rect": [
-    38,
+    39,
     15,
-    41,
+    42,
     18
    ]
   },
   {
    "prop": "bureau_4x4",
    "rect": [
-    60,
+    53,
     15,
-    63,
+    56,
     18
    ]
   },
   {
    "prop": "bureau_4x4",
    "rect": [
-    76,
+    62,
     15,
-    79,
+    65,
     18
    ]
   },
   {
    "prop": "plantenkast_3x8",
    "rect": [
+    22,
     15,
-    15,
-    17,
+    24,
     22
    ]
   },
   {
    "prop": "plantenkast_3x6",
    "rect": [
-    50,
+    47,
     15,
-    52,
+    49,
     20
    ]
   },
@@ -139,9 +157,9 @@
   {
    "prop": "bord_summit_3x1",
    "rect": [
-    47,
+    34,
     8,
-    49,
+    36,
     8
    ],
    "hangend": true
@@ -149,9 +167,9 @@
   {
    "prop": "bord_basecamp_3x1",
    "rect": [
-    61,
+    45,
     8,
-    63,
+    47,
     8
    ],
    "hangend": true
@@ -159,41 +177,41 @@
   {
    "prop": "bord_birdhouse_3x1",
    "rect": [
-    81,
+    58,
     8,
-    83,
+    60,
     8
    ],
    "hangend": true
   }
  ],
  "grid": [
-  "#FFFFFFFF#FHkkkkkkkkkkkkkkwwwwwwwwwwwwwwwF#F###FFFFFFF#FFFFFF####FFFFFFF#FFFFFFFF####FFFFFFFF####FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#",
-  "#........#CCCCCCCCCCCCCCCCCCCCCCCCCCC.....#LxxxLLLLLLL#......____.......#LLLLLLLLmmmmLLLLLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "#u.......FCCCCCCCC_____f__________CCC.....#LLLqqssqqLL#.bb...........bb.#LLLLLsssssssssssLLLL###=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "#........DCCCCCCCC_____f__________zCC.....#LLLqsttsqLL#.bb....rr.....bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "#u.......#CCCCCCCCCCCCCCCCCCCCCCCCCCC.....#LLLqsttsqLL#.......rr........#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbGGGG#",
-  "#........#CCCCCCCCCCCCCCCCCCCCCCCCCCC.....#LLLqqssqqLL#.bb...........bb.#LLLLstttttttttttsLLL###=GGGJJJJJGGGGGGGGGGGGGbbbbbbbJJJG#",
-  "#......W.#CCCCCCCCCCCCCCCCCCCCCCCCCCC.Y...#LLLLLLLLLLL#.bb...........bb.#LLLLLLLLLLLLLLLLLLLL###=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "#FFFFFFFF#................................F=====DD====F=======DD========F=========DD=========FFF=GGGJJJJJGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "#........#....................#FFFDFFF#.........................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "#.__.__..F....................lIIIIIII=.........................................................=GGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJG#",
-  "#.__.__..D....................lIIIIIII=................______________________________________...DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "#.__.__..#....................FFFFFFFFF................______________________________________...DGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "#.__.__.P#......................................................................................DGGGGGGttttttttGGGGGGGGGGGGGGGGGG#",
-  "#........#......................................................................................DGGGGGGttttttttGGGGGGGGGGGGGGGGGG#",
-  "#FFFF####F......................................................................................DGGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
-  "VEEEE____......___......____..........____........___.......____............____................DGGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
-  "VEEEE____......___......____..........____........___.......____............____................=GGGGGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
-  "VEEEE____......___......____..........____........___.......____............____................=GGjjGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
-  "XEEEE____......___......____..........____........___.......____............____................=GGjjGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
-  "XEEEE____......___................................___...........................................=GGjjGGGGGGGGGGGJJJJJJGGGGGGGGGGG#",
-  "mcEEE____......___................................___...........................................=GGjjGGGGGGGcccccGGGGGGGGGGGGGGooN",
-  "mcEEE____......___..............................................................................=GGjjGGGGGGGcccccGGGGGbbbbbbbGGooN",
-  "#EEEE____333333___333333333333333333333333333333333333333333333333333333333333333333333333333333=GGjjGGGGGGGGGGGGGGGGGbbbbbbbGGoo#",
-  "#EEEE2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGoo#",
-  "#EEEE1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111=GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-  "#####TTT####TTT##mmm##############################################################################################################"
+  "#FFFFFFFF#FHkkkkkkkkkwwwwwwww#FFFFmmmmFFF#FFF####FFF#FFFFFFmmmmF###FF#FFFFFFFFF#",
+  "#........#.CCCCCCCCCCCCCCCCCC=LLLLLLLLLLL=...____...=LLLLLLLLLLL###..=GGGGGGGGG#",
+  "#u.......F.C_____f__________C=xqqqsqsqqqL=bb......bb=LLLLsLsLsLL###..=GGGGGGGGG#",
+  "#........D.C_____f__________C=xqq______qL=bb..rr..bb=LLL_______L###..=GJJJJGGGG#",
+  "#u.......#.CCCCCCCCCCCCCCCCzC=xqq______qL=....rr....=LLL_______L###..=GJJJJGbbb#",
+  "#........#.CCCCCCCCCCCCCCCCCC=LqqqsqsqqqL=bb......bb=LLLLsLsLsLL###..=GJJJJGbbb#",
+  "#......W.#.CCCCCCCCCCCCCCCCCC=LLLLLLLLLLL=bb......bb=LLLLLLLLLLL###..=GJJJJGGGG#",
+  "#FFFFFFFF#...................======DD=========D============D====FFF..=GJJJJGGGG#",
+  "#........#................Y..........................................=GGGGGGGGG#",
+  "#..__.__.F...........................................................=GGGGGGGGG#",
+  "#..__.__.D.................#FFDFF#...___________________________.....=GGGGGGGGG#",
+  "#..__.__.#.................lIIIII=...___________________________.....DGGGGGGGGG#",
+  "#..__.__P#.................lIIIII=...................................DGttttGGGG#",
+  "#........#.................FFFFFFF...................................DGttttGGGG#",
+  "#FFFFFFFF#...........................................................DGGGGGGGGG#",
+  "VEEEEEEEE#.....____...___.....____.....____....___...____.....____...=GGGGGGGGG#",
+  "VEEEEEEEo#.....____...___.....____.....____....___...____.....____...=jGGGGGGGG#",
+  "VEEEEEEEo#.....____...___.....____.....____....___...____.....____...=jGGGGJJJG#",
+  "XEEEEEEEEF.....____...___.....____.....____....___...____.....____...=jGGGGJJJG#",
+  "XEEEEEEEED.....____...___......................___...................=jGGGGJJJG#",
+  "mcEEEEEEED.....____...___......................___...................=GGcccJJJGN",
+  "mcEEEEEEE#.....____...___............................................=GGcccJJJGN",
+  "#EEEEEEEE#33333____333___33333333333333333333333333333333333333333333=GGGGGGGoo#",
+  "#EEEEEEEE#22222222222222222222222222222222222222222222222222222222222=GGGGGGGoo#",
+  "#EEEEEEEE#11111111111111111111111111111111111111111111111111111111111=GGGGGGGGG#",
+  "###########TTT##TTT##mmm########################################################"
  ],
  "legend": {
   ".": {
@@ -455,10 +473,10 @@
    "id": "z8_hokje",
    "name": "Het Vergaderhokje",
    "rect": [
-    30,
-    8,
-    38,
-    11
+    27,
+    10,
+    33,
+    13
    ],
    "light": "dim"
   },
@@ -467,8 +485,8 @@
    "name": "Entree",
    "rect": [
     1,
-    14,
-    4,
+    15,
+    8,
     24
    ],
    "light": "warm"
@@ -477,9 +495,9 @@
    "id": "z4_koffiecorner",
    "name": "Koffiecorner",
    "rect": [
-    10,
+    11,
     1,
-    36,
+    28,
     6
    ],
    "light": "warm"
@@ -488,9 +506,9 @@
    "id": "z5_summit",
    "name": "Summit",
    "rect": [
-    43,
+    30,
     1,
-    53,
+    40,
     6
    ],
    "light": "koel"
@@ -499,9 +517,9 @@
    "id": "z6_basecamp",
    "name": "Basecamp",
    "rect": [
-    55,
+    42,
     1,
-    71,
+    51,
     6
    ],
    "light": "neutraal"
@@ -510,9 +528,9 @@
    "id": "z7_birdhouse",
    "name": "Birdhouse",
    "rect": [
-    73,
+    53,
     1,
-    92,
+    63,
     6
    ],
    "light": "koel"
@@ -521,9 +539,9 @@
    "id": "z10_weekend",
    "name": "Weekend",
    "rect": [
-    97,
+    70,
     1,
-    128,
+    78,
     24
    ],
    "light": "jungle"
@@ -534,7 +552,7 @@
    "rect": [
     1,
     14,
-    95,
+    68,
     24
    ],
    "light": "neutraal"
@@ -545,7 +563,7 @@
    "rect": [
     10,
     1,
-    95,
+    68,
     13
    ],
    "light": "neutraal"
