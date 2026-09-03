@@ -282,8 +282,13 @@ EILANDEN = [
 ]
 for (x0, n) in EILANDEN:
     prop("bureau", x0, 15, x0 + 3, 15 + n - 1)
-for (x0, h) in [(22, 8), (47, 6)]:
-    prop("plantenkast", x0, 15, x0 + 2, 15 + h - 1)
+# Twee op de werkvloer, en een derde als roomdivider in de gang. Die derde staat
+# er omdat het stuk gang tussen de koffiecorner en het vergaderhokje anders zes
+# bij zestien tegels kaal beton is -- precies wat PLAN.md F1-b als onbeloonde
+# vloer aanmerkt. Een plantenkast in een gang is bovendien wat er in het echt
+# staat, zie "plantenkast.jpeg".
+for (x0, y0, h) in [(22, 15, 8), (47, 15, 6), (19, 8, 6)]:
+    prop("plantenkast", x0, y0, x0 + 2, y0 + h - 1)
 
 # ---- Ruimtebordjes: wayfinding die je met je ogen oplost ----
 # Ze hangen in de gang, bij de deur van de ruimte die ze aanwijzen. Geen

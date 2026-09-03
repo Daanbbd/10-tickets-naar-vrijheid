@@ -1,611 +1,611 @@
 [
-  {
-    "id": "dennis",
-    "name": "Dennis",
-    "role": "Scrum Master",
-    "zone": "z9_vloer",
-    "home_tile": [
-      61,
-      23
-    ],
-    "dialogue_id": "dennis",
-    "route": [
-      [
-        61,
-        23
-      ],
-      [
-        53,
-        20
-      ],
-      [
-        40,
-        12
-      ],
-      [
-        26,
-        12
-      ],
-      [
-        40,
-        12
-      ],
-      [
-        53,
-        20
-      ]
-    ],
-    "route_pause": 2.5,
-    "can_follow": true,
-    "color": "#3b4364",
-    "skin": "#e8bd94",
-    "hair": "#9c7a4a",
-    "portrait": "res://assets/sprites/portraits/dennis.png",
-    "look": {
-      "body": "stevig",
-      "hair": "stekels",
-      "facial": "",
-      "outfit": "overhemd",
-      "accessory": ""
-    },
-    "pants": "#34384e"
+ {
+  "id": "dennis",
+  "name": "Dennis",
+  "role": "Scrum Master",
+  "zone": "z9_vloer",
+  "home_tile": [
+   45,
+   23
+  ],
+  "dialogue_id": "dennis",
+  "route": [
+   [
+    45,
+    23
+   ],
+   [
+    40,
+    20
+   ],
+   [
+    26,
+    12
+   ],
+   [
+    23,
+    12
+   ],
+   [
+    26,
+    12
+   ],
+   [
+    40,
+    20
+   ]
+  ],
+  "route_pause": 2.5,
+  "can_follow": true,
+  "color": "#3b4364",
+  "skin": "#e8bd94",
+  "hair": "#9c7a4a",
+  "portrait": "res://assets/sprites/portraits/dennis.png",
+  "look": {
+   "body": "stevig",
+   "hair": "stekels",
+   "facial": "",
+   "outfit": "overhemd",
+   "accessory": ""
   },
-  {
-    "id": "dirk",
-    "name": "Dirk Schrijver",
-    "role": "Scrum Master",
-    "zone": "z11_gang",
-    "home_tile": [
-      33,
-      12
-    ],
-    "dialogue_id": "dirk",
-    "route": [
-      [
-        33,
-        12
-      ],
-      [
-        35,
-        12
-      ],
-      [
-        35,
-        13
-      ],
-      [
-        33,
-        13
-      ]
-    ],
-    "route_pause": 3.0,
-    "can_follow": true,
-    "spawn_when": {
-      "min_tickets_done": 5
-    },
-    "color": "#9aa0a8",
-    "skin": "#f2c9a8",
-    "hair": "#6b4a2f",
-    "portrait": "res://assets/sprites/portraits/dirk.png",
-    "look": {
-      "body": "gemiddeld",
-      "hair": "zijscheiding",
-      "facial": "",
-      "outfit": "blazer",
-      "accessory": "speldje"
-    },
-    "pants": "#3a3d44",
-    "accent": "#2f6fb5"
+  "pants": "#34384e"
+ },
+ {
+  "id": "dirk",
+  "name": "Dirk Schrijver",
+  "role": "Scrum Master",
+  "zone": "z11_gang",
+  "home_tile": [
+   26,
+   12
+  ],
+  "dialogue_id": "dirk",
+  "route": [
+   [
+    26,
+    12
+   ],
+   [
+    25,
+    12
+   ],
+   [
+    25,
+    13
+   ],
+   [
+    26,
+    13
+   ]
+  ],
+  "route_pause": 3.0,
+  "can_follow": true,
+  "spawn_when": {
+   "min_tickets_done": 5
   },
-  {
-    "id": "npc_bastiaan",
-    "name": "Bastiaan",
-    "role": "Frontend developer",
-    "zone": "z9_vloer",
-    "home_tile": [
-      12,
-      18
-    ],
-    "dialogue_id": "collega_bastiaan",
-    "route": [
-      [
-        12,
-        18
-      ],
-      [
-        12,
-        22
-      ],
-      [
-        9,
-        22
-      ],
-      [
-        9,
-        18
-      ]
-    ],
-    "route_pause": 6.0,
-    "can_follow": true,
-    "color": "#e8e4dc",
-    "skin": "#e3b096",
-    "hair": "#2c221d",
-    "portrait": "res://assets/sprites/portraits/bastiaan.png",
-    "look": {
-      "body": "slank",
-      "hair": "stekels",
-      "facial": "stoppels",
-      "outfit": "hoodie",
-      "accessory": "",
-      "bezigheid": "zoekglas"
-    },
-    "pants": "#34384e",
-    "is_playable_colleague": true
+  "color": "#9aa0a8",
+  "skin": "#f2c9a8",
+  "hair": "#6b4a2f",
+  "portrait": "res://assets/sprites/portraits/dirk.png",
+  "look": {
+   "body": "gemiddeld",
+   "hair": "zijscheiding",
+   "facial": "",
+   "outfit": "blazer",
+   "accessory": "speldje"
   },
-  {
-    "id": "npc_koen",
-    "name": "Koen",
-    "role": "Backend / AI & automatisering",
-    "zone": "z3_patchhok",
-    "home_tile": [
-      7,
-      9
-    ],
-    "dialogue_id": "collega_koen",
-    "route": [
-      [
-        7,
-        9
-      ],
-      [
-        9,
-        10
-      ],
-      [
-        21,
-        9
-      ],
-      [
-        21,
-        4
-      ],
-      [
-        21,
-        9
-      ],
-      [
-        9,
-        10
-      ]
-    ],
-    "route_pause": 3.0,
-    "can_follow": true,
-    "color": "#6d84b0",
-    "skin": "#eac09a",
-    "hair": "#b07c44",
-    "portrait": "res://assets/sprites/portraits/koen.png",
-    "look": {
-      "body": "gemiddeld",
-      "hair": "fade",
-      "facial": "",
-      "outfit": "tshirt",
-      "accessory": "",
-      "bezigheid": "peuk"
-    },
-    "pants": "#34384e",
-    "is_playable_colleague": true
+  "pants": "#3a3d44",
+  "accent": "#2f6fb5"
+ },
+ {
+  "id": "npc_bastiaan",
+  "name": "Bastiaan",
+  "role": "Frontend developer",
+  "zone": "z9_vloer",
+  "home_tile": [
+   12,
+   18
+  ],
+  "dialogue_id": "collega_bastiaan",
+  "route": [
+   [
+    12,
+    18
+   ],
+   [
+    12,
+    22
+   ],
+   [
+    11,
+    22
+   ],
+   [
+    11,
+    18
+   ]
+  ],
+  "route_pause": 6.0,
+  "can_follow": true,
+  "color": "#e8e4dc",
+  "skin": "#e3b096",
+  "hair": "#2c221d",
+  "portrait": "res://assets/sprites/portraits/bastiaan.png",
+  "look": {
+   "body": "slank",
+   "hair": "stekels",
+   "facial": "stoppels",
+   "outfit": "hoodie",
+   "accessory": "",
+   "bezigheid": "zoekglas"
   },
-  {
-    "id": "klant",
-    "name": "Mevrouw P. Aardenmens",
-    "role": "Klant, Manege De Vrije Teugel",
-    "zone": "z1_entree",
-    "home_tile": [
-      2,
-      21
-    ],
-    "dialogue_id": "klant",
-    "route": [
-      [
-        2,
-        21
-      ],
-      [
-        3,
-        21
-      ],
-      [
-        3,
-        19
-      ]
-    ],
-    "route_pause": 4.0,
-    "can_follow": false,
-    "color": "#d98cb3",
-    "skin": "#f2d3b3",
-    "hair": "#8d8d8d",
-    "look": {
-      "body": "stevig",
-      "hair": "lang",
-      "facial": "",
-      "outfit": "blouse",
-      "accessory": "tas"
-    },
-    "pants": "#4a3c52"
+  "pants": "#34384e",
+  "is_playable_colleague": true
+ },
+ {
+  "id": "npc_koen",
+  "name": "Koen",
+  "role": "Backend / AI & automatisering",
+  "zone": "z3_patchhok",
+  "home_tile": [
+   2,
+   9
+  ],
+  "dialogue_id": "collega_koen",
+  "route": [
+   [
+    2,
+    9
+   ],
+   [
+    9,
+    10
+   ],
+   [
+    17,
+    9
+   ],
+   [
+    17,
+    4
+   ],
+   [
+    17,
+    9
+   ],
+   [
+    9,
+    10
+   ]
+  ],
+  "route_pause": 3.0,
+  "can_follow": true,
+  "color": "#6d84b0",
+  "skin": "#eac09a",
+  "hair": "#b07c44",
+  "portrait": "res://assets/sprites/portraits/koen.png",
+  "look": {
+   "body": "gemiddeld",
+   "hair": "fade",
+   "facial": "",
+   "outfit": "tshirt",
+   "accessory": "",
+   "bezigheid": "peuk"
   },
-  {
-    "id": "bezorger",
-    "name": "De bezorger",
-    "role": "Bezorger, Manege De Vrije Teugel",
-    "zone": "z1_entree",
-    "home_tile": [
-      2,
-      16
-    ],
-    "dialogue_id": "bezorger",
-    "route": [
-      [
-        2,
-        16
-      ],
-      [
-        4,
-        16
-      ]
-    ],
-    "route_pause": 3.0,
-    "can_follow": false,
-    "spawn_when": {
-      "tickets_done": [
-        "t08"
-      ]
-    },
-    "color": "#8d9aae",
-    "skin": "#c98d63",
-    "hair": "#2f2a24",
-    "look": {
-      "body": "stevig",
-      "hair": "kort",
-      "facial": "stoppels",
-      "outfit": "polo",
-      "accessory": "pet"
-    },
-    "pants": "#34384e"
+  "pants": "#34384e",
+  "is_playable_colleague": true
+ },
+ {
+  "id": "klant",
+  "name": "Mevrouw P. Aardenmens",
+  "role": "Klant, Manege De Vrije Teugel",
+  "zone": "z1_entree",
+  "home_tile": [
+   2,
+   21
+  ],
+  "dialogue_id": "klant",
+  "route": [
+   [
+    2,
+    21
+   ],
+   [
+    3,
+    21
+   ],
+   [
+    3,
+    19
+   ]
+  ],
+  "route_pause": 4.0,
+  "can_follow": false,
+  "color": "#d98cb3",
+  "skin": "#f2d3b3",
+  "hair": "#8d8d8d",
+  "look": {
+   "body": "stevig",
+   "hair": "lang",
+   "facial": "",
+   "outfit": "blouse",
+   "accessory": "tas"
   },
-  {
-    "id": "npc_daan",
-    "name": "Daan",
-    "role": "Product Owner",
-    "zone": "z5_summit",
-    "home_tile": [
-      48,
-      6
-    ],
-    "dialogue_id": "collega_daan",
-    "route": [
-      [
-        48,
-        6
-      ],
-      [
-        47,
-        5
-      ],
-      [
-        50,
-        5
-      ]
-    ],
-    "route_pause": 5.0,
-    "can_follow": true,
-    "is_playable_colleague": true,
-    "color": "#2b2b30",
-    "skin": "#e0b491",
-    "hair": "#6b4b36",
-    "portrait": "res://assets/sprites/portraits/daan.png",
-    "look": {
-      "body": "gemiddeld",
-      "hair": "kaal",
-      "facial": "snor",
-      "outfit": "tshirt",
-      "accessory": "lanyard",
-      "bezigheid": "huilen"
-    },
-    "pants": "#34384e"
+  "pants": "#4a3c52"
+ },
+ {
+  "id": "bezorger",
+  "name": "De bezorger",
+  "role": "Bezorger, Manege De Vrije Teugel",
+  "zone": "z1_entree",
+  "home_tile": [
+   2,
+   16
+  ],
+  "dialogue_id": "bezorger",
+  "route": [
+   [
+    2,
+    16
+   ],
+   [
+    4,
+    16
+   ]
+  ],
+  "route_pause": 3.0,
+  "can_follow": false,
+  "spawn_when": {
+   "tickets_done": [
+    "t08"
+   ]
   },
-  {
-    "id": "npc_danny",
-    "name": "Danny",
-    "role": "CRO-specialist",
-    "zone": "z6_basecamp",
-    "home_tile": [
-      60,
-      4
-    ],
-    "dialogue_id": "collega_danny",
-    "route": [
-      [
-        60,
-        4
-      ],
-      [
-        57,
-        4
-      ],
-      [
-        60,
-        2
-      ]
-    ],
-    "route_pause": 5.0,
-    "can_follow": true,
-    "is_playable_colleague": true,
-    "color": "#26262b",
-    "skin": "#eec39a",
-    "hair": "#c9a86a",
-    "portrait": "res://assets/sprites/portraits/danny.png",
-    "look": {
-      "body": "slank",
-      "hair": "kuif",
-      "facial": "stoppels",
-      "outfit": "tshirt",
-      "accessory": "",
-      "bezigheid": "bier"
-    },
-    "pants": "#34384e"
+  "color": "#8d9aae",
+  "skin": "#c98d63",
+  "hair": "#2f2a24",
+  "look": {
+   "body": "stevig",
+   "hair": "kort",
+   "facial": "stoppels",
+   "outfit": "polo",
+   "accessory": "pet"
   },
-  {
-    "id": "npc_victor",
-    "name": "Victor",
-    "role": "Frontend developer",
-    "zone": "z9_vloer",
-    "home_tile": [
-      34,
-      22
-    ],
-    "dialogue_id": "collega_victor",
-    "route": [
-      [
-        34,
-        22
-      ],
-      [
-        34,
-        18
-      ],
-      [
-        30,
-        18
-      ],
-      [
-        30,
-        22
-      ]
-    ],
-    "route_pause": 5.0,
-    "can_follow": true,
-    "is_playable_colleague": true,
-    "color": "#2e2e34",
-    "skin": "#f0c49a",
-    "hair": "#c1854a",
-    "portrait": "res://assets/sprites/portraits/victor.png",
-    "look": {
-      "body": "gemiddeld",
-      "hair": "krullen",
-      "facial": "baard",
-      "outfit": "tshirt",
-      "accessory": "",
-      "bezigheid": "hobbyhorse"
-    },
-    "pants": "#34384e"
+  "pants": "#34384e"
+ },
+ {
+  "id": "npc_daan",
+  "name": "Daan",
+  "role": "Product Owner",
+  "zone": "z5_summit",
+  "home_tile": [
+   35,
+   6
+  ],
+  "dialogue_id": "collega_daan",
+  "route": [
+   [
+    35,
+    6
+   ],
+   [
+    35,
+    5
+   ],
+   [
+    37,
+    5
+   ]
+  ],
+  "route_pause": 5.0,
+  "can_follow": true,
+  "is_playable_colleague": true,
+  "color": "#2b2b30",
+  "skin": "#e0b491",
+  "hair": "#6b4b36",
+  "portrait": "res://assets/sprites/portraits/daan.png",
+  "look": {
+   "body": "gemiddeld",
+   "hair": "kaal",
+   "facial": "snor",
+   "outfit": "tshirt",
+   "accessory": "lanyard",
+   "bezigheid": "huilen"
   },
-  {
-    "id": "npc_jonathan",
-    "name": "Jonathan",
-    "role": "Backend developer",
-    "zone": "z3_patchhok",
-    "home_tile": [
-      4,
-      13
-    ],
-    "dialogue_id": "collega_jonathan",
-    "route": [
-      [
-        4,
-        13
-      ],
-      [
-        7,
-        13
-      ]
-    ],
-    "route_pause": 6.0,
-    "can_follow": true,
-    "is_playable_colleague": true,
-    "color": "#39505c",
-    "skin": "#d6a578",
-    "hair": "#1b1a1c",
-    "portrait": "res://assets/sprites/portraits/jonathan.png",
-    "look": {
-      "body": "stevig",
-      "hair": "lang",
-      "facial": "sik",
-      "outfit": "overhemd",
-      "accessory": "bril",
-      "bezigheid": "gamen"
-    },
-    "pants": "#34384e"
+  "pants": "#34384e"
+ },
+ {
+  "id": "npc_danny",
+  "name": "Danny",
+  "role": "CRO-specialist",
+  "zone": "z6_basecamp",
+  "home_tile": [
+   45,
+   4
+  ],
+  "dialogue_id": "collega_danny",
+  "route": [
+   [
+    45,
+    4
+   ],
+   [
+    43,
+    4
+   ],
+   [
+    45,
+    2
+   ]
+  ],
+  "route_pause": 5.0,
+  "can_follow": true,
+  "is_playable_colleague": true,
+  "color": "#26262b",
+  "skin": "#eec39a",
+  "hair": "#c9a86a",
+  "portrait": "res://assets/sprites/portraits/danny.png",
+  "look": {
+   "body": "slank",
+   "hair": "kuif",
+   "facial": "stoppels",
+   "outfit": "tshirt",
+   "accessory": "",
+   "bezigheid": "bier"
   },
-  {
-    "id": "npc_willem",
-    "name": "Willem",
-    "role": "Client Lead",
-    "zone": "z1_entree",
-    "home_tile": [
-      3,
-      18
-    ],
-    "dialogue_id": "collega_willem",
-    "route": [
-      [
-        3,
-        18
-      ],
-      [
-        3,
-        22
-      ],
-      [
-        2,
-        22
-      ],
-      [
-        2,
-        18
-      ]
-    ],
-    "route_pause": 4.0,
-    "can_follow": true,
-    "is_playable_colleague": true,
-    "color": "#ddd8cc",
-    "skin": "#f0cba8",
-    "hair": "#a07840",
-    "portrait": "res://assets/sprites/portraits/willem.png",
-    "look": {
-      "body": "gemiddeld",
-      "hair": "zijscheiding",
-      "facial": "stoppels",
-      "outfit": "polo",
-      "accessory": "",
-      "bezigheid": "padel"
-    },
-    "pants": "#2f3242"
+  "pants": "#34384e"
+ },
+ {
+  "id": "npc_victor",
+  "name": "Victor",
+  "role": "Frontend developer",
+  "zone": "z9_vloer",
+  "home_tile": [
+   28,
+   22
+  ],
+  "dialogue_id": "collega_victor",
+  "route": [
+   [
+    28,
+    22
+   ],
+   [
+    28,
+    18
+   ],
+   [
+    26,
+    18
+   ],
+   [
+    26,
+    22
+   ]
+  ],
+  "route_pause": 5.0,
+  "can_follow": true,
+  "is_playable_colleague": true,
+  "color": "#2e2e34",
+  "skin": "#f0c49a",
+  "hair": "#c1854a",
+  "portrait": "res://assets/sprites/portraits/victor.png",
+  "look": {
+   "body": "gemiddeld",
+   "hair": "krullen",
+   "facial": "baard",
+   "outfit": "tshirt",
+   "accessory": "",
+   "bezigheid": "hobbyhorse"
   },
-  {
-    "id": "paard_bug_1",
-    "name": "Een paardenbug",
-    "role": "Toilet en Patchhok",
-    "zone": "z2_toilet",
-    "home_tile": [
-      4,
-      3
-    ],
-    "dialogue_id": "",
-    "route": [
-      [
-        4,
-        3
-      ],
-      [
-        6,
-        5
-      ],
-      [
-        4,
-        12
-      ],
-      [
-        4,
-        10
-      ],
-      [
-        15,
-        9
-      ],
-      [
-        25,
-        9
-      ]
-    ],
-    "route_pause": 3.0,
-    "can_follow": false,
-    "spawn_when": {
-      "tickets_done": [
-        "t02"
-      ]
-    },
-    "static_sprite": "res://assets/sprites/props/paard_bug.png"
+  "pants": "#34384e"
+ },
+ {
+  "id": "npc_jonathan",
+  "name": "Jonathan",
+  "role": "Backend developer",
+  "zone": "z3_patchhok",
+  "home_tile": [
+   4,
+   13
+  ],
+  "dialogue_id": "collega_jonathan",
+  "route": [
+   [
+    4,
+    13
+   ],
+   [
+    7,
+    13
+   ]
+  ],
+  "route_pause": 6.0,
+  "can_follow": true,
+  "is_playable_colleague": true,
+  "color": "#39505c",
+  "skin": "#d6a578",
+  "hair": "#1b1a1c",
+  "portrait": "res://assets/sprites/portraits/jonathan.png",
+  "look": {
+   "body": "stevig",
+   "hair": "lang",
+   "facial": "sik",
+   "outfit": "overhemd",
+   "accessory": "bril",
+   "bezigheid": "gamen"
   },
-  {
-    "id": "paard_bug_2",
-    "name": "Een paardenbug",
-    "role": "De Gang, De Vloer en Weekend",
-    "zone": "z11_gang",
-    "home_tile": [
-      60,
-      9
-    ],
-    "dialogue_id": "",
-    "route": [
-      [
-        60,
-        9
-      ],
-      [
-        30,
-        20
-      ],
-      [
-        55,
-        22
-      ],
-      [
-        99,
-        15
-      ],
-      [
-        105,
-        15
-      ],
-      [
-        115,
-        10
-      ],
-      [
-        110,
-        3
-      ]
-    ],
-    "route_pause": 3.0,
-    "can_follow": false,
-    "spawn_when": {
-      "tickets_done": [
-        "t02"
-      ]
-    },
-    "static_sprite": "res://assets/sprites/props/paard_bug.png"
+  "pants": "#34384e"
+ },
+ {
+  "id": "npc_willem",
+  "name": "Willem",
+  "role": "Client Lead",
+  "zone": "z1_entree",
+  "home_tile": [
+   3,
+   18
+  ],
+  "dialogue_id": "collega_willem",
+  "route": [
+   [
+    3,
+    18
+   ],
+   [
+    3,
+    22
+   ],
+   [
+    2,
+    22
+   ],
+   [
+    2,
+    18
+   ]
+  ],
+  "route_pause": 4.0,
+  "can_follow": true,
+  "is_playable_colleague": true,
+  "color": "#ddd8cc",
+  "skin": "#f0cba8",
+  "hair": "#a07840",
+  "portrait": "res://assets/sprites/portraits/willem.png",
+  "look": {
+   "body": "gemiddeld",
+   "hair": "zijscheiding",
+   "facial": "stoppels",
+   "outfit": "polo",
+   "accessory": "",
+   "bezigheid": "padel"
   },
-  {
-    "id": "paard_klant_decoy",
-    "name": "Een paard",
-    "role": "Klant, Manege De Vrije Teugel",
-    "zone": "z9_vloer",
-    "home_tile": [
-      45,
-      22
-    ],
-    "dialogue_id": "",
-    "route": [
-      [
-        45,
-        22
-      ],
-      [
-        60,
-        20
-      ],
-      [
-        70,
-        22
-      ]
-    ],
-    "route_pause": 3.0,
-    "can_follow": false,
-    "spawn_when": {
-      "tickets_done": [
-        "t02"
-      ]
-    },
-    "static_sprite": "res://assets/sprites/props/paard_klant.png"
-  }
+  "pants": "#2f3242"
+ },
+ {
+  "id": "paard_bug_1",
+  "name": "Een paardenbug",
+  "role": "Toilet en Patchhok",
+  "zone": "z2_toilet",
+  "home_tile": [
+   4,
+   3
+  ],
+  "dialogue_id": "",
+  "route": [
+   [
+    4,
+    3
+   ],
+   [
+    6,
+    5
+   ],
+   [
+    5,
+    12
+   ],
+   [
+    5,
+    10
+   ],
+   [
+    14,
+    9
+   ],
+   [
+    17,
+    9
+   ]
+  ],
+  "route_pause": 3.0,
+  "can_follow": false,
+  "spawn_when": {
+   "tickets_done": [
+    "t02"
+   ]
+  },
+  "static_sprite": "res://assets/sprites/props/paard_bug.png"
+ },
+ {
+  "id": "paard_bug_2",
+  "name": "Een paardenbug",
+  "role": "De Gang, De Vloer en Weekend",
+  "zone": "z11_gang",
+  "home_tile": [
+   45,
+   9
+  ],
+  "dialogue_id": "",
+  "route": [
+   [
+    45,
+    9
+   ],
+   [
+    26,
+    20
+   ],
+   [
+    42,
+    22
+   ],
+   [
+    71,
+    15
+   ],
+   [
+    72,
+    15
+   ],
+   [
+    75,
+    10
+   ],
+   [
+    75,
+    3
+   ]
+  ],
+  "route_pause": 3.0,
+  "can_follow": false,
+  "spawn_when": {
+   "tickets_done": [
+    "t02"
+   ]
+  },
+  "static_sprite": "res://assets/sprites/props/paard_bug.png"
+ },
+ {
+  "id": "paard_klant_decoy",
+  "name": "Een paard",
+  "role": "Klant, Manege De Vrije Teugel",
+  "zone": "z9_vloer",
+  "home_tile": [
+   32,
+   22
+  ],
+  "dialogue_id": "",
+  "route": [
+   [
+    32,
+    22
+   ],
+   [
+    45,
+    20
+   ],
+   [
+    50,
+    22
+   ]
+  ],
+  "route_pause": 3.0,
+  "can_follow": false,
+  "spawn_when": {
+   "tickets_done": [
+    "t02"
+   ]
+  },
+  "static_sprite": "res://assets/sprites/props/paard_klant.png"
+ }
 ]
