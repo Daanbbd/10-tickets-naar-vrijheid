@@ -223,11 +223,9 @@ rect(27, 4, 27, 4, 'z')        # de speaker van t07, onder het eind van de tribu
 # met z'n allen omheen zit, en dat leest ook beter op deze schaal.
 rect(30, 2, 30, 4, 'x')        # whiteboard_vergader tegen de westwand
 rect(31, 2, 39, 5, 'q')        # schaakbordkleed
-prop("vergadertafel", 33, 3, 38, 4)   # één tafel, geen raster van tafeltjes
-rect(34, 2, 34, 2, 's')
-rect(36, 2, 36, 2, 's')
-rect(34, 5, 34, 5, 's')
-rect(36, 5, 36, 5, 's')
+# De stoelen zitten in de sprite, dus hier geen losse 's'-tegels: die gaven
+# dubbele bestoeling -- kuipstoelen op de vloer plus de stoelen op de tafel.
+prop("vergadertafel", 33, 3, 38, 4)
 rect(34, 0, 37, 0, 'm')        # wandscherm, in de noordwand zelf: kost geen vloer
 
 # ---- Basecamp: 4 werkplekken, 2 links en 2 rechts, ronde tafels ertussen ----
@@ -241,13 +239,8 @@ prop("monitorwand", 45, 1, 48, 1)   # de wand-tv's: dashboardmuur van t06
 # ---- Birdhouse: één boardroomtafel tegen de oostwand ----
 # Stond hier als zaal met rijen losse krukjes. Er staat in het echt één bureau
 # met zes stoelen, en dat is nu ook wat er staat.
+# Zes stoelen, en die zitten in de sprite. Zie de opmerking bij Summit.
 prop("boardroomtafel", 56, 3, 62, 4)
-rect(57, 2, 57, 2, 's')
-rect(59, 2, 59, 2, 's')
-rect(61, 2, 61, 2, 's')
-rect(57, 5, 57, 5, 's')
-rect(59, 5, 59, 5, 's')
-rect(61, 5, 61, 5, 's')
 rect(59, 0, 62, 0, 'm')        # deploycomputer, in de noordwand zelf
 
 # ---- De Gang: de blauwe tijger, het vergaderhokje en de grote tafel ----

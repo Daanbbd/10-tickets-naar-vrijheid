@@ -17,6 +17,18 @@ const PHYSICS_LAYER := 0
 ## dan verandert de tegelmaat mee en de kamer niet.
 const KORTE_AS_M := 12.0
 
+## De lange as van de verdieping is 60 meter. Die staat hier apart omdat de
+## plattegrond sinds de inkorting niet meer op schaal is in de lengte: het echte
+## pand is 5,06:1, deze vloer is 80x26 en dus 3,08:1. Dat is een bewuste keuze --
+## de ruimtes zijn zo groot als wat er in staat, en de lege gang ertussen is
+## eruit -- maar hij mag niet doorlekken naar wat de speler leest.
+##
+## Zonder deze constante zou de doelwijzer "Birdhouse 22 m" tonen waar het in
+## werkelijkheid 36 m is, want die rekent met meters per tegel en de vloer werd
+## korter terwijl de tegel gelijk bleef. De korte as blijft het anker voor alles
+## wat dwars staat; deze is het anker voor alles wat in de lengte meet.
+const LANGE_AS_M := 60.0
+
 var tile_size: int = 16
 var grid: PackedStringArray = []
 var legend: Dictionary = {}
@@ -149,9 +161,17 @@ func meters_per_tegel() -> float:
 	return KORTE_AS_M / float(maxi(1, size.y))
 
 
-## Meters per wereldpixel. Voor alles wat een afstand in het beeld toont.
+## Meters per tegel in de lengterichting, afgeleid uit `LANGE_AS_M`. Wijkt af
+## van `meters_per_tegel()` omdat de vloer in de lengte samengeperst is; zie daar.
+func meters_per_tegel_lang() -> float:
+	return LANGE_AS_M / float(maxi(1, size.x))
+
+
+## Meters per wereldpixel in de lengterichting. Voor alles wat een afstand in
+## het beeld toont -- en dat is in dit spel altijd een horizontale afstand: de
+## camera klemt verticaal vast, dus `objective_marker` meet alleen over x.
 func meters_per_pixel() -> float:
-	return meters_per_tegel() / float(maxi(1, tile_size))
+	return meters_per_tegel_lang() / float(maxi(1, tile_size))
 
 
 func tile_to_world(t: Vector2i) -> Vector2:
