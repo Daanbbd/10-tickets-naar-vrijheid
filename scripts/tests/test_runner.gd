@@ -71,6 +71,8 @@ func _ready() -> void:
 	_test_teller_daalt_niet_binnen_complete()
 	_test_tweede_oplevering_betaalt_niet_opnieuw()
 	_test_keten_is_bereikbaar_en_afgeleid()
+	_test_duimzone_rechts()
+	await _test_weggevallen_regel_telt()
 	_rapport()
 
 
@@ -2232,10 +2234,24 @@ func _test_navigatie() -> void:
 func _test_intro() -> void:
 	_kop("introductie")
 
-	var eigen := "\n".join(IntroUitleg.LESSEN)
+	var eigen := "\n".join(IntroUitleg.lessen())
 	for les: String in [
 			"Tien tickets", "naar buiten", "verspreid", "ticketbord", "collega"]:
-		_ok(eigen.contains(les), "IntroUitleg.LESSEN noemt niet meer: '%s'" % les)
+		_ok(eigen.contains(les), "IntroUitleg.lessen() noemt niet meer: '%s'" % les)
+
+	# Het getal in regel 3 moet de ticketdata volgen. Hier stond "Negen staan
+	# meteen open" hard in de tekst terwijl F3-a er vier van had gemaakt: het
+	# eerste en enige wat een speler over het keuzemechaniek te horen krijgt,
+	# en het was onwaar. Deze test bindt het woord aan de data, zodat een
+	# volgende herbalancering van `available_when` de tekst meesleept in plaats
+	# van hem stil te laten liegen.
+	var open_nu := IntroUitleg.open_bij_start()
+	_ok(open_nu > 0 and open_nu < GameData.ticket_ids().size(),
+		"open_bij_start() geeft %d van %d; klopt de available_when-keten nog?" % [
+			open_nu, GameData.ticket_ids().size()])
+	_ok(eigen.contains("%s staan meteen open" % IntroUitleg.TELWOORDEN[open_nu]),
+		"de uitleg noemt niet '%s staan meteen open' terwijl er %d openstaan" % [
+			IntroUitleg.TELWOORDEN[open_nu], open_nu])
 
 	# De knoppenbalk (Besturing) staat er op elk apparaat; een toetsnaam
 	# beschrijft dan iets dat niet overal bestaat.
@@ -3702,3 +3718,82 @@ func _test_klant_melding_voor_bericht() -> void:
 
 	tel.queue_free()
 	await get_tree().process_frame
+
+
+func _test_duimzone_rechts() -> void:
+	_kop("de duimzone ligt rechtsonder, weg van de knoppenbalk")
+
+	var b := Besturing.new()
+	add_child(b)
+	b.setup()
+	var r := b.get_viewport().get_visible_rect().size
+
+	# Ruim onder ZONE_TOP en ruim boven de balk: dit meet de zijkant, niet de
+	# hoogte en niet de chrome-uitzondering.
+	var y := r.y * 0.6
+	var rechts := Vector2(r.x * 0.8, y)
+	var links := Vector2(r.x * 0.2, y)
+	var rechtsboven := Vector2(r.x * 0.8, r.y * 0.1)
+
+	# Rechtsonder is waar de duim ligt; linksonder staat de knoppenbalk (▤ ? ≡)
+	# en die mag niet met de stick om dezelfde pixels vechten. Deze test staat
+	# er omdat het een ergonomische keuze is die je bij het lezen van
+	# `_in_zone()` per ongeluk omdraait: één `<` in plaats van `>`.
+	_ok(b._in_zone(rechts),
+		"rechtsonder (%.0f,%.0f) maakt geen stick; ligt de duimzone weer links?" % [
+			rechts.x, rechts.y])
+	_ok(not b._in_zone(links),
+		"linksonder (%.0f,%.0f) maakt een stick, boven op de knoppenbalk" % [
+			links.x, links.y])
+	_ok(not b._in_zone(rechtsboven),
+		"rechtsbóven (%.0f,%.0f) maakt een stick; daar zit de doelregel" % [
+			rechtsboven.x, rechtsboven.y])
+
+	# Zelfde reden als in `_test_hudband()`: synchrone suite, dus meteen vrijgeven.
+	remove_child(b)
+	b.free()
+
+
+## Een geweigerde dialoogregel moet geteld worden, want `push_error()` raakt de
+## exitcode niet.
+##
+## Dit is de bewaking onder de speelbeurt-poort: op het BBD-203-pad vielen
+## Willems briefing, de openingsregel en alle drie keuzerondes weg omdat het
+## harnas interacties afvuurde terwijl het wervingsgesprek nog liep -- en de
+## doorloop meldde dat als "10/10, exit 0". Het harnas wacht nu
+## (`Main._qa_dialoog_vrij()`), maar een teller die niet meetelt is geen poort,
+## dus dit test de teller zelf in plaats van de doorloop van drie minuten.
+func _test_weggevallen_regel_telt() -> void:
+	_kop("een weggevallen dialoogregel wordt geteld")
+	# Deze test lokt de weigeringen zélf uit, dus de ERROR-regels die hierna in
+	# de uitvoer staan horen erbij. Zonder deze regel leest een groene suite met
+	# drie ERROR's erin als een suite die je mag negeren -- en dat is precies de
+	# gewoonte die P0-2 veroorzaakte.
+	print("   (de ERROR-regels hieronder zijn opzettelijk: dit test de weigering)")
+
+	var dc := DialogueController.new()
+	add_child(dc)
+	dc.setup()
+	_ok(dc.geweigerd() == 0, "een verse DialogueController begint niet op nul")
+
+	# `_active` direct zetten in plaats van een echt gesprek starten: `say()`
+	# wacht anders op invoer die in een headless suite nooit komt. Dit is precies
+	# de toestand die het harnas veroorzaakte.
+	dc._active = true
+
+	await dc.say("Willem", "Deze regel valt weg.")
+	_ok(dc.geweigerd() == 1, "een geweigerde say() werd niet geteld")
+
+	var keuze: int = await dc.ask_choice("Welke bedoel je?", ["A", "B"] as Array[String])
+	_ok(keuze == -1, "ask_choice() gaf %d in plaats van -1 tijdens een lopend gesprek" % keuze)
+	_ok(dc.geweigerd() == 2, "een geweigerde ask_choice() werd niet geteld")
+
+	# En een lege labellijst is een aanroepfout van de opgave, geen platgedrukte
+	# regel: die mag de teller niet laten oplopen.
+	dc._active = false
+	var leeg: int = await dc.ask_choice("Niets te kiezen", [] as Array[String])
+	_ok(leeg == -1, "een lege ask_choice() gaf %d in plaats van -1" % leeg)
+	_ok(dc.geweigerd() == 2, "een lege labellijst liet de weigeringsteller oplopen")
+
+	remove_child(dc)
+	dc.free()

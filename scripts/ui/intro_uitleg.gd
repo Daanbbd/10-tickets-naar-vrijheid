@@ -14,12 +14,44 @@ extends Control
 ## Losstaand van de UI-opbouw, zodat _test_intro() in test_runner.gd dezelfde
 ## tekst controleert als wat er op het scherm staat, zonder de scene te hoeven
 ## bouwen of instantiëren.
-const LESSEN: Array[String] = [
-	"Tien tickets, verspreid door het kantoor. Vind ze door rond te lopen.",
-	"Zijn ze alle tien opgelost, dan mag je naar buiten.",
-	"Negen staan meteen open. Op het ticketbord kies je wat je oppakt.",
-	"Niet jouw vak? Haal er een collega bij.",
+## Getallen in woorden, zodat regel 3 dezelfde typografie heeft als "Tien
+## tickets" in regel 1 en er geen cijfer tussen de woorden staat.
+const TELWOORDEN: Array[String] = [
+	"Geen", "Eén", "Twee", "Drie", "Vier", "Vijf",
+	"Zes", "Zeven", "Acht", "Negen", "Tien",
 ]
+
+
+## Hoeveel tickets er bij het begin van de dag openstaan: die zonder
+## `available_when`. `QuestEngine.start_run()` zet precies die op open, de rest
+## begint LOCKED en komt via de keten vrij.
+static func open_bij_start() -> int:
+	var n := 0
+	for id: StringName in GameData.ticket_ids():
+		var t: TicketDef = GameData.ticket(id)
+		if t != null and t.available_when.is_empty():
+			n += 1
+	return n
+
+
+## De vier regels, los van de scene-opbouw zodat `_test_intro()` ze kan
+## controleren zonder de scene te bouwen.
+##
+## Regel 3 leest zijn getal uit de ticketdata en staat er niet meer hard in.
+## Er stond "Negen staan meteen open", en dat was waar tot F3-a de inbox liet
+## vollopen: sindsdien hebben alleen t02, t03, t04 en t05 een lege
+## `available_when` en staan er vier open. Het uitlegscherm is het eerste en
+## enige dat een nieuwe speler over het keuzemechaniek vertelt, dus dat getal
+## moet uit de data komen — een tweede kopie gaat een tweede keer stilstaan.
+static func lessen() -> Array[String]:
+	var open := open_bij_start()
+	var telwoord := TELWOORDEN[open] if open < TELWOORDEN.size() else str(open)
+	return [
+		"Tien tickets, verspreid door het kantoor. Vind ze door rond te lopen.",
+		"Zijn ze alle tien opgelost, dan mag je naar buiten.",
+		"%s staan meteen open. Op het ticketbord kies je wat je oppakt." % telwoord,
+		"Niet jouw vak? Haal er een collega bij.",
+	]
 
 
 func _ready() -> void:
@@ -45,7 +77,7 @@ func _ready() -> void:
 
 	v.add_child(UiKit.spacer(8))
 
-	for les: String in LESSEN:
+	for les: String in lessen():
 		var l := UiKit.label(les, UiKit.FS_SMALL, UiKit.WIT)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(l)

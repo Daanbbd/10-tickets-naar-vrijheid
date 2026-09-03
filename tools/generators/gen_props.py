@@ -224,6 +224,62 @@ def tafel_lang(tw, th=2):
     return img
 
 
+def vergadertafel(tw=6, th=2):
+    """Summit: één vergadertafel met stoelen rondom.
+
+    Summit en Birdhouse stonden als `rect()` van 't'-tegels, en op de render
+    leest dat als een raster van losse tafeltjes in plaats van de ene tafel
+    waar iedereen omheen zit. Een tegel kan dat niet worden — vandaar een prop.
+
+    Afgeronde uiteinden en stoelen ook op de koppen: dat is wat een
+    vergadertafel van een bureau-eiland onderscheidt, dat rug-aan-rug staat en
+    een privacyscherm door het midden heeft.
+    """
+    img, d = _canvas(tw, th)
+    W, H = img.width, img.height
+    d.rounded_rectangle([T - 4, 5, W - T + 3, H - 6], radius=7,
+                        fill=rgba("wit_kast"), outline=rgba("lichtgrijs"))
+    d.line([(T - 1, 7), (W - T, 7)], fill=rgba("wit"))
+    # Stoelen langs de lange zijden, en één aan elke kop.
+    for x in range(T + 4, W - T, 2 * T):
+        _stoel(d, x, 5, True)
+        _stoel(d, x, H - 6, False)
+    _stoel(d, 6, H // 2 - 1, True)
+    _stoel(d, W - 7, H // 2 - 1, False)
+    # Twee laptops en een beker: bewijs dat er vergaderd wordt.
+    for x in (T + 2, W - 2 * T + 2):
+        d.rectangle([x, 11, x + 8, 15], fill=rgba("inkt"), outline=rgba("zwart"))
+        d.line([(x, 11), (x + 8, 11)], fill=rgba("glas", 200))
+    d.ellipse([W // 2 - 2, 12, W // 2 + 2, 16], fill=rgba("wit"), outline=rgba("lichtgrijs"))
+    return img
+
+
+def boardroomtafel(tw=7, th=2):
+    """Birdhouse: één tafel met zes stoelen, drie aan elke lange zijde.
+
+    Daan vroeg hier expliciet om een bureau met zes stoelen; de kamer was
+    daarvoor "veel te groot met veel te veel stoelen". Zes is dus geen
+    schatting maar de opgave, en daarom staat het aantal hier hard en niet als
+    functie van de breedte.
+    """
+    img, d = _canvas(tw, th)
+    W, H = img.width, img.height
+    # Wit, niet hout: de tafels op de verdieping zijn wit. Hout is hier de
+    # lamellenwand van het vergaderhokje, en dat moet het onderscheid blijven.
+    d.rectangle([T - 2, 5, W - T + 1, H - 6],
+                fill=rgba("wit_kast"), outline=rgba("lichtgrijs"))
+    d.line([(T - 1, 7), (W - T, 7)], fill=rgba("wit"))
+    stap = (W - 2 * T) // 3
+    for i in range(3):
+        x = T + stap // 2 + i * stap
+        _stoel(d, x, 5, True)
+        _stoel(d, x, H - 6, False)
+    # Eén beeldscherm aan de kop, binnen de rand van het blad. Buiten de rand
+    # leest het als een monitor die los op de vloer staat.
+    _monitor(d, W - T - 8, H // 2 - 5, 7, 6)
+    return img
+
+
 def tribune(tw=10, th=2):
     """Teal traptrede-bank met kussens, de Jura en de DIA-awards. Eén trap, geen
     rij losse bankjes. Zie assets/nieuwe assets/koffiecorner.jpeg."""
@@ -386,7 +442,12 @@ def main():
         meubels["bureau_4x%d.png" % th] = bureau_eiland_v(th)
     for th in (6, 8):
         meubels["plantenkast_3x%d.png" % th] = plantenkast_v(th)
+    # 38 breed hoorde bij de 130-tegelvloer; de 80-tegelvloer heeft 27 nodig.
+    # Beide blijven staan tot de vloerwissel gemerged is.
     meubels["tafel_lang_38x2.png"] = tafel_lang(38)
+    meubels["tafel_lang_27x2.png"] = tafel_lang(27)
+    meubels["vergadertafel_6x2.png"] = vergadertafel(6)
+    meubels["boardroomtafel_7x2.png"] = boardroomtafel(7)
     meubels["monitorwand_4x1.png"] = monitorwand(4)
     meubels["tribune_10x2.png"] = tribune(10)
     meubels["keukenblok_5x2.png"] = keukenblok(5, 2)

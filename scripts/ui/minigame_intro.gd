@@ -56,7 +56,13 @@ func setup(minigame_id: StringName, inhoud_override: Dictionary) -> void:
 
 
 func _bouw(titel: String, wat: String, waarom: String) -> void:
-	UiKit.full_rect(self)
+	# `fill_viewport` en niet `full_rect`: dit scherm hangt onder Shells
+	# `MinigameLayer`, en een Control onder een CanvasLayer krijgt geen
+	# ouderrect. Met alleen ankers bleef dit scherm 0x0, en omdat `full_rect`
+	# ook `GROW_DIRECTION_BOTH` zet groeide het kader vanuit de oorsprong naar
+	# twee kanten: de kaart hing linksboven half buiten beeld, met WAT en
+	# WAAROM volledig onzichtbaar en "Starten" nauwelijks aan te tikken.
+	UiKit.fill_viewport(self)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(UiKit.dimmer(0.72))
 

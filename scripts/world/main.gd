@@ -116,6 +116,9 @@ func _ready() -> void:
 	# en zet de ongelezen-teller erop. Na besturing.setup(), want die knop
 	# bestaat pas dan.
 	hud.set_besturing(besturing)
+	# De besturingskaart legt uit hoe je loopt; zodra de speler zelf een stick
+	# maakt, is die uitleg klaar en mag hij niet langer over de duimzone liggen.
+	besturing.stick_begonnen.connect(hud.hide_controls_card)
 	npc_layer.spawn_initial()
 	camera.setup(player, builder.world_rect())
 	# De wereld zakt onder de HUD-chips vandaan. De HUD meet zijn eigen balk; dit
@@ -357,6 +360,7 @@ func _qa_auto() -> void:
 	camera.reset_smoothing()
 
 	await get_tree().create_timer(0.4).timeout
+	await _qa_dialoog_vrij()
 	var it := wo.get_node_or_null("Interactable") as Interactable
 	if it != null:
 		_interact_with(it)
@@ -423,9 +427,15 @@ func _qa_playthrough() -> void:
 		Urenstaat.formatteer_duur(Session.worked_minutes),
 		Urenstaat.formatteer(Urenstaat.nu()),
 		Urenstaat.formatteer_duur(Urenstaat.BUDGET_MIN)])
+	# Een weggevallen regel is een stille fout: `push_error()` raakt de exitcode
+	# niet, dus zonder deze regel kan de enige end-to-end poort "10/10, exit 0"
+	# melden over een ticket dat zich zonder één zichtbare regel afspeelde.
+	var kwijt := dialogue.geweigerd()
+	if kwijt > 0:
+		printerr("[SPEELBEURT] %d geschreven regel(s)/keuzevraag(en) weggevallen door een lopend gesprek" % kwijt)
 	if "--quit-when-done" in OS.get_cmdline_user_args():
 		await get_tree().create_timer(1.0).timeout
-		get_tree().quit(0 if Session.all_done() else 1)
+		get_tree().quit(0 if Session.all_done() and kwijt == 0 else 1)
 
 
 ## Eén ticket van _qa_playthrough(): kiezen, ophalen, oplossen. Eigen functie
@@ -464,6 +474,9 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 			camera.reset_smoothing()
 			await get_tree().create_timer(0.3).timeout
 			tickets.handle_npc_talk(helper.interactable)
+			# `is_following()` slaat om zodra de collega meeloopt, en dat gebeurt
+			# midden in het gesprek -- niet aan het eind. Vandaar dat hierna
+			# `_qa_dialoog_vrij()` nog nodig is voordat er iets aangetikt wordt.
 			if not await _qa_wacht_tot(func() -> bool: return helper.is_following(), 30.0):
 				printerr("[SPEELBEURT] %s: %s liep niet mee" % [t.code, helper_id])
 				return false
@@ -490,6 +503,7 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 		camera.global_position = player.global_position
 		camera.reset_smoothing()
 		await get_tree().create_timer(0.3).timeout
+		await _qa_dialoog_vrij()
 		_interact_with(paard.interactable)
 	else:
 		var wo := registry.get_by_id(t.anchor)
@@ -501,6 +515,7 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 		camera.global_position = player.global_position
 		camera.reset_smoothing()
 		await get_tree().create_timer(0.3).timeout
+		await _qa_dialoog_vrij()
 
 		var it := wo.get_node_or_null("Interactable") as Interactable
 		_interact_with(it)
@@ -521,6 +536,21 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 		printerr("[SPEELBEURT] %s: de ticketstroom kwam niet tot rust" % t.code)
 		return false
 	return true
+
+
+## QA: wacht tot er geen gesprek meer loopt.
+##
+## Het harnas vuurde interacties af zonder te wachten en ging daarna pollen,
+## waarmee het langs het invoerslot ging dat een speler wél tegenhoudt. Op het
+## BBD-203-pad startte `TicketController.handle()` daardoor terwijl het
+## wervingsgesprek met Willem nog liep: Willems briefing, de openingsregel en
+## alle drie keuzerondes vielen weg, en de speelbeurt meldde het als groen.
+## Een speler kan dit niet uitlokken (`_unhandled_input()` stopt op
+## `Session.input_locked`), dus dit is een tekortkoming van het harnas -- maar
+## juist daarom moet het harnas hier wachten waar de speler dat ook doet.
+func _qa_dialoog_vrij() -> void:
+	if not await _qa_wacht_tot(func() -> bool: return not dialogue.is_active(), 20.0):
+		printerr("[SPEELBEURT] er liep na 20s nog een gesprek; ga toch door")
 
 
 func _qa_wacht_tot(voorwaarde: Callable, timeout: float) -> bool:

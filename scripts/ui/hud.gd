@@ -452,6 +452,11 @@ func _build_card(root: Control) -> void:
 	_card.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_card.modulate.a = 0.0
 	_card.visible = false
+	# Nooit een tik opeten. De kaart is een uitleg en geen bedieningsvlak, en
+	# hij ligt over de onderste strook waar de duimzone begint; met de
+	# PanelContainer-standaard (MOUSE_FILTER_STOP) slikt hij de druk die de
+	# stick had moeten maken. IGNORE geldt ook voor de labels erin.
+	_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_card)
 
 	var v := VBoxContainer.new()
@@ -465,7 +470,7 @@ func _build_card(root: Control) -> void:
 ##
 ## De knoppenbalk staat in beeld met zijn werkwoord erop, dus die hoeft niet
 ## uitgelegd te worden. Wat onzichtbaar is: dat de stick overal in de
-## linkerhelft opkomt, dat ver uitduwen rennen is, en dat je direct op een
+## rechterhelft opkomt, dat ver uitduwen rennen is, en dat je direct op een
 ## oplichtend object kunt tikken in plaats van er een knop voor te zoeken.
 ##
 ## Dit spel is mobile-only; er staat hier bewust geen toetsenregel meer. WASD/
@@ -476,7 +481,7 @@ func _build_card(root: Control) -> void:
 ## er geen heeft, ook al was die regel al onzichtbaar op een echt toestel.
 func _kaartregels() -> Array[String]:
 	return [
-		"Duim links      lopen",
+		"Duim rechts     lopen",
 		"Ver uitduwen    rennen",
 		"Tik op object   interactie",
 		"▤ ticketbord    ? hint",
@@ -492,6 +497,20 @@ func show_controls_card(duur: float = KAART_ZICHTBAAR) -> void:
 	_card_tween.tween_property(_card, "modulate:a", 1.0, 0.25)
 	_card_tween.tween_interval(duur)
 	_card_tween.tween_property(_card, "modulate:a", 0.0, 0.6)
+	_card_tween.tween_callback(func() -> void: _card.visible = false)
+
+
+## Weg met de kaart, nu. Aangeroepen zodra de speler zelf een stick maakt: de
+## kaart legt uit hoe je loopt, dus wie loopt heeft hem niet meer nodig — en
+## hij hoort niet over de duimzone te blijven liggen. Doet niets als hij al weg
+## is, zodat dit veilig bij elke stick opnieuw mag komen.
+func hide_controls_card() -> void:
+	if not _card.visible:
+		return
+	if _card_tween != null and _card_tween.is_running():
+		_card_tween.kill()
+	_card_tween = create_tween()
+	_card_tween.tween_property(_card, "modulate:a", 0.0, 0.2)
 	_card_tween.tween_callback(func() -> void: _card.visible = false)
 
 
