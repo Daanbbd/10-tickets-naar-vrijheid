@@ -1,7 +1,7 @@
 {
   "available_when": {
     "tickets_done": [
-      "t03"
+      "t01"
     ]
   },
   "requirements": {},

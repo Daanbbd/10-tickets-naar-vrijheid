@@ -1,5 +1,9 @@
 {
-  "available_when": {},
+  "available_when": {
+    "tickets_done": [
+      "t01"
+    ]
+  },
   "requirements": {},
   "dialogue_ids": {
     "offer": "t03_offer",

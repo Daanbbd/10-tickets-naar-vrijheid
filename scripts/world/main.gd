@@ -45,6 +45,11 @@ var _zone_id: StringName = &""
 ## voltooid ticket de tint van de zone waar je nu staat opnieuw kan zetten —
 ## met de nieuwe `Gevolgen.druk()`-fase erin — zonder dat je hoeft te bewegen.
 var _zone_mood: String = "neutraal"
+## De leesbare naam van de huidige zone ("Entree"), om dezelfde reden apart
+## bewaard als `_zone_mood`: een ticket dat vrijkomt terwijl je stilstaat moet
+## gemeld kunnen worden mét de ruimte erbij, zonder de zonedata opnieuw op te
+## zoeken.
+var _zone_naam: String = ""
 ## Waar de doelwijzer nu aan hangt. Ook de bron van de kompasstrip, zodat die
 ## twee nooit uit elkaar kunnen lopen.
 var _doelwit: Node2D = null
@@ -320,9 +325,11 @@ func _intro_beat() -> void:
 	await get_tree().create_timer(0.4).timeout
 
 	# De vondst is nu het gevolg van de infade in plaats van een toast die eraan
-	# voorafgaat. Er ligt werk in de entree waar je al staat: dit is de eerste
-	# keer dat "een ruimte binnenlopen levert een ticket op" iets doet in plaats
-	# van iets beweert.
+	# voorafgaat. Sinds de kickoff (BBD-201) de dag opent staat er in de entree
+	# geen open ticket meer — BBD-203 wacht op die kickoff — dus dit levert bij
+	# een verse dag niets op, en dat is goed: je loopt de gang in en krijgt daar
+	# meteen drie briefjes. "Een ruimte binnenlopen levert werk op" leert zich
+	# beter aan een ruimte waar je zelf naartoe gelopen bent.
 	_intro_loopt = false
 
 	# Ochtendbegroeting. Daan is de enige van de zeven personages die nooit
@@ -331,12 +338,30 @@ func _intro_beat() -> void:
 	# hele ochtend ongezien blijft. Speel je hem zelf, dan groet hij zichzelf
 	# niet: dan is er niemand die het overneemt, en dat is geen gat, want de
 	# game gaat over zíjn dag.
+	#
+	# Hij noemt hier ook de opdracht. Het uitlegscherm zegt wát er gebouwd
+	# wordt; deze regel zegt wanneer het af moet, uit de mond van de product
+	# owner, en zet daarmee de klok van de hele dag. Zonder dit was de deadline
+	# iets wat je pas merkte aan de finale.
+	#
+	# Speel je Daan zelf, dan neemt Dennis het over. Die regel stond er niet, en
+	# daardoor was Daan het enige personage dat zonder deadline aan de dag
+	# begon — precies degene die hem zou moeten kennen. Dennis is scrum master;
+	# een deadline uit zíjn mond is bovendien geen gat maar een grap.
 	if Session.character_id != &"daan":
 		var daan_def: CharacterDef = GameData.character(&"daan")
 		if daan_def != null:
 			await dialogue.say(daan_def.name,
-					"Goedemorgen. Sprint veertien is al bezig — ik zie je zo bij het bord.",
+					"Goedemorgen. De webshop van de manege moet morgen live — "
+					+ "sprint veertien, laatste dag. Ik zie je zo bij het bord.",
 					&"daan")
+	else:
+		var dennis_def: NpcDef = GameData.npc(&"dennis")
+		if dennis_def != null:
+			await dialogue.say(dennis_def.name,
+					"Morgen. Laatste dag van sprint veertien — de webshop van de "
+					+ "manege moet morgen live. Verder heb ik niks nodig.",
+					&"dennis")
 
 	Session.lock_input()
 	var nieuw := _vind_werk(_uitgestelde_zone)
@@ -862,7 +887,7 @@ func _qa_kaart() -> void:
 
 ## QA: `--pauze` opent het pauzemenu meteen. Zonder dit is de volumeslider —
 ## het enige besturingselement in het spel dat geen `UiKit`-stijl draagt —
-## alleen te zien door zelf ≡ te drukken, en dat kan `qa_shot.py` niet.
+## alleen te zien door zelf ☰ te drukken, en dat kan `qa_shot.py` niet.
 func _qa_pauze() -> void:
 	if "--pauze" not in OS.get_cmdline_user_args():
 		return
@@ -884,9 +909,10 @@ func _on_player_tile(t: Vector2i) -> void:
 	if zid != _zone_id and zid != &"":
 		_zone_id = zid
 		_zone_mood = String(z.get("light", "neutraal"))
+		_zone_naam = String(z.get("name", ""))
 		_tint_zone(_zone_mood)
-		Bus.zone_entered.emit(zid, String(z.get("name", "")))
-		_meld_vondst(_vind_werk(zid), String(z.get("name", "")))
+		Bus.zone_entered.emit(zid, _zone_naam)
+		_meld_vondst(_vind_werk(zid), _zone_naam)
 	if zid == &"z10_weekend":
 		_weekend_duwt_terug()
 
@@ -968,6 +994,15 @@ func _on_ticket_completed(id: StringName, _r: MinigameResult) -> void:
 	# krijgt dezelfde mood opnieuw, maar dan met de nieuwe fase erin gemengd.
 	# Zonder dit wacht de gloed tot je toevallig een deur door loopt.
 	_tint_zone(_zone_mood)
+	# Wat er zojuist is opengegaan in de ruimte waar je nú staat, vind je ook
+	# nu. `discover_in_zone()` draait alleen bij het oversteken van een
+	# zonegrens, en `refresh_availability()` promoveert alleen LOCKED ->
+	# AVAILABLE — dus een ticket dat vrijkomt terwijl je in zijn eigen ruimte
+	# staat bleef onvindbaar tot je die ruimte uit en weer in liep. Dat was
+	# altijd al zo en viel niemand op zolang er niets in je eigen ruimte
+	# vrijkwam; sinds BBD-203 (entree) achter BBD-201 hangt, is precies dat
+	# het normale geval — je kunt de kickoff in de entree afronden.
+	_meld_vondst(_vind_werk(_zone_id), _zone_naam)
 	# Alleen de collega van dít ticket gaat terug naar zijn post. _handle_inner
 	# heeft hem meestal al losgelaten; dit is het vangnet. Iemand die je voor
 	# een ánder ticket hebt opgehaald blijft lopen — hem stilletjes naar huis

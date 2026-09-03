@@ -34,6 +34,24 @@ static func open_bij_start() -> int:
 	return n
 
 
+## Waar de dag over gaat. Twee regels, vóór de spelregels.
+##
+## Dit ontbrak volledig. Het uitlegscherm vertelde hoe je tickets vindt en
+## afvinkt, maar nergens stond wát er die dag gebouwd wordt — en dan is het
+## eerste ticket "de klant heeft feedback" op een product waar je nog nooit van
+## gehoord hebt. Elke grap in dit spel hangt aan die opdracht: de webshop, het
+## paard dat naar links moet, de AI-video. Wie de opdracht niet kent, ziet
+## alleen losse sketches.
+##
+## Bewust geen derde regel over de deadline: die staat in Daans ochtendgroet in
+## `Main._intro_beat()`, waar hij uit een mond komt in plaats van van een dia.
+static func opdracht() -> Array[String]:
+	return [
+		"Manege De Vrije Teugel wil een webshop voor paardensupplementen.",
+		"Jij werkt vandaag mee bij Bluebird Day.",
+	]
+
+
 ## De vier regels, los van de scene-opbouw zodat `_test_intro()` ze kan
 ## controleren zonder de scene te bouwen.
 ##
@@ -61,35 +79,45 @@ func _ready() -> void:
 	UiKit.full_rect(bg)
 	add_child(bg)
 
+	# Twee blokken passen niet meer op één gecentreerde kolom van 220 px hoog:
+	# de opdracht erbij maakt het scherm hoger dan 416 px. De kolom vult nu de
+	# hele hoogte binnen een marge, met de knop onderaan vastgezet — anders
+	# schuift die bij een langere opdrachtregel onder het scherm, precies de
+	# fout die de knoppenbalk eerder maakte.
 	var v := VBoxContainer.new()
-	v.set_anchors_preset(Control.PRESET_CENTER)
-	v.anchor_left = 0.5; v.anchor_right = 0.5
-	v.anchor_top = 0.5; v.anchor_bottom = 0.5
-	v.offset_left = -80; v.offset_right = 80
-	v.offset_top = -110; v.offset_bottom = 110
-	v.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_theme_constant_override("separation", 6)
+	UiKit.full_rect(v)
+	v.offset_left = 12; v.offset_right = -12
+	v.offset_top = 16; v.offset_bottom = -12
+	v.add_theme_constant_override("separation", 4)
 	add_child(v)
 
-	var kop := UiKit.label("HOE DIT WERKT", UiKit.FS_HEAD, UiKit.BLUEBIRD_BRIGHT)
-	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(kop)
-
+	_blok(v, "VANDAAG", opdracht(), UiKit.WIT)
 	v.add_child(UiKit.spacer(8))
+	_blok(v, "HOE DIT WERKT", lessen(), UiKit.WIT)
 
-	for les: String in lessen():
-		var l := UiKit.label(les, UiKit.FS_SMALL, UiKit.WIT)
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		v.add_child(l)
-		v.add_child(UiKit.spacer(4))
-
-	v.add_child(UiKit.spacer(6))
+	# Duwt de knop naar de onderrand, wat er ook boven staat.
+	var rek := Control.new()
+	rek.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	rek.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(rek)
 
 	var verder := UiKit.knop_primair("Begrepen", UiKit.FS_BODY)
 	verder.pressed.connect(_on_verder)
 	v.add_child(verder)
 
 	verder.grab_focus()
+
+
+## Eén kop met zijn regels eronder. Linksuitgelijnd en niet gecentreerd: twee
+## blokken onder elkaar hebben een linkerkantlijn nodig om als twee blokken te
+## lezen, en gecentreerde lopende tekst van drie regels is op 168 px breed
+## simpelweg trager te lezen.
+func _blok(ouder: VBoxContainer, kop: String, regels: Array[String], kleur: Color) -> void:
+	ouder.add_child(UiKit.label(kop, UiKit.FS_SMALL, UiKit.BLUEBIRD_BRIGHT))
+	ouder.add_child(UiKit.spacer(2))
+	for r: String in regels:
+		ouder.add_child(UiKit.label(r, UiKit.FS_SMALL, kleur))
+		ouder.add_child(UiKit.spacer(3))
 
 
 func _on_verder() -> void:

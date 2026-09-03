@@ -83,6 +83,7 @@ func _ready() -> void:
 	_test_aanduidingen_kloppen()
 	_test_dialoogplan_ronde_c()
 	_test_finale_heeft_team()
+	_test_glyphdekking()
 	_rapport()
 
 
@@ -1530,7 +1531,12 @@ func _test_questketen_alle_personages() -> void:
 func _test_vrije_volgorde() -> void:
 	_kop("vrije volgorde")
 
-	const EERSTE_VIER: Array[StringName] = [&"t02", &"t03", &"t04", &"t05"]
+	# t01 (de kickoff) verving t03 (de klantfeedback) als startticket. Feedback
+	# op een scope die nog niet bestaat las als het verkeerde begin van de dag —
+	# je haalde Willem erbij voordat je wist wat er gebouwd werd. t03 en t08
+	# hangen nu allebei achter t01: haar feedback én de AI-video komen letterlijk
+	# uit de wensenlijst van die scopesessie.
+	const EERSTE_VIER: Array[StringName] = [&"t01", &"t02", &"t04", &"t05"]
 
 	QuestEngine.start_run(&"daan")
 	var open_bij_start := QuestEngine.open_tickets()
@@ -1884,10 +1890,21 @@ func _test_ankers_bereikbaar() -> void:
 	# statisch en scene-loos, dus hier na te lopen zonder de wereld te starten.
 	var t03: TicketDef = GameData.ticket(&"t03")
 	QuestEngine.start_run(&"daan")
+	# t03 hangt sinds de herordening achter t01 (de kickoff), dus bij een verse
+	# run staat hij op slot en heeft zijn anker geen bijschrift — daar hoort
+	# géén naam te staan voor werk dat nog niet mag. Eerst de kickoff, dan pas
+	# de vier standen van de collega. `eigenaar_suffix()` leest
+	# `preferred_at_anchor()`, en die slaat een LOCKED ticket over.
+	_ok(Hud.eigenaar_suffix(t03.anchor) == "",
+		"een ticket op slot hoort geen naam op zijn tikmarker te zetten: kreeg \"%s\""
+			% Hud.eigenaar_suffix(t03.anchor))
+	QuestEngine.complete(&"t01",
+		MinigameResult.make(&"mg_user_story", GameEnums.Outcome.SUCCESS))
+	_ok(Session.is_available(&"t03"), "t03 ging niet open na de kickoff (t01)")
 	_ok(Hud._wie(t03).begins_with("Haal Willem"),
-		"doelregel bij de start: kreeg \"%s\"" % Hud._wie(t03))
+		"doelregel na de kickoff: kreeg \"%s\"" % Hud._wie(t03))
 	_ok(Hud.eigenaar_suffix(t03.anchor) == " (Willem)",
-		"bijschrift op de tikmarker bij de start: kreeg \"%s\"" % Hud.eigenaar_suffix(t03.anchor))
+		"bijschrift op de tikmarker na de kickoff: kreeg \"%s\"" % Hud.eigenaar_suffix(t03.anchor))
 
 	Session.add_follower(&"npc_willem")
 	_ok(Hud._wie(t03) == "Willem loopt mee",
@@ -3824,7 +3841,7 @@ func _test_duimzone_rechts() -> void:
 	var links := Vector2(r.x * 0.2, y)
 	var rechtsboven := Vector2(r.x * 0.8, r.y * 0.1)
 
-	# Rechtsonder is waar de duim ligt; linksonder staat de knoppenbalk (▤ ? ≡)
+	# Rechtsonder is waar de duim ligt; linksonder staat de knoppenbalk (▤ ? ☰)
 	# en die mag niet met de stick om dezelfde pixels vechten. Deze test staat
 	# er omdat het een ergonomische keuze is die je bij het lezen van
 	# `_in_zone()` per ongeluk omdraait: één `<` in plaats van `>`.
@@ -4144,7 +4161,7 @@ func _controls(root: Node) -> Array[Control]:
 ## hóógte van de balk vast en `_test_hudband()` wat hij bovenin afdekt, maar
 ## niemand vroeg wáár de balk landde. Hij landde op y408 in een viewport van
 ## 416: van elke knop van 30 px stonden er 24 onder het scherm, en op een
-## telefoon zag je van ▤ ? ≡ nog net de bovenrand. Oorzaak was
+## telefoon zag je van ▤ ? ☰ nog net de bovenrand. Oorzaak was
 ## `_balk.size = get_combined_minimum_size()` in `Besturing._bouw_balk()` —
 ## `Control.set_size()` rekent alle vier de offsets opnieuw uit, dus die ene
 ## regel gooide de verankering aan de onderrand weg die er twee regels eerder
@@ -4448,3 +4465,50 @@ func _test_finale_heeft_team() -> void:
 				iemand_spreekt = true
 				break
 		_ok(iemand_spreekt, "%s: geen enkele node heeft een naamloze collega aan het woord — de finale is nog steeds team-loos" % tree_id)
+
+
+## Elk teken dat het spel op het scherm zet, bestaat ook in het font.
+##
+## Dit is de test die er niet was toen het misging. De pauzeknop in de
+## knoppenbalk droeg ≡ (U+2261), en dat teken zit niet in
+## `ark-pixel-*-proportional-latin.ttf`. Godot tekent dan geen foutmelding maar
+## een tofu-vakje met de hex-code erin, dus de enige manier om het spel op een
+## telefoon te pauzeren was een blokje met "2261". Dat stond er op elk apparaat,
+## in elke build, en er kwam nergens een waarschuwing uit.
+##
+## De pixelfonts zijn een latin-subset. Bij een symbool ligt het er dus maar aan
+## of het toevallig in dat subset zit — ▤ (U+25A4) en ☰ (U+2630) wel, ≡ niet, en
+## dat is aan het teken zelf niet te zien. Vandaar deze test en niet een
+## afspraak in een commentaar.
+##
+## Alleen glyphs, geen lopende tekst: de dialoog is Nederlands en die dekking
+## bewaakt `_test_schermen_passen()` al doordat een ontbrekend teken de breedte
+## verandert. Wat hier staat zijn de tekens die niemand uitspreekt.
+func _test_glyphdekking() -> void:
+	_kop("elk UI-teken bestaat in het font")
+
+	# Wat er als symbool op het scherm komt, uit de bron en niet nagetypt.
+	var stukken: Array[String] = [
+		Besturing.GLYPH_BORD, Besturing.GLYPH_HINT, Besturing.GLYPH_PAUZE,
+	]
+	stukken.append_array(Hud.kaartregels())
+
+	# Elke maat draagt zijn eigen snit (`UiKit.FONTS`), en de subsets verschillen
+	# per maat — de 10px-snit dekt 4290 tekens, de 12px-snit 24471. Een glyph die
+	# in de balk klopt kan dus in een bijschrift alsnog een vakje worden, dus
+	# alle drie de snitten langs.
+	for maat: Variant in UiKit.FONTS.keys():
+		var font: FontFile = UiKit.FONTS[maat]
+		_ok(font != null, "geen font voor maat %s" % maat)
+		if font == null:
+			continue
+		for stuk: String in stukken:
+			for i: int in stuk.length():
+				var cp := stuk.unicode_at(i)
+				# ASCII-ruimte en gewone letters zijn niet interessant en zouden
+				# de melding onleesbaar maken; het gaat om de symbolen.
+				if cp < 0x80:
+					continue
+				_ok(font.has_char(cp),
+					"font %spx heeft geen glyph voor U+%04X ('%s') uit \"%s\" — dat wordt een tofu-vakje"
+						% [maat, cp, String.chr(cp), stuk])
