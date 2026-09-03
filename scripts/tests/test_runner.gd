@@ -86,6 +86,7 @@ func _ready() -> void:
 	_test_glyphdekking()
 	await _test_minigames_passen()
 	_test_ruimteakoestiek()
+	await _test_wereldschermen_passen()
 	_rapport()
 
 
@@ -4118,7 +4119,7 @@ func _test_schermen_passen() -> void:
 ## uitsteekt. `PanelContainer` en `Button` en niet elke Control: een Label mag
 ## breder meten dan hij tekent, en een `full_rect`-ColorRect hoort juist precies
 ## de rand te halen.
-func _meet_schermvulling(root: Control, naam: String) -> void:
+func _meet_schermvulling(root: Node, naam: String) -> void:
 	if root == null:
 		_ok(false, "%s: geen scherm om te meten" % naam)
 		return
@@ -4150,7 +4151,7 @@ func _meet_schermvulling(root: Control, naam: String) -> void:
 ## Hangt `c` in een ouder die zijn kinderen afklemt? `ScrollContainer` zet
 ## `clip_contents` in zijn constructor, en `character_select.gd` zet hem zelf op
 ## het podium — één vraag dekt dus beide.
-func _wordt_geklemd(c: Control, root: Control) -> bool:
+func _wordt_geklemd(c: Control, root: Node) -> bool:
 	var n := c.get_parent()
 	while n != null:
 		if n is Control and (n as Control).clip_contents:
@@ -4603,7 +4604,7 @@ func _test_minigames_passen() -> void:
 ## 108 px terwijl de knooppunten 196 px opeisten. Wat er wél klopt is waar de
 ## knooppunten na de layoutronde daadwerkelijk staan, tegen de rand van het vlak
 ## dat ze klemt.
-func _meet_horizontale_overloop(root: Control, naam: String) -> void:
+func _meet_horizontale_overloop(root: Node, naam: String) -> void:
 	for c: Control in _controls(root):
 		if not (c is PanelContainer or c is Button):
 			continue
@@ -4625,7 +4626,7 @@ func _meet_horizontale_overloop(root: Control, naam: String) -> void:
 
 ## Het naaste vlak boven `c` dat zijn inhoud afknipt, of null. Stopt bij `root`,
 ## zodat het scherm zelf niet meetelt.
-func _klemmende_ouder(c: Control, root: Control) -> Control:
+func _klemmende_ouder(c: Control, root: Node) -> Control:
 	var n := c.get_parent()
 	while n != null:
 		if n is Control and (n as Control).clip_contents:
@@ -4706,3 +4707,52 @@ func _test_ruimteakoestiek() -> void:
 		"een onbekende zone valt niet terug op onbewerkt")
 
 	AudioDirector.set_ruimte(&"z9_vloer", 0.0)
+
+
+## Het ticketbord en de telefoon passen ook op het canvas.
+##
+## `_test_schermen_passen()` dekt de vier bootschermen en
+## `_test_minigames_passen()` de elf minigames. Deze twee vielen tussen wal en
+## schip: ze worden net als een minigame in code opgebouwd, ze zijn allebei
+## schermvullend, en de speler ziet ze allebei vaker dan welke minigame ook.
+## Het bord vult zich bovendien met tien briefjes waarvan de tekst uit data
+## komt, dus een langere tickettitel kan het uit zijn voegen duwen.
+##
+## Twee standen voor het bord: leeg (0/10) en vol (alles gevonden). De volle
+## stand is de interessante, want daar staan de briefjes in.
+func _test_wereldschermen_passen() -> void:
+	_kop("bord en telefoon passen op het canvas")
+
+	QuestEngine.start_run(&"daan")
+
+	var bord := Scrumbord.new()
+	UiKit.full_rect(bord)
+	bord.bouw()
+	add_child(bord)
+	bord.vul()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_meet_schermvulling(bord, "scrumbord (leeg)")
+	_meet_horizontale_overloop(bord, "scrumbord (leeg)")
+
+	# En met alle tien de briefjes erop. `discover()` zonder `complete()`, zodat
+	# ze allemaal in de linkerkolom belanden — de smalste van de twee.
+	for id: StringName in GameData.ticket_ids():
+		Session.discover(id)
+	bord.vul()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_meet_schermvulling(bord, "scrumbord (vol)")
+	_meet_horizontale_overloop(bord, "scrumbord (vol)")
+	bord.queue_free()
+	await get_tree().process_frame
+
+	var tel := Telefoon.new()
+	add_child(tel)
+	tel.setup()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_meet_schermvulling(tel, "telefoon")
+	_meet_horizontale_overloop(tel, "telefoon")
+	tel.queue_free()
+	await get_tree().process_frame
