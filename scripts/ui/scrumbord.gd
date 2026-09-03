@@ -93,7 +93,11 @@ func bouw() -> void:
 	# scherm en scrollt, dus "tik ergens om te sluiten" kan niet: elke tik is
 	# daar ook het begin van een veeg. Zelfde vorm als de Stoppen-knop in een
 	# minigame, zodat "hier kom je weg" er overal eender uitziet.
-	_sluit = UiKit.button("Sluiten", UiKit.FS_SMALL)
+	# Primair, want dit scherm is een keuze: het bord popte eerst zelf open bij
+	# elk ticket dat je kreeg, en dan is "Sluiten" het enige wat er te doen is.
+	# Nu open je het zelf om te kiezen, en dan hoort de knop te zeggen dat je
+	# daarmee klaar bent. Het label volgt de keuze — zie `vul()`.
+	_sluit = UiKit.knop_primair("Sluiten", UiKit.FS_SMALL)
 	_sluit.focus_mode = Control.FOCUS_NONE
 	v.add_child(_sluit)
 
@@ -131,6 +135,10 @@ func vul() -> void:
 	_titel.text = "JOUW TICKETS   %d/%d" % [Session.done_count(), Session.total_tickets()]
 	_onder.text = _restregel()
 	_onder.visible = true
+	# Heb je iets vastgezet, dan is dit scherm af en gaat de dag verder. Zonder
+	# keuze is het nog steeds gewoon dichtdoen.
+	if _sluit != null:
+		_sluit.text = "Aan de slag" if Session.pinned_ticket != &"" else "Sluiten"
 
 	if eerste != null:
 		toon_detail(eerste)
@@ -170,7 +178,7 @@ static func _kolom_van(st: GameEnums.TicketState) -> int:
 
 func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
 	var p := PanelContainer.new()
-	var kleur := _papier(t)
+	var kleur := papierkleur(t)
 	if st == GameEnums.TicketState.DONE:
 		# opgelost wijkt terug: die kolom is een archief, geen keuze
 		kleur = kleur.lerp(UiKit.WIT, 0.45)
@@ -180,6 +188,13 @@ func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
 	# enige tint die tegen álle vijf de papierkleuren afsteekt — geel, roze,
 	# blauw, groen en oranje papier.
 	var rand := UiKit.VASTGEZET if Session.is_pinned(t.id) else kleur.darkened(0.30)
+	# Nog niet gezien: hetzelfde blauw als de ring op een object dat je nog nooit
+	# hebt aangetikt, en als de badge op ▤ die je hierheen stuurde. Drie plekken,
+	# één betekenis — "hier is iets nieuws" — en dus één kleur. Vastgezet wint,
+	# want dat is een keuze en dit alleen nieuws.
+	if not Session.is_pinned(t.id) and st != GameEnums.TicketState.DONE \
+			and not Session.get_flag(QuestEngine.bord_gezien_vlag(t.id)):
+		rand = UiKit.BLUEBIRD_BRIGHT
 	p.add_theme_stylebox_override("panel", UiKit.postit(kleur, rand))
 	p.mouse_filter = Control.MOUSE_FILTER_STOP
 	p.tooltip_text = t.title
@@ -241,7 +256,10 @@ func _kies(t: TicketDef) -> void:
 ## twee frontenders en twee backenders, dus op rol zouden vier briefjes twee
 ## kleuren delen en zegt de kleur niets meer. De accentkleur is per persoon
 ## uniek; verbleekt naar papier levert vanzelf een pastel post-it op.
-static func _papier(t: TicketDef) -> Color:
+## Publiek: `Hud.toon_ticket_melding()` gebruikt dezelfde papierkleur voor het
+## briefje dat naar de ▤-knop vliegt, zodat het hetzelfde briefje is als het
+## briefje dat straks op het bord ligt.
+static func papierkleur(t: TicketDef) -> Color:
 	if t.owner_character == &"":
 		return UiKit.POSTIT                     # de gedeelde finale
 	var c: CharacterDef = GameData.character(t.owner_character)

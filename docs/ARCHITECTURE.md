@@ -227,16 +227,42 @@ arrangementen en worden bij het genereren meegeprint.
   tekstlengte, en op een canvas van 184 px breed is "één tekstlengte" geen
   aanname die je mag maken. Twee VBoxen — één die van boven naar beneden groeit,
   één die van de onderrand naar boven groeit — tellen de hoogtes op in plaats
-  van ze te raden. De tussenruimte van de bovenste staat op 0: met twee pixels
-  ertussen kijk je door de HUD heen op de bovenste rij van het kantoor, en dan
-  loopt er een reepje collega tussen de teller en de doelregel door.
+  van ze te raden.
+- **Permanente chrome kost wereld, en die kosten waren niet begroot.** De
+  bovenstapel was vier dekkende dingen over de volle breedte — teller + klok,
+  doelregel (bijna altijd twee regels), kompasstrip, toasts — samen zo'n 80 van
+  de 416 canvaspixels. De camera klemt verticaal volledig vast, dus dat is niet
+  "bovenaan het scherm" maar "over de vergaderkamers": rij 0 is muur, maar op
+  rij 1 staan `deploycomputer` en `sprintbord_vloer`, en in de rijen 1 tot 6
+  lopen collega's. Wat er nu staat is 26 px hoog en op twee chips na
+  doorzichtig — `[▤ 3/10]` links, `[09:12]` rechts, de kompasstrip ertussen
+  zonder paneel eromheen (hij tekent zijn eigen onderlegger, zie
+  `Kompas._draw()`). De doelregel is niet weg maar klapt uit als hij verandert,
+  en met een tik op de tellerchip. Dezelfde afweging als bij de knoppenbalk,
+  die om zijn drie knoppen sloot toen de actieknop verdween.
+- **Wat aan de bovenkant bij komt, gaat er onderaan af.** De verdieping is 26
+  tegels en de viewport precies even hoog, dus `GameCamera.zak_onder_hud()`
+  verdeelt ruimte, hij maakt hem niet. Via `Camera2D.offset`, want dat is de
+  enige knop die voorbij de limieten gaat — `limit_top`/`limit_bottom` klemmen Y
+  onherroepelijk op 208. Het plafond staat op 12 px: onderaan draagt rij 24 het
+  fysieke ticketbord, en de volle 26 px van de chips zou dat onder de
+  knoppenbalk duwen. `_test_hudband()` legt beide kanten vast — de balkhoogte
+  tegen rij 1, en het laagste object tegen de onderrand.
+- **De interactieprompt hangt op het object, niet aan de onderrand.** Hij stond
+  in de onderstapel, gecentreerd, net boven de knoppenbalk. Dat klopte zolang er
+  een actieknop was: de tekst hoorde bij de knop, en die knop stond daar. Sinds
+  je direct op het object tikt, stond de enige regel die zegt wát een tik doet
+  maximaal ver van het ding dat je aantikt, in de strook waar ook de joystick
+  onder je duim opkomt. `TapMarker` draagt nu de ring én het bijschrift.
 - **Wat aan een schermrand klemt moet weten waar de HUD ophoudt.** De doelwijzer
   (`objective_marker.gd`) klemt zich tegen de rand zodra het doel buiten beeld
   ligt. De hele noordelijke strook van het kantoor ligt op schermhoogte van de
   ticketteller, dus zonder correctie staat die pijl precies achter de HUD: hij
   is er wel en je ziet hem niet. Hij vraagt daarom `Hud.vrije_band()` op, en die
-  is **gemeten** en niet geteld — de doelregel is één of twee regels hoog en er
-  kunnen toasts onder hangen.
+  is **gemeten** en niet geteld — de doelregel staat er soms wel en soms niet, is
+  één of twee regels hoog, en er kunnen toasts onder hangen. Sinds kort vragen
+  `TapMarker` (voor zijn bijschrift) en `Hud.toon_ticket_melding()` (voor het
+  briefje dat naar ▤ vliegt) dezelfde band op.
 - **Eén besturing, geen platformvertakking.** Er was een `Invoer.touch()` en zes
   plekken die daar hun eigen indeling uit haalden (HUD, besturingskaart,
   ticketbord, dialoogbox, prompt, elke minigame). Dat leverde twee spellen met

@@ -83,6 +83,11 @@ const TIK_STRAAL := UiKit.KNOP_MIN_H
 
 var _stick: Control
 var _balk: PanelContainer
+## De ▤-knop. Bewaard omdat de HUD hem als landingsplek gebruikt voor een nieuw
+## ticket en er een ongelezen-teller op zet — zie `bord_knop_rect()`.
+var _bord_knop: Button = null
+var _badge: Label = null
+var _badge_tween: Tween = null
 var _vinger: int = -1
 var _midden: Vector2 = Vector2.ZERO
 var _uitslag: Vector2 = Vector2.ZERO
@@ -92,6 +97,10 @@ var _ingedrukt: Array[StringName] = []
 ## zolang er geen kandidaat is; een echte vingerindex is nooit negatief.
 var _tik_index: int = -99
 var _tik_start: Vector2 = Vector2.ZERO
+
+## Vlakken van andere lagen die net zo goed chrome zijn als deze balk: de
+## HUD-chips bovenin. `main.gd` meldt ze aan — zie `meld_chrome()`.
+var _chrome: Array[Control] = []
 
 ## Voor `_probeer_tik()`: main.gd zet dit ná het spawnen van de speler, want
 ## `setup()` hieronder draait daarvóór.
@@ -125,6 +134,18 @@ func set_speler(p: Player) -> void:
 	_speler = p
 
 
+## Vlakken die een tik mogen opeten zonder dat er een interactie of een joystick
+## uit volgt. De balk hieronder kent zichzelf al; dit is voor chrome op andere
+## lagen, zoals de tellerchip in de HUD die de doelregel uitklapt.
+##
+## Rechthoeken worden per gebeurtenis opgevraagd en niet hier gekopieerd: de
+## chips veranderen van breedte zodra de teller van 3/10 naar 10/10 loopt.
+func meld_chrome(vlakken: Array[Control]) -> void:
+	for c: Control in vlakken:
+		if c != null and c not in _chrome:
+			_chrome.append(c)
+
+
 # --- De balk --------------------------------------------------------------
 
 ## Eén paneel dat om zijn drie knoppen sluit, tegen de linkerkant. Stond
@@ -148,7 +169,8 @@ func _bouw_balk(ouder: Control) -> void:
 	rij.add_theme_constant_override("separation", 2)
 	_balk.add_child(rij)
 
-	_knop(rij, "▤", &"ticketboard", HULP_BREEDTE)
+	_bord_knop = _knop(rij, "▤", &"ticketboard", HULP_BREEDTE)
+	_bouw_badge(_bord_knop)
 	_knop(rij, "?", &"hint", HULP_BREEDTE)
 	# Pauze. Op een telefoon bestaat ESC niet, en het pauzemenu is de enige plek
 	# waar je het volume kunt zetten en de run kunt verlaten — dat mag geen
@@ -173,6 +195,72 @@ func _knop(rij: HBoxContainer, tekst: String, actie: StringName, breedte: int) -
 	b.button_up.connect(func() -> void: _actie(actie, false))
 	rij.add_child(b)
 	return b
+
+
+## Het aantal tickets dat je nog niet op het bord hebt bekeken, rechtsboven op
+## de ▤-knop.
+##
+## Dit is het antwoord op "waarom zou ik dat bord openen". Het bord popte eerst
+## elf keer per speelbeurt zelf open bij elk ticket dat je kreeg; nu vliegt het
+## briefje hiernaartoe en blijft dít staan tot je gaat kijken.
+##
+## Kind van de knop en niet van de rij: dan schuift hij mee als de balk van
+## indeling verandert, en hij mag over de knoprand heen hangen.
+func _bouw_badge(knop: Button) -> void:
+	_badge = UiKit.label("", UiKit.FS_SMALL, UiKit.INK)
+	_badge.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_badge.visible = false
+	# Een gevuld rondje in bb-blue: de enige plek in de balk met een vulling, dus
+	# hij trekt de aandacht zonder een nieuwe kleur te introduceren.
+	var vulling := StyleBoxFlat.new()
+	vulling.bg_color = UiKit.BLUEBIRD_BRIGHT
+	vulling.set_corner_radius_all(4)
+	_badge.add_theme_stylebox_override("normal", vulling)
+	_badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_badge.anchor_left = 1.0
+	_badge.offset_left = -9.0
+	_badge.offset_right = 1.0
+	_badge.offset_top = -1.0
+	_badge.offset_bottom = 9.0
+	knop.add_child(_badge)
+
+
+## Waar een nieuw ticket naartoe vliegt, in canvaspixels.
+##
+## De HUD (laag 10) en deze balk (laag 9) rekenen in hetzelfde canvas van
+## 192x416, dus een globale rect uit deze laag is daar direct bruikbaar.
+func bord_knop_rect() -> Rect2:
+	if _bord_knop == null:
+		return Rect2()
+	return _bord_knop.get_global_rect()
+
+
+## Het aantal ongelezen tickets op de ▤-knop. 0 verbergt de badge.
+func zet_ongelezen(aantal: int) -> void:
+	if _badge == null:
+		return
+	_badge.visible = aantal > 0
+	# Boven de negen wordt het cijfer breder dan het rondje, en tien ongelezen
+	# tickets zeggen niets anders dan negen: ga kijken.
+	_badge.text = str(aantal) if aantal <= 9 else "9+"
+
+
+## Kort opveren, als een briefje net geland is. Zelfde vorm als de pop in
+## `mg_standup`: `TRANS_BACK` heen en terug, geen nieuwe curve.
+func pols_bord_knop() -> void:
+	if _bord_knop == null:
+		return
+	if _badge_tween != null and _badge_tween.is_running():
+		_badge_tween.kill()
+	_bord_knop.pivot_offset = _bord_knop.size * 0.5
+	_badge_tween = create_tween()
+	_badge_tween.tween_property(_bord_knop, "scale", Vector2(1.14, 1.14), 0.12) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_badge_tween.tween_property(_bord_knop, "scale", Vector2.ONE, 0.16) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## Een echte InputEventAction, geen Input.action_press: main.gd leest deze
@@ -247,7 +335,7 @@ func _input(event: InputEvent) -> void:
 			_stuur(Vector2.ZERO)
 			_stick.visible = true
 			_stick.queue_redraw()
-		elif _tik_index == -99 and not _op_balk(positie):
+		elif _tik_index == -99 and not _op_chrome(positie):
 			_tik_index = index
 			_tik_start = positie
 	elif index == _vinger:
@@ -286,14 +374,27 @@ func _probeer_tik(scherm_positie: Vector2) -> void:
 
 ## `_input` loopt vóór de GUI-verwerking, dus een tik op ▤ komt hier ook langs.
 ## Zonder deze uitzondering zou het ticketbord openen én een stick achterlaten
-## in de linkerhoek van de balk. De balk uitrekenen in plaats van een marge
-## raden: dan blijft dit kloppen als de balk van hoogte verandert.
-func _op_balk(p: Vector2) -> bool:
-	return _balk != null and _balk.get_global_rect().has_point(p)
+## in de linkerhoek van de balk. De vlakken uitrekenen in plaats van een marge
+## raden: dan blijft dit kloppen als de balk van hoogte verandert en als de
+## tellerchip breder wordt.
+##
+## Geldt net zo goed voor de HUD-chips bovenin. Die liggen buiten de
+## joystickzone, dus daar kwam geen stick vandaan — maar `_probeer_tik()` kijkt
+## alleen of de tik binnen `TIK_STRAAL` (30 px) van de schermprojectie van het
+## huidige interactable valt. Sta je in de Koffiecorner naast de koffiemachine,
+## dan ligt die projectie een rij onder de tellerchip: uitklappen van de
+## doelregel zou dan tegelijk een gesprek starten.
+func _op_chrome(p: Vector2) -> bool:
+	if _balk != null and _balk.get_global_rect().has_point(p):
+		return true
+	for c: Control in _chrome:
+		if is_instance_valid(c) and c.visible and c.get_global_rect().has_point(p):
+			return true
+	return false
 
 
 func _in_zone(p: Vector2) -> bool:
-	if _op_balk(p):
+	if _op_chrome(p):
 		return false
 	var r := _stick.get_viewport_rect().size
 	return p.x < r.x * ZONE_BREEDTE and p.y > r.y * ZONE_TOP
