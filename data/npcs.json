@@ -4,6 +4,7 @@
   "name": "Dennis",
   "role": "Scrum Master",
   "zone": "z9_vloer",
+  "plek": "p_team_1",
   "home_tile": [
    45,
    23
@@ -102,6 +103,7 @@
   "name": "Bastiaan",
   "role": "Frontend developer",
   "zone": "z9_vloer",
+  "plek": "p_team_key",
   "home_tile": [
    12,
    18
@@ -359,6 +361,7 @@
   "name": "Victor",
   "role": "Frontend developer",
   "zone": "z9_vloer",
+  "plek": "p_team_key",
   "home_tile": [
    28,
    22

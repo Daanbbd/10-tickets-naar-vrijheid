@@ -268,19 +268,18 @@ prop("tafel_lang", 37, 10, 63, 11)
 #   8 werkplekken - plantenkast - 4 - 4 - plantenkast - 4 - 4
 # De teamnamen komen uit het echte kantoor, van west naar oost. Key, Helio en 1
 # zijn opgeheven teams -- Bluebird Day is naar een platte organisatie gegaan --
-# maar de bureaus heten er nog naar. Dat is geen slordigheid om weg te poetsen
-# maar precies het soort detail waar dit spel over gaat, dus de `ex`-vlag draagt
-# het en de wereld mag er iets over zeggen.
+# maar de bureaus heten er nog naar. Dat staat hier als toelichting en niet als
+# veld: er is bewust niets in het spel dat er iets over zegt.
 EILANDEN = [
-    # (x0, aantal werkplekken, naam, ex-team) -- de hoogte volgt uit het aantal
-    (15, 8, "Team Key",   True),
-    (30, 4, "Team Helio", True),
-    (39, 4, "Team Sales", False),
-    (53, 4, "Team Run",   False),
-    (62, 4, "Team 1",     True),
+    # (x0, aantal werkplekken, naam) -- de hoogte volgt uit het aantal
+    (15, 8, "Team Key"),
+    (30, 4, "Team Helio"),
+    (39, 4, "Team Sales"),
+    (53, 4, "Team Run"),
+    (62, 4, "Team 1"),
 ]
 PLEKKEN = []
-for (x0, n, naam, ex) in EILANDEN:
+for (x0, n, naam) in EILANDEN:
     prop("bureau", x0, 15, x0 + 3, 15 + n - 1)
     # `aanduiding` is de staart van "Haal Victor ___". Die staat in de data en
     # niet in een template, want per plek is het een ander voorzetsel: je haalt
@@ -290,7 +289,6 @@ for (x0, n, naam, ex) in EILANDEN:
         "id": "p_" + naam.lower().replace(" ", "_"),
         "name": naam,
         "aanduiding": "bij " + naam,
-        "ex": ex,
         "rect": [x0, 15, x0 + 3, 15 + n - 1],
     })
 # Twee op de werkvloer, en een derde als roomdivider in de gang. Die derde staat

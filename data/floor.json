@@ -594,7 +594,6 @@
    "id": "p_team_key",
    "name": "Team Key",
    "aanduiding": "bij Team Key",
-   "ex": true,
    "rect": [
     15,
     15,
@@ -606,7 +605,6 @@
    "id": "p_team_helio",
    "name": "Team Helio",
    "aanduiding": "bij Team Helio",
-   "ex": true,
    "rect": [
     30,
     15,
@@ -618,7 +616,6 @@
    "id": "p_team_sales",
    "name": "Team Sales",
    "aanduiding": "bij Team Sales",
-   "ex": false,
    "rect": [
     39,
     15,
@@ -630,7 +627,6 @@
    "id": "p_team_run",
    "name": "Team Run",
    "aanduiding": "bij Team Run",
-   "ex": false,
    "rect": [
     53,
     15,
@@ -642,7 +638,6 @@
    "id": "p_team_1",
    "name": "Team 1",
    "aanduiding": "bij Team 1",
-   "ex": true,
    "rect": [
     62,
     15,

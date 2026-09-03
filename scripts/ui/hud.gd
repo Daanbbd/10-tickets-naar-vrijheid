@@ -819,7 +819,7 @@ static func _wie(t: TicketDef) -> String:
 	if mist != null:
 		# Een item heeft geen tegel in zijn definitie, alleen een zone, dus hier
 		# komt altijd de zone-staart.
-		var plek := _aanduiding(mist.zone, Vector2i(-1, -1))
+		var plek := _aanduiding(mist.zone, &"")
 		return "Haal %s%s" % [mist.name, "" if plek == "" else " %s" % plek]
 	if stand == GameEnums.HelperStand.EIGEN:
 		return "Jij kunt dit zelf"
@@ -832,34 +832,29 @@ static func _wie(t: TicketDef) -> String:
 		GameEnums.HelperStand.GEWEEST:
 			return "%s is langs geweest" % d.name
 		_:
-			var waar := _aanduiding(d.zone, d.home_tile)
+			var waar := _aanduiding(d.zone, d.plek)
 			return "Haal %s%s" % [d.name, "" if waar == "" else " %s" % waar]
 
 
-## Hoe dicht bij een bureau-eiland je moet zitten om er "bij" te horen, in
-## tegels tot de rand van het eiland.
-##
-## Niet nul: een bureau is een solide tegel, dus niemand staat er ooit óp — een
-## collega staat er naast, en op De Vloer soms een paar tegels ervandaan omdat
-## zijn standplaats op beloopbare vloer moet liggen. Zes is ruim genoeg voor de
-## huidige standplaatsen en nog altijd korter dan de afstand tussen twee
-## eilanden, en er wordt hoe dan ook het dichtste eiland gekozen.
-const PLEK_RADIUS := 6
-
-
-## De staart van "Haal Victor ___": "uit Summit", "bij Team Key",
+## De staart van "Haal Victor ___": "bij Team Key", "uit Summit",
 ## "bij de bureaus".
 ##
 ## Het voorzetsel staat in de data en niet in deze functie, want het verschilt
 ## per plek. Hier stond `" uit %s" % zone_naam`, en op de open werkvloer gaf dat
-## "Haal Victor uit De Vloer" — je haalt niemand uit een vloer. Zit de collega
-## bij een bureau-eiland, dan noemt hij dat eiland: dat is een aanwijzing waar
-## je ook echt naartoe kunt lopen, waar de zone 68 tegels breed is.
-static func _aanduiding(zone_id: StringName, tegel: Vector2i) -> String:
-	if tegel.x >= 0:
-		var plek := _plek_bij(tegel)
-		if not plek.is_empty():
-			return String(plek.get("aanduiding", ""))
+## "Haal Victor uit De Vloer" — je haalt niemand uit een vloer, en de zone is
+## 68 van de 80 tegels breed, dus het wees ook nergens naartoe.
+##
+## Zit de collega aan een bureau-eiland, dan noemt hij dat eiland. Welk eiland
+## dat is komt uit `NpcDef.plek` en werd hier een versie eerder uit de afstand
+## tot het dichtste eiland afgeleid. Dat gaf twee van de drie fout — Victor
+## kwam op Team Helio uit en Dennis op niets — want waar iemand zit is een
+## gegeven van het kantoor en geen functie van zijn looppunt.
+static func _aanduiding(zone_id: StringName, plek_id: StringName) -> String:
+	if plek_id != &"":
+		for raw: Variant in (GameData.floor_data.get("plekken", []) as Array):
+			var p := raw as Dictionary
+			if StringName(p.get("id", "")) == plek_id:
+				return String(p.get("aanduiding", ""))
 	if zone_id == &"":
 		return ""
 	for z: Variant in (GameData.floor_data.get("zones", []) as Array):
@@ -867,24 +862,6 @@ static func _aanduiding(zone_id: StringName, tegel: Vector2i) -> String:
 		if StringName(d.get("id", "")) == zone_id:
 			return String(d.get("aanduiding", ""))
 	return ""
-
-
-## Het dichtstbijzijnde bureau-eiland binnen `PLEK_RADIUS`, of leeg.
-static func _plek_bij(tegel: Vector2i) -> Dictionary:
-	var beste: Dictionary = {}
-	var beste_d := PLEK_RADIUS + 1
-	for raw: Variant in (GameData.floor_data.get("plekken", []) as Array):
-		var p := raw as Dictionary
-		var r: Array = p.get("rect", [])
-		if r.size() != 4:
-			continue
-		var dx := maxi(maxi(int(r[0]) - tegel.x, 0), tegel.x - int(r[2]))
-		var dy := maxi(maxi(int(r[1]) - tegel.y, 0), tegel.y - int(r[3]))
-		var d := dx + dy
-		if d < beste_d:
-			beste_d = d
-			beste = p
-	return beste
 
 
 # --- Reacties -------------------------------------------------------------
