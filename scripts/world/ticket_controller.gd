@@ -330,22 +330,38 @@ func _wh_backend(content: Dictionary) -> MinigameResult:
 	if verbindingen.is_empty():
 		return MinigameResult.make(&"mg_backend_fix", GameEnums.Outcome.SUCCESS, 1, {"juist": true})
 
-	# De juiste verbinding staat op index 0: geen quiz met een verborgen
-	# antwoord, gewoon de kabel die Jonathan je net beschreef.
-	var opties: Array = [verbindingen[0]]
+	# De juiste verbinding wordt hieronder op index 0 opgebouwd, maar niet zo
+	# getoond: de briefing heeft 'm net voorgezegd, dus knop 1 zou altijd goed
+	# zijn zonder dat de speler ook maar hoefde te lezen.
 	var afleiders: Array = content.get("afleiders", [])
-	for i: int in range(mini(2, afleiders.size())):
+
+	# Jonathans vakgebiedvoordeel (`TraitModifier._cableboard()`) knipt de
+	# afleiderslijst in, maar zonder deze `bonus` bleef hier altijd `mini(2, …)`
+	# staan — twee foute kabels, getrimd of niet. Dezelfde grammatica als
+	# `_wh_muziek()` hieronder: vergelijk met het ongetrimde bestand en trek het
+	# verschil van het aantal getoonde afleiders af, zodat "Minder losse
+	# draden." ook echt minder losse draden op het scherm zet.
+	var basis_afleiders: int = (MinigameContent.get_config(&"mg_backend_fix").get("afleiders", []) as Array).size()
+	var bonus := maxi(0, basis_afleiders - afleiders.size())
+	var opties: Array = [verbindingen[0]]
+	for i: int in range(maxi(0, mini(2, afleiders.size()) - bonus)):
 		opties.append(afleiders[i])
 
+	# Volgorde husselen, niet de opties zelf: `opties[0]` blijft "de juiste"
+	# voor de payload, `volgorde` bepaalt alleen waar die op het scherm komt.
+	var volgorde: Array = range(opties.size())
+	volgorde.shuffle()
+	var juist_index := volgorde.find(0)
+
 	var labels: Array[String] = []
-	for raw: Variant in opties:
-		var paar := raw as Array
+	for idx: int in volgorde:
+		var paar := opties[idx] as Array
 		var a := String(labels_van_id.get(String(paar[0]), paar[0]))
 		var b := String(labels_van_id.get(String(paar[1]), paar[1]))
 		labels.append("Verbind %s met %s." % [a, b])
 
 	var gekozen := await _dialogue.ask_choice("Welke kabel leg je?", labels)
-	var juist := gekozen == 0
+	var juist := gekozen == juist_index
 	var eindtekst := String(content.get("success", "")) if juist else String(content.get("failure", ""))
 	if eindtekst != "":
 		await _line(eindtekst)
@@ -383,6 +399,11 @@ func _wh_muziek(content: Dictionary) -> MinigameResult:
 	var opties: Array[Dictionary] = [goede]
 	for i: int in range(maxi(0, mini(2, slechte.size()) - bonus)):
 		opties.append(slechte[i])
+
+	# P1-5: de goede tag stond altijd op index 0, direct na een intro die het
+	# spel al voorzegde. `gekozen` hieronder leest `goed` uit de dictionary
+	# zelf, dus husselen kan zonder een aparte index bij te houden.
+	opties.shuffle()
 
 	var labels: Array[String] = []
 	for r: Dictionary in opties:
