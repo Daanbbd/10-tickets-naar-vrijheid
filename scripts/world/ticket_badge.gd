@@ -48,16 +48,25 @@ func _ready() -> void:
 	_werk_bij()
 
 
-## Alles wat de beschikbaarheid van een ticket kan veranderen. `flag_changed`
-## zit erbij omdat `available_when` op vlaggen kan staan, niet alleen op
-## afgeronde tickets.
+## Twee signalen, en dat is genoeg.
+##
+## Hier stonden er vier, met `flag_changed` erbij omdat `available_when` ook op
+## vlaggen kan staan. Dat is waar, maar overbodig: een `available_when` die gaat
+## kloppen wordt door `QuestEngine.refresh_availability()` opgepikt, en die zet
+## de stand via `_set_state()` — dat vuurt `ticket_state_changed`. De vlagroute
+## komt hier dus toch al binnen, één signaal later.
+##
+## Het verschil is niet academisch. `flag_changed` vuurt bij elke `set_flag()`,
+## dus meermaals per gesprek, en met een badge per anker betekende dat tien
+## luisteraars die elk `preferred_at_anchor()` aanriepen — een lus over alle
+## tickets. Honderd iteraties per gezette vlag, voor een briefje dat op dat
+## moment niets doet. `ticket_discovered` is om dezelfde reden weg: iets vinden
+## verandert niet of het openstaat.
 func _verbind() -> void:
 	Bus.ticket_state_changed.connect(
 		func(_a: StringName, _b: GameEnums.TicketState) -> void: _werk_bij())
 	Bus.ticket_completed.connect(
 		func(_a: StringName, _b: MinigameResult) -> void: _werk_bij())
-	Bus.ticket_discovered.connect(func(_a: StringName) -> void: _werk_bij())
-	Bus.flag_changed.connect(func(_a: StringName, _b: bool) -> void: _werk_bij())
 
 
 func _werk_bij() -> void:

@@ -129,6 +129,21 @@ func vul() -> void:
 		if st != GameEnums.TicketState.DONE and (eerste == null or Session.is_pinned(id)):
 			eerste = t
 
+	# Een lege kolom zegt zelf waarom hij leeg is.
+	#
+	# Bij 0/10 was dit bord voor tweederde een wit vlak: twee kolomkoppen met
+	# niets eronder, en de uitleg pas onderaan in het detailvak. Precies het
+	# scherm dat een nieuwe speler als eerste opent, en het zag eruit alsof het
+	# stuk was. Deze regel staat waar de leegte zit.
+	for i: int in _kolom.size():
+		if _kolom[i].get_child_count() > 0:
+			continue
+		var leeg := UiKit.label(
+			"nog niets" if i == 0 else "nog niets af",
+			UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+		leeg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_kolom[i].add_child(leeg)
+
 	# `total_tickets()` en niet een hardgecodeerde 10, net als de HUD-teller.
 	# Stond hier als "%d/10", en een elfde ticket maakte daarmee van het bord
 	# een leugenaar en van de HUD niet.
@@ -160,21 +175,20 @@ func _restregel() -> String:
 	if Session.all_done():
 		return "Klaar. Naar de voordeur."
 	# Kort houden: op 192 px breed breekt een langere regel over twee regels en
-	# duwt hij de briefjes uit beeld. Vandaar "wacht" en niet "wachten nog op
-	# ander werk".
+	# duwt hij de briefjes uit beeld.
+	#
+	# "Nog 4 in het kantoor. 6 wachten nog." stond hier, en dat is twee keer
+	# "nog" in zeven woorden — plus het brak alsnog over twee regels. "Op slot"
+	# is bovendien het woord dat het bord en de HUD elders al gebruiken voor
+	# werk dat achter ander werk wacht.
 	if rest <= 0:
 		if op_slot > 0:
-			return "Alles gevonden. Nog %d wacht op ander werk." % op_slot
+			return "Alles gevonden, %d op slot." % op_slot
 		return "Alles gevonden."
-	# Niet "op de vloer": dat idioom botst met de zone die zo heet. Zelfde
-	# formulering als de doelregel in de HUD, want die twee mogen elkaar niet
-	# tegenspreken.
-	var regel := "Nog %s in het kantoor." % ("één" if rest == 1 else str(rest))
+	var regel := "Nog %s te vinden" % ("één" if rest == 1 else str(rest))
 	if op_slot > 0:
-		# "6 wacht nog" stond hier: het getal bepaalt het werkwoord, niet het
-		# ticket. Eén wacht, meer wachten.
-		regel += " %s nog." % ("één wacht" if op_slot == 1 else "%d wachten" % op_slot)
-	return regel
+		regel += ", %d op slot" % op_slot
+	return regel + "."
 
 
 static func _kolom_van(st: GameEnums.TicketState) -> int:
