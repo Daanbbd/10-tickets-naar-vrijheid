@@ -8,6 +8,13 @@ extends Resource
 @export var role: String = ""
 @export var home_tile: Vector2i = Vector2i.ZERO
 @export var zone: StringName = &""
+## Aan welk bureau-eiland uit `floor.json` deze collega zit, of leeg.
+##
+## Expliciet en niet uit afstand afgeleid. Dat laatste heeft hier gestaan en gaf
+## twee van de drie fout: Victor kwam op Team Helio uit omdat zijn standplaats
+## daar dichter bij lag, en Dennis viel terug op "bij de bureaus". Waar iemand
+## zit is een gegeven van het kantoor, geen functie van zijn looppunt.
+@export var plek: StringName = &""
 @export var dialogue_id: StringName = &""
 @export var route: Array[Vector2i] = []
 @export var route_pause: float = 2.0

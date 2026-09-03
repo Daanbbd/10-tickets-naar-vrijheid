@@ -838,13 +838,15 @@ static func _wie(t: TicketDef) -> String:
 	# zelf" terwijl de wijzer naar De Vloer wees. Twee aanwijzingen die elkaar
 	# tegenspreken, op het enige moment in de dag dat het erop aankomt.
 	#
-	# Zelfde zinsvorm als bij een collega hieronder ("Haal Victor uit De
-	# Vloer"), dus de naam van het item gaat er onbewerkt in: een lidwoord
+	# Zelfde zinsvorm als bij een collega hieronder ("Haal Victor bij Team
+	# Helio"), dus de naam van het item gaat er onbewerkt in: een lidwoord
 	# erbij verzinnen gaat mis op het eerste onzijdige item.
 	var mist: ItemDef = QuestEngine.ontbrekend_item(t.id)
 	if mist != null:
-		var plek := _zone_naam(mist.zone)
-		return "Haal %s%s" % [mist.name, "" if plek == "" else " uit %s" % plek]
+		# Een item heeft geen tegel in zijn definitie, alleen een zone, dus hier
+		# komt altijd de zone-staart.
+		var plek := _aanduiding(mist.zone, &"")
+		return "Haal %s%s" % [mist.name, "" if plek == "" else " %s" % plek]
 	if stand == GameEnums.HelperStand.EIGEN:
 		return "Jij kunt dit zelf"
 	var d: NpcDef = GameData.npc(QuestEngine.required_helper(t.id))
@@ -856,17 +858,35 @@ static func _wie(t: TicketDef) -> String:
 		GameEnums.HelperStand.GEWEEST:
 			return "%s is langs geweest" % d.name
 		_:
-			var waar := _zone_naam(d.zone)
-			return "Haal %s%s" % [d.name, "" if waar == "" else " uit %s" % waar]
+			var waar := _aanduiding(d.zone, d.plek)
+			return "Haal %s%s" % [d.name, "" if waar == "" else " %s" % waar]
 
 
-static func _zone_naam(zone_id: StringName) -> String:
+## De staart van "Haal Victor ___": "bij Team Key", "uit Summit",
+## "bij de bureaus".
+##
+## Het voorzetsel staat in de data en niet in deze functie, want het verschilt
+## per plek. Hier stond `" uit %s" % zone_naam`, en op de open werkvloer gaf dat
+## "Haal Victor uit De Vloer" — je haalt niemand uit een vloer, en de zone is
+## 68 van de 80 tegels breed, dus het wees ook nergens naartoe.
+##
+## Zit de collega aan een bureau-eiland, dan noemt hij dat eiland. Welk eiland
+## dat is komt uit `NpcDef.plek` en werd hier een versie eerder uit de afstand
+## tot het dichtste eiland afgeleid. Dat gaf twee van de drie fout — Victor
+## kwam op Team Helio uit en Dennis op niets — want waar iemand zit is een
+## gegeven van het kantoor en geen functie van zijn looppunt.
+static func _aanduiding(zone_id: StringName, plek_id: StringName) -> String:
+	if plek_id != &"":
+		for raw: Variant in (GameData.floor_data.get("plekken", []) as Array):
+			var p := raw as Dictionary
+			if StringName(p.get("id", "")) == plek_id:
+				return String(p.get("aanduiding", ""))
 	if zone_id == &"":
 		return ""
 	for z: Variant in (GameData.floor_data.get("zones", []) as Array):
 		var d := z as Dictionary
 		if StringName(d.get("id", "")) == zone_id:
-			return String(d.get("name", ""))
+			return String(d.get("aanduiding", ""))
 	return ""
 
 
@@ -916,8 +936,8 @@ func _refresh_objective() -> void:
 	# binnenlopen iets oplevert. Hetzelfde getal als de lege bordtekst
 	# (undiscovered_count, niet done_count), zodat HUD en bord elkaar niet
 	# tegenspreken.
-	# `locked_count()` erbij, om dezelfde reden als op het bord: staat er niets
-	# meer op de vloer maar wacht er nog werk achter ander werk, dan is "loop
+	# `locked_count()` erbij, om dezelfde reden als op het bord: is er niets
+	# meer te vinden maar wacht er nog werk achter ander werk, dan is "loop
 	# een ruimte in" het verkeerde advies — er is dan niets te vinden, er is
 	# iets af te maken.
 	var rest := QuestEngine.undiscovered_count()
@@ -925,7 +945,11 @@ func _refresh_objective() -> void:
 	if rest <= 0 and op_slot > 0:
 		_zet_objective("Niets meer te vinden. %d wacht op ander werk." % op_slot)
 		return
-	_zet_objective("Nog %d op de vloer. Loop een ruimte in." % rest)
+	# "op de vloer" stond hier, en dat was een idioom ("nog niet gevonden,
+	# ergens in het gebouw") dat botste met de zone die letterlijk De Vloer
+	# heet: je las het als "vier tickets in díe hoek" in plaats van "vier
+	# tickets nog nergens gezien".
+	_zet_objective("Nog %d in het kantoor. Loop een ruimte in." % rest)
 
 
 ## De doelregel zetten, en hem laten zien als hij iets nieuws zegt.

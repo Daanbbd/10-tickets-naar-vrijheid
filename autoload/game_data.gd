@@ -140,6 +140,7 @@ func _load_npcs(path: String) -> void:
 		n.role = String(d.get("role", ""))
 		n.home_tile = _tile(d.get("home_tile", [0, 0]))
 		n.zone = StringName(d.get("zone", ""))
+		n.plek = StringName(d.get("plek", ""))
 		n.dialogue_id = StringName(d.get("dialogue_id", ""))
 		n.route_pause = float(d.get("route_pause", 2.0))
 		n.can_follow = bool(d.get("can_follow", false))

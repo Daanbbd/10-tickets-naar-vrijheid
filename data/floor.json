@@ -465,7 +465,8 @@
     8,
     6
    ],
-   "light": "klinisch"
+   "light": "klinisch",
+   "aanduiding": "uit de toiletten"
   },
   {
    "id": "z3_patchhok",
@@ -476,7 +477,8 @@
     8,
     13
    ],
-   "light": "koud"
+   "light": "koud",
+   "aanduiding": "uit het Patchhok"
   },
   {
    "id": "z8_hokje",
@@ -487,7 +489,8 @@
     33,
     13
    ],
-   "light": "dim"
+   "light": "dim",
+   "aanduiding": "uit het Vergaderhokje"
   },
   {
    "id": "z1_entree",
@@ -498,7 +501,8 @@
     8,
     24
    ],
-   "light": "warm"
+   "light": "warm",
+   "aanduiding": "uit de entree"
   },
   {
    "id": "z4_koffiecorner",
@@ -509,7 +513,8 @@
     28,
     6
    ],
-   "light": "warm"
+   "light": "warm",
+   "aanduiding": "uit de koffiecorner"
   },
   {
    "id": "z5_summit",
@@ -520,7 +525,8 @@
     40,
     6
    ],
-   "light": "koel"
+   "light": "koel",
+   "aanduiding": "uit Summit"
   },
   {
    "id": "z6_basecamp",
@@ -531,7 +537,8 @@
     51,
     6
    ],
-   "light": "neutraal"
+   "light": "neutraal",
+   "aanduiding": "uit Basecamp"
   },
   {
    "id": "z7_birdhouse",
@@ -542,7 +549,8 @@
     63,
     6
    ],
-   "light": "koel"
+   "light": "koel",
+   "aanduiding": "uit Birdhouse"
   },
   {
    "id": "z10_weekend",
@@ -553,7 +561,8 @@
     78,
     24
    ],
-   "light": "jungle"
+   "light": "jungle",
+   "aanduiding": "uit Weekend"
   },
   {
    "id": "z9_vloer",
@@ -564,7 +573,8 @@
     68,
     24
    ],
-   "light": "neutraal"
+   "light": "neutraal",
+   "aanduiding": "bij de bureaus"
   },
   {
    "id": "z11_gang",
@@ -575,7 +585,65 @@
     68,
     13
    ],
-   "light": "neutraal"
+   "light": "neutraal",
+   "aanduiding": "uit de gang"
+  }
+ ],
+ "plekken": [
+  {
+   "id": "p_team_key",
+   "name": "Team Key",
+   "aanduiding": "bij Team Key",
+   "rect": [
+    15,
+    15,
+    18,
+    22
+   ]
+  },
+  {
+   "id": "p_team_helio",
+   "name": "Team Helio",
+   "aanduiding": "bij Team Helio",
+   "rect": [
+    30,
+    15,
+    33,
+    18
+   ]
+  },
+  {
+   "id": "p_team_sales",
+   "name": "Team Sales",
+   "aanduiding": "bij Team Sales",
+   "rect": [
+    39,
+    15,
+    42,
+    18
+   ]
+  },
+  {
+   "id": "p_team_run",
+   "name": "Team Run",
+   "aanduiding": "bij Team Run",
+   "rect": [
+    53,
+    15,
+    56,
+    18
+   ]
+  },
+  {
+   "id": "p_team_1",
+   "name": "Team 1",
+   "aanduiding": "bij Team 1",
+   "rect": [
+    62,
+    15,
+    65,
+    18
+   ]
   }
  ]
 }

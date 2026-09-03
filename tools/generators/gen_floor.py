@@ -266,15 +266,31 @@ prop("tafel_lang", 37, 10, 63, 11)
 # ---- De Vloer (raamzijde): bureau-eilanden en plantenkasten ----
 # Vijf eilanden en twee plantenkasten, in de volgorde van de plattegrond:
 #   8 werkplekken - plantenkast - 4 - 4 - plantenkast - 4 - 4
+# De teamnamen komen uit het echte kantoor, van west naar oost. Key, Helio en 1
+# zijn opgeheven teams -- Bluebird Day is naar een platte organisatie gegaan --
+# maar de bureaus heten er nog naar. Dat staat hier als toelichting en niet als
+# veld: er is bewust niets in het spel dat er iets over zegt.
 EILANDEN = [
-    (15, 8),   # (x0, aantal werkplekken) -- de hoogte volgt uit het aantal
-    (30, 4),
-    (39, 4),
-    (53, 4),
-    (62, 4),
+    # (x0, aantal werkplekken, naam) -- de hoogte volgt uit het aantal
+    (15, 8, "Team Key"),
+    (30, 4, "Team Helio"),
+    (39, 4, "Team Sales"),
+    (53, 4, "Team Run"),
+    (62, 4, "Team 1"),
 ]
-for (x0, n) in EILANDEN:
+PLEKKEN = []
+for (x0, n, naam) in EILANDEN:
     prop("bureau", x0, 15, x0 + 3, 15 + n - 1)
+    # `aanduiding` is de staart van "Haal Victor ___". Die staat in de data en
+    # niet in een template, want per plek is het een ander voorzetsel: je haalt
+    # iemand *uit* Summit maar *bij* een bureau-eiland. Precies daar ging het
+    # mis met "Haal Victor uit De Vloer".
+    PLEKKEN.append({
+        "id": "p_" + naam.lower().replace(" ", "_"),
+        "name": naam,
+        "aanduiding": "bij " + naam,
+        "rect": [x0, 15, x0 + 3, 15 + n - 1],
+    })
 # Twee op de werkvloer, en een derde als roomdivider in de gang. Die derde staat
 # er omdat het stuk gang tussen de koffiecorner en het vergaderhokje anders zes
 # bij zestien tegels kaal beton is -- precies wat PLAN.md F1-b als onbeloonde
@@ -405,21 +421,30 @@ for y in range(H - 1):
             g[y][x] = 'F'
 
 # ZONES: specifiek vóór algemeen — world_builder.zone_at() geeft de eerste match
-# ZONES: specifiek vóór algemeen — world_builder.zone_at() geeft de eerste match
+#
+# `aanduiding` is de staart van "Haal Victor ___", en staat per zone in de data
+# omdat het voorzetsel per plek verschilt. Zonder dat veld bouwde de HUD
+# " uit %s" met de zonenaam erin, en dan staat er "Haal Victor uit De Vloer" —
+# je haalt niemand uit een vloer. De naam blijft "De Vloer", want als label bij
+# binnenkomen is dat precies wat het kantoor het noemt.
 ZONES = [
-    {"id": "z2_toilet",       "name": "Toiletten",        "rect": [1, 1, 8, 6],      "light": "klinisch"},
-    {"id": "z3_patchhok",     "name": "Het Patchhok",     "rect": [1, 8, 8, 13],     "light": "koud"},
-    {"id": "z8_hokje",        "name": "Het Vergaderhokje","rect": [27, 10, 33, 13],  "light": "dim"},
-    {"id": "z1_entree",       "name": "Entree",           "rect": [1, 15, 8, 24],    "light": "warm"},
-    {"id": "z4_koffiecorner", "name": "Koffiecorner",     "rect": [11, 1, 28, 6],    "light": "warm"},
-    {"id": "z5_summit",       "name": "Summit",           "rect": [30, 1, 40, 6],    "light": "koel"},
-    {"id": "z6_basecamp",     "name": "Basecamp",         "rect": [42, 1, 51, 6],    "light": "neutraal"},
-    {"id": "z7_birdhouse",    "name": "Birdhouse",        "rect": [53, 1, 63, 6],    "light": "koel"},
-    {"id": "z10_weekend",     "name": "Weekend",          "rect": [70, 1, 78, 24],   "light": "jungle"},
-    {"id": "z9_vloer",        "name": "De Vloer",         "rect": [1, 14, 68, 24],   "light": "neutraal"},
+    {"id": "z2_toilet",       "name": "Toiletten",        "rect": [1, 1, 8, 6],      "light": "klinisch", "aanduiding": "uit de toiletten"},
+    {"id": "z3_patchhok",     "name": "Het Patchhok",     "rect": [1, 8, 8, 13],     "light": "koud",     "aanduiding": "uit het Patchhok"},
+    {"id": "z8_hokje",        "name": "Het Vergaderhokje","rect": [27, 10, 33, 13],  "light": "dim",      "aanduiding": "uit het Vergaderhokje"},
+    {"id": "z1_entree",       "name": "Entree",           "rect": [1, 15, 8, 24],    "light": "warm",     "aanduiding": "uit de entree"},
+    {"id": "z4_koffiecorner", "name": "Koffiecorner",     "rect": [11, 1, 28, 6],    "light": "warm",     "aanduiding": "uit de koffiecorner"},
+    {"id": "z5_summit",       "name": "Summit",           "rect": [30, 1, 40, 6],    "light": "koel",     "aanduiding": "uit Summit"},
+    {"id": "z6_basecamp",     "name": "Basecamp",         "rect": [42, 1, 51, 6],    "light": "neutraal", "aanduiding": "uit Basecamp"},
+    {"id": "z7_birdhouse",    "name": "Birdhouse",        "rect": [53, 1, 63, 6],    "light": "koel",     "aanduiding": "uit Birdhouse"},
+    {"id": "z10_weekend",     "name": "Weekend",          "rect": [70, 1, 78, 24],   "light": "jungle",   "aanduiding": "uit Weekend"},
+    # "bij de bureaus" en niet "uit De Vloer": dit is 68 tegels open werkvloer,
+    # en wie hier zit, zit aan een bureau-eiland. Staat de collega dicht genoeg
+    # bij een eiland, dan noemt de HUD dat eiland en komt deze staart niet aan
+    # de beurt.
+    {"id": "z9_vloer",        "name": "De Vloer",         "rect": [1, 14, 68, 24],   "light": "neutraal", "aanduiding": "bij de bureaus"},
     # Vangnet voor de hele open oostkant: de noordband voorbij de koffiecorner
     # (waar de blauwe tijger staat) hoort bij de gang, niet bij een kamer.
-    {"id": "z11_gang",        "name": "De Gang",          "rect": [10, 1, 68, 13],   "light": "neutraal"},
+    {"id": "z11_gang",        "name": "De Gang",          "rect": [10, 1, 68, 13],   "light": "neutraal", "aanduiding": "uit de gang"},
 ]
 
 SPAWN = [2, 17]   # in de lobby, net binnen de voordeur
@@ -646,6 +671,7 @@ def main():
         "grid": ["".join(row) for row in g],
         "legend": LEGEND,
         "zones": ZONES,
+        "plekken": PLEKKEN,
     }
     out = os.path.join(os.path.dirname(__file__), "..", "..", "data", "floor.json")
     out = os.path.normpath(out)

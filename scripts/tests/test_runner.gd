@@ -78,6 +78,7 @@ func _ready() -> void:
 	await _test_weggevallen_regel_telt()
 	_test_hokjedak_dekt_de_zone()
 	_test_wijzer_kiest_het_dichtste()
+	_test_aanduidingen_kloppen()
 	_rapport()
 
 
@@ -4168,3 +4169,57 @@ func _kaartje_rect_van(n: Node2D) -> Rect2:
 			var p := k as PanelContainer
 			return Rect2(n.global_position + p.position, p.size)
 	return Rect2()
+
+
+## Elke plek waar je iemand kunt ophalen moet een zinsstaart hebben, en elke
+## `plek` op een NPC moet bestaan.
+##
+## "Haal Victor uit De Vloer" kwam ervan dat de HUD zelf " uit %s" om een
+## zonenaam heen bouwde. Dat voorzetsel staat nu per zone en per bureau-eiland
+## in floor.json — en dat bestand wordt gegenereerd, dus een `aanduiding` die
+## bij een volgende vloerronde wegvalt levert stil "Haal Victor" op, zonder
+## plek en zonder foutmelding.
+func _test_aanduidingen_kloppen() -> void:
+	_kop("iedereen is ergens op te halen")
+
+	var plek_ids: Array[StringName] = []
+	for raw: Variant in GameData.floor_data.get("plekken", []) as Array:
+		var p := raw as Dictionary
+		var pid := StringName(p.get("id", ""))
+		plek_ids.append(pid)
+		_ok(String(p.get("aanduiding", "")) != "",
+			"bureau-eiland '%s' heeft geen aanduiding" % pid)
+		_ok((p.get("rect", []) as Array).size() == 4,
+			"bureau-eiland '%s' heeft geen rect van vier" % pid)
+	_ok(plek_ids.size() == 5, "verwacht vijf bureau-eilanden, kreeg %d" % plek_ids.size())
+
+	for raw: Variant in GameData.floor_data.get("zones", []) as Array:
+		var z := raw as Dictionary
+		_ok(String(z.get("aanduiding", "")) != "",
+			"zone '%s' heeft geen aanduiding" % z.get("id", ""))
+
+	# Elke collega die je kunt moeten ophalen levert een volledige zin op, en
+	# een `plek` die niet bestaat is een typefout die je anders pas ziet als de
+	# doelregel halverwege stopt.
+	for id: StringName in GameData.ticket_ids():
+		var t: TicketDef = GameData.ticket(id)
+		if t == null:
+			continue
+		var helper: StringName = QuestEngine.required_helper(t.id)
+		if helper == &"":
+			continue
+		var d: NpcDef = GameData.npc(helper)
+		if d == null:
+			continue
+		if d.plek != &"":
+			_ok(plek_ids.has(d.plek),
+				"%s zit op plek '%s' en die staat niet in floor.json" % [d.name, d.plek])
+		_ok(Hud._aanduiding(d.zone, d.plek) != "",
+			"%s is nergens op te halen: zone '%s', plek '%s'" % [d.name, d.zone, d.plek])
+
+	# En de plek wint van de zone, want dat is het hele punt: Bastiaan en Victor
+	# zitten op De Vloer maar horen bij een eiland.
+	var bas: NpcDef = GameData.npc(&"npc_bastiaan")
+	if bas != null and bas.plek != &"":
+		_ok(Hud._aanduiding(bas.zone, bas.plek).contains("Team"),
+			"Bastiaan krijgt '%s' en niet zijn eiland" % Hud._aanduiding(bas.zone, bas.plek))
