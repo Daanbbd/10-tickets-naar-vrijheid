@@ -58,7 +58,20 @@ P = {
     # Geen nieuwe key, want die kleur bestond al en is precies goed.
     "ui_bluebird_bright": (58, 134, 255),  # #3a86ff — derivaat voor donkere ondergrond (bb_blue is daar te donker om te lezen)
     "ui_groen":           (63, 174, 110),  # #3fae6e — verzadigd derivaat van bb_green, leesbaar op 8-10px
-    "ui_rood":            (224, 82, 99),   # #e05263 — game-only utility, BBD heeft geen foutkleur
+                                           # OP EEN DONKERE ONDERGROND (SCHERM_NACHT, INK, minigame-chrome).
+                                           # Haalt op een lichte ondergrond nergens 4,5:1 — zie ui_groen_op_licht.
+    "ui_rood":            (224, 82, 99),   # #e05263 — game-only utility, BBD heeft geen foutkleur.
+                                           # Zelfde ondergrond-eis als ui_groen hierboven.
+    # P3: het scrumbord (bb_day/wit paneel, postit-getinte rijen) en de
+    # bevestigingsknop op het titelscherm (UiKit.button()'s lichte "normal")
+    # gebruikten ui_groen/ui_rood rechtstreeks — 2,5:1 resp. 3,4:1 op bb_day,
+    # ruim onder WCAG AA's 4,5:1 voor lopende tekst. Zelfde reden als
+    # ui_grijs_op_licht hierboven: één kleur kan niet twee ondergronden dienen.
+    "ui_groen_op_licht":  (37, 104, 66),   # #256842 — 6,0:1 op bb_day, 5,9:1 op wit, 5,2:1 op
+                                           # postit_geel, 4,8:1 op bb_pink (de krapste van de vijf
+                                           # postit-tints)
+    "ui_rood_op_licht":   (156, 57, 69),   # #9c3945 — 6,1:1 op bb_day, 6,0:1 op wit, 5,3:1 op
+                                           # postit_geel, 4,9:1 op bb_pink/postit_leeg (de krapste)
     "ui_oranje":          (244, 162, 89),  # #f4a259 — verzadigd derivaat van bb_orange, leesbaar op 8-10px
     "ui_neutraal_tint":   (228, 228, 228), # #e4e4e4 — letterlijk --color-line, voor niet-accent states (bv. LOCKED)
     # ui_oranje droeg vier betekenissen tegelijk: doel, vastgezet ticket,

@@ -167,7 +167,7 @@ func _toon_bevestiging() -> void:
 	# eraan te trekken; twee regels is hier geen bezwaar.
 	var wis := UiKit.keuzeknop("Ja, dag wissen en opnieuw beginnen", UiKit.FS_BODY)
 	for kleur: StringName in [&"font_color", &"font_hover_color", &"font_focus_color"]:
-		wis.add_theme_color_override(kleur, UiKit.ROOD)
+		wis.add_theme_color_override(kleur, UiKit.ROOD_OP_LICHT)
 	wis.pressed.connect(_op_wis_en_begin)
 	v.add_child(wis)
 

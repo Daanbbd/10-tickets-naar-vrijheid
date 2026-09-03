@@ -143,7 +143,7 @@ func vul() -> void:
 	if eerste != null:
 		toon_detail(eerste)
 	elif Session.all_done():
-		_detail.text = "[color=#%s]Alles opgelost. Ga naar de voordeur.[/color]" % UiKit.GROEN.to_html(false)
+		_detail.text = "[color=#%s]Alles opgelost. Ga naar de voordeur.[/color]" % UiKit.GROEN_OP_LICHT.to_html(false)
 	else:
 		_detail.text = "[color=#%s]Je hebt nog niets gevonden. Elk ticket ligt in de ruimte waar het hoort.[/color]" % UiKit.GRIJS_OP_LICHT.to_html(false)
 
@@ -228,7 +228,7 @@ func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
 		v.add_child(w)
 
 	if st == GameEnums.TicketState.DONE:
-		var vink := UiKit.label("klaar", UiKit.FS_SMALL, UiKit.GROEN.darkened(0.2))
+		var vink := UiKit.label("klaar", UiKit.FS_SMALL, UiKit.GROEN_OP_LICHT)
 		vink.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(vink)
 
@@ -297,7 +297,7 @@ static func _korte_eigenaar(t: TicketDef) -> String:
 func toon_detail(t: TicketDef) -> void:
 	var regels := "%s\n" % t.title
 	if Session.is_done(t.id):
-		regels += "[color=#%s]Opgelost.[/color]" % UiKit.GROEN.to_html(false)
+		regels += "[color=#%s]Opgelost.[/color]" % UiKit.GROEN_OP_LICHT.to_html(false)
 	else:
 		regels += "[color=#%s]%s  ·  %s[/color]" % [
 			UiKit.GRIJS_OP_LICHT.to_html(false), t.zone_name, _volledige_eigenaar(t)]

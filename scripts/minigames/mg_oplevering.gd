@@ -235,7 +235,10 @@ func _bouw_foutbalk() -> void:
 	_foutbalk.visible = false
 	# Na het dashboard, dus vlak boven de keuzes waar je in fase 3 op reageert.
 	chrome_header().add_child(_foutbalk)
-	_foutbalk_label = UiKit.label("", UiKit.FS_SMALL, UiKit.ROOD)
+	# ROOD_OP_LICHT, niet ROOD: _foutbalk staat op UiKit.PANEL (licht), en ROOD
+	# zelf is een derivaat voor een donkere ondergrond (P3) — die dit paneel
+	# niet heeft, in tegenstelling tot de rest van deze minigame.
+	_foutbalk_label = UiKit.label("", UiKit.FS_SMALL, UiKit.ROOD_OP_LICHT)
 	_foutbalk.add_child(_foutbalk_label)
 
 
@@ -632,13 +635,15 @@ func _refresh_pips() -> void:
 		_pips.add_child(p)
 
 
+## GROEN_OP_LICHT/ROOD_OP_LICHT, niet GROEN/ROOD: `_waarde[m]` staat op het
+## dashboard, en dat paneel is UiKit.WIT — een lichte ondergrond (P3).
 func _meter_kleur(m: StringName) -> Color:
 	var v := int(_toestand[m])
 	match m:
 		&"bugs":
-			return UiKit.GROEN if v == 0 else UiKit.ROOD
+			return UiKit.GROEN_OP_LICHT if v == 0 else UiKit.ROOD_OP_LICHT
 		&"vertrouwen":
-			return UiKit.GROEN if v >= 5 else (UiKit.ORANJE if v >= 3 else UiKit.ROOD)
+			return UiKit.GROEN_OP_LICHT if v >= 5 else (UiKit.ORANJE if v >= 3 else UiKit.ROOD_OP_LICHT)
 		&"getest":
 			return UiKit.BLUEBIRD_INK if v > 0 else UiKit.GRIJS_OP_LICHT
 	return UiKit.INK
@@ -655,7 +660,7 @@ func _flits(m: StringName, beter: bool) -> void:
 	if oud != null and oud.is_valid():
 		oud.kill()
 
-	var vanaf := UiKit.GROEN if beter else UiKit.ROOD
+	var vanaf := UiKit.GROEN_OP_LICHT if beter else UiKit.ROOD_OP_LICHT
 	var doel := _meter_kleur(m) if l.text != "?" else UiKit.GRIJS_OP_LICHT
 	l.pivot_offset = l.size * 0.5
 	l.scale = Vector2(1.5, 1.5)

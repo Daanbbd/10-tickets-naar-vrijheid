@@ -411,7 +411,9 @@ func _werk_regels_bij() -> void:
 ## verschijnt — hetzelfde moment waarop een luisterende speler 'm zou lezen.
 ## Geen aankondiging vooraf, geen los label erbij: de tekst zelf is de tell.
 func _markeer_nuttige_regel(l: Label) -> void:
-	l.add_theme_color_override("font_color", UiKit.GROEN)
+	# GROEN_OP_LICHT, niet GROEN: de kaart staat op UiKit.PANEL (licht), en
+	# GROEN zelf is een derivaat voor een donkere ondergrond (P3).
+	l.add_theme_color_override("font_color", UiKit.GROEN_OP_LICHT)
 	l.pivot_offset = Vector2(0, l.size.y * 0.5)
 	var tw := create_tween()
 	tw.tween_property(l, "scale", Vector2(1.06, 1.06), 0.12) \

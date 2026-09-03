@@ -2177,6 +2177,23 @@ func _test_leesbaarheid() -> void:
 		var v := _contrast(UiKit.GRIJS_OP_LICHT, op_licht[naam] as Color)
 		_ok(v >= AA, "GRIJS_OP_LICHT haalt op %s maar %.2f:1, AA vraagt %.1f" % [naam, v, AA])
 
+	# P3: dezelfde eis voor GROEN/ROOD, dezelfde reden. GROEN en ROOD zelf
+	# zijn derivaten voor een DONKERE ondergrond (SCHERM_NACHT, INK) en horen
+	# daar te blijven; wie ze op een licht paneel nodig heeft gebruikt
+	# GROEN_OP_LICHT/ROOD_OP_LICHT. Ook de postit-tints erbij: het scrumbord
+	# zet "klaar" op precies die kleuren, per vakgebied.
+	var op_licht_postit := op_licht.duplicate()
+	op_licht_postit["POSTIT"] = UiKit.POSTIT
+	op_licht_postit["ROZE_TINT"] = UiKit.ROZE_TINT
+	op_licht_postit["BLUEBIRD_TINT"] = UiKit.BLUEBIRD_TINT
+	op_licht_postit["GROEN_TINT"] = UiKit.GROEN_TINT
+	op_licht_postit["ORANJE_TINT"] = UiKit.ORANJE_TINT
+	for naam: String in op_licht_postit:
+		var vg := _contrast(UiKit.GROEN_OP_LICHT, op_licht_postit[naam] as Color)
+		_ok(vg >= AA, "GROEN_OP_LICHT haalt op %s maar %.2f:1, AA vraagt %.1f" % [naam, vg, AA])
+		var vr := _contrast(UiKit.ROOD_OP_LICHT, op_licht_postit[naam] as Color)
+		_ok(vr >= AA, "ROOD_OP_LICHT haalt op %s maar %.2f:1, AA vraagt %.1f" % [naam, vr, AA])
+
 	# `INK.lightened(0.14)` is de opgelichte rij van de karakterselectie: het
 	# lichtste donkere vlak in het spel en dus de krapste van de twee kanten.
 	var op_donker := {
