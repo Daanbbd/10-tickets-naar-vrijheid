@@ -812,13 +812,15 @@ static func _wie(t: TicketDef) -> String:
 	# zelf" terwijl de wijzer naar De Vloer wees. Twee aanwijzingen die elkaar
 	# tegenspreken, op het enige moment in de dag dat het erop aankomt.
 	#
-	# Zelfde zinsvorm als bij een collega hieronder ("Haal Victor uit De
-	# Vloer"), dus de naam van het item gaat er onbewerkt in: een lidwoord
+	# Zelfde zinsvorm als bij een collega hieronder ("Haal Victor bij Team
+	# Helio"), dus de naam van het item gaat er onbewerkt in: een lidwoord
 	# erbij verzinnen gaat mis op het eerste onzijdige item.
 	var mist: ItemDef = QuestEngine.ontbrekend_item(t.id)
 	if mist != null:
-		var plek := _zone_naam(mist.zone)
-		return "Haal %s%s" % [mist.name, "" if plek == "" else " uit %s" % plek]
+		# Een item heeft geen tegel in zijn definitie, alleen een zone, dus hier
+		# komt altijd de zone-staart.
+		var plek := _aanduiding(mist.zone, Vector2i(-1, -1))
+		return "Haal %s%s" % [mist.name, "" if plek == "" else " %s" % plek]
 	if stand == GameEnums.HelperStand.EIGEN:
 		return "Jij kunt dit zelf"
 	var d: NpcDef = GameData.npc(QuestEngine.required_helper(t.id))
@@ -830,18 +832,59 @@ static func _wie(t: TicketDef) -> String:
 		GameEnums.HelperStand.GEWEEST:
 			return "%s is langs geweest" % d.name
 		_:
-			var waar := _zone_naam(d.zone)
-			return "Haal %s%s" % [d.name, "" if waar == "" else " uit %s" % waar]
+			var waar := _aanduiding(d.zone, d.home_tile)
+			return "Haal %s%s" % [d.name, "" if waar == "" else " %s" % waar]
 
 
-static func _zone_naam(zone_id: StringName) -> String:
+## Hoe dicht bij een bureau-eiland je moet zitten om er "bij" te horen, in
+## tegels tot de rand van het eiland.
+##
+## Niet nul: een bureau is een solide tegel, dus niemand staat er ooit óp — een
+## collega staat er naast, en op De Vloer soms een paar tegels ervandaan omdat
+## zijn standplaats op beloopbare vloer moet liggen. Zes is ruim genoeg voor de
+## huidige standplaatsen en nog altijd korter dan de afstand tussen twee
+## eilanden, en er wordt hoe dan ook het dichtste eiland gekozen.
+const PLEK_RADIUS := 6
+
+
+## De staart van "Haal Victor ___": "uit Summit", "bij Team Key",
+## "bij de bureaus".
+##
+## Het voorzetsel staat in de data en niet in deze functie, want het verschilt
+## per plek. Hier stond `" uit %s" % zone_naam`, en op de open werkvloer gaf dat
+## "Haal Victor uit De Vloer" — je haalt niemand uit een vloer. Zit de collega
+## bij een bureau-eiland, dan noemt hij dat eiland: dat is een aanwijzing waar
+## je ook echt naartoe kunt lopen, waar de zone 68 tegels breed is.
+static func _aanduiding(zone_id: StringName, tegel: Vector2i) -> String:
+	if tegel.x >= 0:
+		var plek := _plek_bij(tegel)
+		if not plek.is_empty():
+			return String(plek.get("aanduiding", ""))
 	if zone_id == &"":
 		return ""
 	for z: Variant in (GameData.floor_data.get("zones", []) as Array):
 		var d := z as Dictionary
 		if StringName(d.get("id", "")) == zone_id:
-			return String(d.get("name", ""))
+			return String(d.get("aanduiding", ""))
 	return ""
+
+
+## Het dichtstbijzijnde bureau-eiland binnen `PLEK_RADIUS`, of leeg.
+static func _plek_bij(tegel: Vector2i) -> Dictionary:
+	var beste: Dictionary = {}
+	var beste_d := PLEK_RADIUS + 1
+	for raw: Variant in (GameData.floor_data.get("plekken", []) as Array):
+		var p := raw as Dictionary
+		var r: Array = p.get("rect", [])
+		if r.size() != 4:
+			continue
+		var dx := maxi(maxi(int(r[0]) - tegel.x, 0), tegel.x - int(r[2]))
+		var dy := maxi(maxi(int(r[1]) - tegel.y, 0), tegel.y - int(r[3]))
+		var d := dx + dy
+		if d < beste_d:
+			beste_d = d
+			beste = p
+	return beste
 
 
 # --- Reacties -------------------------------------------------------------
@@ -890,8 +933,8 @@ func _refresh_objective() -> void:
 	# binnenlopen iets oplevert. Hetzelfde getal als de lege bordtekst
 	# (undiscovered_count, niet done_count), zodat HUD en bord elkaar niet
 	# tegenspreken.
-	# `locked_count()` erbij, om dezelfde reden als op het bord: staat er niets
-	# meer op de vloer maar wacht er nog werk achter ander werk, dan is "loop
+	# `locked_count()` erbij, om dezelfde reden als op het bord: is er niets
+	# meer te vinden maar wacht er nog werk achter ander werk, dan is "loop
 	# een ruimte in" het verkeerde advies — er is dan niets te vinden, er is
 	# iets af te maken.
 	var rest := QuestEngine.undiscovered_count()
@@ -899,7 +942,11 @@ func _refresh_objective() -> void:
 	if rest <= 0 and op_slot > 0:
 		_zet_objective("Niets meer te vinden. %d wacht op ander werk." % op_slot)
 		return
-	_zet_objective("Nog %d op de vloer. Loop een ruimte in." % rest)
+	# "op de vloer" stond hier, en dat was een idioom ("nog niet gevonden,
+	# ergens in het gebouw") dat botste met de zone die letterlijk De Vloer
+	# heet: je las het als "vier tickets in díe hoek" in plaats van "vier
+	# tickets nog nergens gezien".
+	_zet_objective("Nog %d in het kantoor. Loop een ruimte in." % rest)
 
 
 ## De doelregel zetten, en hem laten zien als hij iets nieuws zegt.

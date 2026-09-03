@@ -12,7 +12,7 @@ extends Control
 ## Sinds alle tickets tegelijk openstaan is dit je inventaris in plaats van een
 ## voortgangslijst. "Welke bestaan er" is geen informatie meer; "welke heb ik
 ## gevonden" wel. Dus staan hier alleen de briefjes die je bij je hebt, met
-## eronder hoeveel er nog ergens op de vloer liggen — dat leest als een reden om
+## eronder hoeveel er nog ergens in het kantoor liggen — dat leest als een reden om
 ## te gaan kijken, waar negen geblokkeerde briefjes als negen weigeringen lazen.
 ##
 ## Een briefje aantikken kiest het: dat wordt je doel, en de doelregel, de hint
@@ -166,7 +166,10 @@ func _restregel() -> String:
 		if op_slot > 0:
 			return "Alles gevonden. Nog %d wacht op ander werk." % op_slot
 		return "Alles gevonden."
-	var regel := "Nog %s op de vloer." % ("één" if rest == 1 else str(rest))
+	# Niet "op de vloer": dat idioom botst met de zone die zo heet. Zelfde
+	# formulering als de doelregel in de HUD, want die twee mogen elkaar niet
+	# tegenspreken.
+	var regel := "Nog %s in het kantoor." % ("één" if rest == 1 else str(rest))
 	if op_slot > 0:
 		# "6 wacht nog" stond hier: het getal bepaalt het werkwoord, niet het
 		# ticket. Eén wacht, meer wachten.
