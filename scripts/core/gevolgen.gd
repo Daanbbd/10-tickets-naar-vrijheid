@@ -176,10 +176,15 @@ static func finale_start() -> Dictionary:
 		getest += 1
 	if Session.get_flag(&"gevolg_danny_gemist"):
 		getest -= 1
-	# Het paard zelf nooit gezien hebben is een geldige route (Bastiaans
-	# vakgebiedvoordeel), maar wel een route met minder eigen legwerk erin.
-	if Session.get_flag(&"gevolg_paard_gemist"):
-		getest -= 1
+	# P1-6: hier stond een `getest -= 1` bij `gevolg_paard_gemist`. Alleen
+	# Bastiaans vakgebiedvoordeel (`geen_zoektocht`) kan die vlag ooit zetten —
+	# zonder de trait blokkeert `_wh_paarden()` de route via het bord juist
+	# (`ticket_controller.gd`), dus "het paard zelf nooit gezien" gebeurde
+	# nooit door onoplettendheid, alleen door de trait te gebruiken. Dat botst
+	# met de harde regel in `TraitModifier`: een trait geeft alleen voordeel,
+	# nooit een straf. De vlag blijft staan (Bastiaan krijgt er een eigen
+	# regel over — "wist ik meteen waar hij zat" in dialogue/npcs.json), maar
+	# kost geen `getest` meer.
 
 	# Scope is wat je beloofd hebt, niet wat je gebouwd hebt: hoe meer wensen
 	# je meenam, hoe meer er in de oplevering mis kan gaan.

@@ -325,12 +325,25 @@ func _test_gevolgen() -> void:
 		GameEnums.Outcome.SUCCESS, 1, {&"paard": true, &"zelf_gevonden": true}))
 	_ok(not Session.get_flag(&"gevolg_paard_gemist"),
 		"het paard zelf vinden zet gevolg_paard_gemist toch")
+	# P1-6: dit is de enige route waarlangs gevolg_paard_gemist ooit true wordt
+	# (Bastiaans vakgebiedvoordeel, via _wh_paarden()'s geen_zoektocht — zonder
+	# de trait blokkeert die functie de route via het bord juist). Een trait
+	# geeft alleen voordeel, nooit een straf (TraitModifier), dus getest mag
+	# door deze vlag niet zakken. `clampi(getest, 0, 3)` in finale_start() zou
+	# een straf op een toch al lege getest-teller onzichtbaar maken, dus eerst
+	# gevolg_cro_gehaald erbij zodat de meting niet op de bodemklem struikelt.
+	Gevolgen.boek(&"mg_cro", MinigameResult.make(&"mg_cro",
+		GameEnums.Outcome.SUCCESS, 0, {&"boven_doel": true, &"conversie": 3.4}))
+	var getest_voor := int(Gevolgen.finale_start()[&"getest"])
+	_ok(getest_voor > 0, "P1-6: testopzet deugt niet, getest_voor zit al op de bodemklem")
 	Gevolgen.boek(&"mg_paarden", MinigameResult.make(&"mg_paarden",
 		GameEnums.Outcome.SUCCESS, 1, {&"paard": true, &"zelf_gevonden": false}))
 	_ok(Session.get_flag(&"gevolg_paard_gemist"),
 		"het paard niet zelf vinden zet gevolg_paard_gemist niet")
 	_ok(not bool(Gevolgen.getal(&"paard_zelf_gevonden", true)),
 		"paard_zelf_gevonden komt niet in de gevolgen terecht")
+	_ok(int(Gevolgen.finale_start()[&"getest"]) == getest_voor,
+		"P1-6: gevolg_paard_gemist kost getest — Bastiaans voordeel is weer een straf")
 
 	# --- de finale begint met de opgetelde dag ----------------------------
 	var slecht := Gevolgen.finale_start()
