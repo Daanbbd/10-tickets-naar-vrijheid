@@ -122,9 +122,11 @@ func _ready() -> void:
 	# en zet de ongelezen-teller erop. Na besturing.setup(), want die knop
 	# bestaat pas dan.
 	hud.set_besturing(besturing)
-	# De besturingskaart legt uit hoe je loopt; zodra de speler zelf een stick
-	# maakt, is die uitleg klaar en mag hij niet langer over de duimzone liggen.
-	besturing.stick_begonnen.connect(hud.hide_controls_card)
+	# Geen `besturing.stick_begonnen.connect(hud.hide_controls_card)` meer. Dat
+	# hoorde bij de strook die onderaan lag en die de duimzone niet mocht
+	# afdekken; de uitleg is nu een modaal venster dat op zijn eigen knop
+	# weggaat. En de tik die dat venster opvangt maakt geen stick, want
+	# `chrome_vlakken()` geeft de verduistering mee aan `meld_chrome()`.
 	npc_layer.spawn_initial()
 	camera.setup(player, builder.world_rect())
 	# De wereld zakt onder de HUD-chips vandaan. De HUD meet zijn eigen balk; dit
@@ -320,7 +322,12 @@ func _intro_beat() -> void:
 		await hud.toon_nieuw_briefje(nieuw[0], 2.6)
 	Session.unlock_input()
 
-	hud.show_controls_card()
+	# Alleen bij een nieuwe dag. Wie "Doorgaan" heeft gekozen weet al hoe hij
+	# loopt, en een modaal venster dat je bij elke hervatting opnieuw moet
+	# wegklikken is een tolpoort. `Session.hervat` en niet `done_count()`: wie
+	# opnieuw laadt vóór zijn eerste opgeloste ticket staat ook op nul.
+	if not Session.hervat:
+		hud.show_controls_card()
 
 
 ## QA: `-- --speler=x --kijk=<x>,<y>` zet de speler op die tegel en kijkt verder
@@ -786,17 +793,18 @@ func _qa_hint() -> void:
 	Bus.hint_requested.emit()
 
 
-## QA: `--kaart` zet de besturingskaart in beeld en laat hem staan.
+## QA: `--kaart` zet de besturingsuitleg in beeld.
 ##
-## Zonder deze vlag was de kaart alleen te zien door de intro uit te spelen of
+## Zonder deze vlag is de uitleg alleen te zien door de intro uit te spelen of
 ## F1 in te drukken, en dus niet met een `--shot` te controleren. Dat is precies
 ## het scherm dat vertelt hoe het spel werkt, dus dat hoort in beeld te kunnen
-## komen zonder een mens aan het toetsenbord.
+## komen zonder een mens aan het toetsenbord. Geen duur meer: het venster blijft
+## staan tot iemand op "Ik begrijp het" drukt.
 func _qa_kaart() -> void:
 	if "--kaart" not in OS.get_cmdline_user_args():
 		return
 	await get_tree().create_timer(0.5).timeout
-	hud.show_controls_card(600.0)
+	hud.show_controls_card()
 
 
 func _on_player_tile(t: Vector2i) -> void:

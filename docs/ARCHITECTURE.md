@@ -246,6 +246,19 @@ arrangementen en worden bij het genereren meegeprint.
   wel — voor elke `PanelContainer` en elke `Button`, tegen `get_visible_rect()`,
   en met een uitzondering voor wat in een klemmende ouder hangt (de
   personagerijen staan in een `ScrollContainer` en horen eronderuit te lopen).
+- **De besturingsuitleg is een modaal venster, geen strook die wegfaadt.** Hij
+  lag onderaan, negen seconden lang, en verdween bovendien zodra je zelf een
+  stick maakte (`besturing.stick_begonnen`). Wie het spel opstart en meteen zijn
+  duim neerzet — precies wat je op een telefoon doet — had de enige uitleg die
+  het spel heeft dus nooit gezien. Nu staat hij midden op het scherm met één
+  knop ("Ik begrijp het") en blijft hij staan tot die knop ingedrukt is.
+
+  Twee dingen die daarbij horen. De verduistering gaat mee in
+  `Hud.chrome_vlakken()`, want `Besturing._input()` loopt vóór de GUI en zou
+  onder het paneel dat de stick uitlegt een stick achterlaten. En hij komt
+  alleen bij een nieuwe dag op: `Session.hervat` (gezet in `load_from_disk()`,
+  gewist in `start_new()`) en niet `done_count() > 0` — wie hervat vóór zijn
+  eerste opgeloste ticket staat ook op nul.
 - **Vier minigames leunen op `emulate_mouse_from_touch`.** `mg_scope`,
   `mg_cableboard`, `mg_uitlijnen` en `mg_pijplijn` lezen in hun `_gui_input()`
   een `InputEventMouseButton`. Dat werkt op een telefoon omdat Godot standaard

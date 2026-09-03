@@ -25,7 +25,6 @@ const ROL_DUUR := 0.6
 const NA_ROL := 0.15
 ## Hoe lang "+45 min" blijft staan terwijl hij omhoog drijft.
 const PLUS_DUUR := 0.9
-const KAART_ZICHTBAAR := 9.0
 
 ## Hoe lang de doelregel blijft staan als hij vanzelf verschijnt.
 ##
@@ -182,7 +181,14 @@ var _toasts: VBoxContainer
 var _hint_briefje: PanelContainer = null
 var _board: Control
 var _bord: Scrumbord
+## De besturingsuitleg: een modaal venster met één knop. `_card_root` is de
+## schermvullende laag die de tik opvangt, `_card_dim` de verduistering
+## eronder (ook wat `chrome_vlakken()` doorgeeft, zodat een tik hierop geen
+## joystick achterlaat), `_card` het paneel en `_card_knop` de enige uitweg.
+var _card_root: Control
+var _card_dim: ColorRect
 var _card: PanelContainer
+var _card_knop: Button
 var _card_tween: Tween = null
 var _nudge: Timer
 
@@ -209,7 +215,9 @@ func setup() -> void:
 	_bouw_bovenstapel(veilig)
 	_bouw_onderstapel(veilig)
 	_bouw_plus(veilig)
-	_build_card(veilig)
+	# Aan `root`: de uitleg is een schermvullende overlay en hoort tot in de
+	# notch door te lopen, net als het ticketbord.
+	_build_card(root)
 	_build_board(root)
 
 	_nudge = Timer.new()
@@ -422,6 +430,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		toggle_controls_card()
 		return
+	# De uitleg ligt over alles heen, dus `cancel` sluit die eerst — anders zou
+	# Esc het pauzemenu openen achter een modaal venster dat nog open staat.
+	if _card_root != null and _card_root.visible and event.is_action_pressed("cancel"):
+		get_viewport().set_input_as_handled()
+		hide_controls_card()
+		return
 	# Esc/terug legt eerst de hint weg. Anders is de enige uitweg uit een briefje
 	# dat blijft staan het aanraakscherm, en dat heeft een laptop niet.
 	if _hint_briefje != null and event.is_action_pressed("cancel"):
@@ -432,38 +446,51 @@ func _unhandled_input(event: InputEvent) -> void:
 # --- Besturingskaart -----------------------------------------------------
 
 func _build_card(root: Control) -> void:
+	# Aan `root` en niet aan de veilige laag: een schermvullende overlay hoort
+	# door te lopen tot in de notch, net als het ticketbord. Zie `setup()`.
+	_card_root = UiKit.fill_viewport(Control.new())
+	_card_root.visible = false
+	_card_root.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(_card_root)
+
+	_card_dim = UiKit.dimmer(0.72)
+	_card_root.add_child(_card_dim)
+
 	_card = PanelContainer.new()
-	_card.add_theme_stylebox_override("panel", UiKit.panel(UiKit.PANEL_DARK, UiKit.INK))
-	# De kaart is een brede strook onderaan. Dat stond er als `offset_left =
-	# -(192 - MARGE * 2)` bij een rechterrand op `-MARGE`, wat op precies één
-	# canvasbreedte neerkomt op "vier pixels van links": een viewportmaat die in
-	# code was uitgerekend in plaats van uit de viewport gehaald. Twee ankers
-	# zeggen hetzelfde en blijven kloppen als het canvas verandert.
-	_card.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_card.anchor_top = 1.0
-	_card.anchor_bottom = 1.0
+	_card.add_theme_stylebox_override("panel",
+		UiKit.panel(UiKit.PANEL_DARK, UiKit.BLUEBIRD_BRIGHT, 2))
+	# Gecentreerd, en breed op de marges na. Twee ankers zeggen dat en blijven
+	# kloppen als het canvas verandert; een uitgerekende viewportmaat niet.
+	_card.anchor_left = 0.0
+	_card.anchor_right = 1.0
+	_card.anchor_top = 0.5
+	_card.anchor_bottom = 0.5
 	_card.offset_left = MARGE
 	_card.offset_right = -MARGE
-	# Ook boven de duimzone: deze kaart legt juist die knoppen uit, dus hij
-	# mag ze niet afdekken terwijl hij in beeld staat. Groeit naar boven, zodat
-	# een vijfde regel de balk niet alsnog afdekt.
-	_card.offset_top = -78 - DUIMZONE
-	_card.offset_bottom = -MARGE - DUIMZONE
-	_card.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_card.modulate.a = 0.0
-	_card.visible = false
-	# Nooit een tik opeten. De kaart is een uitleg en geen bedieningsvlak, en
-	# hij ligt over de onderste strook waar de duimzone begint; met de
-	# PanelContainer-standaard (MOUSE_FILTER_STOP) slikt hij de druk die de
-	# stick had moeten maken. IGNORE geldt ook voor de labels erin.
-	_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(_card)
+	_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_card_root.add_child(_card)
 
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 1)
+	v.add_theme_constant_override("separation", 3)
 	_card.add_child(v)
+
+	var kop := UiKit.label("ZO BESTUUR JE DIT", UiKit.FS_BODY, UiKit.BLUEBIRD_BRIGHT)
+	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(kop)
+
 	for regel: String in _kaartregels():
 		v.add_child(UiKit.label(regel, UiKit.FS_SMALL, UiKit.WIT))
+
+	v.add_child(UiKit.spacer(3))
+
+	# Eén knop, en die is de enige uitweg: dit is het enige moment in het spel
+	# waarop iemand deze vier regels gelezen moet hebben. Vandaar een modaal
+	# venster en niet de strook die hier eerst stond — die faadde na negen
+	# seconden weg, en verdween bovendien zodra je begon te lopen. Wie het
+	# spel opstart en meteen zijn duim neerzet had de uitleg dus nooit gezien.
+	_card_knop = UiKit.knop_primair("Ik begrijp het", UiKit.FS_BODY)
+	_card_knop.pressed.connect(hide_controls_card)
+	v.add_child(_card_knop)
 
 
 ## Eén kaart, en die noemt alleen wat je niet kunt zien.
@@ -488,42 +515,41 @@ func _kaartregels() -> Array[String]:
 	]
 
 
-## Laat de kaart even zien en fade hem daarna weg. F1 haalt hem terug.
-func show_controls_card(duur: float = KAART_ZICHTBAAR) -> void:
-	if _card_tween != null and _card_tween.is_running():
-		_card_tween.kill()
-	_card.visible = true
-	_card_tween = create_tween()
-	_card_tween.tween_property(_card, "modulate:a", 1.0, 0.25)
-	_card_tween.tween_interval(duur)
-	_card_tween.tween_property(_card, "modulate:a", 0.0, 0.6)
-	_card_tween.tween_callback(func() -> void: _card.visible = false)
-
-
-## Weg met de kaart, nu. Aangeroepen zodra de speler zelf een stick maakt: de
-## kaart legt uit hoe je loopt, dus wie loopt heeft hem niet meer nodig — en
-## hij hoort niet over de duimzone te blijven liggen. Doet niets als hij al weg
-## is, zodat dit veilig bij elke stick opnieuw mag komen.
-func hide_controls_card() -> void:
-	if not _card.visible:
+## Zet de uitleg in beeld. Blijft staan tot de speler hem wegklikt.
+##
+## Geen tijdsduur meer: dit was een strook die na negen seconden wegfaadde en
+## bij de eerste stick al eerder verdween. De enige uitleg die het spel heeft
+## mag niet aflopen terwijl je nog aan het lezen bent.
+func show_controls_card() -> void:
+	if _card_root.visible:
 		return
+	_card_root.visible = true
+	_card_root.modulate.a = 0.0
 	if _card_tween != null and _card_tween.is_running():
 		_card_tween.kill()
 	_card_tween = create_tween()
-	_card_tween.tween_property(_card, "modulate:a", 0.0, 0.2)
-	_card_tween.tween_callback(func() -> void: _card.visible = false)
+	_card_tween.tween_property(_card_root, "modulate:a", 1.0, 0.2)
+	_card_knop.grab_focus()
+
+
+## Weg met de uitleg. Doet niets als hij al weg is, zodat dit veilig langs meer
+## dan één route mag komen: de knop, `cancel`, en F1 tijdens development.
+func hide_controls_card() -> void:
+	if not _card_root.visible:
+		return
+	AudioDirector.play_ui(&"klik")
+	if _card_tween != null and _card_tween.is_running():
+		_card_tween.kill()
+	_card_tween = create_tween()
+	_card_tween.tween_property(_card_root, "modulate:a", 0.0, 0.2)
+	_card_tween.tween_callback(func() -> void: _card_root.visible = false)
 
 
 func toggle_controls_card() -> void:
-	if _card.visible and _card.modulate.a > 0.5:
-		if _card_tween != null and _card_tween.is_running():
-			_card_tween.kill()
-		_card_tween = create_tween()
-		_card_tween.tween_property(_card, "modulate:a", 0.0, 0.2)
-		_card_tween.tween_callback(func() -> void: _card.visible = false)
+	if _card_root.visible:
+		hide_controls_card()
 	else:
-		show_controls_card(20.0)
-	AudioDirector.play_ui(&"klik")
+		show_controls_card()
 
 
 # --- Ticketbord -----------------------------------------------------------
@@ -968,6 +994,12 @@ func chrome_vlakken() -> Array[Control]:
 		uit.append(_teller_chip)
 	if _klok_chip != null:
 		uit.append(_klok_chip)
+	# De verduistering van de besturingsuitleg. `_op_chrome()` kijkt per
+	# gebeurtenis naar `visible`, dus dit vlak doet alleen iets zolang het
+	# venster open staat — en dan hoort een tik erop geen stick te maken onder
+	# het paneel dat net uitlegt hoe die stick werkt.
+	if _card_dim != null:
+		uit.append(_card_dim)
 	return uit
 
 

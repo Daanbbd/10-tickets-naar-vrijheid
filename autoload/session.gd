@@ -47,6 +47,16 @@ var worked_minutes: int = 0
 ## Hoeveel minuten je officieel geboekt hebt. Loopt bewust achter op
 ## worked_minutes: dat verschil is waar Dirk over komt praten.
 var booked_minutes: int = 0
+## Is deze sessie van schijf gekomen in plaats van net begonnen?
+##
+## Staat bewust **niet** in de save: het gaat over hoe deze speelbeurt is
+## gestart, niet over wat je hebt gedaan. `main.gd` leest het voor de
+## besturingsuitleg — die hoort bij een nieuwe dag en niet bij een dag die je
+## halverwege oppakt, want dan heb je al leren lopen. `done_count() > 0` is
+## daar geen antwoord op: wie opnieuw laadt vóór zijn eerste opgeloste ticket
+## staat op nul en zou de uitleg dan alsnog krijgen.
+var hervat: bool = false
+
 ## Hoeveel systemen de invoer tegelijk op slot hebben. De enige bron van
 ## waarheid; `input_locked` is er niets anders dan een lezing van.
 var _sloten: int = 0
@@ -60,6 +70,7 @@ var input_locked: bool : get = _is_input_locked, set = _weiger_directe_zet
 # --- Sessiebeheer ---------------------------------------------------------
 
 func start_new(chosen: StringName) -> void:
+	hervat = false
 	character_id = chosen
 	flags.clear()
 	inventory.clear()
@@ -352,6 +363,7 @@ func load_from_disk() -> bool:
 	if d.is_empty():
 		return false
 	from_dict(d)
+	hervat = true
 	return true
 
 
