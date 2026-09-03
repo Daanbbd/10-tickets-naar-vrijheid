@@ -319,6 +319,20 @@ func _intro_beat() -> void:
 	# keer dat "een ruimte binnenlopen levert een ticket op" iets doet in plaats
 	# van iets beweert.
 	_intro_loopt = false
+
+	# Ochtendbegroeting. Daan is de enige van de zeven personages die nooit
+	# meespreekt bij de stand-up (BBD-202, de planning, is zíjn ticket — geen
+	# sprekersrol in `mg_planning`) en die dus, tenzij je hem zelf speelt, de
+	# hele ochtend ongezien blijft. Speel je hem zelf, dan groet hij zichzelf
+	# niet: dan is er niemand die het overneemt, en dat is geen gat, want de
+	# game gaat over zíjn dag.
+	if Session.character_id != &"daan":
+		var daan_def: CharacterDef = GameData.character(&"daan")
+		if daan_def != null:
+			await dialogue.say(daan_def.name,
+					"Goedemorgen. Sprint veertien is al bezig — ik zie je zo bij het bord.",
+					&"daan")
+
 	Session.lock_input()
 	var nieuw := _vind_werk(_uitgestelde_zone)
 	if not nieuw.is_empty():
