@@ -109,8 +109,19 @@ func _ready() -> void:
 	# Besturing.setup() draaide hierboven al, vóórdat de speler bestond — de
 	# tik-hit-test heeft player.probe nodig, dus die referentie komt pas nu.
 	besturing.set_speler(player)
+	# De chips bovenin zijn chrome, geen wereld: een tik erop mag geen interactie
+	# starten met het object waar je toevallig naast staat.
+	besturing.meld_chrome(hud.chrome_vlakken())
+	# En de andere kant op: de HUD laat een nieuw ticket naar de ▤-knop vliegen
+	# en zet de ongelezen-teller erop. Na besturing.setup(), want die knop
+	# bestaat pas dan.
+	hud.set_besturing(besturing)
 	npc_layer.spawn_initial()
 	camera.setup(player, builder.world_rect())
+	# De wereld zakt onder de HUD-chips vandaan. De HUD meet zijn eigen balk; dit
+	# getal staat daarom niet twee keer in de codebase. Na camera.setup(), want
+	# die zet de limieten en offset gaat daar juist bewust voorbij.
+	camera.zak_onder_hud(hud.bovenband_hoogte())
 	# Generaliseert Dirk: welke collega's langskomen, wat er stukgaat, staat in
 	# data/storingen.json in plaats van in een naam-check. Na de speler en de
 	# NPC's, want de node moet ze allebei kunnen aanspreken.
@@ -119,8 +130,13 @@ func _ready() -> void:
 	Bus.ticket_completed.connect(_on_ticket_completed)
 	Bus.ticket_state_changed.connect(func(_a: StringName, _b: GameEnums.TicketState) -> void: _refresh_marker())
 	Bus.ticket_completed.connect(func(_a: StringName, _b: MinigameResult) -> void: _refresh_marker())
-	Bus.follower_joined.connect(func(_a: StringName) -> void: _refresh_marker())
-	Bus.follower_released.connect(func(_a: StringName) -> void: _refresh_marker())
+	# `_volgers_veranderd()` ook: het bijschrift op de tikmarker draagt de
+	# helperstand ("(Victor)" -> "(met Victor)"), en dat kaartje wordt alleen
+	# herbouwd als de probe opnieuw uitstuurt. Sluit Victor aan terwijl je al
+	# voor het ticket staat, dan blijft er anders "(Victor)" staan — je moet
+	# hem ophalen — bij een collega die naast je staat.
+	Bus.follower_joined.connect(func(_a: StringName) -> void: _volgers_veranderd())
+	Bus.follower_released.connect(func(_a: StringName) -> void: _volgers_veranderd())
 	Bus.flag_changed.connect(func(_a: StringName, _b: bool) -> void: _refresh_marker())
 	Bus.interaction_prompt_changed.connect(_op_tik_doel_veranderd)
 	# Verbergen, niet vernietigen: InteractionProbe.refresh() wordt nergens
@@ -168,6 +184,14 @@ func _ready() -> void:
 ## en `new()` niet, leefden er tot het eind van die frame twee markers naast
 ## elkaar, tegen de belofte van `objective_marker.gd` in; en de deining begon
 ## elke keer opnieuw bij nul, wat je als een tik in beeld zag.
+## Een collega sluit aan of loopt weg: de wijzer verandert, en de tekst op de
+## tikmarker ook.
+func _volgers_veranderd() -> void:
+	_refresh_marker()
+	if player != null:
+		player.probe.refresh()
+
+
 func _refresh_marker() -> void:
 	var doel := _doel_node()
 	if doel == _doelwit and is_instance_valid(_doelwit):
@@ -221,20 +245,30 @@ func _mark_node(n: Node2D) -> void:
 	_doelwit = n
 
 
-## Volgt hetzelfde signaal als de HUD-prompt en de (voormalige) actieknop: het
-## huidige interactable van de speler. Alleen kern-objecten die nog nooit
-## aangetikt zijn krijgen de ring — zie `Interactable.should_show_tik_marker()`.
-func _op_tik_doel_veranderd(_text: String, shown: bool, _world_id: StringName, _verb: String) -> void:
+## Volgt het huidige interactable van de speler, en draagt sinds kort ook de
+## tekst: de prompt die eerst onderaan het scherm in `Hud._prompt` stond staat nu
+## op het object zelf. Zie de kop van `tap_marker.gd`.
+##
+## De marker bestaat dus zolang er iets binnen bereik is; de **ring** licht
+## alleen op bij een kern-object dat nog nooit is aangetikt — zie
+## `Interactable.should_show_tik_marker()`. Zonder dat onderscheid zou elke
+## poster in het kantoor gaan pulseren zodra hij zijn naam moest tonen.
+func _op_tik_doel_veranderd(text: String, shown: bool, world_id: StringName, _verb: String) -> void:
 	if is_instance_valid(_tikmarker):
 		_tikmarker.queue_free()
 	_tikmarker = null
 	if not shown:
 		return
 	var it := player.probe.current()
-	if it == null or not it.should_show_tik_marker():
+	if it == null:
 		return
 	_tikmarker = TapMarker.new()
 	it.add_child(_tikmarker)
+	# Wie dit ticket bezit hoort zichtbaar te zijn vóór de interactie, niet pas
+	# nadat je er vergeefs op getikt hebt. Die regel stond in de HUD en hoort nu
+	# hier, bij de tekst waar hij aan vast zit.
+	_tikmarker.zet("%s%s" % [text, Hud.eigenaar_suffix(world_id)],
+		it.should_show_tik_marker())
 
 
 ## De kompasstrip in de HUD: waar sta jij, waar staat je doel, op ware schaal.
@@ -608,9 +642,10 @@ func _examine(it: Interactable) -> void:
 	if it.dialogue_id != &"":
 		await dialogue.play(it.dialogue_id, it.label)
 	if it.action == &"board":
-		# Aan het echte bord sta je ernaast: dat is de close-up. TAB blijft de
-		# snelle blik van overal.
-		hud.toggle_board(true)
+		# Het fysieke bord in de wereld opent hetzelfde scherm als de ▤-knop.
+		# Hier stond `toggle_board(true)` met een commentaar over een close-up
+		# die nooit is gebouwd — zie `Hud.toggle_board()`.
+		hud.toggle_board()
 
 
 # --- Opbouw ---------------------------------------------------------------
@@ -741,7 +776,7 @@ func _on_player_tile(t: Vector2i) -> void:
 		_zone_id = zid
 		_tint_zone(String(z.get("light", "neutraal")))
 		Bus.zone_entered.emit(zid, String(z.get("name", "")))
-		_vind_werk(zid)
+		_meld_vondst(_vind_werk(zid), String(z.get("name", "")))
 	if zid == &"z10_weekend":
 		_weekend_duwt_terug()
 
@@ -749,11 +784,10 @@ func _on_player_tile(t: Vector2i) -> void:
 ## Een ruimte binnenlopen levert het werk op dat daar ligt. Dat is de reden om
 ## te verkennen nu niets meer achter een ander ticket zit.
 ##
-## Eén melding voor de hele ruimte, niet één per ticket: op De Vloer hangen er
-## drie, en drie toasts achter elkaar leest als een foutmelding.
-##
-## Retourneert wat er gevonden is, zodat _intro_beat() de vondst die hij heeft
-## uitgesteld zelf kan tonen in plaats van als toast.
+## Vindt alleen, en meldt niets: `_meld_vondst()` doet dat. Die scheiding is er
+## omdat `_intro_beat()` de uitgestelde vondst zelf op het bord laat landen — met
+## de melding erin zou daar tegelijk een briefje naar de ▤-knop vliegen terwijl
+## datzelfde briefje op het open bord neerkomt.
 func _vind_werk(zone_id: StringName) -> Array[TicketDef]:
 	if _intro_loopt:
 		_uitgestelde_zone = zone_id
@@ -761,17 +795,23 @@ func _vind_werk(zone_id: StringName) -> Array[TicketDef]:
 	var nieuw := QuestEngine.discover_in_zone(zone_id)
 	if nieuw.is_empty():
 		return []
-	if nieuw.size() == 1:
-		Bus.toast_requested.emit("Nieuw ticket: %s" % nieuw[0].code, &"ticket")
-	else:
-		var codes: Array[String] = []
-		for t: TicketDef in nieuw:
-			codes.append(t.code)
-		Bus.toast_requested.emit("%d tickets gevonden: %s" % [
-			nieuw.size(), ", ".join(codes)], &"ticket")
-	AudioDirector.play_ui(&"pak")
 	_refresh_marker()
 	return nieuw
+
+
+## Wat je net gevonden hebt, als één melding die naar het ticketbord vliegt.
+##
+## Eén voor de hele ruimte, met de rest als "+2 meer": op De Vloer hangen er
+## drie, en drie briefjes achter elkaar naar dezelfde knop laten vliegen leest
+## als een foutmelding. Dat was hiervoor een kale toast ("Nieuw ticket:
+## BBD-204") — de enige van de vier vondstroutes met een eigen vorm.
+func _meld_vondst(nieuw: Array[TicketDef], zone_naam: String) -> void:
+	if nieuw.is_empty():
+		return
+	if hud == null:
+		AudioDirector.play_ui(&"pak")
+		return
+	hud.toon_ticket_melding(nieuw[0], zone_naam, nieuw.size() - 1)
 
 
 ## Weekend is van het designbureau waar we de vloer mee delen. Je mag er komen,

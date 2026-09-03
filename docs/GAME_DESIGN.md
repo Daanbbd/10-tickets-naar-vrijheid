@@ -132,15 +132,37 @@ normaal doen over een absurde situatie — niet uit grappen per regel.
 
 ## Feedback en voortgang
 
-- **Ticketteller** linksboven, altijd zichtbaar.
-- **Ticketbord** (▤ op de knoppenbalk, sneltoets Tab): je inventaris — de tickets die je gevonden hebt, met
-  zone, of jij het zelf kunt, en een hint. Een briefje aantikken maakt het je
-  doel; eronder staat hoeveel er nog ergens op de vloer liggen.
+- **Ticketteller** linksboven, altijd zichtbaar, met de ▤-glyph van de knop die
+  het bord opent — teller en knop wijzen naar hetzelfde ding.
+- **Een ticket krijgen** is een briefje dat in beeld komt met zijn afzender erop
+  ("Van Victor", of de ruimte waar je het vond) en dat daarna naar de ▤-knop
+  vliegt. Op die knop blijft staan hoeveel je nog niet bekeken hebt.
+
+  Dit is met opzet géén bord dat zelf opengaat. Dat deed het wel, bij elk ticket
+  dat je kreeg: elf keer per speelbeurt nam het spel het scherm over zonder dat
+  er stond waarom, en dan is het bord iets dat jou overkomt in plaats van de
+  plek waar jij kiest. Eén uitzondering blijft: de intro-beat opent het bord één
+  keer, want dat is de enige plek waar het spel moet leren dát het er is.
+- **Ticketbord** (▤ op de knoppenbalk, sneltoets Tab): je inventaris en je
+  keuzescherm — de tickets die je gevonden hebt, met zone, of jij het zelf kunt,
+  en een hint. Een briefje aantikken maakt het je doel, en de knop onderaan zegt
+  dan "Aan de slag" in plaats van "Sluiten". Eronder staat hoeveel er nog ergens
+  op de vloer liggen en hoeveel er nog achter ander werk wachten. Een briefje
+  dat je nog niet bekeken hebt heeft een blauwe rand — dezelfde blauwe als de
+  ring op een object dat je nog nooit hebt aangetikt en als de badge op ▤.
 - **Doelregel**: je keuze, of hoeveel je kunt kiezen, of "loop rond" als je nog
   niets gevonden hebt. De ruimte staat er één keer in: noemt de opdracht de plek
   al ("Haal Victor uit De Vloer"), dan zegt de regel hem niet nóg een keer.
-- **Kompasstrip**, direct onder de doelregel: de hele verdieping op één regel,
-  één pixel per tegel, met jouw plek en je doel erop. Zie Navigatie.
+
+  Hij staat er niet permanent. Hij klapt vier seconden uit zodra hij iets anders
+  te zeggen heeft, en een tik op de ticketteller haalt hem terug. De reden is
+  ruimte: de camera klemt verticaal vast, dus alles wat bovenin permanent staat,
+  staat over de vergaderkamers.
+- **Kompasstrip**, tussen de teller en de klok in: de hele verdieping op één
+  regel, één pixel per tegel, met jouw plek en je doel erop. Zie Navigatie.
+- **Wat een tik doet** staat op het object zelf, bij de pulserende ring: "Praten
+  met Victor", "Onderzoeken". Niet onderaan het scherm — daar stond het toen er
+  nog een actieknop was die de tekst droeg.
 - **Doelwijzer** in de wereld: een driehoekje boven je doel, en zodra dat doel
   buiten beeld ligt een pijl tegen de schermrand met de ruimtenaam en de afstand
   erbij.

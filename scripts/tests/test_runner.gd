@@ -52,6 +52,7 @@ func _ready() -> void:
 	_test_ticket_eigenaarschap()
 	_test_omz_en_absoluta()
 	_test_balkmaat()
+	_test_hudband()
 	_test_leesbaarheid()
 	_test_minigame_chrome()
 	_test_navigatie()
@@ -1811,14 +1812,14 @@ func _test_ankers_bereikbaar() -> void:
 	QuestEngine.start_run(&"daan")
 	_ok(Hud._wie(t03).begins_with("Haal Willem"),
 		"doelregel bij de start: kreeg \"%s\"" % Hud._wie(t03))
-	_ok(Hud._eigenaar_suffix(t03.anchor) == " (Willem)",
-		"prompt bij de start: kreeg \"%s\"" % Hud._eigenaar_suffix(t03.anchor))
+	_ok(Hud.eigenaar_suffix(t03.anchor) == " (Willem)",
+		"bijschrift op de tikmarker bij de start: kreeg \"%s\"" % Hud.eigenaar_suffix(t03.anchor))
 
 	Session.add_follower(&"npc_willem")
 	_ok(Hud._wie(t03) == "Willem loopt mee",
 		"doelregel met Willem erbij: kreeg \"%s\"" % Hud._wie(t03))
-	_ok(Hud._eigenaar_suffix(t03.anchor) == " (met Willem)",
-		"prompt met Willem erbij: kreeg \"%s\"" % Hud._eigenaar_suffix(t03.anchor))
+	_ok(Hud.eigenaar_suffix(t03.anchor) == " (met Willem)",
+		"bijschrift met Willem erbij: kreeg \"%s\"" % Hud.eigenaar_suffix(t03.anchor))
 	_ok(Scrumbord._korte_eigenaar(t03) == "loopt mee",
 		"briefje met Willem erbij: kreeg \"%s\"" % Scrumbord._korte_eigenaar(t03))
 	_ok(Scrumbord._volledige_eigenaar(t03) == "Willem loopt met je mee",
@@ -1829,8 +1830,8 @@ func _test_ankers_bereikbaar() -> void:
 	QuestEngine.start_run(&"willem")
 	_ok(Hud._wie(t03) == "Jij kunt dit zelf",
 		"eigen vakgebied: kreeg \"%s\"" % Hud._wie(t03))
-	_ok(Hud._eigenaar_suffix(t03.anchor) == "",
-		"eigen vakgebied hoort geen naam achter de prompt te zetten")
+	_ok(Hud.eigenaar_suffix(t03.anchor) == "",
+		"eigen vakgebied hoort geen naam achter het bijschrift te zetten")
 
 
 ## Commit 9da2cf2 maakte Bastiaan en Koen speelbaar en verschoof het
@@ -2013,6 +2014,64 @@ func _test_balkmaat() -> void:
 			Hud.DUIMZONE, Besturing.BALK_RUIMTE])
 
 	houder.queue_free()
+
+
+## Wat de HUD bovenin permanent afdekt, en wat daaronder ligt.
+##
+## De verdieping is 26 tegels en de viewport precies even hoog, dus de camera
+## klemt Y volledig vast: chrome bovenin staat over de vergaderkamers. Rij 0 is
+## muur — daar mag het staan. Rij 1 is spel: `deploycomputer` op (1,1),
+## `sprintbord_vloer` op (25,1). `GameCamera.zak_onder_hud()` schuift de wereld
+## daarom een stukje omlaag, en de som van die twee getallen moet kloppen.
+##
+## Dit is het soort getal dat stil verschuift: één regel extra in de bovenbalk,
+## of een groter font, en de vergaderkamers zitten er weer achter zonder dat er
+## iets faalt. Vandaar gemeten en niet geteld — `bovenband_hoogte()` telt zijn
+## eigen chips op, deze test legt de uitkomst vast.
+func _test_hudband() -> void:
+	_kop("de band die de HUD bovenin afdekt")
+
+	var tegel := int(GameData.floor_data.get("tile_size", 16))
+	var hoog := int(ProjectSettings.get_setting("display/window/size/viewport_height", 416))
+
+	var hud := Hud.new()
+	add_child(hud)
+	hud.setup()
+	var band := hud.bovenband_hoogte()
+	var verschuiving := minf(band, GameCamera.MAX_VERSCHUIVING)
+
+	_ok(band > 0.0, "bovenband_hoogte() geeft 0; meet de bovenbalk niets?")
+	# De eerste rij spel begint na de verschuiving op `tegel + verschuiving`.
+	# Daar moet de chrome ophouden, anders staat hij over de vergaderkamers.
+	_ok(band <= float(tegel) + verschuiving,
+		"de vaste HUD-balk is %.0f px hoog en dekt daarmee rij 1 af (die begint op %.0f)" % [
+			band, float(tegel) + verschuiving])
+
+	var tiles := _object_tiles()
+	var hoogste := 99
+	var laagste := 0
+	for wid: StringName in tiles:
+		var y: int = (tiles[wid] as Vector2i).y
+		hoogste = mini(hoogste, y)
+		laagste = maxi(laagste, y)
+
+	# Rij 0 is muur en draagt geen enkel object. Komt daar ooit iets te staan,
+	# dan is de hele afweging hierboven ongeldig en moet dit meebewegen.
+	_ok(hoogste >= 1,
+		"er staat een object op tegelrij %d, en die rij ligt achter de HUD-chips" % hoogste)
+	# En wat er onderaan af gaat, mag niet van het scherm vallen: rij 24 draagt
+	# het fysieke ticketbord.
+	_ok(float((laagste + 1) * tegel) + GameCamera.MAX_VERSCHUIVING <= float(hoog),
+		"het laagste object staat op rij %d en valt met %.0f px verschuiving onder het scherm" % [
+			laagste, GameCamera.MAX_VERSCHUIVING])
+
+	# `free()` en niet `queue_free()`: alle tests draaien synchroon in `_ready()`,
+	# dus een uitgestelde vrijgave laat deze HUD de hele rest van de suite in de
+	# boom staan. Hij is op vijftien Bus-signalen aangesloten en zou dus meelopen
+	# met elke latere test die er een uitstuurt — toasts bouwen, tweens starten,
+	# de doelregel verversen. Meten en meteen opruimen.
+	remove_child(hud)
+	hud.free()
 
 
 ## De secundaire tekst haalt WCAG AA, en blijft dat halen.

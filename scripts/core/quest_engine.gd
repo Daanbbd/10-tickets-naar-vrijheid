@@ -349,6 +349,41 @@ static func undiscovered_count() -> int:
 	return n
 
 
+## De vlag die zegt dat je dit ticket op het bord hebt gezien.
+##
+## Zelfde idioom als `Interactable._gezien_vlag()`: een vlag per ding in plaats
+## van een aparte lijst in de Session. Gaat daarmee gratis mee in de save, en
+## een dag die je morgen hervat weet nog welke briefjes je al gelezen had.
+static func bord_gezien_vlag(id: StringName) -> StringName:
+	return StringName("bord_gezien_%s" % id)
+
+
+## Hoeveel tickets je bij je hebt en nog niet op het bord bekeken hebt.
+##
+## Dit getal staat als badge op de ▤-knop, en het is het enige wat er nog
+## overblijft van "het bord springt zelf open". Het bord popte elf keer per
+## speelbeurt zonder dat de speler erom vroeg; nu vliegt het briefje naar de
+## knop en blijft dit getal staan tot je gaat kijken.
+##
+## Leest `is_discovered` en niet `is_available`: een ticket dat je hebt gevonden
+## maar dat door een storing weer op slot ging, is nog steeds iets dat je nog
+## niet gezien hebt.
+static func ongelezen_count() -> int:
+	var n := 0
+	for id: StringName in GameData.ticket_ids():
+		if Session.is_discovered(id) and not Session.get_flag(bord_gezien_vlag(id)):
+			n += 1
+	return n
+
+
+## Alles wat je bij je hebt als gezien markeren. Het bord roept dit aan bij
+## openen — daar zíe je ze immers.
+static func markeer_bord_gelezen() -> void:
+	for id: StringName in GameData.ticket_ids():
+		if Session.is_discovered(id):
+			Session.set_flag(bord_gezien_vlag(id), true)
+
+
 ## Hoeveel tickets nog achter ander werk wachten. Het tweede onbekende getal
 ## van de dag: `undiscovered_count()` telt alleen wat al opengesteld ís, en
 ## sinds de ticketketen erin zit starten vijf van de tien LOCKED. Zonder dit

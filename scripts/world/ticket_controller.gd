@@ -118,10 +118,15 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 		return
 
 	QuestEngine.activate(t.id)
-	# Het briefje op het bord zien landen, vóór de dialoog. Dit is het moment
-	# waarop een ticket iets wordt in plaats van een regel in een lijst.
+	# Het briefje zien binnenkomen en naar het ticketbord zien gaan, vóór de
+	# dialoog. Dit is het moment waarop een ticket iets wordt in plaats van een
+	# regel in een lijst.
+	#
+	# Hier stond `toon_nieuw_briefje()`, en dat zette het volledige bord over het
+	# scherm — elf keer per speelbeurt, zonder dat er stond waarom. Zie
+	# `Hud.toon_ticket_melding()`.
 	if _hud != null:
-		await _hud.toon_nieuw_briefje(t)
+		await _hud.toon_ticket_melding(t, t.zone_name)
 
 	# Niet jouw vakgebied? Dan moet de eigenaar meegelopen zijn.
 	if not QuestEngine.is_own_expertise(t.id):
@@ -465,9 +470,10 @@ func handle_npc_talk(source: Interactable) -> void:
 		# doelregel en op het bord.
 		Bus.toast_requested.emit("%s loopt mee naar %s" % [npc.def.name, wanted.zone_name], &"volgen")
 		# Het briefje ná het gesprek: bij een object is het briefje de vondst,
-		# hier is het gesprek de werving en het briefje het gevolg.
+		# hier is het gesprek de werving en het briefje het gevolg. En hier heeft
+		# de melding een echte afzender — dit ticket komt van deze collega.
 		if _hud != null:
-			await _hud.toon_nieuw_briefje(wanted)
+			await _hud.toon_ticket_melding(wanted, npc.def.name)
 	elif npc.def.dialogue_id != &"":
 		var uitkomst := await _dialogue.play(npc.def.dialogue_id, npc.def.name)
 		# Dirk is de enige NPC met een minigame achter zijn gesprek. Welke van

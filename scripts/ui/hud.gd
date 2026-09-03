@@ -27,6 +27,23 @@ const NA_ROL := 0.15
 const PLUS_DUUR := 0.9
 const KAART_ZICHTBAAR := 9.0
 
+## Hoe lang de doelregel blijft staan als hij vanzelf verschijnt.
+##
+## Vier seconden: lang genoeg om "Nu: BBD-204 · Haal Victor uit De Vloer" te
+## lezen (44 tekens, Nederlands leest op 15-20 tekens/s), kort genoeg om niet
+## over de vergaderkamers te blijven hangen. Uitgeklapt met een tik blijft hij
+## staan tot je hem weer wegtikt — zie `toggle_objective()`.
+const OBJECTIVE_ZICHTBAAR := 4.0
+
+## Hoe lang de ticketmelding blijft staan voordat hij naar de ▤-knop vliegt.
+## Eén seconde: "Van Victor / BBD-204 De frontend is stuk" is in één oogopslag
+## te lezen, en dit gebeurt tien keer per speelbeurt.
+const MELDING_ZICHTBAAR := 1.0
+const MELDING_VLUCHT := 0.34
+## Hoe breed het briefje mag worden. Niet de volle 184: een briefje dat het hele
+## scherm haalt leest als een dialoogvenster.
+const MELDING_BREEDTE := 116.0
+
 ## Hoe ver de onderste HUD-regels omhoog moeten. De knoppenbalk staat daar, en
 ## alles wat eronder blijft hangen wordt door een hand afgedekt op precies het
 ## moment dat je het nodig hebt — de prompt zegt immers wat er gebeurt als je
@@ -104,7 +121,13 @@ class Kompas extends Control:
 		var x0 := floorf((size.x - breed) * 0.5)
 		var midden := floorf(size.y * 0.5)
 
-		draw_rect(Rect2(x0, midden, breed, 1.0), UiKit.LINE)
+		# Zijn eigen onderlegger, want er zit geen paneel meer omheen. De strip
+		# hangt over de noordmuur van het kantoor (#484e60) en `UiKit.LINE`
+		# (#4a4a4a) verdwijnt daar volledig in — het pandje eromheen deed dat
+		# contrast eerst, en dat pandje was precies de dekking die de
+		# vergaderkamers afdekte.
+		draw_rect(Rect2(x0 - 1.0, midden - 1.0, breed + 2.0, 3.0), Color(UiKit.INK, 0.8))
+		draw_rect(Rect2(x0, midden, breed, 1.0), UiKit.GRIJS_OP_DONKER)
 		# De kamergrenzen maken er een plattegrond van in plaats van een liniaal:
 		# je ziet dat je nog drie deuren van je doel af bent.
 		for k: int in _kamers:
@@ -114,12 +137,14 @@ class Kompas extends Control:
 		if _eigen >= 0:
 			_streepje(x0 + float(_eigen) * schaal, UiKit.WIT, 1.0)
 
+	## Met een donker randje eromheen: de streepjes steken boven en onder de
+	## onderlegger uit en staan daar los op de wereld.
 	func _streepje(x: float, kleur: Color, breed: float) -> void:
-		draw_rect(Rect2(floorf(x - breed * 0.5), 1.0, breed, size.y - 2.0), kleur)
+		var r := Rect2(floorf(x - breed * 0.5), 1.0, breed, size.y - 2.0)
+		draw_rect(r.grow(1.0), Color(UiKit.INK, 0.8))
+		draw_rect(r, kleur)
 
 
-var _prompt: PanelContainer
-var _prompt_label: Label
 var _counter: Label
 var _klok: Label
 var _plus: Label
@@ -132,8 +157,23 @@ var _plus_top: float = 0.0
 var _overwerk_gemeld: bool = false
 var _bovenstapel: VBoxContainer = null
 var _onderstapel: VBoxContainer = null
+## De laag waar schermvullende en zwevende dingen aan hangen — zonder
+## veilige-zone-insets, want een overlay hoort tot in de notch door te lopen.
+var _root: Control = null
+## Voor de landingsplek en de badge van de ▤-knop. `main.gd` zet dit ná
+## `Besturing.setup()`; de testsuite bouwt de HUD los en laat hem null.
+var _besturing: Besturing = null
+var _bovenbalk: HBoxContainer = null
+var _teller_chip: PanelContainer = null
+var _klok_chip: PanelContainer = null
 var _objective: PanelContainer
 var _objective_label: Label
+## De tekst die er nu staat. De doelregel klapt alleen uit als deze verandert;
+## zonder die vergelijking flitst hij op elk item dat je oppakt.
+var _objective_tekst: String = ""
+var _objective_tween: Tween = null
+## Uitgeklapt met een tik in plaats van vanzelf: dan blijft hij staan.
+var _objective_vast: bool = false
 var _kompas: Kompas = null
 var _zone: Label
 var _zone_tween: Tween = null
@@ -149,9 +189,6 @@ var _nudge: Timer
 ## De laatste promptargumenten. InteractionProbe stuurt alleen een signaal als
 ## het dichtstbijzijnde object verandert; sluit er iemand aan terwijl je
 ## stilstaat, dan zou de suffix zonder deze cache verouderd blijven staan.
-var _prompt_tekst: String = ""
-var _prompt_world: StringName = &""
-var _prompt_aan: bool = false
 
 
 func setup() -> void:
@@ -163,6 +200,7 @@ func setup() -> void:
 	var root := UiKit.full_rect(Control.new())
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
+	_root = root
 
 	# Alles wat aan een rand plakt hangt aan de veilige zone; het ticketbord
 	# hangt bewust aan `root` omdat een overlay tot in de notch moet doorlopen.
@@ -181,7 +219,6 @@ func setup() -> void:
 	add_child(_nudge)
 	_nudge.start()
 
-	Bus.interaction_prompt_changed.connect(_on_prompt)
 	Bus.ticket_state_changed.connect(func(_a: StringName, _b: GameEnums.TicketState) -> void: _refresh())
 	Bus.ticket_completed.connect(func(_a: StringName, _b: MinigameResult) -> void: _refresh())
 	Bus.ticket_discovered.connect(func(_a: StringName) -> void: _refresh())
@@ -202,84 +239,115 @@ func setup() -> void:
 	_refresh()
 
 
-## De bovenkant van het scherm is één stapel, geen vier losse panelen op geraden
-## y-waarden.
+## De bovenkant is één regel die niet de volle breedte claimt.
 ##
-## Dat waren er vier, en ze vielen over elkaar heen zodra een regel afbrak. De
-## doelbalk begon op `MARGE + 18` = y22 terwijl de tellerbalk daaronder tot y30
-## doorloopt, dus de doelregel lag standaard over de klok. De toasts begonnen op
-## y46 terwijl de doelregel bij twee regels tot y76 komt — en twee regels is de
-## normale toestand, niet de uitzondering: "Nu: BBD-204 · Haal Victor uit De
-## Vloer" past niet op één regel van 184 px.
+## Hij was vier dingen boven elkaar in één dekkende kolom over de volle breedte:
+## teller + klok, doelregel (bijna altijd twee regels), kompasstrip, en daaronder
+## de toasts. Samen zo'n 80 van de 416 canvaspixels, dekkend, van rand tot rand.
 ##
-## Elk van die getallen klopte voor precies één tekstlengte. Een VBox telt ze op
-## in plaats van ze te raden, en dan kan geen enkele rij nog over de vorige
-## vallen, ongeacht hoe lang de tekst wordt of hoeveel toasts er staan.
+## En dat is precies de duurste strook van het scherm. De verdieping is 26 tegels
+## en de viewport ook, dus de camera klemt verticaal volledig vast: wat hier
+## staat, staat er over de vergaderkamers. Rij 0 is muur, maar vanaf rij 1 ligt
+## er spel — `sprintbord_vloer` (25,1), `deploycomputer` (1,1), `prikbord`, en
+## de vier kamers waar collega's rondlopen. Die zaten structureel achter de HUD.
+##
+## Wat overblijft is 26 px hoog en op twee chips na doorzichtig:
+##
+##     [▤ 3/10]  ──────┬────────────────  [09:12]
+##
+## Hetzelfde gebaar dat `Besturing._bouw_balk()` al maakt sinds de balk om zijn
+## drie knoppen sluit: chrome dat alleen ruimte pakt waar het iets zegt. Een
+## personage van 32 px halverwege het scherm heeft daardoor vrij zicht, en de
+## camera schuift de muurrij achter de chips (zie `bovenband_hoogte()`).
+##
+## De doelregel is niet weg — hij is een chip geworden die verschijnt als hij
+## verandert, en die je met een tik op de teller terughaalt. Zie `_zet_objective()`.
+##
+## De VBox blijft. Elk van de oude y-waarden klopte voor precies één tekstlengte,
+## en op 184 px is "één tekstlengte" geen aanname die je mag maken.
 func _bouw_bovenstapel(veilig: Control) -> void:
 	var kolom := VBoxContainer.new()
 	kolom.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	kolom.offset_left = MARGE
 	kolom.offset_right = -MARGE
 	kolom.offset_top = MARGE
-	# Geen tussenruimte tussen de vaste balken. Met twee pixels ertussen kijk je
-	# door de HUD heen op de wereld, en op de bovenste rij van het kantoor staan
-	# de collega's: dan loopt er een reepje kruin en kapsel tussen de teller en
-	# de doelregel door. Elke balk heeft zijn eigen rand, dus tegen elkaar aan
-	# leest het als één stapel.
-	kolom.add_theme_constant_override("separation", 0)
+	# Twee pixels lucht mag nu wél: er staat niets meer tegen elkaar aan dat als
+	# één balk moet lezen. De chips en de doelregel zijn losse dingen.
+	kolom.add_theme_constant_override("separation", 2)
 	kolom.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	veilig.add_child(kolom)
 	_bovenstapel = kolom
 
-	# --- ticketteller en klok ---
-	var top := PanelContainer.new()
-	top.add_theme_stylebox_override("panel", UiKit.panel(UiKit.PANEL_DARK, UiKit.INK))
-	kolom.add_child(top)
-	# Teller links, klok rechts. Een PanelContainer legt alle kinderen in
-	# hetzelfde rect, dus dit moet via een HBox.
-	var top_rij := HBoxContainer.new()
-	top.add_child(top_rij)
-	# Beide bewust zonder autowrap: UiKit.label() zet die standaard aan, en in een
-	# HBox krijgt een afbrekend Label een minimumbreedte van ongeveer één teken.
-	# De klok werd daardoor verticaal afgebroken tot "0 9 : 0 0", wat de balk vijf
-	# regels hoog maakte en over de doelregel heen duwde.
+	# --- de vaste regel: teller, kompas, klok ---
+	_bovenbalk = HBoxContainer.new()
+	_bovenbalk.add_theme_constant_override("separation", 4)
+	_bovenbalk.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	kolom.add_child(_bovenbalk)
+
+	# De ▤-glyph in plaats van het woord "Tickets": dezelfde tekens als de knop
+	# die het bord opent, dus de teller en de knop wijzen naar hetzelfde ding.
+	# Scheelt bovendien de breedte die het kompas ertussen nodig heeft.
+	_teller_chip = PanelContainer.new()
+	_teller_chip.add_theme_stylebox_override("panel",
+		UiKit.panel_krap(UiKit.PANEL_DARK, UiKit.INK))
+	_bovenbalk.add_child(_teller_chip)
+	# Bewust zonder autowrap: UiKit.label() zet die standaard aan, en in een HBox
+	# krijgt een afbrekend Label een minimumbreedte van ongeveer één teken. De
+	# klok werd daardoor verticaal afgebroken tot "0 9 : 0 0", wat de balk vijf
+	# regels hoog maakte. Geldt voor beide chips.
 	_counter = UiKit.label("", UiKit.FS_BODY, UiKit.WIT)
 	_counter.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_counter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top_rij.add_child(_counter)
+	_teller_chip.add_child(_counter)
+	# De teller is tegelijk de knop die de doelregel terughaalt. Een Button
+	# overheen in plaats van `_gui_input`, zoals `Scrumbord._briefje()` het ook
+	# doet: dan komt de duimmaat en de klik-audio gratis mee.
+	var teller_knop := Button.new()
+	teller_knop.flat = true
+	teller_knop.focus_mode = Control.FOCUS_NONE
+	UiKit.full_rect(teller_knop)
+	teller_knop.pressed.connect(toggle_objective)
+	_teller_chip.add_child(teller_knop)
+
+	# --- kompasstrip, tussen de chips in, zonder paneel ---
+	# De strip is niets dan lijntjes, dus hij heeft geen ondergrond nodig om op
+	# te staan — alleen zijn eigen contrast, zie Kompas._draw(). Dat maakt het
+	# midden van deze regel doorzichtig, en dat is het hele punt.
+	_kompas = Kompas.new()
+	_kompas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_kompas.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_bovenbalk.add_child(_kompas)
+
+	_klok_chip = PanelContainer.new()
+	_klok_chip.add_theme_stylebox_override("panel",
+		UiKit.panel_krap(UiKit.PANEL_DARK, UiKit.INK))
+	_bovenbalk.add_child(_klok_chip)
 	_klok = UiKit.label("", UiKit.FS_BODY, UiKit.WIT)
 	_klok.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_klok.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	top_rij.add_child(_klok)
+	_klok_chip.add_child(_klok)
 
-	# --- doelregel, direct onder de teller, permanent zichtbaar ---
-	# Dit is het antwoord op "ik weet niet waar ik moet beginnen": er staat
-	# altijd precies een doel op het scherm, ook als de DAG er twee openzet.
-	_objective = PanelContainer.new()
+	# --- doelregel, onder de vaste regel, alleen als hij iets te melden heeft ---
+	# Dit is het antwoord op "ik weet niet waar ik moet beginnen". Dat antwoord
+	# hoeft er niet permanent te staan — het hoort er te staan op het moment dat
+	# het verandert, en daarna op één tik afstand.
+	#
 	# Dekkend, niet half-doorzichtig. Het stond op 80% zodat je de bovenrand van
 	# de wereld nog zag, maar daar lopen collega's langs: hun kleding schijnt er
 	# in gedempte vlekken door en dan staat "Daan is langs geweest" in wit op een
-	# lapjesdeken. Dit is de regel die antwoord geeft op "waar begin ik", dus
-	# leesbaarheid gaat hier vóór doorkijk — dezelfde afweging als de dekkende
-	# balk erboven.
+	# lapjesdeken. Deze regel moet je kunnen lezen; de doorkijk zit nu in het
+	# doorzichtige midden van de regel erboven.
+	_objective = PanelContainer.new()
 	_objective.add_theme_stylebox_override("panel",
 		UiKit.panel(UiKit.PANEL_DARK, UiKit.ORANJE))
+	_objective.visible = false
+	# Groeit naar beneden de wereld in, niet omhoog over de chips heen.
+	_objective.grow_vertical = Control.GROW_DIRECTION_END
 	kolom.add_child(_objective)
 	_objective_label = UiKit.label("", UiKit.FS_SMALL, UiKit.WIT)
 	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_objective.add_child(_objective_label)
 
-	# --- kompasstrip, direct onder de doelregel ---
-	# De doelregel zegt wát en de strip zegt waar: dezelfde informatie, één
-	# ruimtelijk in plaats van in woorden. Ze horen naast elkaar te staan.
-	var kompaspaneel := PanelContainer.new()
-	kompaspaneel.add_theme_stylebox_override("panel",
-		UiKit.panel_krap(UiKit.PANEL_DARK, UiKit.INK))
-	kolom.add_child(kompaspaneel)
-	_kompas = Kompas.new()
-	kompaspaneel.add_child(_kompas)
-
-	# --- toasts, onder de doelregel en de strip ---
+	# --- toasts, onder alles ---
 	_toasts = VBoxContainer.new()
 	_toasts.add_theme_constant_override("separation", 2)
 	_toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -334,19 +402,14 @@ func _bouw_onderstapel(veilig: Control) -> void:
 	veilig.add_child(kolom)
 	_onderstapel = kolom
 
-	# --- interactieprompt ---
-	_prompt = PanelContainer.new()
-	_prompt.add_theme_stylebox_override("panel", UiKit.panel(UiKit.PANEL, UiKit.INK))
-	_prompt.visible = false
-	kolom.add_child(_prompt)
-	_prompt_label = UiKit.label("", UiKit.FS_SMALL)
-	_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_prompt.add_child(_prompt_label)
-
-	# --- zonenaam, onderste regel boven de knoppenbalk ---
-	# Faden via `modulate` en niet via `visible`: een regel die uit de stapel
-	# verdwijnt laat de prompt erboven een paar pixels zakken, en dan verspringt
-	# het ding waar de speler net naar wees.
+	# --- zonenaam, de enige regel die hier nog staat ---
+	# De interactieprompt stond hierboven en hangt sinds kort op het object zelf
+	# (zie `tap_marker.gd`). Wat overblijft is de bevestiging dat je de goede
+	# ruimte binnenloopt, en die hoort onderaan: hij gaat over waar je bent, niet
+	# over waar je voor staat.
+	#
+	# Faden via `modulate` en niet via `visible`, zodat de stapel niet krimpt en
+	# er niets boven hem verspringt.
 	_zone = UiKit.label("", UiKit.FS_BODY, UiKit.WIT)
 	_zone.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_zone.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -461,19 +524,29 @@ func _build_board(root: Control) -> void:
 	_bord.zet_sluitknop(func() -> void: toggle_board())
 
 
-func toggle_board(close_up: bool = false) -> void:
+## Het bord open of dicht. Geen `close_up`-argument meer: dat stond hier met een
+## commentaar dat het onderscheid uitlegde ("aan het echte bord sta je ernaast"),
+## maar de functie negeerde het volledig terwijl `main.gd` er `true` in stopte.
+## Twee gedaanten die niet bestonden is erger dan één die dat wel doet — en er is
+## niets dat de close-up nu nog anders zou moeten doen.
+func toggle_board() -> void:
 	_board.visible = not _board.visible
 	AudioDirector.play_ui(&"klik")
-	if _board.visible:
-		_fill_board()
+	if not _board.visible:
+		return
+	_fill_board()
+	# Openen ís lezen: hier zie je de briefjes staan. Dit is het enige wat de
+	# badge op ▤ weer op nul zet.
+	QuestEngine.markeer_bord_gelezen()
+	_bijwerk_badge()
 
 
-## Het bord openen en een net gevonden briefje zien landen. Dit is wat een
-## ticket vinden tot een moment maakt in plaats van een regel in een lijst.
+## Het bord openen en, als het al open staat, een net gevonden briefje zien
+## landen. Alleen nog de intro-beat gebruikt de eerste helft hiervan: dat is de
+## ene plek waar het spel moet leren dát er een bord is en dat je daar kiest.
 ##
-## `duur` is instelbaar zodat het allereerste briefje (het intro-nabeat, waar
-## dit ook het "haal een collega"-voorbeeld moet laten zien) langer mag blijven
-## staan dan de tien routineuze vondsten erna.
+## `duur` is instelbaar zodat dat eerste briefje langer mag blijven staan dan de
+## routineuze vondsten erna — die krijgen sinds kort `toon_ticket_melding()`.
 func toon_nieuw_briefje(t: TicketDef, duur: float = BRIEFJE_ZICHTBAAR) -> void:
 	# Tijdens een geautomatiseerde speelbeurt niets tonen: die drukt geen toets
 	# in om weg te klikken en zou hier blijven hangen.
@@ -481,9 +554,143 @@ func toon_nieuw_briefje(t: TicketDef, duur: float = BRIEFJE_ZICHTBAAR) -> void:
 		return
 	_board.visible = true
 	_fill_board()
+	QuestEngine.markeer_bord_gelezen()
 	_bord.laat_briefje_landen(t)
 	await get_tree().create_timer(duur, true, false, true).timeout
 	_board.visible = false
+	_bijwerk_badge()
+
+
+## "Je hebt een ticket gekregen van Victor", en dan het briefje dat naar de
+## ▤-knop vliegt.
+##
+## **Wat dit vervangt.** `toon_nieuw_briefje()` zette hier het volledige,
+## schermvullende bord aan, liet een briefje landen en zette het na 1,4 s weer
+## uit — bij élk ticket dat je kreeg. Elf keer per speelbeurt nam het spel het
+## scherm over zonder dat de speler erom vroeg, en zonder dat er stond waarom.
+## Het bord was daarmee iets dat jou overkwam in plaats van de plek waar jij
+## kiest.
+##
+## Nu zie je waar het vandaan komt en waar het heen gaat, in dezelfde 1,3 s, en
+## de wereld blijft eronder staan. Het bord is wat overblijft: een quest select
+## die je zelf opent, met de badge op ▤ als reden.
+##
+## `van` is de herkomst in mensentaal — een collega ("Victor") of een ruimte
+## ("Summit"). `extra` telt de briefjes die in dezelfde beweging meekomen; drie
+## meldingen achter elkaar voor één ruimte leest als een foutmelding.
+func toon_ticket_melding(t: TicketDef, van: String, extra: int = 0) -> void:
+	_bijwerk_badge()
+	# Staat het bord open, dan is de melding overbodig: daar zie je het briefje
+	# zelf landen. En onder Autopilot niets, om dezelfde reden als hierboven.
+	if t == null or _board.visible or Autopilot.gevraagd():
+		return
+
+	var kaart := PanelContainer.new()
+	var papier := Scrumbord.papierkleur(t)
+	kaart.add_theme_stylebox_override("panel",
+		UiKit.postit(papier, papier.darkened(0.25)))
+	kaart.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var kolom := VBoxContainer.new()
+	kolom.add_theme_constant_override("separation", 1)
+	kaart.add_child(kolom)
+
+	var kop := UiKit.label(_meldingskop(van, extra), UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+	kop.autowrap_mode = TextServer.AUTOWRAP_OFF
+	kolom.add_child(kop)
+	# De titel mag wél afbreken: "De frontend is stuk" past, maar er staan
+	# langere in data/tickets. Met een bovengrens op de breedte, want een
+	# briefje van 184 px is geen briefje meer.
+	var regel := UiKit.label("%s  %s" % [t.code, t.title], UiKit.FS_BODY, UiKit.INK)
+	regel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	regel.custom_minimum_size = Vector2(MELDING_BREEDTE, 0)
+	kolom.add_child(regel)
+
+	_root.add_child(kaart)
+	kaart.size = kaart.get_combined_minimum_size()
+	var start := _meldingsplek(kaart.size)
+	kaart.position = start
+	kaart.pivot_offset = kaart.size * 0.5
+	kaart.scale = Vector2(0.9, 0.9)
+	kaart.modulate.a = 0.0
+
+	AudioDirector.play_ui(&"pak")
+	Haptiek.tril(Haptiek.Sterkte.TIK)
+
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(kaart, "modulate:a", 1.0, 0.16)
+	tw.tween_property(kaart, "scale", Vector2.ONE, 0.22) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.set_parallel(false)
+	tw.tween_interval(MELDING_ZICHTBAAR)
+
+	# En dan naar de knop. Krimpen tot een kwart in plaats van tot nul: op het
+	# laatst is het nog een briefje en niet een stip, en het landt op iets dat er
+	# staat. Naar de knop toe versnellen (EASE_IN) — dat leest als iets dat
+	# ergens ín gaat, niet als iets dat komt aanzetten.
+	var doel := _bordknop_midden(kaart.size)
+	tw.set_parallel(true)
+	tw.tween_property(kaart, "position", doel, MELDING_VLUCHT) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tw.tween_property(kaart, "scale", Vector2(0.25, 0.25), MELDING_VLUCHT) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tw.tween_property(kaart, "modulate:a", 0.0, MELDING_VLUCHT * 0.5) \
+		.set_delay(MELDING_VLUCHT * 0.5)
+	tw.set_parallel(false)
+	tw.tween_callback(func() -> void:
+		kaart.queue_free()
+		AudioDirector.play_ui(&"klik")
+		if _besturing != null:
+			_besturing.pols_bord_knop())
+	await tw.finished
+
+
+## "Van Victor" of "Gevonden in Summit", plus wat er in dezelfde beweging
+## meekomt. `van` leeg is geen fout: een storing kan een ticket teruggeven
+## zonder dat er iemand aan te pas komt.
+static func _meldingskop(van: String, extra: int) -> String:
+	var kop := "Nieuw ticket"
+	if van != "":
+		kop = "Van %s" % van
+	if extra > 0:
+		kop += "   +%d meer" % extra
+	return kop
+
+
+## Op tweederde hoogte, en altijd binnen de band die de HUD vrij laat: boven de
+## duimzone en onder de chips. Zonder die klem valt het briefje bij een
+## uitgeklapte doelregel achter de HUD.
+func _meldingsplek(maat: Vector2) -> Vector2:
+	var vp := get_viewport().get_visible_rect().size
+	var band := vrije_band()
+	var y := clampf(vp.y * 0.62 - maat.y * 0.5,
+		band.x + 4.0, maxf(band.x + 4.0, band.y - maat.y - 4.0))
+	return Vector2(floorf((vp.x - maat.x) * 0.5), floorf(y))
+
+
+## Het midden van de ▤-knop, omgerekend naar de linkerbovenhoek van het briefje.
+##
+## De knop leeft in `Besturing` (laag 9) en dit briefje in de HUD (laag 10),
+## maar beide lagen rekenen in hetzelfde canvas van 192x416 — een globale rect
+## uit de ene laag is dus direct bruikbaar in de andere. Zonder besturing (de
+## testsuite bouwt de HUD los) valt hij terug op de linkeronderhoek, waar die
+## knop staat.
+func _bordknop_midden(maat: Vector2) -> Vector2:
+	var vp := get_viewport().get_visible_rect().size
+	var midden := Vector2(MARGE + 17.0, vp.y - MARGE - 17.0)
+	if _besturing != null:
+		var r := _besturing.bord_knop_rect()
+		if r.size.x > 0.0:
+			midden = r.get_center()
+	return midden - maat * 0.5
+
+
+## De badge op ▤ bijwerken. Eén plek, want vier dingen veranderen het aantal:
+## een vondst, een werving, het bord openen, en een storing die een ticket
+## teruggeeft.
+func _bijwerk_badge() -> void:
+	if _besturing != null:
+		_besturing.zet_ongelezen(QuestEngine.ongelezen_count())
 
 
 # --- De urenstaat ---------------------------------------------------------
@@ -624,8 +831,14 @@ func _refresh() -> void:
 	# De klok staat hier bewust niet in: _refresh() hangt aan ticket_completed
 	# en zou de cijfers al doen springen voordat de rol begint. En hij herstart
 	# de hintnudge, wat een kop koffie niet mag doen. Zie _refresh_klok().
-	_counter.text = "Tickets  %d/%d" % [Session.done_count(), Session.total_tickets()]
+	# De ▤-glyph draagt hier de betekenis die het woord "Tickets" droeg: hij
+	# staat op de knop die het bord opent, en deze chip ís die knop.
+	_counter.text = "▤  %d/%d" % [Session.done_count(), Session.total_tickets()]
 	_refresh_objective()
+	# Vier dingen veranderen het aantal ongelezen tickets, en drie ervan komen
+	# hier langs: een vondst, een werving en een storing die iets teruggeeft.
+	# Het bord openen is de vierde en zet hem op nul.
+	_bijwerk_badge()
 	if _board.visible:
 		_fill_board()
 	if _nudge != null:
@@ -640,18 +853,18 @@ func _refresh() -> void:
 ## het kantoor in.
 func _refresh_objective() -> void:
 	if Session.all_done():
-		_objective_label.text = "Nu:  alles is opgelost — ga naar de voordeur"
+		_zet_objective("Nu:  alles is opgelost — ga naar de voordeur")
 		return
 
 	if Session.pinned_ticket != &"" and Session.is_available(Session.pinned_ticket):
 		var t: TicketDef = GameData.ticket(Session.pinned_ticket)
-		_objective_label.text = "Nu:  %s%s" % [t.code, _waarheen(t)]
+		_zet_objective("Nu:  %s%s" % [t.code, _waarheen(t)])
 		return
 
 	var bij_je := QuestEngine.inventory_tickets().size()
 	if bij_je > 0:
-		_objective_label.text = "%d ticket%s open  ·  %s om te kiezen" % [
-			bij_je, "" if bij_je == 1 else "s", "▤"]
+		_zet_objective("%d ticket%s open  ·  %s om te kiezen" % [
+			bij_je, "" if bij_je == 1 else "s", "▤"])
 		return
 
 	# Vóór dit een getal noemde, was "loop rond" de enige aanwijzing dat
@@ -665,9 +878,104 @@ func _refresh_objective() -> void:
 	var rest := QuestEngine.undiscovered_count()
 	var op_slot := QuestEngine.locked_count()
 	if rest <= 0 and op_slot > 0:
-		_objective_label.text = "Niets meer te vinden. %d wacht op ander werk." % op_slot
+		_zet_objective("Niets meer te vinden. %d wacht op ander werk." % op_slot)
 		return
-	_objective_label.text = "Nog %d op de vloer. Loop een ruimte in." % rest
+	_zet_objective("Nog %d op de vloer. Loop een ruimte in." % rest)
+
+
+## De doelregel zetten, en hem laten zien als hij iets nieuws zegt.
+##
+## Alleen bij een echte tekstwijziging. `_refresh()` hangt aan zes signalen,
+## waaronder `item_added` en `item_removed` — zonder deze vergelijking klapt de
+## regel uit op elke koffiebeker die je oppakt, en dan is "er verscheen iets
+## bovenin" geen signaal meer.
+##
+## Staat hij vastgezet (met een tik uitgeklapt), dan blijft hij staan en wordt
+## alleen de tekst ververst.
+func _zet_objective(tekst: String) -> void:
+	if tekst == _objective_tekst:
+		return
+	_objective_tekst = tekst
+	_objective_label.text = tekst
+	if _objective_vast:
+		return
+	# Ook de allereerste vulling, die uit `setup()` komt terwijl de wereld nog
+	# infade't: "Nog 10 op de vloer. Loop een ruimte in." is precies wat je op
+	# dat moment wilt lezen.
+	_toon_objective(OBJECTIVE_ZICHTBAAR)
+
+
+## Uitklappen. `duur` op 0 betekent: blijven staan tot iemand hem wegtikt.
+##
+## Kill-before-recreate, om dezelfde reden als bij de zonenaam: twee wijzigingen
+## kort na elkaar (een ticket dat afrondt en de collega die loslaat) leveren
+## anders twee tweens die om dezelfde alpha vechten.
+func _toon_objective(duur: float) -> void:
+	if _objective_tween != null and _objective_tween.is_running():
+		_objective_tween.kill()
+	_objective_tween = null
+	_objective.visible = true
+	_objective.modulate.a = 1.0
+	if duur <= 0.0:
+		return
+	_objective_tween = create_tween()
+	_objective_tween.tween_interval(duur)
+	_objective_tween.tween_property(_objective, "modulate:a", 0.0, 0.4)
+	_objective_tween.tween_callback(func() -> void: _objective.visible = false)
+
+
+## Een tik op de tellerchip. Dit is de enige manier om de doelregel terug te
+## halen nadat hij vanzelf is weggevallen, dus hij moet er zijn — de chip is
+## 46 px breed en de volle balkhoogte, ruim boven de duimvloer.
+func toggle_objective() -> void:
+	AudioDirector.play_ui(&"klik")
+	if _objective.visible:
+		_objective_vast = false
+		if _objective_tween != null and _objective_tween.is_running():
+			_objective_tween.kill()
+		_objective_tween = null
+		_objective.visible = false
+		return
+	_objective_vast = true
+	_toon_objective(0.0)
+
+
+## De vlakken bovenin die een tik opeten. `Besturing` moet ze kennen, anders
+## start het uitklappen van de doelregel tegelijk een gesprek — zie
+## `Besturing._op_chrome()`.
+func chrome_vlakken() -> Array[Control]:
+	var uit: Array[Control] = []
+	if _teller_chip != null:
+		uit.append(_teller_chip)
+	if _klok_chip != null:
+		uit.append(_klok_chip)
+	return uit
+
+
+## `main.gd` roept dit aan ná `Besturing.setup()`: de HUD staat er dan al, maar
+## de ▤-knop nog niet. Expliciet doorgeven en niet via een groep opzoeken, in
+## dezelfde geest als `Besturing.set_speler()` — de bootvolgorde van `main.gd`
+## is expliciet en hangt niet aan `_ready()`-volgorde.
+func set_besturing(b: Besturing) -> void:
+	_besturing = b
+	_bijwerk_badge()
+
+
+## Hoe hoog de vaste regel bovenin werkelijk is, in canvaspixels, inclusief zijn
+## marge. `GameCamera` schuift de wereld hiermee omlaag zodat de muurrij erachter
+## valt in plaats van de eerste rij spel.
+##
+## Gemeten en niet geteld, net als `Besturing.KNOP_HOOGTE`: een Button en een
+## PanelContainer melden zelf hun regelhoogte plus stijlmarges, en twee plekken
+## die hetzelfde getal raden lopen uit elkaar.
+func bovenband_hoogte() -> float:
+	if _bovenbalk == null:
+		return 0.0
+	# `get_combined_minimum_size()` en niet `size`: dit wordt aangeroepen in de
+	# bootvolgorde van `main.gd`, vóór de eerste layoutronde, en dan is `size`
+	# nog nul. De optelling over de zojuist toegevoegde chips is er dan al —
+	# dezelfde truc als `Besturing._bouw_balk()` gebruikt voor zijn eigen maat.
+	return MARGE + _bovenbalk.get_combined_minimum_size().y
 
 
 ## De plaats en de opdracht, zonder de plaats twee keer.
@@ -691,34 +999,19 @@ static func _waarheen(t: TicketDef) -> String:
 	return "  ·  %s  ·  %s" % [t.zone_name, wie]
 
 
-## Wie dit ticket bezit hoort zichtbaar te zijn vóór de interactie, niet pas
-## nadat de speler er vergeefs op E heeft gedrukt.
-func _on_prompt(text: String, shown: bool, world_id: StringName, _verb: String) -> void:
-	_prompt_tekst = text
-	_prompt_aan = shown
-	_prompt_world = world_id
-	_teken_prompt()
-
-
-## Er is geen actieknop meer die het werkwoord draagt — je tikt direct op het
-## object. Deze prompt is dus de enige plek die nog zegt wát een tik doet, dus
-## hij toont weer de volledige tekst inclusief werkwoord ("Praten met Victor"
-## i.p.v. alleen "Victor").
-func _teken_prompt() -> void:
-	_prompt.visible = _prompt_aan and not Session.input_locked
-	_prompt_label.text = "%s%s" % [_prompt_tekst, _eigenaar_suffix(_prompt_world)]
-
-
-## Sluit er iemand aan of loopt hij weg, dan verandert de doelregel, het bord én
-## de prompt. De prompt hangt niet aan een ticketsignaal, dus die moet apart.
+## Sluit er iemand aan of loopt hij weg, dan verandert de doelregel en het bord.
+## Het bijschrift op de tikmarker hangt niet aan een ticketsignaal en wordt in
+## `main.gd` apart bijgewerkt.
 func _volgers_veranderd() -> void:
 	_refresh()
-	_teken_prompt()
 
 
 ## Vóór de interactie zichtbaar maken dat je iemand nodig hebt; loopt hij al
 ## mee, dan bevestigen; is hij geweest, dan is er niets meer te melden.
-static func _eigenaar_suffix(world_id: StringName) -> String:
+##
+## Publiek en statisch: `TapMarker` draagt de prompttekst sinds die van de
+## onderrand naar het object verhuisde, en `main.gd` plakt deze staart eraan.
+static func eigenaar_suffix(world_id: StringName) -> String:
 	var t: TicketDef = QuestEngine.preferred_at_anchor(world_id)
 	if t == null:
 		return ""
@@ -733,11 +1026,11 @@ static func _eigenaar_suffix(world_id: StringName) -> String:
 			return ""
 
 
-## De dialoogbox (layer 20) dekt de prompt en de zonenaam (layer 10) af. Verberg
-## ze dus zolang de input op slot staat, in plaats van ze eronder te laten staan.
+## De dialoogbox (layer 20) dekt de zonenaam (layer 10) af. Verberg hem dus
+## zolang de input op slot staat, in plaats van hem eronder te laten staan.
+## `TapMarker` doet hetzelfde voor zijn eigen bijschrift, zie daar.
 func _on_input_lock(locked: bool) -> void:
 	if locked:
-		_prompt.visible = false
 		_zone.modulate.a = 0.0
 
 
