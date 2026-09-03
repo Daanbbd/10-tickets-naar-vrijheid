@@ -165,7 +165,7 @@
   "type": "choicescene",
   "briefing": "Zij zegt straks {rondes} keer twee dingen die niet samen kunnen. Je moet op {drempel} punten uitkomen. Ik zit erbij en ik zeg niks — dat werkt bij haar beter. Dat is wel top.",
   "intro": "Mevrouw P. Aardenmens zit in de entree met een uitgeprinte screenshot en elf punten. Drie ervan spreken elkaar tegen. Vertaal wat ze zegt naar iets dat je kunt bouwen.",
-  "waarom": "Zij zegt vaak twee dingen tegelijk die niet allebei kunnen. Wat je ervan opschrijft, is wat er straks gebouwd wordt.",
+  "waarom": "Zij zegt twee dingen tegelijk die niet allebei kunnen. Wat jij opschrijft, wordt gebouwd.",
   "rondes": [
    {
     "prompt": "'Het moet rustiger worden. Maar het moet ook meer opvallen.'",

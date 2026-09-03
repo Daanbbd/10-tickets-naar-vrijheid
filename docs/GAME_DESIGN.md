@@ -20,13 +20,28 @@ hebt. Alleen de deploy wacht op 9/10 — zie QUESTS.md.
 
 ## De eerste minuut
 
-Een nieuwe speler moet binnen een minuut vier dingen weten. Dat gebeurt op een
-eigen scherm tussen titel en personagekeuze (`IntroUitleg`,
-`scripts/ui/intro_uitleg.gd` + `scenes/boot/intro_uitleg.tscn`), niet pas bij
-het spawnen: op de personagekeuze staat de ticketbalk en "twee tickets zelf"
-al, en dat leest pas ergens voor wie eerst weet dát er tickets bestaan om zelf
-te doen. `TitleScreen._on_start()` routeert er nu doorheen (`Shell.goto_intro_uitleg()`)
-vóór `Shell.goto_character_select()`.
+Een nieuwe speler moet binnen een minuut weten **wat er gebouwd wordt** en
+**hoe dit spel werkt**. Dat gebeurt op een eigen scherm tussen titel en
+personagekeuze (`IntroUitleg`, `scripts/ui/intro_uitleg.gd` +
+`scenes/boot/intro_uitleg.tscn`), niet pas bij het spawnen: op de
+personagekeuze staat de ticketbalk en "twee tickets zelf" al, en dat leest pas
+ergens voor wie eerst weet dát er tickets bestaan om zelf te doen.
+`TitleScreen._on_start()` routeert er doorheen
+(`Shell.goto_intro_uitleg()`) vóór `Shell.goto_character_select()`.
+
+**VANDAAG** — de opdracht, in `IntroUitleg.opdracht()`:
+
+1. Manege De Vrije Teugel wil een webshop voor paardensupplementen.
+2. Jij werkt vandaag mee bij Bluebird Day.
+
+Dit blok ontbrak volledig, en dat was het gat waar de hele dag onlogisch van
+werd. Het scherm legde uit hoe je tickets vindt en afvinkt, maar nergens stond
+wát er gebouwd wordt — en het eerste ticket dat je vond was "de klant heeft
+feedback", op een product waar je nog nooit van had gehoord. Elke grap in dit
+spel hangt aan die opdracht: de webshop, het paard dat naar links moet, de
+AI-video. Wie de opdracht niet kent ziet losse sketches.
+
+**HOE DIT WERKT** — de spelregels, in `IntroUitleg.lessen()`:
 
 1. **Tien tickets, dan mag je naar buiten.** De wincondititie.
 2. **Ze liggen verspreid; een ruimte binnenlopen levert er een op.** Zonder dit
@@ -36,26 +51,39 @@ vóór `Shell.goto_character_select()`.
 4. **Niet je vakgebied? Dan haal je er iemand bij.** De centrale spanning
    hierboven.
 
-De vier regels staan letterlijk in `IntroUitleg.LESSEN`, los van de
-scene-opbouw, zodat `_test_intro()` in `scripts/tests/test_runner.gd` ze kan
-controleren zonder de scene te hoeven bouwen. Eén statisch scherm, geen wizard:
-vier regels, één knop ("Begrepen") terug naar de personagekeuze.
+Beide blokken staan als functie los van de scene-opbouw, zodat `_test_intro()`
+in `scripts/tests/test_runner.gd` ze kan controleren zonder de scene te hoeven
+bouwen — en zodat het getal in regel 3 uit de ticketdata komt in plaats van uit
+de tekst. Eén statisch scherm, geen wizard: twee blokken, één knop ("Begrepen")
+terug naar de personagekeuze.
 
 Wat overblijft in de wereld zelf, in `Main._intro_beat()`
-(`scripts/world/main.gd`): geen gesproken tekst meer bij het spawnen, alleen
-het mechanische deel. De ticketvondst in de entree (waar de speler al staat)
-wordt tijdens de infade vastgehouden en pas daarna getoond, als bordbeat in
-plaats van als toast. Zonder dat uitstel vuurt `_report_tile()` op
-physics-frame 1 al een toast af over BBD-203: boven de infade, voordat de
-speler een stap heeft gezet — precies de omgekeerde les van "verkennen levert
-werk op". Pas na het bordbeat verschijnt de besturingskaart
-(`Hud.show_controls_card()`).
+(`scripts/world/main.gd`): de **deadline**, uit een mond in plaats van van een
+dia. Daan (of Dennis, als je Daan zelf speelt) zegt dat de webshop morgen live
+moet en dat dit de laatste dag van sprint veertien is. Dat is de klok van de
+hele dag, en die stond nergens.
+
+Bij een verse dag levert de entree geen ticket op: BBD-203 wacht sinds de
+herordening op de kickoff (zie QUESTS.md). Je loopt de gang in en krijgt daar
+meteen drie briefjes — "een ruimte binnenlopen levert werk op" leert zich beter
+aan een ruimte waar je zelf naartoe gelopen bent. Een vondst die tóch tijdens de
+infade valt wordt vastgehouden en pas daarna als bordbeat getoond; zonder dat
+uitstel vuurt `_report_tile()` op physics-frame 1 al een toast af boven de
+infade, voordat de speler een stap heeft gezet. Pas daarna verschijnt de
+besturingskaart (`Hud.show_controls_card()`).
 
 **Staande regel: nergens in dit scherm of in de nabeat staat een toetsnaam.**
-`Besturing` (`scripts/ui/besturing.gd`) is het enige besturingsvlak en staat er
-op elk apparaat; een toetsnaam ("druk op E") beschrijft dan iets dat niet
-altijd bestaat. `_test_intro()` faalt als `IntroUitleg.LESSEN` alsnog een toets
-noemt.
+Dit scherm en alle dialoog tonen op elk apparaat dezelfde tekst, dus een
+toetsnaam ("druk op E") beschrijft daar iets dat niet altijd bestaat.
+`_test_intro()` faalt als `IntroUitleg.lessen()` alsnog een toets noemt.
+
+De besturingskaart is de uitzondering, en bewust: die kiest op
+`DisplayServer.is_touchscreen_available()` tussen de duimversie en de
+toetsenbordversie (`Hud.kaartregels()`). De regel hierboven bestaat om te
+voorkomen dat het spel over een toets praat die er niet is — niet om te
+verzwijgen wélke besturing je in je handen hebt. Op een laptop was de enige
+uitleg die het spel gaf "Duim rechts → lopen", over een joystick die daar
+sinds `Invoer.muis_stuurt_stick()` niet eens meer bestaat.
 
 ## De centrale spanning
 

@@ -1,12 +1,37 @@
 # De tien tickets
 
 **Er is geen vaste volgorde, maar wel een keten.** Vier tickets staan vanaf
-minuut één open (BBD-202 t/m BBD-205) en je kiest zelf waar je begint. Elk van
-die vier maakt er één vrij, BBD-208 maakt BBD-201 vrij, en BBD-210 (Naar
-productie) wacht tot de andere negen klaar zijn plus de deploysleutel.
+minuut één open — BBD-201, BBD-202, BBD-204 en BBD-205 — en je kiest zelf waar
+je begint. BBD-201 (de kickoff) maakt er twee vrij, de andere drie elk één, en
+BBD-210 (Naar productie) wacht tot de andere negen klaar zijn plus de
+deploysleutel.
+
+```
+BBD-201  Wat moeten we eigenlijk bouwen?  ->  BBD-203  De klant heeft feedback
+                                          ->  BBD-208  De klant wil een AI-video
+BBD-202  Waarom sta ik hier eigenlijk?    ->  BBD-209  Paardenbugs
+BBD-204  De frontend is stuk              ->  BBD-207  We hebben muziek nodig
+BBD-205  De backend is stuk               ->  BBD-206  Niemand koopt iets
+9/10 + deploysleutel                      ->  BBD-210  Naar productie
+```
+
+**Waarom de kickoff de dag opent.** Dit stond andersom: BBD-203 (de
+klantfeedback) was een startticket en BBD-201 hing twee schakels diep achter
+BBD-208, dat weer achter BBD-203 hing. Je begon je dag dus met het vertalen van
+feedback op een product waarvan het spel nog nergens had gezegd wát het was, en
+je haalde Willem erbij voordat je iemand kende. De premisse kwam als negende aan
+de beurt, en dat is precies waar de dag onlogisch van gaat voelen. Dat BBD-203
+én BBD-208 achter BBD-201 hangen is geen willekeurige herordening: haar feedback
+en die AI-video staan letterlijk in de `wensen`-lijst van diezelfde
+scopesessie.
+
+De entree heeft daarmee bij een verse dag geen open ticket. Dat is geen verlies:
+je loopt de gang in en krijgt daar meteen drie briefjes, en "een ruimte
+binnenlopen levert werk op" leert zich beter aan een ruimte waar je zelf naartoe
+gelopen bent.
 
 Die afhankelijkheid staat op het **kind**, in zijn eigen `available_when`
-(`{"tickets_done": ["t08"]}`), en niet als `unlocks` op de ouder. Dat is geen
+(`{"tickets_done": ["t01"]}`), en niet als `unlocks` op de ouder. Dat is geen
 stijlkeuze: zo is beschikbaarheid afgeleide state, en herstelt
 `refresh_availability()` de hele keten na het laden van een save. Een `unlocks`
 is een gebeurtenis, en die kan na het laden niet opnieuw worden afgespeeld —
@@ -30,13 +55,13 @@ De ruimtes zijn de echte ruimtes van de vloer — zie `docs/LEVEL.md`.
 |---|---|---|---|---|---|
 | BBD-201 | Wat moeten we eigenlijk bouwen? | Summit | daan | `mg_user_story` | vanaf het begin |
 | BBD-202 | Waarom sta ik hier eigenlijk? | De Vloer | daan | `mg_planning` | vanaf het begin |
-| BBD-203 | De klant heeft feedback | Entree | willem | `mg_klantfeedback` | vanaf het begin |
+| BBD-203 | De klant heeft feedback | Entree | willem | `mg_klantfeedback` | na BBD-201 |
 | BBD-204 | De frontend is stuk | De Vloer | victor | `mg_frontend_fix` | vanaf het begin |
 | BBD-205 | De backend is stuk | Het Patchhok | jonathan | `mg_backend_fix` | vanaf het begin |
-| BBD-206 | Niemand koopt iets | Basecamp | danny | `mg_cro` | vanaf het begin |
-| BBD-207 | We hebben muziek nodig | Koffiecorner | danny | `mg_muziek` | vanaf het begin |
-| BBD-208 | De klant wil een AI-video | Het Vergaderhokje | koen | `mg_video` | vanaf het begin |
-| BBD-209 | Er lopen paardenbugs door het kantoor | De Vloer | bastiaan | `mg_paarden` | vanaf het begin |
+| BBD-206 | Niemand koopt iets | Basecamp | danny | `mg_cro` | na BBD-205 |
+| BBD-207 | We hebben muziek nodig | Koffiecorner | danny | `mg_muziek` | na BBD-204 |
+| BBD-208 | De klant wil een AI-video | Het Vergaderhokje | koen | `mg_video` | na BBD-201 |
+| BBD-209 | Er lopen paardenbugs door het kantoor | De Vloer | bastiaan | `mg_paarden` | na BBD-202 |
 | BBD-210 | Naar productie | Birdhouse | iedereen | `mg_deploy` | bij 9/10 |
 
 ## Wereldveranderingen

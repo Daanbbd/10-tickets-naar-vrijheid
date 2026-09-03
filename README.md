@@ -25,15 +25,20 @@ Open het project in Godot en druk op play, of vanaf de command line:
 praten, onderzoeken, gebruiken · **TAB** je tickets · **Q** hint · **ESC**
 pauzemenu, en een minigame afbreken.
 
-**Besturing (telefoon)** — duim links om te lopen, ver uitduwen is rennen · de
-knop rechtsonder draagt het werkwoord van waar je voor staat · **▤** je tickets
-· **?** hint · **☰** pauze.
+**Besturing (telefoon)** — duim rechts om te lopen, ver uitduwen is rennen ·
+tik op een object om ermee te doen wat er bij staat · **▤** je tickets · **?**
+hint · **☰** pauze. Deze drie knoppen staan linksonder; de joystick komt op
+waar je duim landt in de rechterhelft.
+
+Met een muis komt er geen joystick op — daar loop je met WASD en klik je op een
+object waar je naast staat.
 
 Je dag wordt bij elk opgelost ticket bewaard, en ook als je de app wegdrukt.
 **Doorgaan** op het titelscherm zet je terug waar je gebleven was.
 
-Vier tickets staan open zodra je binnenkomt; de rest komt vrij door werk af te
-maken. Je vindt ze door rond te lopen, en je kiest op het bord welke je als
+De dag begint bij de kickoff: BBD-201 ("Wat moeten we eigenlijk bouwen?") staat
+open zodra je binnenkomt, samen met drie andere tickets, en haar feedback en de
+AI-video komen daar pas achteraan. De rest komt vrij door werk af te maken. Je vindt ze door rond te lopen, en je kiest op het bord welke je als
 eerste doet. Tien tickets, tien verschillende opgaven — geen twee delen een
 mechaniek. Wat je onderweg besluit komt terug:
 in wat je collega's zeggen, in wat De Klant je stuurt, en in hoe zwaar de
