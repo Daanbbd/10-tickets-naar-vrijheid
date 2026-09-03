@@ -437,19 +437,184 @@ def validate():
     d0 = dijkstra(tuple(SPAWN), solid)
     unreach = [p for p in free if p not in d0]
     worst = max(d0.values())
-    return free, unreach, worst
+    return free, unreach, worst, solid, d0
+
+# ---- de vloer tegen de rest van data/ houden -------------------------------
+# Deze checks stonden alleen in scripts/tests/test_runner.gd. Dat betekende dat
+# een vloer met verschoven coordinaten pas na een Godot-run zichtbaar werd, en
+# dan als honderd failures tegelijk. Hier kosten ze een seconde en noemen ze
+# precies welk object, welke NPC-stap en welk ticketanker is gestrand — dat is
+# de worklist, niet de schade.
+
+def _data(*p):
+    return os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "data", *p))
+
+def _laad(*p):
+    with open(_data(*p), encoding="utf-8") as f:
+        return json.load(f)
+
+def zone_at(x, y):
+    """Port van world_builder.gd zone_at(): eerste treffer wint, dus de
+    volgorde van ZONES is betekenisdragend."""
+    for z in ZONES:
+        a, b, c, d = z["rect"]
+        if a <= x <= c and b <= y <= d:
+            return z["id"]
+    return ""
+
+def _tegel_ok(t, solid, bereik):
+    p = (int(t[0]), int(t[1]))
+    if not (0 <= p[0] < W and 0 <= p[1] < H):
+        return "ligt buiten de vloer"
+    if p in solid:
+        return "staat in een muur of meubel"
+    if p not in bereik:
+        return "is onbereikbaar vanaf de spawn"
+    return None
+
+def controleer_data(solid, bereik):
+    klachten = []
+
+    objecten = _laad("objects.json")
+    wereld_ids = set(_laad("world_ids.json"))
+
+    # 1 + 5: elk object op een begaanbare, bereikbare tegel met een bekend id
+    for o in objecten:
+        wid = o["world_id"]
+        fout = _tegel_ok(o["tile"], solid, bereik)
+        if fout:
+            klachten.append("object '%s' op %s %s" % (wid, o["tile"], fout))
+        if wid not in wereld_ids:
+            klachten.append("object '%s' staat niet in world_ids.json" % wid)
+
+    # 6: de winconditie. main.gd vuurt hem als de speler het voordeur-object
+    # gebruikt, maar alleen de 'V'-tegel is de echte uitgang. Verhuist de deur
+    # wel en het object niet, dan is het spel stil onuitspeelbaar en vangt
+    # alleen een volledige playthrough dat. Dus hard.
+    per_id = {o["world_id"]: o for o in objecten}
+    uitgangen = {(x, y) for y in range(H) for x in range(W)
+                 if LEGEND[g[y][x]]["kind"] == "exit"}
+    if "voordeur" in per_id:
+        vx, vy = per_id["voordeur"]["tile"]
+        if not any((vx + dx, vy + dy) in uitgangen
+                   for dx, dy in ((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1))):
+            klachten.append(
+                "object 'voordeur' op (%d,%d) ligt niet naast een exit-tegel — "
+                "de winconditie in main.gd kan nooit vuren" % (vx, vy))
+
+    # 2: NPC's staan stil op hun home_tile en lopen hun route echt af
+    for n in _laad("npcs.json"):
+        fout = _tegel_ok(n["home_tile"], solid, bereik)
+        if fout:
+            klachten.append("NPC '%s' home_tile %s %s" % (n["id"], n["home_tile"], fout))
+        for i, wp in enumerate(n.get("route", [])):
+            fout = _tegel_ok(wp, solid, bereik)
+            if fout:
+                klachten.append("NPC '%s' route[%d] %s %s" % (n["id"], i, wp, fout))
+
+    # 3: een ticketanker moet in de zone liggen die het ticket zelf noemt.
+    # Precies de bug die vorige ronde met de hand gevonden is (t08).
+    tdir = _data("tickets")
+    for naam in sorted(os.listdir(tdir)):
+        if not naam.endswith(".json"):
+            continue
+        t = _laad("tickets", naam)
+        anker, zone = t.get("anchor"), t.get("zone")
+        if not anker or not zone:
+            continue
+        if anker not in per_id:
+            klachten.append("ticket %s ankert op '%s', dat geen object is" % (t["id"], anker))
+            continue
+        ax, ay = per_id[anker]["tile"]
+        echt = zone_at(ax, ay)
+        if echt != zone:
+            klachten.append(
+                "ticket %s zegt zone '%s', maar anker '%s' op (%d,%d) ligt volgens zone_at() in '%s'"
+                % (t["id"], zone, anker, ax, ay, echt or "geen zone"))
+
+    # 4: een zone moet binnen de vloer vallen en ook echt beloopbaar zijn
+    for z in ZONES:
+        a, b, c, d = z["rect"]
+        if not (0 <= a <= c < W and 0 <= b <= d < H):
+            klachten.append("zone '%s' rect %s valt buiten de vloer %dx%d" % (z["id"], z["rect"], W, H))
+            continue
+        if not any((x, y) not in solid for y in range(b, d + 1) for x in range(a, c + 1)):
+            klachten.append("zone '%s' heeft geen enkele begaanbare tegel" % z["id"])
+
+    # 7: twee props op dezelfde tegel betekent twee sprites over elkaar. De
+    # rects zijn met de hand geplaatst, dus dit is makkelijk mis te gaan.
+    vast = [p for p in PROPS if not p.get("hangend")]
+    for i, p in enumerate(vast):
+        ax0, ay0, ax1, ay1 = p["rect"]
+        for q in vast[i + 1:]:
+            bx0, by0, bx1, by1 = q["rect"]
+            if ax0 <= bx1 and bx0 <= ax1 and ay0 <= by1 and by0 <= ay1:
+                klachten.append("props '%s' %s en '%s' %s overlappen"
+                                % (p["prop"], p["rect"], q["prop"], q["rect"]))
+
+    return klachten
+
+def losse_meubels(objecten):
+    """Objecten die naar een meubel vernoemd zijn maar er niet naast liggen.
+
+    Zacht, geen afkeuring: het meubel kan een samengestelde prop zijn in plaats
+    van een enkel legenda-teken, en dan klopt de tegel wel maar het teken niet.
+    Bruikbaar als handleiding bij het verplaatsen, niet als poort.
+    """
+    per_id = {o["world_id"]: o for o in objecten}
+    prop_bij = {}
+    for p in PROPS:
+        stam = p["prop"].rsplit("_", 1)[0]
+        prop_bij.setdefault(stam, []).append(p["rect"])
+    los = []
+    for ch, info in LEGEND.items():
+        naam = info.get("prop")
+        if naam not in per_id:
+            continue
+        ox, oy = per_id[naam]["tile"]
+        buren = [(ox, oy), (ox - 1, oy), (ox + 1, oy), (ox, oy - 1), (ox, oy + 1)]
+        if any(0 <= x < W and 0 <= y < H and g[y][x] == ch for x, y in buren):
+            continue
+        if any(x0 - 1 <= ox <= x1 + 1 and y0 - 1 <= oy <= y1 + 1
+               for x0, y0, x1, y1 in prop_bij.get(naam, [])):
+            continue
+        if not any(g[y][x] == ch for y in range(H) for x in range(W)):
+            los.append("'%s' op (%d,%d): teken '%s' staat nergens op de vloer" % (naam, ox, oy, ch))
+        else:
+            los.append("'%s' op (%d,%d) ligt niet naast zijn '%s'-tegel" % (naam, ox, oy, ch))
+    return los
+
 
 def main():
-    free, unreach, worst = validate()
+    alleen_vloer = "--alleen-vloer" in sys.argv
+    free, unreach, worst, solid, bereik = validate()
     ok = not unreach
     print(f"begaanbare tegels : {len(free)}")
     print(f"onbereikbaar      : {len(unreach)} {unreach[:12]}")
     print(f"verste punt       : {worst:.1f} tiles = {worst / WALK_SPEED_TILES:.1f}s lopen")
-    for zid in [z["id"] for z in ZONES]:
-        pass
     if not ok:
         print("AFGEKEURD: onbereikbare vloertegels.", file=sys.stderr)
         sys.exit(1)
+
+    klachten = controleer_data(solid, bereik)
+    if klachten:
+        kop = "WAARSCHUWING" if alleen_vloer else "AFGEKEURD"
+        print(f"{kop}      : {len(klachten)} punten uit data/ passen niet op deze vloer",
+              file=sys.stderr)
+        for k in klachten:
+            print("  - " + k, file=sys.stderr)
+        if not alleen_vloer:
+            print("Draai met --alleen-vloer om de vloer toch te schrijven en deze lijst "
+                  "als worklist te gebruiken.", file=sys.stderr)
+            sys.exit(1)
+    else:
+        print("data/ tegen vloer : alles past")
+
+    los = losse_meubels(_laad("objects.json"))
+    if los:
+        print("los van hun meubel : %d (zacht, ter info)" % len(los))
+        for l in los:
+            print("  ~ " + l)
 
     data = {
         "size": [W, H],
