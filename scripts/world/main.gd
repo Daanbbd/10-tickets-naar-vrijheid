@@ -3,7 +3,6 @@ extends Node2D
 ## van de _ready-volgorde van siblings.
 
 const PLAYER_SCENE := "res://scenes/entities/player.tscn"
-const OBJECTS_JSON := "res://data/objects.json"
 
 ## De zeven light-moods uit floor.json waren geschreven en werden door niets
 ## gelezen. Dit maakt van 60% identiek grijs acht ruimtes die anders voelen.
@@ -688,12 +687,9 @@ func _examine(it: Interactable) -> void:
 # --- Opbouw ---------------------------------------------------------------
 
 func _spawn_objects() -> void:
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(OBJECTS_JSON))
-	if not (parsed is Array):
-		push_error("Main: %s kon niet gelezen worden" % OBJECTS_JSON)
-		return
-
-	for raw: Variant in parsed:
+	# Uit GameData en niet uit het bestand: `QuestEngine` leest dezelfde regels
+	# om afstanden te wegen, en één lezer is één waarheid.
+	for raw: Variant in GameData.objects:
 		var d := raw as Dictionary
 		var wo := WorldObject.new()
 		wo.world_id = StringName(d.get("world_id", ""))
@@ -804,6 +800,11 @@ func _qa_kaart() -> void:
 
 
 func _on_player_tile(t: Vector2i) -> void:
+	# Waar de speler staat, zodat `QuestEngine.next_hint_ticket()` het dichtste
+	# doel kan kiezen in plaats van het laagste ticketnummer. Hier en niet als
+	# parameter door drie lagen: de wijzer, de doelregel en de hintknop vragen
+	# alle drie hetzelfde en hoeven de speler daarvoor niet te kennen.
+	Session.player_tile = t
 	# Eén pixel per tegel, dus per tegel bijwerken is precies de resolutie van de
 	# strip. Vaker zou niets veranderen en wel elke frame een redraw kosten.
 	_kompas_bijwerken()

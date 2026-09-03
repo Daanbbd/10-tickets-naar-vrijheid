@@ -28,6 +28,13 @@ var followers: Array[StringName] = []
 ## Het ticket dat je zelf gekozen hebt. Stuurt de doelregel, de hint en de
 ## wijzer in de wereld. Leeg = je hebt nog niets gekozen.
 var pinned_ticket: StringName = &""
+
+## Waar de speler nu staat, in tegels. Transient: hij staat niet in `to_dict()`,
+## want na het laden begin je weer bij het spawnpunt en is deze waarde onjuist
+## tot de eerste tegelwissel. (-1, -1) betekent "nog geen speler", en daar
+## rekent `QuestEngine.next_hint_ticket()` op: zonder speler valt hij terug op
+## ticketvolgorde, zoals in de headless suite.
+var player_tile: Vector2i = Vector2i(-1, -1)
 var counters: Dictionary = {}       ## StringName -> int
 ## Wat de dag met je heeft gedaan, in getallen. Alleen `Gevolgen` schrijft hier
 ## en alleen de finale leest eruit; de narratieve gevolgen zijn gewone flags,

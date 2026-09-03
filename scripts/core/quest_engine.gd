@@ -266,15 +266,59 @@ static func next_hint_ticket() -> TicketDef:
 	if Session.pinned_ticket != &"" and Session.is_available(Session.pinned_ticket):
 		return GameData.ticket(Session.pinned_ticket)
 
-	var eerste_ongevonden: TicketDef = null
+	# Het dichtstbijzijnde doel, niet het laagste ticketnummer.
+	#
+	# Dit liep `ticket_ids()` af en gaf het eerste beschikbare terug. Die lijst
+	# staat op `order`, en dat is narratieve nummering: de gidslaag stuurde je
+	# dus in ticketnummervolgorde over de verdieping. Nagerekend op de ankers
+	# uit objects.json kost dat 338 tegels waar 156 genoeg is — ruim de helft
+	# van al het loopwerk in een speelbeurt, en het is loopwerk zonder inhoud.
+	#
+	# Wat het niet doet is kiezen wat je moet doen: elk beschikbaar ticket
+	# blijft even geldig en je eigen vastgezette keuze wint nog steeds. Het
+	# kiest alleen, tussen dingen die allemaal mogen, het dichtste.
+	#
+	# Afstand in tegels en Manhattan: er is geen pathfinding in dit spel (de
+	# speler loopt vrij en NPC's lopen rechte lijnen naar waypoints), dus een
+	# echte route bestaat niet om tegen te meten. En tegels en niet meters,
+	# want `meters_per_pixel()` heeft een eigen maat voor de lengterichting.
+	var vanaf := Session.player_tile
+	var beste_gevonden: TicketDef = null
+	var beste_gevonden_d := -1
+	var beste_ongevonden: TicketDef = null
+	var beste_ongevonden_d := -1
+
 	for id: StringName in GameData.ticket_ids():
 		if not Session.is_available(id):
 			continue
+		var t: TicketDef = GameData.ticket(id)
+		if t == null:
+			continue
+		var d := _afstand_tot(t, vanaf)
 		if Session.is_discovered(id):
-			return GameData.ticket(id)
-		if eerste_ongevonden == null:
-			eerste_ongevonden = GameData.ticket(id)
-	return eerste_ongevonden
+			if beste_gevonden == null or d < beste_gevonden_d:
+				beste_gevonden = t
+				beste_gevonden_d = d
+		elif beste_ongevonden == null or d < beste_ongevonden_d:
+			beste_ongevonden = t
+			beste_ongevonden_d = d
+
+	return beste_gevonden if beste_gevonden != null else beste_ongevonden
+
+
+## Afstand van `vanaf` tot het anker van dit ticket, in tegels.
+##
+## Geeft 0 zodra er geen speler is (`vanaf` is dan (-1, -1)) of het anker geen
+## tegel heeft: dan zijn alle afstanden gelijk en houdt de lus hierboven de
+## eerste in `order` over — precies het oude gedrag, wat de headless suite en
+## elke test die zonder wereld draait nodig heeft.
+static func _afstand_tot(t: TicketDef, vanaf: Vector2i) -> int:
+	if vanaf.x < 0:
+		return 0
+	var doel := GameData.object_tile(t.anchor)
+	if doel.x < 0:
+		return 0
+	return absi(doel.x - vanaf.x) + absi(doel.y - vanaf.y)
 
 
 static func open_tickets() -> Array[TicketDef]:

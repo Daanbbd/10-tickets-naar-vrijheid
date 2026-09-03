@@ -11,6 +11,14 @@ var minigames: Dictionary = {}    ## StringName -> Dictionary {scene, title}
 var world_ids: Array[StringName] = []
 var floor_data: Dictionary = {}
 
+## De ruwe regels uit data/objects.json. `main.gd` bouwt hier zijn WorldObjects
+## uit, en `QuestEngine` leest er de tegel van een anker uit om afstanden te
+## kunnen wegen. Stond eerder alleen in `Main._spawn_objects()`, dat het bestand
+## zelf parste — met een tweede lezer wordt dat twee keer dezelfde JSON en twee
+## plekken die uit elkaar kunnen lopen.
+var objects: Array = []
+var _object_tiles: Dictionary = {}   ## StringName -> Vector2i
+
 var load_errors: Array[String] = []
 var _ticket_order: Array[StringName] = []
 
@@ -24,12 +32,14 @@ func load_all() -> void:
 	characters.clear(); npcs.clear(); items.clear()
 	tickets.clear(); dialogues.clear(); minigames.clear()
 	world_ids.clear(); _ticket_order.clear()
+	objects.clear(); _object_tiles.clear()
 
 	_load_characters("res://data/characters.json")
 	_load_npcs("res://data/npcs.json")
 	_load_items("res://data/items.json")
 	_load_minigames("res://data/minigames.json")
 	_load_world_ids("res://data/world_ids.json")
+	_load_objects("res://data/objects.json")
 	floor_data = _read_json("res://data/floor.json") as Dictionary
 
 	for path: String in _files_in("res://data/tickets", ".json"):
@@ -77,6 +87,14 @@ func dialogue(id: StringName) -> DialogueDef:
 func minigame_scene_path(id: StringName) -> String:
 	var m := minigames.get(id, {}) as Dictionary
 	return String(m.get("scene", ""))
+
+## De tegel van een object, of (-1, -1) als het niet bestaat. Vector2i en niet
+## een positie in pixels: afstanden horen in tegels gewogen te worden, want
+## `meters_per_pixel()` heeft sinds de ingekorte vloer een eigen maat voor de
+## lengterichting en dan meet je door die correctie heen.
+func object_tile(world_id: StringName) -> Vector2i:
+	return _object_tiles.get(world_id, Vector2i(-1, -1))
+
 
 func has_world_id(id: StringName) -> bool:
 	return id in world_ids
@@ -169,6 +187,23 @@ func _load_minigames(path: String) -> void:
 func _load_world_ids(path: String) -> void:
 	for raw: Variant in _array_of(path):
 		world_ids.append(StringName(raw))
+
+
+## Alleen inlezen en de tegels indexeren; wat een object verder ís (kind, label,
+## dialoog) blijft de zaak van `Main._spawn_objects()`.
+func _load_objects(path: String) -> void:
+	for raw: Variant in _array_of(path):
+		var d := raw as Dictionary
+		objects.append(d)
+		var wid := StringName(d.get("world_id", ""))
+		var t: Array = d.get("tile", [])
+		if wid == &"":
+			load_errors.append("object zonder world_id in %s" % path)
+			continue
+		if t.size() != 2:
+			load_errors.append("object '%s' heeft geen tile" % wid)
+			continue
+		_object_tiles[wid] = Vector2i(int(t[0]), int(t[1]))
 
 
 func _load_ticket(path: String) -> void:

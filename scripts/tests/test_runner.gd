@@ -74,6 +74,7 @@ func _ready() -> void:
 	_test_duimzone_rechts()
 	await _test_weggevallen_regel_telt()
 	_test_hokjedak_dekt_de_zone()
+	_test_wijzer_kiest_het_dichtste()
 	_rapport()
 
 
@@ -3836,3 +3837,78 @@ func _test_hokjedak_dekt_de_zone() -> void:
 	# En hij moet boven de speler liggen, anders loop je ervoor langs in plaats
 	# van eronder — dat is het hele punt van een dak.
 	_ok(HokjeDak.Z_DAK > 0, "Z_DAK is %d en ligt daarmee niet boven de wereld" % HokjeDak.Z_DAK)
+
+
+## De wijzer kiest het dichtste beschikbare ticket, niet het laagste nummer.
+##
+## `next_hint_ticket()` liep `ticket_ids()` af, en die lijst staat op `order`.
+## De gidslaag stuurde je daarmee in ticketnummervolgorde over de verdieping:
+## nagerekend op de ankers uit objects.json 338 tegels waar 156 genoeg is.
+## Deze test staat er omdat de oude versie er onschuldig uitzag — "geef het
+## eerste beschikbare terug" is een redelijke regel, tot je ziet welke volgorde
+## die lijst heeft.
+func _test_wijzer_kiest_het_dichtste() -> void:
+	_kop("de wijzer kiest het dichtste doel")
+
+	var bewaar_tile := Session.player_tile
+	QuestEngine.start_run(&"daan")
+
+	# Twee tickets die bij de start allebei openstaan, met ankers ver uit
+	# elkaar. Uit de data gehaald, niet gehardcodeerd: de vloer is al een keer
+	# ingekort en dan moeten deze tegels meebewegen.
+	var open_ids: Array[StringName] = []
+	for id: StringName in GameData.ticket_ids():
+		if Session.is_available(id) and GameData.object_tile(GameData.ticket(id).anchor).x >= 0:
+			open_ids.append(id)
+	_ok(open_ids.size() >= 2, "minder dan twee open tickets met een anker; test kan niets meten")
+	if open_ids.size() < 2:
+		Session.player_tile = bewaar_tile
+		return
+
+	# De twee die het verst van elkaar liggen, zodat de meting niet op een
+	# gelijkspel uitkomt.
+	var a: StringName = open_ids[0]
+	var b: StringName = open_ids[1]
+	var verst := -1
+	for i: int in open_ids.size():
+		for j: int in range(i + 1, open_ids.size()):
+			var ta := GameData.object_tile(GameData.ticket(open_ids[i]).anchor)
+			var tb := GameData.object_tile(GameData.ticket(open_ids[j]).anchor)
+			var d := absi(ta.x - tb.x) + absi(ta.y - tb.y)
+			if d > verst:
+				verst = d
+				a = open_ids[i]
+				b = open_ids[j]
+	_ok(verst > 0, "de twee ankers liggen op dezelfde tegel")
+
+	Session.discover(a)
+	Session.discover(b)
+	Session.unpin()
+
+	# Naast a gaan staan moet a opleveren, ook als b een lager ticketnummer heeft.
+	Session.player_tile = GameData.object_tile(GameData.ticket(a).anchor)
+	var bij_a: TicketDef = QuestEngine.next_hint_ticket()
+	_ok(bij_a != null and bij_a.id == a,
+		"naast %s wijst de wijzer naar %s" % [a, bij_a.id if bij_a != null else &"niets"])
+
+	Session.player_tile = GameData.object_tile(GameData.ticket(b).anchor)
+	var bij_b: TicketDef = QuestEngine.next_hint_ticket()
+	_ok(bij_b != null and bij_b.id == b,
+		"naast %s wijst de wijzer naar %s" % [b, bij_b.id if bij_b != null else &"niets"])
+
+	# En zonder speler valt hij terug op ticketvolgorde, want dan zijn alle
+	# afstanden 0. Daar leunt elke test op die zonder wereld draait.
+	# Alleen a en b zijn gevonden, en gevonden gaat voor: verwacht dus de eerste
+	# van die twee in order, niet het eerste open ticket.
+	var eerst_gevonden: StringName = a
+	for id: StringName in GameData.ticket_ids():
+		if id == a or id == b:
+			eerst_gevonden = id
+			break
+	Session.player_tile = Vector2i(-1, -1)
+	var zonder: TicketDef = QuestEngine.next_hint_ticket()
+	_ok(zonder != null and zonder.id == eerst_gevonden,
+		"zonder speler geeft de wijzer %s in plaats van %s (de eerste in order)" % [
+			zonder.id if zonder != null else &"niets", eerst_gevonden])
+
+	Session.player_tile = bewaar_tile
