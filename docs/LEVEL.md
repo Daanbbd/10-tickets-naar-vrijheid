@@ -148,7 +148,7 @@ koffiecorner waar de blauwe tijger staat.
 | `z6_basecamp` | Basecamp | 42,1 – 51,6 | neutraal |
 | `z7_birdhouse` | Birdhouse | 53,1 – 63,6 | koel |
 | `z10_weekend` | Weekend | 70,1 – 78,24 | jungle |
-| `z9_vloer` | De Vloer | 1,14 – 68,24 | neutraal |
+| `z9_vloer` | De Werkvloer | 1,14 – 68,24 | neutraal |
 | `z11_gang` | De Gang | 10,1 – 68,13 | neutraal |
 
 Elk van de tien ticketankers ligt in de zone die het ticket noemt. Dat gold niet

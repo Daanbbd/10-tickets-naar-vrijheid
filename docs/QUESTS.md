@@ -54,14 +54,14 @@ De ruimtes zijn de echte ruimtes van de vloer — zie `docs/LEVEL.md`.
 | Code | Titel | Zone | Vakgebied | Minigame | Open |
 |---|---|---|---|---|---|
 | BBD-201 | Wat moeten we eigenlijk bouwen? | Summit | daan | `mg_user_story` | vanaf het begin |
-| BBD-202 | Waarom sta ik hier eigenlijk? | De Vloer | daan | `mg_planning` | vanaf het begin |
+| BBD-202 | Waarom sta ik hier eigenlijk? | De Werkvloer | daan | `mg_planning` | vanaf het begin |
 | BBD-203 | De klant heeft feedback | Entree | willem | `mg_klantfeedback` | na BBD-201 |
-| BBD-204 | De frontend is stuk | De Vloer | victor | `mg_frontend_fix` | vanaf het begin |
+| BBD-204 | De frontend is stuk | De Werkvloer | victor | `mg_frontend_fix` | vanaf het begin |
 | BBD-205 | De backend is stuk | Het Patchhok | jonathan | `mg_backend_fix` | vanaf het begin |
 | BBD-206 | Niemand koopt iets | Basecamp | danny | `mg_cro` | na BBD-205 |
 | BBD-207 | We hebben muziek nodig | Koffiecorner | danny | `mg_muziek` | na BBD-204 |
 | BBD-208 | De klant wil een AI-video | Het Vergaderhokje | koen | `mg_video` | na BBD-201 |
-| BBD-209 | Er lopen paardenbugs door het kantoor | De Vloer | bastiaan | `mg_paarden` | na BBD-202 |
+| BBD-209 | Er lopen paardenbugs door het kantoor | De Werkvloer | bastiaan | `mg_paarden` | na BBD-202 |
 | BBD-210 | Naar productie | Birdhouse | iedereen | `mg_deploy` | bij 9/10 |
 
 ## Wereldveranderingen
@@ -115,16 +115,16 @@ Deze regels verschijnen op het ticketbord (▤, sneltoets Tab), via de hint
 
 | Code | Hint |
 |---|---|
-| BBD-201 | Op de tafel in Summit: de eerste van de drie glazen vergaderruimtes langs de gang. |
-| BBD-202 | Het scrumbord hangt op de werkvloer, precies onder de tribune van de koffiecorner. |
-| BBD-203 | De klant zit in de entree op de bank, voorbij de kapstok. |
+| BBD-201 | Op de vergadertafel, achter het glas halverwege de gang. |
+| BBD-202 | Meteen bij de voordeur, achter het eerste bureau-eiland. |
+| BBD-203 | De klant zit op de bank, voorbij de kapstok. |
 | BBD-204 | De wandmonitor hangt aan het begin van de werkvloer, naast het ticketbord. |
-| BBD-205 | Het Patchhok zit naast de toiletten, achter de badgelezer. |
-| BBD-206 | De dashboardmuur hangt in Basecamp: de tweede glazen ruimte, met de ronde tafel. |
-| BBD-207 | De speaker staat in de koffiecorner, naast de koelkast, voorbij de tribune. |
-| BBD-208 | De iPad ligt in het vergaderhokje midden in de gang, dat met de Samen Bingo-poster. |
+| BBD-205 | Direct onder de toiletten, achter de badgelezer. |
+| BBD-206 | De dashboardmuur hangt in de tweede glazen ruimte, die met de ronde tafel. |
+| BBD-207 | De speaker staat aan het eind van de tribune, tegen het blok waar je omheen kunt lopen. |
+| BBD-208 | De iPad ligt in het hokje midden in de gang, met de Samen Bingo-poster op de deur. |
 | BBD-209 | Ze zijn overal. Je vindt ze vanzelf. |
-| BBD-210 | De deploymentcomputer staat in Birdhouse, de laatste en grootste glazen zaal. De deploysleutel ligt in de plantenkast, onder het speelgoedpaard. |
+| BBD-210 | De deploymentcomputer staat in de laatste en grootste glazen zaal. De deploysleutel ligt in de plantenkast, onder het speelgoedpaard. |
 
 De drie glazen vergaderruimtes staan in de hints **op een rij genummerd**:
 Summit is de eerste, Basecamp de tweede, Birdhouse de laatste en grootste. Dat
