@@ -1,6 +1,10 @@
 extends Control
 ## Titelscherm.
 
+## Hoe ver de kolom van de canvasranden blijft. Zelfde getal als `Hud.MARGE`,
+## maar niet daaruit geleend: dit scherm kent de HUD niet.
+const MARGE := 4
+
 func _ready() -> void:
 	UiKit.full_rect(self)
 	var bg := ColorRect.new()
@@ -8,11 +12,15 @@ func _ready() -> void:
 	UiKit.full_rect(bg)
 	add_child(bg)
 
+	# Verticaal gecentreerd, horizontaal aan de canvasranden met een marge —
+	# niet op een vaste breedte. Dit stond op -140/140, dus 280 px op een canvas
+	# van 192: de knoppen rekken met de VBox mee, dus "Doorgaan" en "Afsluiten"
+	# liepen er 44 px aan elke kant buiten. Zelfde patroon als
+	# `character_select.gd`, dat zijn wortel op 4/-4 zet.
 	var v := VBoxContainer.new()
-	v.set_anchors_preset(Control.PRESET_CENTER)
-	v.anchor_left = 0.5; v.anchor_right = 0.5
+	v.anchor_left = 0.0; v.anchor_right = 1.0
 	v.anchor_top = 0.5; v.anchor_bottom = 0.5
-	v.offset_left = -140; v.offset_right = 140
+	v.offset_left = MARGE; v.offset_right = -MARGE
 	v.offset_top = -70; v.offset_bottom = 70
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_theme_constant_override("separation", 4)
@@ -149,7 +157,15 @@ func _toon_bevestiging() -> void:
 	# een tweede primaire kleur voor een destructieve actie zou de twee door
 	# elkaar laten lopen. Rood is hier de enige plek in de boot-schermen die
 	# een waarschuwing draagt.
-	var wis := UiKit.button("Ja, dag wissen en opnieuw beginnen", UiKit.FS_BODY)
+	#
+	# En `keuzeknop()` en niet `button()`. Een `UiKit.button()` zet bewust geen
+	# autowrap (zie de gemeten tabel bij die functie), dus hij meldde deze 33
+	# tekens als minimumbreedte: ~210 px op een paneel dat 168 vraagt. Een
+	# Control kan niet onder zijn minimum, dus het paneel groeide buiten het
+	# canvas en de knop las "Ja, dag wissen en opnieuw be" met de rest eraf.
+	# `keuzeknop()` breekt af en past zich aan de breedte aan in plaats van
+	# eraan te trekken; twee regels is hier geen bezwaar.
+	var wis := UiKit.keuzeknop("Ja, dag wissen en opnieuw beginnen", UiKit.FS_BODY)
 	for kleur: StringName in [&"font_color", &"font_hover_color", &"font_focus_color"]:
 		wis.add_theme_color_override(kleur, UiKit.ROOD)
 	wis.pressed.connect(_op_wis_en_begin)

@@ -45,7 +45,10 @@ func _bouw_ping() -> void:
 	p.set_anchors_preset(Control.PRESET_CENTER)
 	p.anchor_left = 0.5; p.anchor_right = 0.5
 	p.anchor_top = 0.5; p.anchor_bottom = 0.5
-	p.offset_left = -130; p.offset_right = 130
+	# 184 en niet 260: dit stond op -130/130, dus 34 px aan elke kant buiten een
+	# canvas van 192. Dezelfde fout als het titelscherm had — een vaste breedte
+	# uit de oude 480x270-indeling die niemand tegen het portretcanvas hield.
+	p.offset_left = -92; p.offset_right = 92
 	p.offset_top = -26; p.offset_bottom = 26
 	p.modulate.a = 0.0
 	add_child(p)

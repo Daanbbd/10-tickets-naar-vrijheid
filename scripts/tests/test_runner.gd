@@ -66,6 +66,7 @@ func _ready() -> void:
 	_test_werving_begint_met_de_vraag()
 	_test_klant_is_een_persoon()
 	await _test_dialoogvenster_past()
+	await _test_schermen_passen()
 	await _test_klant_melding_voor_bericht()
 	_test_dialoog_speelt_niet_zijn_eigen_id()
 	_test_teller_daalt_niet_binnen_complete()
@@ -3912,3 +3913,103 @@ func _test_wijzer_kiest_het_dichtste() -> void:
 			zonder.id if zonder != null else &"niets", eerst_gevonden])
 
 	Session.player_tile = bewaar_tile
+
+
+## Elk paneel en elke knop op de boot-schermen past binnen het canvas.
+##
+## Dit is het gat waardoor drie afgekapte schermen konden shippen. De suite
+## controleerde hier gedrag en geen geometrie: `_test_save_verwijderen()` bouwt
+## de échte bevestigingsoverlay op en kijkt alleen of de wisknop de goede
+## functie aanroept. Of je die knop kón lezen was geen test.
+##
+## Wat er stond: het titelscherm zette zijn kolom op 280 px breed (canvas is
+## 192), de eindeschermen-ping op 260, en de knop "Ja, dag wissen en opnieuw
+## beginnen" was een `UiKit.button()` zonder autowrap — die meldt zijn volle
+## tekstbreedte als minimum en duwde het paneel daarmee buiten het canvas.
+##
+## Meet horizontaal én verticaal, en niet alleen het paneel: een Control groeit
+## standaard naar `GROW_DIRECTION_END`, en onderaan het scherm is dat de kant
+## waar niets meer is. Twee frames per scherm, want een Container legt zijn
+## kinderen pas in de layout-pass neer — zelfde reden als bij
+## `_test_dialoogvenster_past()`.
+func _test_schermen_passen() -> void:
+	_kop("de boot-schermen passen op het canvas")
+
+	for pad: String in ["res://scenes/boot/title.tscn",
+			"res://scenes/boot/ending.tscn",
+			"res://scenes/boot/intro_uitleg.tscn",
+			"res://scenes/boot/character_select.tscn"]:
+		var scherm: Control = (load(pad) as PackedScene).instantiate()
+		add_child(scherm)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		_meet_schermvulling(scherm, pad.get_file())
+
+		# De bevestigingsoverlay bestaat alleen na een aanroep, en juist daar zat
+		# de afgekapte knop. Hij hangt onder hetzelfde scherm, dus dezelfde meting.
+		if scherm.has_method("_toon_bevestiging"):
+			scherm.call("_toon_bevestiging")
+			await get_tree().process_frame
+			await get_tree().process_frame
+			_meet_schermvulling(scherm.get("_bevestiging") as Control,
+				"%s + bevestiging" % pad.get_file())
+			scherm.call("_sluit_bevestiging")
+
+		scherm.queue_free()
+		await get_tree().process_frame
+
+
+## Loopt de boom af en klaagt over elk paneel of elke knop die buiten het canvas
+## uitsteekt. `PanelContainer` en `Button` en niet elke Control: een Label mag
+## breder meten dan hij tekent, en een `full_rect`-ColorRect hoort juist precies
+## de rand te halen.
+func _meet_schermvulling(root: Control, naam: String) -> void:
+	if root == null:
+		_ok(false, "%s: geen scherm om te meten" % naam)
+		return
+	var vp := get_viewport().get_visible_rect()
+	for c: Control in _controls(root):
+		if not (c is PanelContainer or c is Button):
+			continue
+		if not c.is_visible_in_tree() or c.size == Vector2.ZERO:
+			continue
+		# Wat in een klemmende ouder hangt mag buiten beeld uitsteken: de
+		# personagerijen staan in een `ScrollContainer` en de onderste hoort
+		# er 24 px onderuit te lopen — dat is waar scrollen voor is.
+		if _wordt_geklemd(c, root):
+			continue
+		var r := Rect2(c.global_position, c.size)
+		var wat := "%s in %s" % [c.get_class(), naam]
+		if c is Button:
+			wat = "knop \"%s\" in %s" % [(c as Button).text.replace("\n", " "), naam]
+		_ok(r.position.x >= vp.position.x - 0.5,
+			"%s begint %.0f px links buiten het canvas" % [wat, vp.position.x - r.position.x])
+		_ok(r.end.x <= vp.end.x + 0.5,
+			"%s loopt %.0f px rechts buiten het canvas" % [wat, r.end.x - vp.end.x])
+		_ok(r.position.y >= vp.position.y - 0.5,
+			"%s begint %.0f px boven het canvas" % [wat, vp.position.y - r.position.y])
+		_ok(r.end.y <= vp.end.y + 0.5,
+			"%s loopt %.0f px onder het canvas door" % [wat, r.end.y - vp.end.y])
+
+
+## Hangt `c` in een ouder die zijn kinderen afklemt? `ScrollContainer` zet
+## `clip_contents` in zijn constructor, en `character_select.gd` zet hem zelf op
+## het podium — één vraag dekt dus beide.
+func _wordt_geklemd(c: Control, root: Control) -> bool:
+	var n := c.get_parent()
+	while n != null:
+		if n is Control and (n as Control).clip_contents:
+			return true
+		if n == root:
+			return false
+		n = n.get_parent()
+	return false
+
+
+func _controls(root: Node) -> Array[Control]:
+	var uit: Array[Control] = []
+	if root is Control:
+		uit.append(root as Control)
+	for kind: Node in root.get_children():
+		uit.append_array(_controls(kind))
+	return uit
