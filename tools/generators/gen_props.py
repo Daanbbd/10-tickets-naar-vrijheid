@@ -442,9 +442,8 @@ def main():
         meubels["bureau_4x%d.png" % th] = bureau_eiland_v(th)
     for th in (6, 8):
         meubels["plantenkast_3x%d.png" % th] = plantenkast_v(th)
-    # 38 breed hoorde bij de 130-tegelvloer; de 80-tegelvloer heeft 27 nodig.
-    # Beide blijven staan tot de vloerwissel gemerged is.
-    meubels["tafel_lang_38x2.png"] = tafel_lang(38)
+    # 27 en niet 38: de 38-brede tafel hoorde bij de 130-tegelvloer en is met
+    # die vloer verdwenen.
     meubels["tafel_lang_27x2.png"] = tafel_lang(27)
     meubels["vergadertafel_6x2.png"] = vergadertafel(6)
     meubels["boardroomtafel_7x2.png"] = boardroomtafel(7)
