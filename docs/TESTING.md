@@ -157,6 +157,7 @@ Alles achter `--` en alleen voor testen:
 | `--doorgaan` | drukt "Doorgaan" op het titelscherm in, dus hervat de bewaarde run (combineer met `--scherm=titel`) |
 | `--klant=<1-6>` | legt die melding van De Klant klaar zonder er tickets voor op te lossen |
 | `--auto=<world_id>` | zet de speler bij dat object en interacteert |
+| `--praat=<npc_id>` | zet de speler bij die collega en start het gesprek — `--auto=` bereikt geen NPC's, die komen uit `NpcLayer` en niet uit `floor.json`. Let op: `npc_id` is het veld uit `data/npcs.json`, meestal `npc_<naam>` (`npc_danny`, niet `danny`) |
 | `--kijk=<x>,<y>` | zet de speler op die tegel en doet verder niets |
 | `--autoplay` | drukt zelf op de interactietoets en lost minigames op |
 | `--playthrough` | speelt alle tien de tickets af |

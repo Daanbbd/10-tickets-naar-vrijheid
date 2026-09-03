@@ -182,6 +182,7 @@ func _ready() -> void:
 	else:
 		_qa_kijk()
 		_qa_auto()
+		_qa_praat()
 		_intro_beat()
 
 
@@ -306,7 +307,7 @@ func _intro_beat() -> void:
 	if Session.done_count() > 0:
 		return
 	for a: String in OS.get_cmdline_user_args():
-		if a.begins_with("--auto=") or a.begins_with("--kijk=") \
+		if a.begins_with("--auto=") or a.begins_with("--kijk=") or a.begins_with("--praat=") \
 				or a == "--autoplay" or a == "--playthrough":
 			return
 
@@ -379,6 +380,37 @@ func _qa_auto() -> void:
 	var it := wo.get_node_or_null("Interactable") as Interactable
 	if it != null:
 		_interact_with(it)
+
+
+## QA: `-- --speler=x --praat=<npc_id>` zet de speler bij een collega en
+## triggert het gesprek meteen. `--auto=` kan dit niet: collega's komen uit
+## `NpcLayer.spawn_initial()`, niet uit `floor.json`, en staan dus niet in
+## `registry`. Zonder dit was een NPC-gesprek de enige inhoud in het spel die
+## visueel niet te controleren was — `--auto=` triggert alleen wereldobjecten.
+## Gaat via dezelfde route als een echte E-druk (`TicketController
+## .handle_npc_talk()`), zodat dit ook de wervingstekst en de "collega
+## opgehaald"-stroom laat zien als er nog een ticket op deze collega wacht.
+func _qa_praat() -> void:
+	var target := ""
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--praat="):
+			target = a.trim_prefix("--praat=")
+	if target == "":
+		return
+
+	var npc := npc_layer.find_npc(StringName(target))
+	if npc == null:
+		push_error("QA: onbekende collega '%s'" % target)
+		return
+
+	var tile := builder.world_to_tile(npc.global_position)
+	player.global_position = builder.tile_to_world(builder.nearest_walkable(tile))
+	camera.global_position = player.global_position
+	camera.reset_smoothing()
+
+	await get_tree().create_timer(0.4).timeout
+	await _qa_dialoog_vrij()
+	tickets.handle_npc_talk(npc.interactable)
 
 
 ## QA: loopt alle tien de tickets af in de echte runtime, inclusief dialogen,
