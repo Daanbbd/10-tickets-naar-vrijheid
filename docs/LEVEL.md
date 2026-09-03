@@ -9,7 +9,21 @@ direction vastleggen.
 
 Opgemeten op de ontruimingsplattegrond: buitenwanden op x≈544 en x≈868,
 boven- en onderwand op y≈310 en y≈1930 → **≈5,06 : 1**. Het spel gebruikt
-**130 × 26 tegels** = 2080 × 416 px, dus 5,0 : 1.
+**80 × 26 tegels** = 1280 × 416 px, dus 3,08 : 1.
+
+Die verhouding klopt dus **bewust niet** meer met het pand. De vloer was 130 × 26
+en daarmee wél 5,0 : 1, maar dan waren de ruimtes groter dan wat erin staat --
+Birdhouse had twintig tegels en een zaal vol losse krukjes voor een kamer met één
+bureau en zes stoelen -- en was de gang ertussen leeg. `PLAN.md` F1-b telde 1025
+van 2340 beloopbare tegels zonder werk erop; `AUDIT.md` mat de openingszet op
+8,6 s lopen. De ruimtes zijn nu zo groot als hun inhoud en de lege meters ertussen
+zijn eruit. Wat je wint is een kantoor dat bezet aanvoelt; wat je inlevert is de
+letterlijke plattegrondverhouding.
+
+De speler merkt daar niets van in meters: `world_builder.gd` heeft naast
+`KORTE_AS_M` een `LANGE_AS_M := 60.0`, en de doelwijzer rekent met die tweede.
+Zonder dat zou "Birdhouse 22 m" veranderen in 14 m puur omdat de tekening korter
+werd.
 
 De schets is dezelfde vloer 90° tegen de klok in gedraaid: schets-links =
 plan-boven (toiletten, serverhok, entree), schets-boven = plan-rechts (de
@@ -28,18 +42,23 @@ je in de tekening zelf makkelijk mist: **SERVER HOK** onder het toilet, **Kast
 De oude vloer was een verzonnen *ring* om een dichte kern. Die kern bestaat niet.
 Wat er wel is:
 
-| Band | y | West (x1–8) | Oost (x10–95) |
+| Band | y | West (x1–8) | Oost (x11–68) |
 |---|---|---|---|
 | buitenwand | 0 | | kastenwand `k` en raam `w` achter de koffiecorner |
 | noordband | 1–6 | Toilet | open, met de **Koffiecorner als vrijstaand eiland**, dan Summit · Basecamp · Birdhouse |
-| scheidingslijn | 7 | wand tussen toilet en serverhok | glas vóór de drie vergaderruimtes; **open van x10 tot x41** |
-| circulatieband | 8–13 | Het Patchhok | De Gang, met het Vergaderhokje op x30–38 en de grote tafel met planten op x55–92 |
-| open werkvloer | 14–24 | Entree bij de voordeur | De Vloer: vijf bureau-eilanden en twee plantenkasten, raamzijde |
+| scheidingslijn | 7 | wand tussen toilet en patchhok | glas vóór de drie vergaderruimtes; **open van x11 tot x28** |
+| circulatieband | 8–13 | Het Patchhok | De Gang, met een plantenkast als roomdivider op x19–21, het Vergaderhokje op x27–33 en de grote tafel met planten op x37–63 |
+| open werkvloer | 14–24 | de lobby, achter de binnendeur op x9 | De Vloer: vijf bureau-eilanden en twee plantenkasten, raamzijde |
 | buitenwand | 25 | | |
 
-Geen doodlopers: de gang loopt door van x10 tot x95 en de bureauband is een
+Geen doodlopers: de gang loopt door van x11 tot x68 en de bureauband is een
 tweede doorlopende baan. Samen één lange lus. Weekend ligt achter een glaslijn
-op x96 met een brede opening op y10–15.
+op x69 met een opening op y11–14.
+
+De scheidingswanden tussen de drie vergaderruimtes (x29, x41, x52) zijn glas en
+geen metselwerk. Je kijkt vanaf de gang dwars door alle drie heen en ziet in één
+blik of er iemand zit — dat is wat er in het echt staat en het maakt de noordband
+leesbaar in plaats van drie dichte dozen.
 
 Het glas op y7 vóór Summit, Basecamp en Birdhouse is het wayfinding-wapen: je
 blijft de drie vergaderruimtes door de hele gang zien.
@@ -82,7 +101,7 @@ definitie niet omheen lopen, terwijl dat het enige is wat een *corner* van een
 kamer onderscheidt. Nu is het één solide blok op x18–33, y2–3 —
 `keukenblok_5x2` · koelkast · `tribune_10x2`, met de speaker van t07 tegen het
 oosteinde — met loopruimte aan alle vier de kanten: y1 boven, y4–y7 onder,
-x10–17 west, x34–41 oost. Op de buitenwand erachter staan de kastenwand (`k`,
+x11–12 west, x28 oost. Op de buitenwand erachter staan de kastenwand (`k`,
 donkerblauw, met de bank ervoor) en het raam (`w`), precies waar de schets ze
 rood aanwijst.
 
@@ -122,15 +141,15 @@ koffiecorner waar de blauwe tijger staat.
 |---|---|---|---|
 | `z2_toilet` | Toiletten | 1,1 – 8,6 | klinisch |
 | `z3_patchhok` | Het Patchhok | 1,8 – 8,13 | koud |
-| `z8_hokje` | Het Vergaderhokje | 30,8 – 38,11 | dim |
-| `z1_entree` | Entree | 1,14 – 4,24 | warm |
-| `z4_koffiecorner` | Koffiecorner | 10,1 – 36,6 | warm |
-| `z5_summit` | Summit | 43,1 – 53,6 | koel |
-| `z6_basecamp` | Basecamp | 55,1 – 71,6 | neutraal |
-| `z7_birdhouse` | Birdhouse | 73,1 – 92,6 | koel |
-| `z10_weekend` | Weekend | 97,1 – 128,24 | jungle |
-| `z9_vloer` | De Vloer | 1,14 – 95,24 | neutraal |
-| `z11_gang` | De Gang | 10,1 – 95,13 | neutraal |
+| `z8_hokje` | Het Vergaderhokje | 27,10 – 33,13 | dim |
+| `z1_entree` | Entree | 1,15 – 8,24 | warm |
+| `z4_koffiecorner` | Koffiecorner | 11,1 – 28,6 | warm |
+| `z5_summit` | Summit | 30,1 – 40,6 | koel |
+| `z6_basecamp` | Basecamp | 42,1 – 51,6 | neutraal |
+| `z7_birdhouse` | Birdhouse | 53,1 – 63,6 | koel |
+| `z10_weekend` | Weekend | 70,1 – 78,24 | jungle |
+| `z9_vloer` | De Vloer | 1,14 – 68,24 | neutraal |
+| `z11_gang` | De Gang | 10,1 – 68,13 | neutraal |
 
 Elk van de tien ticketankers ligt in de zone die het ticket noemt. Dat gold niet
 voor t08 (zie hierboven) en is geen toeval meer: wie een anker verplaatst, moet
@@ -193,9 +212,9 @@ wegschrijven. Huidige stand:
 
 | | |
 |---|---|
-| begaanbare tegels | 2404 |
+| begaanbare tegels | 1345 |
 | onbereikbaar | 0 (het script weigert te schrijven bij >0) |
-| verste punt vanaf spawn | 140,5 tegels = **23,4 s lopen** |
+| verste punt vanaf spawn | 87,8 tegels = **14,6 s lopen** |
 
 Dat is de prijs van de echte verhouding (was 14,6 s op de vierkante verzonnen
 vloer), plus de verhuizing van het spawnpunt naar de voordeur in de zuidwesthoek.
@@ -223,9 +242,17 @@ Bewerk `floor.json` **nooit** met de hand: de volgende run draait het stil terug
 ## Schaal
 
 Ankermaat: de verdieping is over de korte as **12 meter** breed. Die as is 26
-tegels, dus `M_PER_TILE = 12/26 = 0,4615`. Het gebouw is daarmee 60,0 × 12,0 m en
-exact **5,00 : 1** — tegen de 5,06 : 1 die op de ontruimingsplattegrond is
-opgemeten. 1,2% verschil, dus de schaal klopt.
+tegels, dus `M_PER_TILE = 12/26 = 0,4615`. Die as is ongewijzigd en blijft het
+anker voor alles wat dwars staat.
+
+De lange as is dat niet meer. Het pand is 60 m, de vloer is 80 tegels, dus in de
+lengte is de tekening samengeperst (0,75 m per tegel in plaats van 0,4615). Dat
+is een tekenkeuze, geen meetfout — zie **Verhouding** hierboven. Alles wat een
+afstand aan de speler toont gebruikt daarom `meters_per_tegel_lang()` uit
+`world_builder.gd` en niet `meters_per_tegel()`.
+
+Wie op afstand sorteert (bijvoorbeeld `next_hint_ticket()`) moet op **tegels**
+sorteren en niet op de getoonde meters, anders rekent hij door de correctie heen.
 
 Gebruik `tiles(meters)` en `m2(w, h)` uit `gen_floor.py` voor elke nieuwe maat.
 **Niet meer op gevoel kiezen.**
@@ -235,13 +262,20 @@ Gebruik `tiles(meters)` en `m2(w, h)` uit `gen_floor.py` voor elke nieuwe maat.
 | Toiletten | 8 × 6 | 10,2 |
 | Het Patchhok | 8 × 6 | 10,2 |
 | Koffiecorner (het eiland zelf) | 16 × 2 | 6,8 |
-| **Summit** | 11 × 6 | **14,1** — klein en leeg |
-| **Basecamp** | 17 × 6 | **21,7** — hybride werk/overleg |
-| **Birdhouse** | 20 × 6 | **25,6** — de grote zaal |
-| Het Vergaderhokje | 9 × 4 | 7,7 |
+| **Summit** | 11 × 6 | **14,1** — klein en leeg, hield zijn maat |
+| **Basecamp** | 10 × 6 | **12,8** — vier werkplekken, twee links en twee rechts |
+| **Birdhouse** | 11 × 6 | **14,1** — één boardroomtafel met zes stoelen |
+| Het Vergaderhokje | 7 × 4 | 6,0 |
+| De lobby | 8 × 10 | 17,0 |
 
-De drie vergaderruimtes zijn nu ook in tegels merkbaar verschillend, niet alleen
-in de tekst.
+De drie vergaderruimtes verschillen niet meer in oppervlak maar in inhoud.
+Birdhouse was de grote zaal omdat het de finale is; nu is het de kamer waar één
+tafel in staat, want dat is wat er in het echt staat. Summit hield zijn maat
+omdat die al klopte.
+
+De lobby is nieuw. Je komt binnen op de westwand, staat in een afgesloten hal
+onder het patchhok, en stapt door de binnendeur op x9 de werkvloer op. Daarvoor
+was de entree een hoek van de open vloer en merkte je van binnenkomen niets.
 
 ## Samengestelde meubels: tegel doet collision, sprite doet beeld
 
