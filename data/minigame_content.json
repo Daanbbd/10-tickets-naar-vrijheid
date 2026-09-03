@@ -245,7 +245,7 @@
   ],
   "drempel": 6,
   "success": "Elf punten zijn drie concrete requirements geworden. Mevrouw P. Aardenmens voelt zich gehoord en jij hebt iets om te bouwen. Beide waar, tegelijk.",
-  "failure": "Het gesprek is heel gezellig geweest. Er is niets besloten. Willem kijkt je aan. Nog een keer."
+  "failure": "Het gesprek is heel gezellig geweest. Er is niets besloten. Willem schrijft er zelf drie requirements bij elkaar — geen daarvan is wat ze bedoelde, en jij bouwt ze toch."
  },
  "mg_frontend_fix": {
   "type": "uitlijnen",
@@ -382,7 +382,7 @@
    ]
   ],
   "success": "De webshop praat weer met de database. Er staan echte prijzen op de pagina. Jonathan zegt dat het lokaal al werkte, en dat is ook waar.",
-  "failure": "Je hebt de webshop rechtstreeks aan de Excel van de klant geknoopt. Het werkt. Dat is precies het probleem. Haal die kabel weg en probeer opnieuw."
+  "failure": "Je hebt de webshop rechtstreeks aan de Excel van de klant geknoopt. Het werkt. Dat is precies het probleem, en niemand haalt de kabel er nog uit."
  },
  "mg_cro": {
   "type": "abtest",
@@ -583,7 +583,7 @@
   ],
   "eis": "Iets van twaalf seconden dat je zonder uitleg aan mevrouw P. Aardenmens kunt laten horen.",
   "success": "Twaalf seconden merksound. Willem speelt het af in de telefoon en de klant zegt 'oooh'. Dat is de hoogste score die bestaat.",
-  "failure": "Dit gaan we niet aan de klant laten horen. Gooi de tags weg en genereer opnieuw.",
+  "failure": "Dit gaan we niet aan de klant laten horen. Willem speelt hem toch af in de telefoon, en mevrouw Aardenmens zegt niks.",
   "pogingen": 4
  },
  "mg_video": {
