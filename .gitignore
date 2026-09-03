@@ -4,7 +4,14 @@ export_presets.cfg
 *.translation
 
 # QA-artefacten (gegenereerde frames en logs)
-qa/
+#
+# `qa/*` en niet `qa/`, zodat de uitzondering eronder werkt: bij `qa/` daalt git
+# de map niet meer in en is een `!`-regel erbinnen zinloos. Die ene uitzondering
+# is `.gdignore`, en die moet mee de repo in — zonder hem importeert Godot de
+# twintig QA-frames als projectresources en reizen ze mee in de pck van de
+# webbuild. Ze zaten er ~148 kB in.
+qa/*
+!qa/.gdignore
 
 # Webexport: de Web-preset schrijft hierheen (wasm + pck, tientallen MB)
 build/

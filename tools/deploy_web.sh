@@ -21,6 +21,14 @@ TIJD="$(date '+%Y-%m-%d %H:%M')"
 cd "$WORTEL"
 
 echo "==> Exporteren"
+# Eerst leegmaken, en niet alleen aanmaken. `build/web` ligt binnen de
+# projectmap, dus de PNG's die een vorige export daar achterliet (index.png,
+# index.icon.png, index.apple-touch-icon.png) worden bij de volgende run door
+# Godot geïmporteerd als gewone projectresources -- en belanden dan in de pck,
+# met hun .import-bestanden erbij in de gepubliceerde map. Elke deploy
+# vervuilde zo de volgende: de webbuild van 3 september 08:03 droeg 13 kB dode
+# iconen mee en drie .import-bestanden die niemand opvraagt.
+rm -rf build/web
 mkdir -p build/web
 "$GODOT" --headless --path . --export-release Web build/web/index.html
 
