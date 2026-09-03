@@ -48,6 +48,11 @@
         ],
         "choices": [
           {
+            "when": {
+              "flags_none": [
+                "dennis_bezocht"
+              ]
+            },
             "text": "Het gaat goed.",
             "next": "goed",
             "effects": [
@@ -59,6 +64,11 @@
             ]
           },
           {
+            "when": {
+              "flags_none": [
+                "dennis_bezocht"
+              ]
+            },
             "text": "Het is een puinhoop.",
             "next": "puinhoop",
             "effects": [
@@ -308,6 +318,11 @@
         "text": "Hoe zit het?",
         "choices": [
           {
+            "when": {
+              "flags_none": [
+                "daan_bezocht"
+              ]
+            },
             "text": "Alles loopt goed.",
             "next": "goed",
             "effects": [
@@ -324,6 +339,11 @@
             ]
           },
           {
+            "when": {
+              "flags_none": [
+                "daan_bezocht"
+              ]
+            },
             "text": "Er is iets wat me dwars zit.",
             "next": "dwars",
             "effects": [
@@ -516,9 +536,14 @@
       },
       "slot": {
         "speaker": "danny",
-        "text": "?",
+        "text": "wat is er.",
         "choices": [
           {
+            "when": {
+              "flags_none": [
+                "danny_bezocht"
+              ]
+            },
             "text": "Wat test je?",
             "next": "test_vraag",
             "effects": [
@@ -535,6 +560,11 @@
             ]
           },
           {
+            "when": {
+              "flags_none": [
+                "danny_bezocht"
+              ]
+            },
             "text": "Ik zag iets in het gedrag van de gebruikers.",
             "next": "tip",
             "effects": [
@@ -552,7 +582,7 @@
           },
           {
             "text": "Ga door.",
-            "next": "einde",
+            "next": "terug",
             "effects": [
               {
                 "op": "set_flag",
@@ -562,6 +592,11 @@
             ]
           }
         ]
+      },
+      "terug": {
+        "speaker": "danny",
+        "text": "oke. ik ga terug naar de cijfers.",
+        "next": "einde"
       },
       "einde": {
         "speaker": ""
@@ -728,6 +763,11 @@
         "text": "Wat?",
         "choices": [
           {
+            "when": {
+              "flags_none": [
+                "victor_bezocht"
+              ]
+            },
             "text": "Er zit iets scheef bij de entree.",
             "next": "scheef",
             "effects": [
@@ -744,6 +784,11 @@
             ]
           },
           {
+            "when": {
+              "flags_none": [
+                "victor_bezocht"
+              ]
+            },
             "text": "De build ziet er goed uit.",
             "next": "compliment",
             "effects": [
@@ -761,7 +806,7 @@
           },
           {
             "text": "Oke.",
-            "next": "einde",
+            "next": "verder",
             "effects": [
               {
                 "op": "set_flag",
@@ -771,6 +816,11 @@
             ]
           }
         ]
+      },
+      "verder": {
+        "speaker": "victor",
+        "text": "Oke. Dan ga ik weer turen.",
+        "next": "einde"
       },
       "einde": {
         "speaker": ""
@@ -902,9 +952,14 @@
       },
       "slot": {
         "speaker": "jonathan",
-        "text": ".",
+        "text": "Wat zag je in de logs?",
         "choices": [
           {
+            "when": {
+              "flags_none": [
+                "jonathan_bezocht"
+              ]
+            },
             "text": "Er is iets in de logs.",
             "next": "logs_probleem",
             "effects": [
@@ -921,6 +976,12 @@
             ]
           },
           {
+            "when": {
+              "flags_none": [
+                "jonathan_bezocht",
+                "gevolg_jonathan_gemist"
+              ]
+            },
             "text": "Logs zien er goed uit.",
             "next": "logs_ok",
             "effects": [
@@ -1108,6 +1169,11 @@
         "text": "Heeft ze al gebeld?",
         "choices": [
           {
+            "when": {
+              "flags_none": [
+                "willem_bezocht"
+              ]
+            },
             "text": "Nog niet.",
             "next": "nog_niet",
             "effects": [
@@ -1119,6 +1185,11 @@
             ]
           },
           {
+            "when": {
+              "flags_none": [
+                "willem_bezocht"
+              ]
+            },
             "text": "Ze belde al.",
             "next": "belde",
             "effects": [
@@ -1131,7 +1202,7 @@
           },
           {
             "text": "Oke, ga door.",
-            "next": "einde",
+            "next": "in_de_buurt",
             "effects": [
               {
                 "op": "set_flag",
@@ -1141,6 +1212,11 @@
             ]
           }
         ]
+      },
+      "in_de_buurt": {
+        "speaker": "willem",
+        "text": "Oke. Ik blijf in de buurt van de telefoon.",
+        "next": "einde"
       },
       "einde": {
         "speaker": ""
@@ -1238,6 +1314,22 @@
           {
             "when": {
               "flags_all": [
+                "gevolg_comicsans_beloofd"
+              ]
+            },
+            "text": "heb je haar Comic Sans beloofd,, geen Comic Sans is een beetje de standaard tegenwoordig"
+          },
+          {
+            "when": {
+              "flags_all": [
+                "gevolg_paard_gemist"
+              ]
+            },
+            "text": "wist ik meteen waar hij zat,, heb je hem zelf nog gezien,, jammer,, hij is best grappig,,"
+          },
+          {
+            "when": {
+              "flags_all": [
                 "bastiaan_bezocht"
               ],
               "min_tickets_done": 7
@@ -1260,22 +1352,6 @@
               ]
             },
             "text": "hiya nog een keer,, ik ben er nog,,"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_comicsans_beloofd"
-              ]
-            },
-            "text": "heb je haar Comic Sans belooft,, geen Comic Sans is een beetje de standaard tegenwoordig"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_paard_gemist"
-              ]
-            },
-            "text": "wist ik meteen waar hij zat,, heb je hem zelf nog gezien,, jammer,, hij is best grappig,,"
           },
           {
             "when": {
@@ -1322,9 +1398,14 @@
       },
       "slot": {
         "speaker": "bastiaan",
-        "text": ",,",
+        "text": "zeg het maar,,",
         "choices": [
           {
+            "when": {
+              "flags_none": [
+                "bastiaan_bezocht"
+              ]
+            },
             "text": "Wat bouw je?",
             "next": "component",
             "effects": [
@@ -1341,6 +1422,11 @@
             ]
           },
           {
+            "when": {
+              "flags_none": [
+                "bastiaan_bezocht"
+              ]
+            },
             "text": "Kijk je mee straks?",
             "next": "meekijken",
             "effects": [
@@ -1358,7 +1444,7 @@
           },
           {
             "text": "Oke.",
-            "next": "einde",
+            "next": "verder",
             "effects": [
               {
                 "op": "set_flag",
@@ -1368,6 +1454,11 @@
             ]
           }
         ]
+      },
+      "verder": {
+        "speaker": "bastiaan",
+        "text": "oke,, dan ga ik weer verder,,",
+        "next": "einde"
       },
       "einde": {
         "speaker": ""
@@ -1462,6 +1553,11 @@
         "text": "Wat is er?",
         "choices": [
           {
+            "when": {
+              "flags_none": [
+                "koen_bezocht"
+              ]
+            },
             "text": "Wat zijn piepelienies precies?",
             "next": "uitleg",
             "effects": [
@@ -1478,6 +1574,11 @@
             ]
           },
           {
+            "when": {
+              "flags_none": [
+                "koen_bezocht"
+              ]
+            },
             "text": "Jonathan zoekt je.",
             "next": "verstop",
             "effects": [
@@ -1495,7 +1596,7 @@
           },
           {
             "text": "Niets. Ga zo door.",
-            "next": "einde",
+            "next": "verder",
             "effects": [
               {
                 "op": "set_flag",
@@ -1505,6 +1606,11 @@
             ]
           }
         ]
+      },
+      "verder": {
+        "speaker": "koen",
+        "text": "Oke lekker ouwe. Ik hou de piepelienies in de gaten.",
+        "next": "einde"
       },
       "einde": {
         "speaker": ""
