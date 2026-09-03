@@ -223,4 +223,12 @@ func _on_doorgaan() -> void:
 		push_warning("Titelscherm: de save kon niet gelezen worden")
 		return
 	QuestEngine.refresh_availability()
+	# Wie hervat op een dag waar nog niets van af is, heeft de opdracht nooit
+	# gezien: "Doorgaan" sloeg het uitlegscherm over, en dat scherm is de enige
+	# plek waar staat wát er gebouwd wordt. Is de dag al onderweg, dan zou
+	# hetzelfde scherm een tolpoort zijn en slaan we het over.
+	if Session.done_count() == 0:
+		IntroUitleg.na_uitleg_het_spel_in = true
+		Shell.goto_intro_uitleg()
+		return
 	Shell.goto_game()

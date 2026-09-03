@@ -1,51 +1,51 @@
 {
-  "available_when": {},
-  "requirements": {},
-  "dialogue_ids": {
-    "offer": "t02_offer",
-    "fetch": "t02_fetch",
-    "recruit": "t02_recruit",
-    "complete": "t02_complete",
-    "fail": "t02_fail",
-    "done": "t02_done"
+ "available_when": {},
+ "requirements": {},
+ "dialogue_ids": {
+  "offer": "t02_offer",
+  "fetch": "t02_fetch",
+  "recruit": "t02_recruit",
+  "complete": "t02_complete",
+  "fail": "t02_fail",
+  "done": "t02_done"
+ },
+ "minigame_config": {},
+ "reward_effects": [
+  {
+   "op": "add_item",
+   "item": "planning"
   },
-  "minigame_config": {},
-  "reward_effects": [
-    {
-      "op": "add_item",
-      "item": "planning"
-    },
-    {
-      "op": "toast",
-      "text": "BBD-202 opgelost. Je staat op de planning. Op dit project."
-    },
-    {
-      "op": "cue",
-      "cue": "ticket_klaar"
-    }
-  ],
-  "unlocks": [],
-  "world_changes": [
-    {
-      "op": "set_text",
-      "target": "scrumbord_gang",
-      "value": "SPRINT 14: Webshop paardensupplementen"
-    },
-    {
-      "op": "camera_focus",
-      "target": "scrumbord_gang",
-      "hold": 1.4
-    }
-  ],
-  "hint": "Het scrumbord hangt op de werkvloer, meteen bij de voordeur, achter het eerste bureau-eiland.",
-  "id": "t02",
-  "code": "BBD-202",
-  "order": 2,
-  "title": "Waarom sta ik hier eigenlijk?",
-  "summary": "Jij staat niet op de planning. Of je staat er drie keer op. Dennis weet het ook niet meer.",
-  "anchor": "scrumbord_gang",
-  "owner_character": "daan",
-  "minigame_id": "mg_planning",
-  "zone": "z9_vloer",
-  "zone_name": "De Vloer"
+  {
+   "op": "toast",
+   "text": "BBD-202 opgelost. Je staat op de planning. Op dit project."
+  },
+  {
+   "op": "cue",
+   "cue": "ticket_klaar"
+  }
+ ],
+ "unlocks": [],
+ "world_changes": [
+  {
+   "op": "set_text",
+   "target": "scrumbord_gang",
+   "value": "SPRINT 14: Webshop paardensupplementen"
+  },
+  {
+   "op": "camera_focus",
+   "target": "scrumbord_gang",
+   "hold": 1.4
+  }
+ ],
+ "hint": "Meteen bij de voordeur, achter het eerste bureau-eiland.",
+ "id": "t02",
+ "code": "BBD-202",
+ "order": 2,
+ "title": "Waarom sta ik hier eigenlijk?",
+ "summary": "Jij staat niet op de planning. Of je staat er drie keer op. Dennis weet het ook niet meer.",
+ "anchor": "scrumbord_gang",
+ "owner_character": "daan",
+ "minigame_id": "mg_planning",
+ "zone": "z9_vloer",
+ "zone_name": "De Vloer"
 }

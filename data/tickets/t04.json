@@ -1,51 +1,51 @@
 {
-  "available_when": {},
-  "requirements": {},
-  "dialogue_ids": {
-    "offer": "t04_offer",
-    "fetch": "t04_fetch",
-    "recruit": "t04_recruit",
-    "complete": "t04_complete",
-    "fail": "t04_fail",
-    "done": "t04_done"
+ "available_when": {},
+ "requirements": {},
+ "dialogue_ids": {
+  "offer": "t04_offer",
+  "fetch": "t04_fetch",
+  "recruit": "t04_recruit",
+  "complete": "t04_complete",
+  "fail": "t04_fail",
+  "done": "t04_done"
+ },
+ "minigame_config": {},
+ "reward_effects": [
+  {
+   "op": "set_flag",
+   "flag": "frontend_ok"
   },
-  "minigame_config": {},
-  "reward_effects": [
-    {
-      "op": "set_flag",
-      "flag": "frontend_ok"
-    },
-    {
-      "op": "toast",
-      "text": "BBD-204 opgelost. De pagina staat weer rechtop."
-    },
-    {
-      "op": "cue",
-      "cue": "ticket_klaar"
-    }
-  ],
-  "unlocks": [],
-  "world_changes": [
-    {
-      "op": "set_text",
-      "target": "wandmonitor_vloer",
-      "value": "staging: layout OK"
-    },
-    {
-      "op": "camera_focus",
-      "target": "wandmonitor_vloer",
-      "hold": 1.4
-    }
-  ],
-  "hint": "De wandmonitor hangt aan het begin van de werkvloer, naast het ticketbord.",
-  "id": "t04",
-  "code": "BBD-204",
-  "order": 4,
-  "title": "De frontend is stuk",
-  "summary": "Het paard staat boven de header, de CTA staat onder de footer en de productfoto is 4000 pixels breed.",
-  "anchor": "wandmonitor_vloer",
-  "owner_character": "victor",
-  "minigame_id": "mg_frontend_fix",
-  "zone": "z9_vloer",
-  "zone_name": "De Vloer"
+  {
+   "op": "toast",
+   "text": "BBD-204 opgelost. De pagina staat weer rechtop."
+  },
+  {
+   "op": "cue",
+   "cue": "ticket_klaar"
+  }
+ ],
+ "unlocks": [],
+ "world_changes": [
+  {
+   "op": "set_text",
+   "target": "wandmonitor_vloer",
+   "value": "staging: layout OK"
+  },
+  {
+   "op": "camera_focus",
+   "target": "wandmonitor_vloer",
+   "hold": 1.4
+  }
+ ],
+ "hint": "De wandmonitor hangt aan het begin van de werkvloer, naast het ticketbord.",
+ "id": "t04",
+ "code": "BBD-204",
+ "order": 4,
+ "title": "De frontend is stuk",
+ "summary": "Het paard staat boven de header, de CTA staat onder de footer en de productfoto is 4000 pixels breed.",
+ "anchor": "wandmonitor_vloer",
+ "owner_character": "victor",
+ "minigame_id": "mg_frontend_fix",
+ "zone": "z9_vloer",
+ "zone_name": "De Vloer"
 }

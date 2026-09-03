@@ -106,7 +106,7 @@
    11
   ],
   "kind": "examine",
-  "label": "Serverrack",
+  "label": "Het rack ernaast",
   "dialogue": "serverrack_b"
  },
  {
@@ -390,16 +390,6 @@
   "kind": "examine",
   "label": "Paardenkostuum",
   "dialogue": "paardenkostuum"
- },
- {
-  "world_id": "tafelvoetbal",
-  "tile": [
-   72,
-   16
-  ],
-  "kind": "examine",
-  "label": "Tafelvoetbal",
-  "dialogue": "tafelvoetbal"
  },
  {
   "world_id": "plotter",

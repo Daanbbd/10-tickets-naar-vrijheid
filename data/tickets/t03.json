@@ -1,60 +1,60 @@
 {
-  "available_when": {
-    "tickets_done": [
-      "t01"
-    ]
+ "available_when": {
+  "tickets_done": [
+   "t01"
+  ]
+ },
+ "requirements": {},
+ "dialogue_ids": {
+  "offer": "t03_offer",
+  "fetch": "t03_fetch",
+  "recruit": "t03_recruit",
+  "complete": "t03_complete",
+  "fail": "t03_fail",
+  "done": "t03_done"
+ },
+ "minigame_config": {},
+ "reward_effects": [
+  {
+   "op": "add_item",
+   "item": "klantfeedback"
   },
-  "requirements": {},
-  "dialogue_ids": {
-    "offer": "t03_offer",
-    "fetch": "t03_fetch",
-    "recruit": "t03_recruit",
-    "complete": "t03_complete",
-    "fail": "t03_fail",
-    "done": "t03_done"
+  {
+   "op": "toast",
+   "text": "BBD-203 opgelost. De feedback is vertaald naar iets uitvoerbaars."
   },
-  "minigame_config": {},
-  "reward_effects": [
-    {
-      "op": "add_item",
-      "item": "klantfeedback"
-    },
-    {
-      "op": "toast",
-      "text": "BBD-203 opgelost. De feedback is vertaald naar iets uitvoerbaars."
-    },
-    {
-      "op": "cue",
-      "cue": "ticket_klaar"
-    }
-  ],
-  "unlocks": [],
-  "world_changes": [
-    {
-      "op": "set_text",
-      "target": "wachtbank",
-      "value": "Bezoek: afgerond"
-    },
-    {
-      "op": "despawn_npc",
-      "npc": "klant"
-    },
-    {
-      "op": "camera_focus",
-      "target": "wachtbank",
-      "hold": 1.4
-    }
-  ],
-  "hint": "De klant zit in de entree op de bank, voorbij de kapstok.",
-  "id": "t03",
-  "code": "BBD-203",
-  "order": 3,
-  "title": "De klant heeft feedback",
-  "summary": "Mevrouw P. Aardenmens zit in de entree. Ze heeft elf punten. Drie ervan spreken elkaar tegen.",
-  "anchor": "wachtbank",
-  "owner_character": "willem",
-  "minigame_id": "mg_klantfeedback",
-  "zone": "z1_entree",
-  "zone_name": "Entree",
-  "wereldhandeling": true
+  {
+   "op": "cue",
+   "cue": "ticket_klaar"
+  }
+ ],
+ "unlocks": [],
+ "world_changes": [
+  {
+   "op": "set_text",
+   "target": "wachtbank",
+   "value": "Bezoek: afgerond"
+  },
+  {
+   "op": "despawn_npc",
+   "npc": "klant"
+  },
+  {
+   "op": "camera_focus",
+   "target": "wachtbank",
+   "hold": 1.4
+  }
+ ],
+ "hint": "De klant zit op de bank, voorbij de kapstok.",
+ "id": "t03",
+ "code": "BBD-203",
+ "order": 3,
+ "title": "De klant heeft feedback",
+ "summary": "Mevrouw P. Aardenmens zit in de entree. Ze heeft elf punten. Drie ervan spreken elkaar tegen.",
+ "anchor": "wachtbank",
+ "owner_character": "willem",
+ "minigame_id": "mg_klantfeedback",
+ "zone": "z1_entree",
+ "zone_name": "Entree",
+ "wereldhandeling": true
 }

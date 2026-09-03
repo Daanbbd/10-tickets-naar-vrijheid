@@ -132,7 +132,18 @@ func _leg_kaartje() -> void:
 	_kaartje.position = Vector2(floorf(x), floorf(_kaartje_y()))
 
 
-## Boven de ring als dat binnen de vrije band van de HUD valt, anders eronder.
+## Boven de ring als dat kan, anders eronder — maar nooit in de chrome.
+##
+## Hier keek alleen de bovenkant mee: paste het kaartje niet boven de ring, dan
+## klapte het eronder, en of daar iets stond werd niet gecontroleerd. Onderaan
+## het scherm staat de knoppenbalk (▤ ? ☰), en die ligt op een CanvasLayer —
+## dit kaartje hangt in de wereld en gaat er dus per definitie onder. Bij elk
+## object in de onderste strook las je daardoor "Oppakken Wandmon..." met de
+## knoppen er half overheen.
+##
+## Nu wint boven zodra onder in de balk zou vallen. Boven is ook de betere
+## standaard: daar staat alleen de dunne HUD-band, en het kaartje hoort bij het
+## object waar het boven hangt.
 func _kaartje_y() -> float:
 	var boven := -KAARTJE_LUCHT - _kaartje.size.y
 	var vp := get_viewport()
@@ -140,9 +151,16 @@ func _kaartje_y() -> float:
 		return boven
 	var band := _hud.vrije_band()
 	var terug := vp.get_canvas_transform().affine_inverse()
-	if global_position.y + boven >= (terug * Vector2(0.0, band.x)).y:
+	var boven_vrij: bool = global_position.y + boven >= (terug * Vector2(0.0, band.x)).y
+	if boven_vrij:
 		return boven
-	return KAARTJE_LUCHT
+	# Onder de ring: alleen als de onderkant van het kaartje boven de balk
+	# blijft. `band.y` is de bovenkant van de onderste chrome, in schermpixels.
+	var onder := KAARTJE_LUCHT
+	var onderrand := global_position.y + onder + _kaartje.size.y
+	if onderrand <= (terug * Vector2(0.0, band.y)).y:
+		return onder
+	return boven
 
 
 ## Het zichtbare stuk wereld, in wereldcoördinaten. Uit de canvastransform en

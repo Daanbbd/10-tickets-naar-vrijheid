@@ -266,6 +266,34 @@ static func next_hint_ticket() -> TicketDef:
 	if Session.pinned_ticket != &"" and Session.is_available(Session.pinned_ticket):
 		return GameData.ticket(Session.pinned_ticket)
 
+	# Loopt er een collega achter je aan, dan is zíjn ticket waar je mee bezig
+	# bent. Zonder deze stap viel de gidslaag terug op "het dichtste ticket", en
+	# dat sprak de doelregel tegen: die leest `pinned_ticket` en zei "Nu:
+	# BBD-205", terwijl de wijzer en de hint naar BBD-201 in Summit stonden te
+	# wijzen omdat dat toevallig dichterbij lag. Twee systemen die tegelijk in
+	# beeld staan en iets anders beweren over wat je aan het doen bent.
+	#
+	# Dit werd pas zichtbaar toen BBD-201 vanaf minuut één openging (de kickoff
+	# opent nu de dag): daarvoor stond dat ticket op slot en deed het nooit mee
+	# in de afstandsvergelijking. Je haalt een collega niet voor niets op, dus
+	# dat is een sterker signaal dan afstand.
+	var mee: TicketDef = null
+	var mee_d := -1
+	for id: StringName in GameData.ticket_ids():
+		if not Session.is_available(id):
+			continue
+		var kandidaat: TicketDef = GameData.ticket(id)
+		if kandidaat == null or is_own_expertise(id):
+			continue
+		if helper_stand(id) != GameEnums.HelperStand.MEE:
+			continue
+		var afst := _afstand_tot(kandidaat, Session.player_tile)
+		if mee == null or afst < mee_d:
+			mee = kandidaat
+			mee_d = afst
+	if mee != null:
+		return mee
+
 	# Het dichtstbijzijnde doel, niet het laagste ticketnummer.
 	#
 	# Dit liep `ticket_ids()` af en gaf het eerste beschikbare terug. Die lijst

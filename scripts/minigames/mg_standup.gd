@@ -463,7 +463,7 @@ func _werk_rest_bij() -> void:
 		_rest.text = "%d sec te veel" % maxi(1, ceili(tekort))
 		_rest.add_theme_color_override("font_color", UiKit.ROOD_OP_LICHT)
 	else:
-		_rest.text = "past — %d sec speling" % maxi(0, floori(-tekort))
+		_rest.text = "past, %d sec speling" % maxi(0, floori(-tekort))
 		_rest.add_theme_color_override("font_color", UiKit.GROEN_OP_LICHT)
 
 

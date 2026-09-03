@@ -352,14 +352,14 @@ func _intro_beat() -> void:
 		var daan_def: CharacterDef = GameData.character(&"daan")
 		if daan_def != null:
 			await dialogue.say(daan_def.name,
-					"Goedemorgen. De webshop van de manege moet morgen live — "
-					+ "sprint veertien, laatste dag. Ik zie je zo bij het bord.",
+					"Goedemorgen. De webshop van de manege moet morgen live. "
+					+ "Laatste dag van sprint veertien. Ik zie je zo bij het bord.",
 					&"daan")
 	else:
 		var dennis_def: NpcDef = GameData.npc(&"dennis")
 		if dennis_def != null:
 			await dialogue.say(dennis_def.name,
-					"Morgen. Laatste dag van sprint veertien — de webshop van de "
+					"Morgen. Laatste dag van sprint veertien. De webshop van de "
 					+ "manege moet morgen live. Verder heb ik niks nodig.",
 					&"dennis")
 
@@ -805,6 +805,27 @@ func _spawn_objects() -> void:
 		shape.shape = circle
 		area.add_child(shape)
 		wo.add_child(area)
+
+		# Een zwevend briefje boven elk anker waar een ticket op kan liggen.
+		# Alleen bij ankers: de badge beslist zelf of hij zichtbaar is, maar een
+		# node ophangen aan de prijzenkast heeft geen zin als daar nooit werk
+		# ligt. Zie `TicketBadge` voor waarom dit er moest komen.
+		if _is_ticketanker(wo.world_id):
+			var badge := TicketBadge.new()
+			badge.name = "TicketBadge"
+			badge.world_id = wo.world_id
+			wo.add_child(badge)
+
+
+## Hangt er ooit een ticket aan dit object? Ongeacht of dat nu openstaat — de
+## badge kijkt zelf naar de stand van de dag, dit bepaalt alleen of er een badge
+## nodig is.
+static func _is_ticketanker(world_id: StringName) -> bool:
+	for id: StringName in GameData.ticket_ids():
+		var t: TicketDef = GameData.ticket(id)
+		if t != null and t.anchor == world_id:
+			return true
+	return false
 
 
 static func _kind_from(s: String) -> Interactable.Kind:

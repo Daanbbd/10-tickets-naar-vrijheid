@@ -1,1777 +1,1801 @@
 {
-  "dennis": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "dennis",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "dennis_bezocht"
-              ]
-            },
-            "text": "Oh, jij nog een keer. Bord staat nog goed."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_scope_te_groot"
-              ]
-            },
-            "text": "Ik heb het grof geschat. Het past niet. is maar weekje later"
-          },
-          {
-            "text": "Alles staat op het bord. Heb ik vanmorgen alvast bijgewerkt."
-          }
-        ],
-        "next": "vraag"
-      },
-      "vraag": {
-        "speaker": "dennis",
-        "variants": [
-          {
-            "when": {
-              "min_tickets_done": 8
-            },
-            "text": "Nog twee. Is maar weekje later."
-          },
-          {
-            "when": {
-              "min_tickets_done": 4
-            },
-            "text": "De helft. Ik heb de rest alvast nagelopen en grof geschat."
-          },
-          {
-            "text": "Ik heb de issues alvast nagelopen. Verder heb ik niks nodig."
-          }
-        ],
-        "choices": [
-          {
-            "when": {
-              "flags_none": [
-                "dennis_bezocht"
-              ]
-            },
-            "text": "Het gaat goed.",
-            "next": "goed",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "dennis_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "when": {
-              "flags_none": [
-                "dennis_bezocht"
-              ]
-            },
-            "text": "Het is een puinhoop.",
-            "next": "puinhoop",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "dennis_weet_het",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "dennis_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Ik heb even geen tijd.",
-            "next": "weg",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "dennis_bezocht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "goed": {
-        "speaker": "dennis",
-        "text": "oke.",
-        "next": "slot",
-        "outcome": "geen_blokkades"
-      },
-      "puinhoop": {
-        "speaker": "dennis",
-        "text": "-_- ik deploy het wel.",
-        "next": "slot",
-        "outcome": "gemeld"
-      },
-      "weg": {
-        "speaker": "dennis",
-        "text": "oke. andere mogelijkheid is er niet.",
-        "next": "slot",
-        "outcome": "afgehouden"
-      },
-      "slot": {
-        "speaker": "dennis",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "uren_geboekt"
-              ]
-            },
-            "text": "oke. dirk had het al gemeld. hij meldt het altijd."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "dennis_weet_het"
-              ]
-            },
-            "text": "Ik heb het al aangepast. Zei ik niks over."
-          },
-          {
-            "text": "Cool. thanks is gedaan."
-          }
-        ]
-      }
-    }
-  },
-  "klant": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "klant",
-        "variants": [
-          {
-            "when": {
-              "tickets_done": [
-                "t03"
-              ]
-            },
-            "text": "Ik wacht op de taxi. Uw koffie is trouwens erg sterk."
-          },
-          {
-            "text": "Ik ben iets te vroeg. Dat doe ik altijd."
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "klant",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "U bent zeker de computerman. Mijn neef doet ook iets met computers. Hij zei dat het in een weekend kan."
-          },
-          {
-            "when": {
-              "trait": [
-                "commercieel"
-              ]
-            },
-            "text": "U bent van het praten, zie ik. Prettig, dan hoef ik het niet zelf uit te leggen."
-          },
-          {
-            "text": "Ik heb elf paarden en één website. Met de paarden gaat het beter."
-          }
-        ],
-        "next": "derde"
-      },
-      "derde": {
-        "speaker": "klant",
-        "text": "Mijn schoonzus vindt blauw mooier. Zij doet iets met tuinen, maar ze heeft er wel oog voor."
-      }
-    }
-  },
-  "bezorger": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "bezorger",
-        "text": "Bestelling voor Bluebird Day. Van Manege De Vrije Teugel.",
-        "next": "doos"
-      },
-      "doos": {
-        "speaker": "",
-        "text": "Hij zet een doos neer. Er zit stro in en twaalf potten supplement.",
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "bezorger",
-        "variants": [
-          {
-            "when": {
-              "tickets_done": [
-                "t09"
-              ]
-            },
-            "text": "Mevrouw vroeg of de paarden goed zijn aangekomen. Ik heb gezegd van wel."
-          },
-          {
-            "text": "Ze zei: geef maar aan degene die de website doet. Dus veel succes met uitzoeken."
-          }
-        ]
-      }
-    }
-  },
-  "collega_daan": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "daan",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "daan_bezocht",
-                "daan_op_de_hoogte"
-              ]
-            },
-            "text": "Heb je dat ding gevonden dat je dwars zat?"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "daan_bezocht",
-                "daan_goed_nieuws"
-              ],
-              "min_tickets_done": 6
-            },
-            "text": "Jij zei dat het goed liep. Dat klopt nog steeds, hoop ik."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "daan_bezocht"
-              ]
-            },
-            "text": "Al iets gevonden?"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_scope_te_groot"
-              ]
-            },
-            "text": "Een app EN een puntensysteem. In deze sprint. Ik werd helemaal waus."
-          },
-          {
-            "when": {
-              "min_tickets_done": 8
-            },
-            "text": "Bijna. Ik durf het bijna hardop te zeggen."
-          },
-          {
-            "when": {
-              "min_tickets_done": 5
-            },
-            "text": "De helft staat. De helft die overblijft is altijd de lastigste helft."
-          },
-          {
-            "when": {
-              "min_tickets_done": 2
-            },
-            "text": "We hebben scope. Dat is wellicht nieuw voor ons."
-          },
-          {
-            "text": "Ik heb de tickets op volgorde gezet. Wilde het mezelf zo makkelijk mogelijk maken. Puur uit interesse: wat staat dit aan O-M-Z te doen?"
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "daan",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "Kom je iets tegen dat niet in het ticket staat? Puur uit interesse: waar kwam dat dan vandaan."
-          },
-          {
-            "when": {
-              "trait": [
-                "commercieel"
-              ]
-            },
-            "text": "Als de klant belt: doorverbinden. Naar Willem. Altijd naar Willem."
-          },
-          {
-            "text": "Zeg het als iets niet klopt. Liever nu dan bij de oplevering."
-          }
-        ],
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "daan",
-        "text": "Hoe zit het?",
-        "choices": [
-          {
-            "when": {
-              "flags_none": [
-                "daan_bezocht"
-              ]
-            },
-            "text": "Alles loopt goed.",
-            "next": "goed",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "daan_goed_nieuws",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "daan_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "when": {
-              "flags_none": [
-                "daan_bezocht"
-              ]
-            },
-            "text": "Er is iets wat me dwars zit.",
-            "next": "dwars",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "daan_op_de_hoogte",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "daan_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Niets bijzonders.",
-            "next": "niets",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "daan_bezocht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "einde": {
-        "speaker": ""
-      },
-      "goed": {
-        "speaker": "daan",
-        "text": "Dat is fijn om te horen. Echt.",
-        "next": "einde"
-      },
-      "dwars": {
-        "speaker": "daan",
-        "text": "Zeg het maar.",
-        "next": "dwars2"
-      },
-      "dwars2": {
-        "speaker": "speler",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "De backend gedraagt zich raar."
-          },
-          {
-            "when": {
-              "trait": [
-                "commercieel"
-              ]
-            },
-            "text": "De klant verwacht meer dan in het ticket staat."
-          },
-          {
-            "text": "Ik weet het nog niet precies."
-          }
-        ],
-        "next": "dwars3"
-      },
-      "dwars3": {
-        "speaker": "daan",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "Jonathan weet dat. Of Jonathan heeft het gemaakt."
-          },
-          {
-            "when": {
-              "trait": [
-                "commercieel"
-              ]
-            },
-            "text": "Doorverbinden naar Willem. Die weet hoe hij dat landt."
-          },
-          {
-            "text": "Dan is het waarschijnlijk in een ticket. Zet het er anders in."
-          }
-        ],
-        "next": "einde"
-      },
-      "niets": {
-        "speaker": "daan",
-        "text": "Mooi. Dan laat ik je verder met rust.",
-        "next": "einde"
-      }
-    }
-  },
-  "collega_danny": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "danny",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "danny_bezocht",
-                "danny_tip_gekregen"
-              ]
-            },
-            "text": "die tip van jou klopt trouwens. heb er een test op gezet."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "danny_bezocht",
-                "danny_test_uitgelegd"
-              ],
-              "min_tickets_done": 5
-            },
-            "text": "de test van die knop is klaar. groter wint. psies."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "danny_bezocht"
-              ]
-            },
-            "text": "ah jij nog. psies. ik ben een test aan het analyseren."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_danny_gemist"
-              ]
-            },
-            "text": "je kapte me af, dus ik heb het gewoon aangezet. checkout valt weg op stap twee. psies"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_verkeerde_merksound"
-              ]
-            },
-            "text": "die merksound bij de speaker. psies. niet de goeie. ik zet er een test op"
-          },
-          {
-            "when": {
-              "min_tickets_done": 8
-            },
-            "text": "joejoe. de cijfers lopen op. ik beloof nog niets"
-          },
-          {
-            "when": {
-              "min_tickets_done": 4
-            },
-            "text": "ik heb een test lopen. vraag me over drie dagen wat eruit komt"
-          },
-          {
-            "text": "ik kijk naar wat mensen doen, niet naar wat ze zeggen. dat scheelt veel. en het is beter voor de o-m-z"
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "danny",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "data"
-              ]
-            },
-            "text": "psies. meningen zijn ruis. gedrag is data"
-          },
-          {
-            "when": {
-              "trait": [
-                "detail"
-              ]
-            },
-            "text": "de knop staat twee pixels scheef. kost ons niets, maar ik zeg het toch"
-          },
-          {
-            "text": "alles is een funnel. de gang ook. mensen lopen linksom, altijd"
-          }
-        ],
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "danny",
-        "text": "wat is er.",
-        "choices": [
-          {
-            "when": {
-              "flags_none": [
-                "danny_bezocht"
-              ]
-            },
-            "text": "Wat test je?",
-            "next": "test_vraag",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "danny_test_uitgelegd",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "danny_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "when": {
-              "flags_none": [
-                "danny_bezocht"
-              ]
-            },
-            "text": "Ik zag iets in het gedrag van de gebruikers.",
-            "next": "tip",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "danny_tip_gekregen",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "danny_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Ga door.",
-            "next": "terug",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "danny_bezocht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "terug": {
-        "speaker": "danny",
-        "text": "oke. ik ga terug naar de cijfers.",
-        "next": "einde"
-      },
-      "einde": {
-        "speaker": ""
-      },
-      "test_vraag": {
-        "speaker": "danny",
-        "text": "kijken of mensen eerder klikken als de knop groter is. of roder. of allebei. drie varianten. morgen weten we het.",
-        "next": "test_keuze"
-      },
-      "test_keuze": {
-        "speaker": "danny",
-        "text": "wat denk jij?",
-        "choices": [
-          {
-            "text": "Groter.",
-            "next": "test_groter"
-          },
-          {
-            "text": "Roder.",
-            "next": "test_roder"
-          },
-          {
-            "text": "Dat hangt ervan af.",
-            "next": "test_afhankelijk"
-          }
-        ]
-      },
-      "test_groter": {
-        "speaker": "danny",
-        "text": "psies. dat is het. maar bewijs het zelf maar.",
-        "next": "einde"
-      },
-      "test_roder": {
-        "speaker": "danny",
-        "text": "dat zegt iedereen. data zegt iets anders. biem.",
-        "next": "einde"
-      },
-      "test_afhankelijk": {
-        "speaker": "danny",
-        "text": "ah. je bent een van ons.",
-        "next": "einde"
-      },
-      "tip": {
-        "speaker": "speler",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "data"
-              ]
-            },
-            "text": "Ze haken af op de tweede stap."
-          },
-          {
-            "text": "Ze scrollen niet naar beneden."
-          }
-        ],
-        "next": "tip2"
-      },
-      "tip2": {
-        "speaker": "danny",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "data"
-              ]
-            },
-            "text": "dat weet ik. maar goed dat jij het ziet. zet hem in een segment."
-          },
-          {
-            "text": "de fold. het is altijd de fold. biem."
-          }
-        ],
-        "next": "einde"
-      }
-    }
-  },
-  "collega_victor": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "victor",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "victor_bezocht",
-                "victor_entree_gemeld"
-              ]
-            },
-            "text": "Die drie pixels bij de entree. Gefixed. Niemand zag het. Behalve jij. En ik."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "victor_bezocht",
-                "victor_compliment"
-              ]
-            },
-            "text": "Ik heb de build nog een keer gecheckt. Klopt nog steeds. Voor nu."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "victor_bezocht"
-              ]
-            },
-            "text": "Oh. Is er iets scheef?"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_uitlijn_perfect"
-              ]
-            },
-            "text": "Ik heb er nog een keer naar gekeken. Het staat. Done."
-          },
-          {
-            "when": {
-              "min_tickets_done": 8
-            },
-            "text": "De build is groen. Done."
-          },
-          {
-            "when": {
-              "min_tickets_done": 4
-            },
-            "text": "manmanman. Ik heb vandaag drie dingen rechtgezet die niemand scheef zag staan."
-          },
-          {
-            "text": "Ik bouw wat anderen bedenken. Ik vraag alleen of iemand erover heeft nagedacht. Iedereen roept O-M-Z. Niemand roept dat de tweede rij scheef staat."
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "victor",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "detail"
-              ]
-            },
-            "text": "Kijk eens naar de tweede rij. Nee? Precies. Dat is het probleem."
-          },
-          {
-            "when": {
-              "trait": [
-                "proces"
-              ]
-            },
-            "text": "Zet het in een ticket. Anders bestaat het niet en doe ik het toch. hahaha"
-          },
-          {
-            "text": "Als je iets scheef ziet staan, zeg het. Dan zie ik het ook en slaap ik slechter."
-          }
-        ],
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "victor",
-        "text": "Wat?",
-        "choices": [
-          {
-            "when": {
-              "flags_none": [
-                "victor_bezocht"
-              ]
-            },
-            "text": "Er zit iets scheef bij de entree.",
-            "next": "scheef",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "victor_entree_gemeld",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "victor_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "when": {
-              "flags_none": [
-                "victor_bezocht"
-              ]
-            },
-            "text": "De build ziet er goed uit.",
-            "next": "compliment",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "victor_compliment",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "victor_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Oke.",
-            "next": "verder",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "victor_bezocht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "verder": {
-        "speaker": "victor",
-        "text": "Oke. Dan ga ik weer turen.",
-        "next": "einde"
-      },
-      "einde": {
-        "speaker": ""
-      },
-      "scheef": {
-        "speaker": "victor",
-        "text": "Welke kant?",
-        "next": "scheef2"
-      },
-      "scheef2": {
-        "speaker": "speler",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "detail"
-              ]
-            },
-            "text": "Links. Drie pixels."
-          },
-          {
-            "text": "Links, denk ik."
-          }
-        ],
-        "next": "scheef3"
-      },
-      "scheef3": {
-        "speaker": "victor",
-        "text": "Dat dacht ik al. Ik fix het. Godver.",
-        "next": "einde"
-      },
-      "compliment": {
-        "speaker": "victor",
-        "text": "Dat zei ik ook. Maar ik vertrouw het nog niet. Hahaha.",
-        "next": "einde"
-      }
-    }
-  },
-  "collega_jonathan": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "jonathan",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "jonathan_bezocht",
-                "jonathan_alert"
-              ]
-            },
-            "text": "Die E die je noemde was een W. Ben er toch even naartoe gegaan."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "jonathan_bezocht",
-                "jonathan_logs_ok"
-              ]
-            },
-            "text": "Logs nog steeds ok. Moet zeggen dat dat me verbaast."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "jonathan_bezocht"
-              ]
-            },
-            "text": "Ik ga er naartoe kijken, voor je het vraagt."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_jonathan_gemist"
-              ]
-            },
-            "text": "Ik had het vanmorgen al gemeld, maar de tijd was om. Dat assortment hangt aan een store EN een levering. Best wel structureel ^.^"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_backend_fout_gekozen"
-              ]
-            },
-            "text": "Die kabel bij het rack lag verkeerd. Ik heb hem omgelegd. Het werkt nu, maar ik weet ook iets over jou ^.^"
-          },
-          {
-            "when": {
-              "min_tickets_done": 8
-            },
-            "text": "De verbinding staat. Ben benieuwd hoe lang."
-          },
-          {
-            "when": {
-              "min_tickets_done": 4
-            },
-            "text": "Ik heb iets gerepareerd dat niemand kapot heeft zien gaan. Dat is het werk."
-          },
-          {
-            "text": "Als je mijn werk ziet, is er iets stuk. Dus je ziet me het liefst niet."
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "jonathan",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "Zie je iets in de logs met een hoofdletter E: dat ben ik niet. Ik ga er wel naartoe kijken."
-          },
-          {
-            "when": {
-              "trait": [
-                "commercieel"
-              ]
-            },
-            "text": "Beloof niets over snelheid. Ik weet niet waar die vandaan moet komen."
-          },
-          {
-            "text": "Het werkt lokaal. Moet zeggen dat dat ook iets is."
-          }
-        ],
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "jonathan",
-        "text": "Wat zag je in de logs?",
-        "choices": [
-          {
-            "when": {
-              "flags_none": [
-                "jonathan_bezocht"
-              ]
-            },
-            "text": "Er is iets in de logs.",
-            "next": "logs_probleem",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "jonathan_alert",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "jonathan_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "when": {
-              "flags_none": [
-                "jonathan_bezocht",
-                "gevolg_jonathan_gemist"
-              ]
-            },
-            "text": "Logs zien er goed uit.",
-            "next": "logs_ok",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "jonathan_logs_ok",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "jonathan_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Niets van belang.",
-            "next": "niets",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "jonathan_bezocht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "einde": {
-        "speaker": ""
-      },
-      "logs_probleem": {
-        "speaker": "jonathan",
-        "text": "Welke letter?",
-        "next": "logs_letter"
-      },
-      "logs_letter": {
-        "speaker": "speler",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "Een E. En er staan er drie."
-          },
-          {
-            "text": "Een hoofdletter. Weet niet welke."
-          }
-        ],
-        "next": "logs_reactie"
-      },
-      "logs_reactie": {
-        "speaker": "jonathan",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "Drie E's. Eén is echt, twee zijn gevolgen. Ik ga er naartoe kijken."
-          },
-          {
-            "text": "Als het een E is, ben ik het niet. Anders ook niet. Ik ga er naartoe kijken."
-          }
-        ],
-        "next": "einde"
-      },
-      "logs_ok": {
-        "speaker": "jonathan",
-        "text": "Dat zei ik ook. Niemand gelooft het als ik het zeg.",
-        "next": "einde"
-      },
-      "niets": {
-        "speaker": "jonathan",
-        "text": "Mooi. Ben benieuwd.",
-        "next": "einde"
-      }
-    }
-  },
-  "collega_willem": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "willem",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "willem_bezocht",
-                "willem_klant_blij"
-              ]
-            },
-            "text": "Ze heeft nóg een keer gebeld. Absoluta... ehh, Looff. Ook blij. Dat is uitzonderlijk."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "willem_bezocht",
-                "willem_vragen_op"
-              ]
-            },
-            "text": "Die vragen van de klant heb ik beantwoord. Twee van de drie kloppen ook."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "willem_bezocht",
-                "willem_wacht"
-              ]
-            },
-            "text": "Ze heeft nog niet teruggebeld. Ik sta klaar."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "willem_bezocht"
-              ]
-            },
-            "text": "Ben net terug. Ze is rustig. Voorlopig."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_geen_webshop"
-              ]
-            },
-            "text": "Ik moet dit morgen presenteren. Er zit geen manier in om iets te kopen. Dat is wel top, ja."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_klant_ontevreden"
-              ]
-            },
-            "text": "Ze belde niet blij op. Ik heb het gladgestreken. Dat kost een paar dagen vertrouwen, niet meer."
-          },
-          {
-            "when": {
-              "min_tickets_done": 8
-            },
-            "text": "Ik heb de klant gesproken. Ze is heeeel enthousiast, en dat is nu nog terecht."
-          },
-          {
-            "when": {
-              "min_tickets_done": 4
-            },
-            "text": "Ik heb drie dingen toegezegd aan Absoluta... ehh, Looff. Twee daarvan kunnen ook echt."
-          },
-          {
-            "text": "Ik hou de klant bij je vandaan. Dat is geen grap, dat is de functieomschrijving. En het levert O-M-Z op."
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "willem",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "Zeg tegen mij dat iets niet kan. Ik vertaal het wel naar iets vriendelijkers."
-          },
-          {
-            "when": {
-              "trait": [
-                "sociaal"
-              ]
-            },
-            "text": "Jij begrijpt het. Nee zeggen kost een uur. Ja zeggen kost een kwartaal."
-          },
-          {
-            "text": "Als ze belt, ben ik in het hokje. Ook als ik daar niet ben."
-          }
-        ],
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "willem",
-        "text": "Heeft ze al gebeld?",
-        "choices": [
-          {
-            "when": {
-              "flags_none": [
-                "willem_bezocht"
-              ]
-            },
-            "text": "Nog niet.",
-            "next": "nog_niet",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "willem_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "when": {
-              "flags_none": [
-                "willem_bezocht"
-              ]
-            },
-            "text": "Ze belde al.",
-            "next": "belde",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "willem_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Oke, ga door.",
-            "next": "in_de_buurt",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "willem_bezocht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "in_de_buurt": {
-        "speaker": "willem",
-        "text": "Oke. Ik blijf in de buurt van de telefoon.",
-        "next": "einde"
-      },
-      "einde": {
-        "speaker": ""
-      },
-      "nog_niet": {
-        "speaker": "willem",
-        "text": "Dat duurt niet lang meer. Ze belt altijd terug.",
-        "next": "einde"
-      },
-      "belde": {
-        "speaker": "willem",
-        "text": "Wat zei ze?",
-        "next": "belde2"
-      },
-      "belde2": {
-        "speaker": "speler",
-        "choices": [
-          {
-            "text": "Blij.",
-            "next": "klant_blij",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "willem_klant_blij",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Vragen.",
-            "next": "klant_vragen",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "willem_vragen_op",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Ze belt terug.",
-            "next": "klant_terug",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "willem_wacht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "klant_blij": {
-        "speaker": "willem",
-        "text": "Gelukkig. Anders had ik nu gerend. Heeeel snel.",
-        "next": "einde"
-      },
-      "klant_vragen": {
-        "speaker": "willem",
-        "text": "Geef ze maar aan mij. Ik vertaal ze naar iets uitvoerbaars.",
-        "next": "einde"
-      },
-      "klant_terug": {
-        "speaker": "willem",
-        "text": "Ah. Dan ga ik vast klaarstaan. Absoluta... ehh, Looff.",
-        "next": "einde"
-      }
-    }
-  },
-  "collega_bastiaan": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "bastiaan",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "bastiaan_bezocht",
-                "bastiaan_component_gevraagd"
-              ],
-              "min_tickets_done": 5
-            },
-            "text": "hiya,, de accordion is klaar,, hij klapt perfect,, ik maak er nog een,,"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "bastiaan_bezocht",
-                "bastiaan_komt_meekijken"
-              ]
-            },
-            "text": "hiya,, ik kom zo,, ik moet alleen nog even,, ik kom echt zo,,"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_comicsans_beloofd"
-              ]
-            },
-            "text": "heb je haar Comic Sans beloofd,, geen Comic Sans is een beetje de standaard tegenwoordig"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_paard_gemist"
-              ]
-            },
-            "text": "wist ik meteen waar hij zat,, heb je hem zelf nog gezien,, jammer,, hij is best grappig,,"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "bastiaan_bezocht"
-              ],
-              "min_tickets_done": 7
-            },
-            "text": "hiya,, alles is groen,, ik vertrouw het niet,,"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "bastiaan_bezocht"
-              ],
-              "min_tickets_done": 3
-            },
-            "text": "ah jij nog een keer,, ik ben dezelfde component nog aan het verbeteren,, hij is nu echt goed,,"
-          },
-          {
-            "when": {
-              "flags_all": [
-                "bastiaan_bezocht"
-              ]
-            },
-            "text": "hiya nog een keer,, ik ben er nog,,"
-          },
-          {
-            "when": {
-              "min_tickets_done": 7
-            },
-            "text": "Ik heb de hele build nagelopen,, er zit niets fout in,, dat vertrouw ik niet."
-          },
-          {
-            "when": {
-              "min_tickets_done": 3
-            },
-            "text": "Ik heb een component gemaakt die niemand nodig heeft,, nog niet."
-          },
-          {
-            "text": "hiya,, ik zit nog in een ticket van vorige week,, ik kom er wel uit."
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "bastiaan",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "Kijk je straks even mee,, niet nu,, straks."
-          },
-          {
-            "when": {
-              "trait": [
-                "detail"
-              ]
-            },
-            "text": "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat ook hè."
-          },
-          {
-            "text": "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
-          }
-        ],
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "bastiaan",
-        "text": "zeg het maar,,",
-        "choices": [
-          {
-            "when": {
-              "flags_none": [
-                "bastiaan_bezocht"
-              ]
-            },
-            "text": "Wat bouw je?",
-            "next": "component",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "bastiaan_component_gevraagd",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "bastiaan_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "when": {
-              "flags_none": [
-                "bastiaan_bezocht"
-              ]
-            },
-            "text": "Kijk je mee straks?",
-            "next": "meekijken",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "bastiaan_komt_meekijken",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "bastiaan_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Oke.",
-            "next": "verder",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "bastiaan_bezocht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "verder": {
-        "speaker": "bastiaan",
-        "text": "oke,, dan ga ik weer verder,,",
-        "next": "einde"
-      },
-      "einde": {
-        "speaker": ""
-      },
-      "component": {
-        "speaker": "bastiaan",
-        "text": "een accordion component,, maar dan eentje die echt goed werkt,, hij klapt uit en in,, niemand heeft hem gevraagd,, maar hij bestaat nu,,",
-        "next": "einde"
-      },
-      "meekijken": {
-        "speaker": "bastiaan",
-        "text": "ja,, wanneer,, zeg maar wanneer,, ik ben er,,",
-        "next": "einde"
-      }
-    }
-  },
-  "collega_koen": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "koen",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "koen_bezocht",
-                "koen_verborgen_voor_jonathan"
-              ]
-            },
-            "text": "Is Jonathan al weg? Psst. Lekker ouwe."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "koen_bezocht",
-                "koen_piepelienies_uitgelegd"
-              ],
-              "min_tickets_done": 6
-            },
-            "text": "piepelienies lopen nog steeds. heb ze goed ingesteld haha."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "koen_bezocht"
-              ]
-            },
-            "text": "Ah, ben je er weer. Ik zit in een andere rabbit hole. Geen zorg haha."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "gevolg_credits_verbrand"
-              ]
-            },
-            "text": "Al die credits eraan. Als daar piepelienies om hadden gezeten was dat niet gebeurd."
-          },
-          {
-            "when": {
-              "min_tickets_done": 6
-            },
-            "text": "De logs zijn stil. Is weer een pareltje hoor haha."
-          },
-          {
-            "text": "Ik zal even kijken. Het duurt nog veertig minuten, vgm."
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "koen",
-        "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken.",
-        "next": "derde"
-      },
-      "derde": {
-        "speaker": "koen",
-        "variants": [
-          {
-            "when": {
-              "min_tickets_done": 6
-            },
-            "text": "De piepelienies lopen trouwens weer. Took a while haha."
-          },
-          {
-            "text": "Ik kijk straks nog even naar de piepelienies. Iets met een timeout, vgm."
-          }
-        ],
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "koen",
-        "text": "Wat is er?",
-        "choices": [
-          {
-            "when": {
-              "flags_none": [
-                "koen_bezocht"
-              ]
-            },
-            "text": "Wat zijn piepelienies precies?",
-            "next": "uitleg",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "koen_piepelienies_uitgelegd",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "koen_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "when": {
-              "flags_none": [
-                "koen_bezocht"
-              ]
-            },
-            "text": "Jonathan zoekt je.",
-            "next": "verstop",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "koen_verborgen_voor_jonathan",
-                "value": true
-              },
-              {
-                "op": "set_flag",
-                "flag": "koen_bezocht",
-                "value": true
-              }
-            ]
-          },
-          {
-            "text": "Niets. Ga zo door.",
-            "next": "verder",
-            "effects": [
-              {
-                "op": "set_flag",
-                "flag": "koen_bezocht",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "verder": {
-        "speaker": "koen",
-        "text": "Oke lekker ouwe. Ik hou de piepelienies in de gaten.",
-        "next": "einde"
-      },
-      "einde": {
-        "speaker": ""
-      },
-      "uitleg": {
-        "speaker": "koen",
-        "text": "piepelienies. ci/cd. build, test, deploy. maar dan lekker. en als ze kapot zijn duurt het veertig minuten, vgm.",
-        "next": "einde"
-      },
-      "verstop": {
-        "speaker": "koen",
-        "text": "Ah nee. Zeg maar dat ik in een call zit, lekker ouwe.",
-        "next": "einde"
-      }
-    }
-  },
-  "dirk": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "dirk",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "uren_geboekt"
-              ]
-            },
-            "text": "Hoi {naam}, ik zie dat je vandaag {geboekt} hebt geboekt. Dank je!"
-          },
-          {
-            "when": {
-              "overwerk": true
-            },
-            "text": "Hoi {naam}, het is {klok}. Ik zie dat je nog aan het werk bent. Dat mag natuurlijk."
-          },
-          {
-            "text": "Hoi {naam}, even een klein seintje. Heb je even?"
-          }
-        ],
-        "next": "cijfers"
-      },
-      "cijfers": {
-        "speaker": "dirk",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "uren_geboekt"
-              ],
-              "overwerk": true
-            },
-            "text": "Er staat nu {geboekt} geboekt en je hebt {gewerkt} gewerkt. Dat verschil kan ik niet boeken. Ik laat het even zo."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "uren_geboekt"
-              ]
-            },
-            "text": "Mocht er later nog iets bij komen, dan vul je het gewoon aan."
-          },
-          {
-            "when": {
-              "overwerk": true
-            },
-            "text": "Er staat vandaag {geboekt} geboekt, terwijl de verwachting rond de {gewerkt} ligt. Je bent nu over je dag heen. Ik noteer het alleen."
-          },
-          {
-            "text": "Er staat vandaag tot nu toe {geboekt} geboekt, terwijl de verwachting rond de {gewerkt} ligt. Zou je je uren aanvullen als er nog wat mist?"
-          }
-        ],
-        "next": "waarom"
-      },
-      "waarom": {
-        "speaker": "dirk",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "uren_geboekt"
-              ]
-            },
-            "text": "Fijn dat het compleet is. Alvast bedankt!"
-          },
-          {
-            "text": "Ik probeer jullie zo goed mogelijk te helpen met de voortgang op projecten, en daarvoor helpt een complete urenregistratie enorm. Alvast bedankt!"
-          }
-        ],
-        "choices": [
-          {
-            "text": "Goed, ik boek ze nu.",
-            "next": "boeken"
-          },
-          {
-            "text": "Ik loop ergens tegenaan.",
-            "next": "dennis"
-          },
-          {
-            "text": "Ik heb even geen tijd.",
-            "next": "later"
-          }
-        ]
-      },
-      "boeken": {
-        "speaker": "dirk",
-        "text": "Top. Ik zet je urenstaat er even bij.",
-        "outcome": "boeken"
-      },
-      "dennis": {
-        "speaker": "dirk",
-        "text": "Dat snap ik. Loopt er iets waardoor het boeken er nu bij inschiet? Als je ergens tegenaan loopt, kun je terecht bij mijn collega Dennis, die denkt graag met je mee.",
-        "next": "dennis_slot",
-        "outcome": "doorgestuurd"
-      },
-      "dennis_slot": {
-        "speaker": "dirk",
-        "text": "Ik loop zelf ook nog even mee, voor het geval het je toch te binnen schiet."
-      },
-      "later": {
-        "speaker": "dirk",
-        "text": "Geen probleem hoor. Ik kom er later op terug.",
-        "next": "later_slot",
-        "outcome": "afgehouden"
-      },
-      "later_slot": {
-        "speaker": "dirk",
-        "variants": [
-          {
-            "when": {
-              "overwerk": true
-            },
-            "text": "Je bent trouwens {gewerkt} aan het werk. Zou je daar {budget} van willen boeken?"
-          },
-          {
-            "text": "Zou je het voor het einde van de dag doen? Dan hoef ik er niet nog een keer over te beginnen."
-          }
-        ]
-      }
-    }
-  },
-  "dirk_urenstaat": {
-    "_comment": "Dirks slotregel na de urenstaat. Deze boom wordt niet gewandeld: ticket_controller.gd::_dirk_oordeel() kiest een node op de payload van de minigame (op_rest, lege_tickets), want dat is een getal en geen Conditions-vlag. De tekst hoort hier zodat zijn stem in de data staat en _test_karakterstemmen hem meeleest.",
-    "start": "alles_geboekt",
-    "nodes": {
-      "veel_rest": {
-        "speaker": "dirk",
-        "text": "Dank je {naam}! Ik zie {rest} op overige posten staan, terwijl de verwachting daar rond het half uur ligt. Ik zet er een vraagteken bij, dan kijkt mijn collega Dennis er nog even naar. Alvast bedankt!"
-      },
-      "lege_tickets": {
-        "speaker": "dirk",
-        "text": "Dank je {naam}! Even een klein seintje: er staan nog {aantal} tickets op nul. Dan is daar niet aan gewerkt, klopt dat? Zou je ze aanvullen als er nog wat mist?"
-      },
-      "alles_geboekt": {
-        "speaker": "dirk",
-        "text": "Dank je {naam}! Helemaal op het werk zelf geboekt. Dat is netjes. Ik geef het even door aan mijn collega Dennis, die denkt graag met je mee."
-      },
-      "rest": {
-        "speaker": "dirk",
-        "text": "Dank je {naam}! {rest} op overig. Dat kan gebeuren, geen probleem hoor. Zou je het aanvullen als er nog wat mist? Alvast bedankt!"
-      }
-    }
+ "dennis": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "dennis",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "dennis_bezocht"
+       ]
+      },
+      "text": "Oh, jij nog een keer. Bord staat nog goed."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_scope_te_groot"
+       ]
+      },
+      "text": "Ik heb het grof geschat. Het past niet. is maar weekje later"
+     },
+     {
+      "text": "Alles staat op het bord. Heb ik vanmorgen alvast bijgewerkt."
+     }
+    ],
+    "next": "vraag"
+   },
+   "vraag": {
+    "speaker": "dennis",
+    "variants": [
+     {
+      "when": {
+       "min_tickets_done": 8
+      },
+      "text": "Nog twee. Is maar weekje later."
+     },
+     {
+      "when": {
+       "min_tickets_done": 4
+      },
+      "text": "De helft. Ik heb de rest alvast nagelopen en grof geschat."
+     },
+     {
+      "text": "Ik heb de issues alvast nagelopen. Verder heb ik niks nodig."
+     }
+    ],
+    "choices": [
+     {
+      "when": {
+       "flags_none": [
+        "dennis_bezocht"
+       ]
+      },
+      "text": "Het gaat goed.",
+      "next": "goed",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "dennis_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "when": {
+       "flags_none": [
+        "dennis_bezocht"
+       ]
+      },
+      "text": "Het is een puinhoop.",
+      "next": "puinhoop",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "dennis_weet_het",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "dennis_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Ik heb even geen tijd.",
+      "next": "weg",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "dennis_bezocht",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "goed": {
+    "speaker": "dennis",
+    "text": "oke.",
+    "next": "slot",
+    "outcome": "geen_blokkades"
+   },
+   "puinhoop": {
+    "speaker": "dennis",
+    "text": "-_- ik deploy het wel.",
+    "next": "slot",
+    "outcome": "gemeld"
+   },
+   "weg": {
+    "speaker": "dennis",
+    "text": "oke. andere mogelijkheid is er niet.",
+    "next": "slot",
+    "outcome": "afgehouden"
+   },
+   "slot": {
+    "speaker": "dennis",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "uren_geboekt"
+       ]
+      },
+      "text": "oke. dirk had het al gemeld. hij meldt het altijd."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "dennis_weet_het"
+       ]
+      },
+      "text": "Ik heb het al aangepast. Zei ik niks over."
+     },
+     {
+      "text": "Cool. thanks is gedaan."
+     }
+    ]
+   }
   }
+ },
+ "klant": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "klant",
+    "variants": [
+     {
+      "when": {
+       "tickets_done": [
+        "t03"
+       ]
+      },
+      "text": "Ik wacht op de taxi. Uw koffie is trouwens erg sterk."
+     },
+     {
+      "text": "Ik ben iets te vroeg. Dat doe ik altijd."
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "klant",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "U bent zeker de computerman. Mijn neef doet ook iets met computers. Hij zei dat het in een weekend kan."
+     },
+     {
+      "when": {
+       "trait": [
+        "commercieel"
+       ]
+      },
+      "text": "U bent van het praten, zie ik. Prettig, dan hoef ik het niet zelf uit te leggen."
+     },
+     {
+      "text": "Ik heb elf paarden en één website. Met de paarden gaat het beter."
+     }
+    ],
+    "next": "derde"
+   },
+   "derde": {
+    "speaker": "klant",
+    "text": "Mijn schoonzus vindt blauw mooier. Zij doet iets met tuinen, maar ze heeft er wel oog voor."
+   }
+  }
+ },
+ "bezorger": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "bezorger",
+    "text": "Bestelling voor Bluebird Day. Van Manege De Vrije Teugel.",
+    "next": "doos"
+   },
+   "doos": {
+    "speaker": "",
+    "text": "Hij zet een doos neer. Er zit stro in en twaalf potten supplement.",
+    "next": "slot"
+   },
+   "slot": {
+    "speaker": "bezorger",
+    "variants": [
+     {
+      "when": {
+       "tickets_done": [
+        "t09"
+       ]
+      },
+      "text": "Mevrouw vroeg of de paarden goed zijn aangekomen. Ik heb gezegd van wel."
+     },
+     {
+      "text": "Ze zei: geef maar aan degene die de website doet. Dus veel succes met uitzoeken."
+     }
+    ]
+   }
+  }
+ },
+ "collega_daan": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "daan",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "daan_bezocht",
+        "daan_op_de_hoogte"
+       ]
+      },
+      "text": "Heb je dat ding gevonden dat je dwars zat?"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "daan_bezocht",
+        "daan_goed_nieuws"
+       ],
+       "min_tickets_done": 6
+      },
+      "text": "Jij zei dat het goed liep. Dat klopt nog steeds, hoop ik."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "daan_bezocht"
+       ]
+      },
+      "text": "Al iets gevonden?"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_scope_te_groot"
+       ]
+      },
+      "text": "Een app EN een puntensysteem. In deze sprint. Ik werd helemaal waus."
+     },
+     {
+      "when": {
+       "min_tickets_done": 8
+      },
+      "text": "Bijna. Ik durf het bijna hardop te zeggen."
+     },
+     {
+      "when": {
+       "min_tickets_done": 5
+      },
+      "text": "De helft staat. De helft die overblijft is altijd de lastigste helft."
+     },
+     {
+      "when": {
+       "min_tickets_done": 2
+      },
+      "text": "We hebben scope. Dat is wellicht nieuw voor ons."
+     },
+     {
+      "text": "Ik heb de tickets op volgorde gezet. Wilde het mezelf zo makkelijk mogelijk maken. Puur uit interesse: wat staat dit aan O-M-Z te doen?"
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "daan",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "Kom je iets tegen dat niet in het ticket staat? Puur uit interesse: waar kwam dat dan vandaan."
+     },
+     {
+      "when": {
+       "trait": [
+        "commercieel"
+       ]
+      },
+      "text": "Als de klant belt: doorverbinden. Naar Willem. Altijd naar Willem."
+     },
+     {
+      "text": "Zeg het als iets niet klopt. Liever nu dan bij de oplevering."
+     }
+    ],
+    "next": "slot"
+   },
+   "slot": {
+    "speaker": "daan",
+    "text": "Hoe zit het?",
+    "choices": [
+     {
+      "when": {
+       "flags_none": [
+        "daan_bezocht"
+       ]
+      },
+      "text": "Alles loopt goed.",
+      "next": "goed",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "daan_goed_nieuws",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "daan_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "when": {
+       "flags_none": [
+        "daan_bezocht"
+       ]
+      },
+      "text": "Er is iets wat me dwars zit.",
+      "next": "dwars",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "daan_op_de_hoogte",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "daan_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Niets bijzonders.",
+      "next": "niets",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "daan_bezocht",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "einde": {
+    "speaker": ""
+   },
+   "goed": {
+    "speaker": "daan",
+    "text": "Dat is fijn om te horen. Echt.",
+    "next": "einde"
+   },
+   "dwars": {
+    "speaker": "daan",
+    "text": "Zeg het maar.",
+    "next": "dwars2"
+   },
+   "dwars2": {
+    "speaker": "speler",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "De backend gedraagt zich raar."
+     },
+     {
+      "when": {
+       "trait": [
+        "commercieel"
+       ]
+      },
+      "text": "De klant verwacht meer dan in het ticket staat."
+     },
+     {
+      "text": "Ik weet het nog niet precies."
+     }
+    ],
+    "next": "dwars3"
+   },
+   "dwars3": {
+    "speaker": "daan",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "Jonathan weet dat. Of Jonathan heeft het gemaakt."
+     },
+     {
+      "when": {
+       "trait": [
+        "commercieel"
+       ]
+      },
+      "text": "Doorverbinden naar Willem. Die weet hoe hij dat landt."
+     },
+     {
+      "text": "Dan is het waarschijnlijk in een ticket. Zet het er anders in."
+     }
+    ],
+    "next": "einde"
+   },
+   "niets": {
+    "speaker": "daan",
+    "text": "Mooi. Dan laat ik je verder met rust.",
+    "next": "einde"
+   }
+  }
+ },
+ "collega_danny": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "danny",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "danny_bezocht",
+        "danny_tip_gekregen"
+       ]
+      },
+      "text": "die tip van jou klopt trouwens. heb er een test op gezet."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "danny_bezocht",
+        "danny_test_uitgelegd"
+       ],
+       "min_tickets_done": 5
+      },
+      "text": "de test van die knop is klaar. groter wint. psies."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "danny_bezocht"
+       ]
+      },
+      "text": "ah jij nog. psies. ik ben een test aan het analyseren."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_danny_gemist"
+       ]
+      },
+      "text": "je kapte me af, dus ik heb het gewoon aangezet. checkout valt weg op stap twee. psies"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_verkeerde_merksound"
+       ]
+      },
+      "text": "die merksound bij de speaker. psies. niet de goeie. ik zet er een test op"
+     },
+     {
+      "when": {
+       "min_tickets_done": 8
+      },
+      "text": "joejoe. de cijfers lopen op. ik beloof nog niets"
+     },
+     {
+      "when": {
+       "min_tickets_done": 4
+      },
+      "text": "ik heb een test lopen. vraag me over drie dagen wat eruit komt"
+     },
+     {
+      "text": "ik kijk naar wat mensen doen, niet naar wat ze zeggen. dat scheelt veel. en het is beter voor de o-m-z"
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "danny",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "data"
+       ]
+      },
+      "text": "psies. meningen zijn ruis. gedrag is data"
+     },
+     {
+      "when": {
+       "trait": [
+        "detail"
+       ]
+      },
+      "text": "de knop staat twee pixels scheef. kost ons niets, maar ik zeg het toch"
+     },
+     {
+      "text": "alles is een funnel. de gang ook. mensen lopen linksom, altijd"
+     }
+    ],
+    "next": "slot"
+   },
+   "slot": {
+    "speaker": "danny",
+    "text": "wat is er.",
+    "choices": [
+     {
+      "when": {
+       "flags_none": [
+        "danny_bezocht"
+       ]
+      },
+      "text": "Wat test je?",
+      "next": "test_vraag",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "danny_test_uitgelegd",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "danny_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "when": {
+       "flags_none": [
+        "danny_bezocht"
+       ]
+      },
+      "text": "Ik zag iets in het gedrag van de gebruikers.",
+      "next": "tip",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "danny_tip_gekregen",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "danny_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Ga door.",
+      "next": "terug",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "danny_bezocht",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "terug": {
+    "speaker": "danny",
+    "text": "oke. ik ga terug naar de cijfers.",
+    "next": "einde"
+   },
+   "einde": {
+    "speaker": ""
+   },
+   "test_vraag": {
+    "speaker": "danny",
+    "text": "kijken of mensen eerder klikken als de knop groter is. of roder. of allebei. drie varianten. morgen weten we het.",
+    "next": "test_keuze"
+   },
+   "test_keuze": {
+    "speaker": "danny",
+    "text": "wat denk jij?",
+    "choices": [
+     {
+      "text": "Groter.",
+      "next": "test_groter"
+     },
+     {
+      "text": "Roder.",
+      "next": "test_roder"
+     },
+     {
+      "text": "Dat hangt ervan af.",
+      "next": "test_afhankelijk"
+     }
+    ]
+   },
+   "test_groter": {
+    "speaker": "danny",
+    "text": "psies. dat is het. maar bewijs het zelf maar.",
+    "next": "einde"
+   },
+   "test_roder": {
+    "speaker": "danny",
+    "text": "dat zegt iedereen. data zegt iets anders. biem.",
+    "next": "einde"
+   },
+   "test_afhankelijk": {
+    "speaker": "danny",
+    "text": "ah. je bent een van ons.",
+    "next": "einde"
+   },
+   "tip": {
+    "speaker": "speler",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "data"
+       ]
+      },
+      "text": "Ze haken af op de tweede stap."
+     },
+     {
+      "text": "Ze scrollen niet naar beneden."
+     }
+    ],
+    "next": "tip2"
+   },
+   "tip2": {
+    "speaker": "danny",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "data"
+       ]
+      },
+      "text": "dat weet ik. maar goed dat jij het ziet. zet hem in een segment."
+     },
+     {
+      "text": "de fold. het is altijd de fold. biem."
+     }
+    ],
+    "next": "einde"
+   }
+  }
+ },
+ "collega_victor": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "victor",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "victor_bezocht",
+        "victor_entree_gemeld"
+       ]
+      },
+      "text": "Die drie pixels bij de entree. Gefixed. Niemand zag het. Behalve jij. En ik."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "victor_bezocht",
+        "victor_compliment"
+       ]
+      },
+      "text": "Ik heb de build nog een keer gecheckt. Klopt nog steeds. Voor nu."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "victor_bezocht"
+       ]
+      },
+      "text": "Oh. Is er iets scheef?"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_uitlijn_perfect"
+       ]
+      },
+      "text": "Ik heb er nog een keer naar gekeken. Het staat. Done."
+     },
+     {
+      "when": {
+       "min_tickets_done": 8
+      },
+      "text": "De build is groen. Done."
+     },
+     {
+      "when": {
+       "min_tickets_done": 4
+      },
+      "text": "manmanman. Ik heb vandaag drie dingen rechtgezet die niemand scheef zag staan."
+     },
+     {
+      "text": "Ik bouw wat anderen bedenken. Ik vraag alleen of iemand erover heeft nagedacht. Iedereen roept O-M-Z. Niemand roept dat de tweede rij scheef staat."
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "victor",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "detail"
+       ]
+      },
+      "text": "Kijk eens naar de tweede rij. Nee? Precies. Dat is het probleem."
+     },
+     {
+      "when": {
+       "trait": [
+        "proces"
+       ]
+      },
+      "text": "Zet het in een ticket. Anders bestaat het niet en doe ik het toch. hahaha"
+     },
+     {
+      "text": "Als je iets scheef ziet staan, zeg het. Dan zie ik het ook en slaap ik slechter."
+     }
+    ],
+    "next": "slot"
+   },
+   "slot": {
+    "speaker": "victor",
+    "text": "Wat?",
+    "choices": [
+     {
+      "when": {
+       "flags_none": [
+        "victor_bezocht"
+       ]
+      },
+      "text": "Er zit iets scheef bij de entree.",
+      "next": "scheef",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "victor_entree_gemeld",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "victor_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "when": {
+       "flags_none": [
+        "victor_bezocht"
+       ]
+      },
+      "text": "De build ziet er goed uit.",
+      "next": "compliment",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "victor_compliment",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "victor_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Oke.",
+      "next": "verder",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "victor_bezocht",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "verder": {
+    "speaker": "victor",
+    "text": "Oke. Dan ga ik weer turen.",
+    "next": "einde"
+   },
+   "einde": {
+    "speaker": ""
+   },
+   "scheef": {
+    "speaker": "victor",
+    "text": "Welke kant?",
+    "next": "scheef2"
+   },
+   "scheef2": {
+    "speaker": "speler",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "detail"
+       ]
+      },
+      "text": "Links. Drie pixels."
+     },
+     {
+      "text": "Links, denk ik."
+     }
+    ],
+    "next": "scheef3"
+   },
+   "scheef3": {
+    "speaker": "victor",
+    "text": "Dat dacht ik al. Ik fix het. Godver.",
+    "next": "einde"
+   },
+   "compliment": {
+    "speaker": "victor",
+    "text": "Dat zei ik ook. Maar ik vertrouw het nog niet. Hahaha.",
+    "next": "einde"
+   }
+  }
+ },
+ "collega_jonathan": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "jonathan",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "jonathan_bezocht",
+        "jonathan_alert"
+       ]
+      },
+      "text": "Die E die je noemde was een W. Ben er toch even naartoe gegaan."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "jonathan_bezocht",
+        "jonathan_logs_ok"
+       ]
+      },
+      "text": "Logs nog steeds ok. Moet zeggen dat dat me verbaast."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "jonathan_bezocht"
+       ]
+      },
+      "text": "Ik ga er naartoe kijken, voor je het vraagt."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_jonathan_gemist"
+       ]
+      },
+      "text": "Ik had het vanmorgen al gemeld, maar de tijd was om. Dat assortment hangt aan een store EN een levering. Best wel structureel ^.^"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_backend_fout_gekozen"
+       ]
+      },
+      "text": "Die kabel bij het rack lag verkeerd. Ik heb hem omgelegd. Het werkt nu, maar ik weet ook iets over jou ^.^"
+     },
+     {
+      "when": {
+       "min_tickets_done": 8
+      },
+      "text": "De verbinding staat. Ben benieuwd hoe lang."
+     },
+     {
+      "when": {
+       "min_tickets_done": 4
+      },
+      "text": "Ik heb iets gerepareerd dat niemand kapot heeft zien gaan. Dat is het werk."
+     },
+     {
+      "text": "Als je mijn werk ziet, is er iets stuk. Dus je ziet me het liefst niet."
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "jonathan",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "Zie je iets in de logs met een hoofdletter E: dat ben ik niet. Ik ga er wel naartoe kijken."
+     },
+     {
+      "when": {
+       "trait": [
+        "commercieel"
+       ]
+      },
+      "text": "Beloof niets over snelheid. Ik weet niet waar die vandaan moet komen."
+     },
+     {
+      "text": "Het werkt lokaal. Moet zeggen dat dat ook iets is."
+     }
+    ],
+    "next": "slot"
+   },
+   "slot": {
+    "speaker": "jonathan",
+    "text": "Wat zag je in de logs?",
+    "choices": [
+     {
+      "when": {
+       "flags_none": [
+        "jonathan_bezocht"
+       ]
+      },
+      "text": "Er is iets in de logs.",
+      "next": "logs_probleem",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "jonathan_alert",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "jonathan_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "when": {
+       "flags_none": [
+        "jonathan_bezocht",
+        "gevolg_jonathan_gemist"
+       ]
+      },
+      "text": "Logs zien er goed uit.",
+      "next": "logs_ok",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "jonathan_logs_ok",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "jonathan_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Niets van belang.",
+      "next": "niets",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "jonathan_bezocht",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "einde": {
+    "speaker": ""
+   },
+   "logs_probleem": {
+    "speaker": "jonathan",
+    "text": "Welke letter?",
+    "next": "logs_letter"
+   },
+   "logs_letter": {
+    "speaker": "speler",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "Een E. En er staan er drie."
+     },
+     {
+      "text": "Een hoofdletter. Weet niet welke."
+     }
+    ],
+    "next": "logs_reactie"
+   },
+   "logs_reactie": {
+    "speaker": "jonathan",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "Drie E's. Eén is echt, twee zijn gevolgen. Ik ga er naartoe kijken."
+     },
+     {
+      "text": "Als het een E is, ben ik het niet. Anders ook niet. Ik ga er naartoe kijken."
+     }
+    ],
+    "next": "einde"
+   },
+   "logs_ok": {
+    "speaker": "jonathan",
+    "text": "Dat zei ik ook. Niemand gelooft het als ik het zeg.",
+    "next": "einde"
+   },
+   "niets": {
+    "speaker": "jonathan",
+    "text": "Mooi. Ben benieuwd.",
+    "next": "einde"
+   }
+  }
+ },
+ "collega_willem": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "willem",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "willem_bezocht",
+        "willem_klant_blij"
+       ]
+      },
+      "text": "Ze heeft nóg een keer gebeld. Absoluta... ehh, Looff. Ook blij. Dat is uitzonderlijk."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "willem_bezocht",
+        "willem_vragen_op"
+       ]
+      },
+      "text": "Die vragen van de klant heb ik beantwoord. Twee van de drie kloppen ook."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "willem_bezocht",
+        "willem_wacht"
+       ]
+      },
+      "text": "Ze heeft nog niet teruggebeld. Ik sta klaar."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "willem_bezocht"
+       ]
+      },
+      "text": "Ben net terug. Ze is rustig. Voorlopig."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "klant_alles_opgeschreven"
+       ]
+      },
+      "text": "Elf punten en geen volgorde. Ik heb er zelf maar een volgorde in gezet."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "klant_schoonzus_gevraagd"
+       ]
+      },
+      "text": "De schoonzus heeft gebeld. Over blauw. Dat is wel top, ja."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "klant_prioriteit_gevraagd"
+       ]
+      },
+      "text": "Punt zeven eerst, zei ze. Daar kan ik wat mee."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_geen_webshop"
+       ]
+      },
+      "text": "Ik moet dit morgen presenteren. Er zit geen manier in om iets te kopen. Dat is wel top, ja."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_klant_ontevreden"
+       ]
+      },
+      "text": "Ze belde niet blij op. Ik heb het gladgestreken. Dat kost een paar dagen vertrouwen, niet meer."
+     },
+     {
+      "when": {
+       "min_tickets_done": 8
+      },
+      "text": "Ik heb de klant gesproken. Ze is heeeel enthousiast, en dat is nu nog terecht."
+     },
+     {
+      "when": {
+       "min_tickets_done": 4
+      },
+      "text": "Ik heb drie dingen toegezegd aan Absoluta... ehh, Looff. Twee daarvan kunnen ook echt."
+     },
+     {
+      "text": "Ik hou de klant bij je vandaan. Dat is geen grap, dat is de functieomschrijving. En het levert O-M-Z op."
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "willem",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "Zeg tegen mij dat iets niet kan. Ik vertaal het wel naar iets vriendelijkers."
+     },
+     {
+      "when": {
+       "trait": [
+        "sociaal"
+       ]
+      },
+      "text": "Jij begrijpt het. Nee zeggen kost een uur. Ja zeggen kost een kwartaal."
+     },
+     {
+      "text": "Als ze belt, ben ik in het hokje. Ook als ik daar niet ben."
+     }
+    ],
+    "next": "slot"
+   },
+   "slot": {
+    "speaker": "willem",
+    "text": "Heeft ze al gebeld?",
+    "choices": [
+     {
+      "when": {
+       "flags_none": [
+        "willem_bezocht"
+       ]
+      },
+      "text": "Nog niet.",
+      "next": "nog_niet",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "willem_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "when": {
+       "flags_none": [
+        "willem_bezocht"
+       ]
+      },
+      "text": "Ze belde al.",
+      "next": "belde",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "willem_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Oke, ga door.",
+      "next": "in_de_buurt",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "willem_bezocht",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "in_de_buurt": {
+    "speaker": "willem",
+    "text": "Oke. Ik blijf in de buurt van de telefoon.",
+    "next": "einde"
+   },
+   "einde": {
+    "speaker": ""
+   },
+   "nog_niet": {
+    "speaker": "willem",
+    "text": "Dat duurt niet lang meer. Ze belt altijd terug.",
+    "next": "einde"
+   },
+   "belde": {
+    "speaker": "willem",
+    "text": "Wat zei ze?",
+    "next": "belde2"
+   },
+   "belde2": {
+    "speaker": "speler",
+    "choices": [
+     {
+      "text": "Blij.",
+      "next": "klant_blij",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "willem_klant_blij",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Vragen.",
+      "next": "klant_vragen",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "willem_vragen_op",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Ze belt terug.",
+      "next": "klant_terug",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "willem_wacht",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "klant_blij": {
+    "speaker": "willem",
+    "text": "Gelukkig. Anders had ik nu gerend. Heeeel snel.",
+    "next": "einde"
+   },
+   "klant_vragen": {
+    "speaker": "willem",
+    "text": "Geef ze maar aan mij. Ik vertaal ze naar iets uitvoerbaars.",
+    "next": "einde"
+   },
+   "klant_terug": {
+    "speaker": "willem",
+    "text": "Ah. Dan ga ik vast klaarstaan. Absoluta... ehh, Looff.",
+    "next": "einde"
+   }
+  }
+ },
+ "collega_bastiaan": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "bastiaan",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "bastiaan_bezocht",
+        "bastiaan_component_gevraagd"
+       ],
+       "min_tickets_done": 5
+      },
+      "text": "hiya,, de accordion is klaar,, hij klapt perfect,, ik maak er nog een,,"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "bastiaan_bezocht",
+        "bastiaan_komt_meekijken"
+       ]
+      },
+      "text": "hiya,, ik kom zo,, ik moet alleen nog even,, ik kom echt zo,,"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_comicsans_beloofd"
+       ]
+      },
+      "text": "heb je haar Comic Sans beloofd,, geen Comic Sans is een beetje de standaard tegenwoordig"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_paard_gemist"
+       ]
+      },
+      "text": "wist ik meteen waar hij zat,, heb je hem zelf nog gezien,, jammer,, hij is best grappig,,"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "bastiaan_bezocht"
+       ],
+       "min_tickets_done": 7
+      },
+      "text": "hiya,, alles is groen,, ik vertrouw het niet,,"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "bastiaan_bezocht"
+       ],
+       "min_tickets_done": 3
+      },
+      "text": "ah jij nog een keer,, ik ben dezelfde component nog aan het verbeteren,, hij is nu echt goed,,"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "bastiaan_bezocht"
+       ]
+      },
+      "text": "hiya nog een keer,, ik ben er nog,,"
+     },
+     {
+      "when": {
+       "min_tickets_done": 7
+      },
+      "text": "Ik heb de hele build nagelopen,, er zit niets fout in,, dat vertrouw ik niet."
+     },
+     {
+      "when": {
+       "min_tickets_done": 3
+      },
+      "text": "Ik heb een component gemaakt die niemand nodig heeft,, nog niet."
+     },
+     {
+      "text": "hiya,, ik zit nog in een ticket van vorige week,, ik kom er wel uit."
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "bastiaan",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "Kijk je straks even mee,, niet nu,, straks."
+     },
+     {
+      "when": {
+       "trait": [
+        "detail"
+       ]
+      },
+      "text": "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat ook hè."
+     },
+     {
+      "text": "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
+     }
+    ],
+    "next": "slot"
+   },
+   "slot": {
+    "speaker": "bastiaan",
+    "text": "zeg het maar,,",
+    "choices": [
+     {
+      "when": {
+       "flags_none": [
+        "bastiaan_bezocht"
+       ]
+      },
+      "text": "Wat bouw je?",
+      "next": "component",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "bastiaan_component_gevraagd",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "bastiaan_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "when": {
+       "flags_none": [
+        "bastiaan_bezocht"
+       ]
+      },
+      "text": "Kijk je mee straks?",
+      "next": "meekijken",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "bastiaan_komt_meekijken",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "bastiaan_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Oke.",
+      "next": "verder",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "bastiaan_bezocht",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "verder": {
+    "speaker": "bastiaan",
+    "text": "oke,, dan ga ik weer verder,,",
+    "next": "einde"
+   },
+   "einde": {
+    "speaker": ""
+   },
+   "component": {
+    "speaker": "bastiaan",
+    "text": "een accordion component,, maar dan eentje die echt goed werkt,, hij klapt uit en in,, niemand heeft hem gevraagd,, maar hij bestaat nu,,",
+    "next": "einde"
+   },
+   "meekijken": {
+    "speaker": "bastiaan",
+    "text": "ja,, wanneer,, zeg maar wanneer,, ik ben er,,",
+    "next": "einde"
+   }
+  }
+ },
+ "collega_koen": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "koen",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "koen_bezocht",
+        "koen_verborgen_voor_jonathan"
+       ]
+      },
+      "text": "Is Jonathan al weg? Psst. Lekker ouwe."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "koen_bezocht",
+        "koen_piepelienies_uitgelegd"
+       ],
+       "min_tickets_done": 6
+      },
+      "text": "piepelienies lopen nog steeds. heb ze goed ingesteld haha."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "koen_bezocht"
+       ]
+      },
+      "text": "Ah, ben je er weer. Ik zit in een andere rabbit hole. Geen zorg haha."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "gevolg_credits_verbrand"
+       ]
+      },
+      "text": "Al die credits eraan. Als daar piepelienies om hadden gezeten was dat niet gebeurd."
+     },
+     {
+      "when": {
+       "min_tickets_done": 6
+      },
+      "text": "De logs zijn stil. Is weer een pareltje hoor haha."
+     },
+     {
+      "text": "Ik zal even kijken. Het duurt nog veertig minuten, vgm."
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "koen",
+    "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken.",
+    "next": "derde"
+   },
+   "derde": {
+    "speaker": "koen",
+    "variants": [
+     {
+      "when": {
+       "min_tickets_done": 6
+      },
+      "text": "De piepelienies lopen trouwens weer. Took a while haha."
+     },
+     {
+      "text": "Ik kijk straks nog even naar de piepelienies. Iets met een timeout, vgm."
+     }
+    ],
+    "next": "slot"
+   },
+   "slot": {
+    "speaker": "koen",
+    "text": "Wat is er?",
+    "choices": [
+     {
+      "when": {
+       "flags_none": [
+        "koen_bezocht"
+       ]
+      },
+      "text": "Wat zijn piepelienies precies?",
+      "next": "uitleg",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "koen_piepelienies_uitgelegd",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "koen_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "when": {
+       "flags_none": [
+        "koen_bezocht"
+       ]
+      },
+      "text": "Jonathan zoekt je.",
+      "next": "verstop",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "koen_verborgen_voor_jonathan",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "koen_bezocht",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Niets. Ga zo door.",
+      "next": "verder",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "koen_bezocht",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "verder": {
+    "speaker": "koen",
+    "text": "Oke lekker ouwe. Ik hou de piepelienies in de gaten.",
+    "next": "einde"
+   },
+   "einde": {
+    "speaker": ""
+   },
+   "uitleg": {
+    "speaker": "koen",
+    "text": "piepelienies. ci/cd. build, test, deploy. maar dan lekker. en als ze kapot zijn duurt het veertig minuten, vgm.",
+    "next": "einde"
+   },
+   "verstop": {
+    "speaker": "koen",
+    "text": "Ah nee. Zeg maar dat ik in een call zit, lekker ouwe.",
+    "next": "einde"
+   }
+  }
+ },
+ "dirk": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "dirk",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "uren_geboekt"
+       ]
+      },
+      "text": "Hoi {naam}, ik zie dat je vandaag {geboekt} hebt geboekt. Dank je!"
+     },
+     {
+      "when": {
+       "overwerk": true
+      },
+      "text": "Hoi {naam}, het is {klok}. Ik zie dat je nog aan het werk bent. Dat mag natuurlijk."
+     },
+     {
+      "text": "Hoi {naam}, even een klein seintje. Heb je even?"
+     }
+    ],
+    "next": "cijfers"
+   },
+   "cijfers": {
+    "speaker": "dirk",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "uren_geboekt"
+       ],
+       "overwerk": true
+      },
+      "text": "Er staat nu {geboekt} geboekt en je hebt {gewerkt} gewerkt. Dat verschil kan ik niet boeken. Ik laat het even zo."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "uren_geboekt"
+       ]
+      },
+      "text": "Mocht er later nog iets bij komen, dan vul je het gewoon aan."
+     },
+     {
+      "when": {
+       "overwerk": true
+      },
+      "text": "Er staat vandaag {geboekt} geboekt, terwijl de verwachting rond de {gewerkt} ligt. Je bent nu over je dag heen. Ik noteer het alleen."
+     },
+     {
+      "text": "Er staat vandaag tot nu toe {geboekt} geboekt, terwijl de verwachting rond de {gewerkt} ligt. Zou je je uren aanvullen als er nog wat mist?"
+     }
+    ],
+    "next": "waarom"
+   },
+   "waarom": {
+    "speaker": "dirk",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "uren_geboekt"
+       ]
+      },
+      "text": "Fijn dat het compleet is. Alvast bedankt!"
+     },
+     {
+      "text": "Ik probeer jullie zo goed mogelijk te helpen met de voortgang op projecten, en daarvoor helpt een complete urenregistratie enorm. Alvast bedankt!"
+     }
+    ],
+    "choices": [
+     {
+      "text": "Goed, ik boek ze nu.",
+      "next": "boeken"
+     },
+     {
+      "text": "Ik loop ergens tegenaan.",
+      "next": "dennis"
+     },
+     {
+      "text": "Ik heb even geen tijd.",
+      "next": "later"
+     }
+    ]
+   },
+   "boeken": {
+    "speaker": "dirk",
+    "text": "Top. Ik zet je urenstaat er even bij.",
+    "outcome": "boeken"
+   },
+   "dennis": {
+    "speaker": "dirk",
+    "text": "Dat snap ik. Loopt er iets waardoor het boeken er nu bij inschiet? Als je ergens tegenaan loopt, kun je terecht bij mijn collega Dennis, die denkt graag met je mee.",
+    "next": "dennis_slot",
+    "outcome": "doorgestuurd"
+   },
+   "dennis_slot": {
+    "speaker": "dirk",
+    "text": "Ik loop zelf ook nog even mee, voor het geval het je toch te binnen schiet."
+   },
+   "later": {
+    "speaker": "dirk",
+    "text": "Geen probleem hoor. Ik kom er later op terug.",
+    "next": "later_slot",
+    "outcome": "afgehouden"
+   },
+   "later_slot": {
+    "speaker": "dirk",
+    "variants": [
+     {
+      "when": {
+       "overwerk": true
+      },
+      "text": "Je bent trouwens {gewerkt} aan het werk. Zou je daar {budget} van willen boeken?"
+     },
+     {
+      "text": "Zou je het voor het einde van de dag doen? Dan hoef ik er niet nog een keer over te beginnen."
+     }
+    ]
+   }
+  }
+ },
+ "dirk_urenstaat": {
+  "_comment": "Dirks slotregel na de urenstaat. Deze boom wordt niet gewandeld: ticket_controller.gd::_dirk_oordeel() kiest een node op de payload van de minigame (op_rest, lege_tickets), want dat is een getal en geen Conditions-vlag. De tekst hoort hier zodat zijn stem in de data staat en _test_karakterstemmen hem meeleest.",
+  "start": "alles_geboekt",
+  "nodes": {
+   "veel_rest": {
+    "speaker": "dirk",
+    "text": "Dank je {naam}! Ik zie {rest} op overige posten staan, terwijl de verwachting daar rond het half uur ligt. Ik zet er een vraagteken bij, dan kijkt mijn collega Dennis er nog even naar. Alvast bedankt!"
+   },
+   "lege_tickets": {
+    "speaker": "dirk",
+    "text": "Dank je {naam}! Even een klein seintje: er staan nog {aantal} tickets op nul. Dan is daar niet aan gewerkt, klopt dat? Zou je ze aanvullen als er nog wat mist?"
+   },
+   "alles_geboekt": {
+    "speaker": "dirk",
+    "text": "Dank je {naam}! Helemaal op het werk zelf geboekt. Dat is netjes. Ik geef het even door aan mijn collega Dennis, die denkt graag met je mee."
+   },
+   "rest": {
+    "speaker": "dirk",
+    "text": "Dank je {naam}! {rest} op overig. Dat kan gebeuren, geen probleem hoor. Zou je het aanvullen als er nog wat mist? Alvast bedankt!"
+   }
+  }
+ }
 }

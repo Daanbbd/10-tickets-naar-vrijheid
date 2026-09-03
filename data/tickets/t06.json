@@ -1,60 +1,60 @@
 {
-  "available_when": {
-    "tickets_done": [
-      "t05"
-    ]
+ "available_when": {
+  "tickets_done": [
+   "t05"
+  ]
+ },
+ "requirements": {},
+ "dialogue_ids": {
+  "offer": "t06_offer",
+  "fetch": "t06_fetch",
+  "recruit": "t06_recruit",
+  "complete": "t06_complete",
+  "fail": "t06_fail",
+  "done": "t06_done"
+ },
+ "minigame_config": {},
+ "reward_effects": [
+  {
+   "op": "set_flag",
+   "flag": "cro_ok"
   },
-  "requirements": {},
-  "dialogue_ids": {
-    "offer": "t06_offer",
-    "fetch": "t06_fetch",
-    "recruit": "t06_recruit",
-    "complete": "t06_complete",
-    "fail": "t06_fail",
-    "done": "t06_done"
+  {
+   "op": "toast",
+   "text": "BBD-206 opgelost. Conversie +17%."
   },
-  "minigame_config": {},
-  "reward_effects": [
-    {
-      "op": "set_flag",
-      "flag": "cro_ok"
-    },
-    {
-      "op": "toast",
-      "text": "BBD-206 opgelost. Conversie +17%."
-    },
-    {
-      "op": "cue",
-      "cue": "ticket_klaar"
-    }
-  ],
-  "unlocks": [],
-  "world_changes": [
-    {
-      "op": "set_text",
-      "target": "dashboardmuur",
-      "value": "conversie +17%"
-    },
-    {
-      "op": "set_modulate",
-      "target": "dashboardmuur",
-      "value": "#c9f5d8"
-    },
-    {
-      "op": "camera_focus",
-      "target": "dashboardmuur",
-      "hold": 1.4
-    }
-  ],
-  "hint": "De dashboardmuur hangt in Basecamp: de tweede glazen ruimte, met de ronde tafel.",
-  "id": "t06",
-  "code": "BBD-206",
-  "order": 6,
-  "title": "Niemand koopt iets",
-  "summary": "De webshop werkt. De conversie is 0,04%. Dat is statistisch gezien niemand.",
-  "anchor": "dashboardmuur",
-  "owner_character": "danny",
-  "minigame_id": "mg_cro",
-  "zone": "z6_basecamp",
-  "zone_name": "Basecamp"
+  {
+   "op": "cue",
+   "cue": "ticket_klaar"
+  }
+ ],
+ "unlocks": [],
+ "world_changes": [
+  {
+   "op": "set_text",
+   "target": "dashboardmuur",
+   "value": "conversie +17%"
+  },
+  {
+   "op": "set_modulate",
+   "target": "dashboardmuur",
+   "value": "#c9f5d8"
+  },
+  {
+   "op": "camera_focus",
+   "target": "dashboardmuur",
+   "hold": 1.4
+  }
+ ],
+ "hint": "De dashboardmuur hangt in de tweede glazen ruimte, die met de ronde tafel.",
+ "id": "t06",
+ "code": "BBD-206",
+ "order": 6,
+ "title": "Niemand koopt iets",
+ "summary": "De webshop werkt. De conversie is 0,04%. Dat is statistisch gezien niemand.",
+ "anchor": "dashboardmuur",
+ "owner_character": "danny",
+ "minigame_id": "mg_cro",
+ "zone": "z6_basecamp",
+ "zone_name": "Basecamp"
 }

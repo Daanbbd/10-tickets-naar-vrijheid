@@ -1,967 +1,943 @@
 {
-  "voordeur": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "alle_tickets_klaar"
-              ]
-            },
-            "text": "De deur staat open. Buiten is het nog licht."
-          },
-          {
-            "text": "De deur zit op slot. Het briefje van vanmorgen hangt er nog: TIEN TICKETS. Daaronder een ouder briefje: 'Nog even.'"
-          }
-        ],
-        "next": "tweede"
+ "voordeur": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "alle_tickets_klaar"
+       ]
       },
-      "tweede": {
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "alle_tickets_klaar"
-              ]
-            },
-            "speaker": "speler",
-            "text": "Tien tickets. Dat was het dan."
-          },
-          {
-            "speaker": "speler",
-            "text": "Nog even. Dat briefje hangt er sinds maart."
-          }
-        ],
-        "next": "derde"
+      "text": "De deur staat open. Buiten is het nog licht."
+     },
+     {
+      "text": "De deur zit op slot. Het briefje van vanmorgen hangt er nog: TIEN TICKETS. Daaronder een ouder briefje: 'Nog even.'"
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "alle_tickets_klaar"
+       ]
       },
-      "derde": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "alle_tickets_klaar"
-              ]
-            },
-            "text": "Je pakt je jas van de kapstok. De rest kan wachten tot morgen."
-          },
-          {
-            "text": "Je loopt terug de gang in. Er staat nog werk open."
-          }
-        ]
-      }
-    }
-  },
-  "nooduitgang": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Nooduitgang. Op het bordje staat: alleen bij brand.",
-        "next": "tweede"
+      "speaker": "speler",
+      "text": "Tien tickets. Dat was het dan."
+     },
+     {
+      "speaker": "speler",
+      "text": "Nog even. Dat briefje hangt er sinds maart."
+     }
+    ],
+    "next": "derde"
+   },
+   "derde": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "alle_tickets_klaar"
+       ]
       },
-      "tweede": {
-        "speaker": "speler",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "proces"
-              ]
-            },
-            "text": "Dit is geen brand. Dit is een sprint."
-          },
-          {
-            "text": "Er staat niet bij wat je moet doen als het geen brand is."
-          }
-        ]
-      }
-    }
-  },
-  "ticketbord": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Het ticketbord. Tien tickets, allemaal met BBD ervoor.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "tickets_not_done": [
-                "t01"
-              ]
-            },
-            "text": "Bovenaan staat BBD-201. Summit — de vergaderruimte achter het glas, halverwege de gang."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "alle_tickets_klaar"
-              ]
-            },
-            "text": "Alles staat op Done. Iemand heeft er met potlood 'echt?' bij gezet."
-          },
-          {
-            "when": {
-              "min_tickets_done": 5
-            },
-            "text": "De helft is naar rechts geschoven. De andere helft staat er nog precies zo bij."
-          },
-          {
-            "text": "Ze staan allemaal links. Links betekent hier: nog niets van waar."
-          }
-        ],
-        "next": "derde"
-      },
-      "derde": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "tickets_not_done": [
-                "t01"
-              ]
-            },
-            "text": "Daar wacht iemand tot iemand beslist wat we bouwen."
-          },
-          {
-            "text": ""
-          }
-        ]
-      }
-    }
-  },
-  "printer": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "De printer meldt een storing. Welke storing staat er niet bij.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "In de lade ligt een stapel testpagina's. Geprint, nooit opgehaald."
-      }
-    }
-  },
-  "prijzenkast": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Een kast met vier prijzen. Twee ervan zijn van een bureau dat is overgenomen.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "Op de onderste plank staat een beker met 'Deelnemer'. Die staat vooraan."
-      }
-    }
-  },
-  "kapstok": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Vier jassen. Drie ervan hangen hier het hele jaar.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "alle_tickets_klaar"
-              ]
-            },
-            "text": "Jouw jas hangt er ook. Die mag straks mee."
-          },
-          {
-            "text": "Er hangt ook een winterjas. Het is juni."
-          }
-        ]
-      }
-    }
-  },
-  "prikbord": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Een prikbord vol losse briefjes. Niemand weet meer welke nog geldig zijn.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "has_item": [
-                "planning"
-              ]
-            },
-            "text": "Tussen de briefjes hangt de planning van vandaag. Iemand heeft er al een vraagteken bij gezet."
-          },
-          {
-            "text": "Bovenaan hangt een hart-sticker naast een briefje: 'Wie heeft mijn koffiemok'."
-          }
-        ]
-      }
-    }
-  },
-  "scherm_entree": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "tickets_done": [
-                "t08"
-              ]
-            },
-            "text": "Op het scherm rent een paard door een weiland. De lus duurt twaalf seconden."
-          },
-          {
-            "text": "Op het scherm staat 'Welkom' en de datum. De datum klopt niet."
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "has_item": [
-                "klantfeedback"
-              ]
-            },
-            "text": "Op het scherm staat de nieuwe tekst. Precies zoals de klant hem drie keer anders wilde."
-          },
-          {
-            "when": {
-              "tickets_done": [
-                "t08"
-              ]
-            },
-            "text": "Bezoekers kijken er langer naar dan de bedoeling was."
-          },
-          {
-            "text": "Eronder staat een quote. Er staat niet bij van wie."
-          }
-        ]
-      }
-    }
-  },
-  "koffiemachine": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "De koffiemachine. Er zit een sticker op: niet de middelste knop.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "has_item": [
-                "audiobestand"
-              ]
-            },
-            "text": "Uit de speaker komt de nieuwe merksound. Iemand heeft het volume alweer lager gezet."
-          },
-          {
-            "when": {
-              "min_tickets_done": 3
-            },
-            "text": "Er staat een schaal koeken naast. Briefje van Dennis: omdat ik gisteren weer een jaartje ouder ben geworden."
-          },
-          {
-            "when": {
-              "trait": [
-                "detail"
-              ]
-            },
-            "text": "Nergens staat waarom niet. Dat is erger dan de knop zelf."
-          },
-          {
-            "text": "Je drukt de tweede knop. Er komt soep uit. Dat is bekend."
-          }
-        ]
-      }
-    }
-  },
-  "koelkast": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "In de koelkast staat melk met een naam erop. De naam is doorgestreept en vervangen.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "Achterin staat een bakje met de datum 14-03. Het jaartal is weggekrast."
-      }
-    }
-  },
-  "lunchtafel": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "De lunchtafel. Om twaalf uur zit hier iedereen, om vijf over twaalf niemand.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "Op tafel staat een pot pindakaas zonder deksel. Het deksel is nooit teruggevonden."
-      }
-    }
-  },
-  "tafelvoetbal": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Tafelvoetbal. Bij het rode team ontbreekt de keeper.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "min_tickets_done": 6
-            },
-            "text": "Je hebt er vandaag nog niet aan gedacht. Dat zegt iets over vandaag."
-          },
-          {
-            "text": "Er ligt een briefje op: toernooi vrijdag. Er staat geen datum bij."
-          }
-        ]
-      }
-    }
-  },
-  "bureau_victor": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Twee schermen, precies even hoog afgesteld. Met een waterpas.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "character": [
-                "victor"
-              ]
-            },
-            "text": "Jouw bureau. Het toetsenbord ligt evenwijdig aan de rand. Zo hoort dat."
-          },
-          {
-            "when": {
-              "character": [
-                "koen"
-              ]
-            },
-            "text": "Twee schermen op precies dezelfde hoogte. Jij zou er niet aan durven komen."
-          },
-          {
-            "when": {
-              "character": [
-                "bastiaan"
-              ]
-            },
-            "text": "Op een geeltje staat: 4px. Jij ziet er zeven en je zegt niets."
-          },
-          {
-            "when": {
-              "character": [
-                "jonathan"
-              ]
-            },
-            "text": "Twee schermen op precies dezelfde hoogte. Moet zeggen, knap werk."
-          },
-          {
-            "when": {
-              "character": [
-                "willem"
-              ]
-            },
-            "text": "Twee schermen op precies dezelfde hoogte. Daar heeft nog nooit een klant naar gevraagd."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "frontend_ok"
-              ]
-            },
-            "text": "Op het scherm staat de webshop. Alles ligt op één lijn. Victor heeft er niets over gezegd."
-          },
-          {
-            "text": "Op een geeltje staat: 4px. Ik weet dat je het ziet."
-          }
-        ]
-      }
-    }
-  },
-  "bureau_bastiaan": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Zes koffiebekers, netjes op een rij. Van links naar rechts steeds ouder.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "character": [
-                "bastiaan"
-              ]
-            },
-            "text": "Jouw bureau. Vier knoppen die er hetzelfde uitzien. Jij weet welke drie fout zijn."
-          },
-          {
-            "text": "Op het scherm staat een componentbibliotheek. Vier knoppen die er hetzelfde uitzien."
-          }
-        ]
-      }
-    }
-  },
-  "bureau_danny": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Drie dashboards en één plant. De plant heeft geen dashboard.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "character": [
-                "danny"
-              ]
-            },
-            "text": "Jouw bureau. Je weet nog precies wanneer je hier voor het laatst hebt gezeten."
-          },
-          {
-            "when": {
-              "character": [
-                "koen"
-              ]
-            },
-            "text": "Op een geeltje: meningen zijn geen data. Jij vindt dat wel meevallen."
-          },
-          {
-            "when": {
-              "character": [
-                "bastiaan"
-              ]
-            },
-            "text": "Op een geeltje: meningen zijn geen data. Jij hebt er drie."
-          },
-          {
-            "when": {
-              "character": [
-                "victor"
-              ]
-            },
-            "text": "Drie dashboards, drie verschillende fonts. Dat kan geen toeval zijn."
-          },
-          {
-            "when": {
-              "character": [
-                "willem"
-              ]
-            },
-            "text": "Drie dashboards. Jij kunt de klant door twee ervan heen praten zonder dat hij het merkt."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "cro_ok"
-              ]
-            },
-            "text": "Op het middelste dashboard loopt een groene lijn. Danny heeft er een geeltje op geplakt: KIJK."
-          },
-          {
-            "text": "Op een geeltje: meningen zijn geen data. In zijn eigen handschrift."
-          }
-        ]
-      }
-    }
-  },
-  "loungehoek": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Twee banken en een lage tafel. Op tafel ligt een boek over merkstrategie. Ongelezen.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "In het kussen zit de afdruk van iemand die hier langer heeft gezeten dan gepland."
-      }
-    }
-  },
-  "beamer": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "De beamer staat aan sinds de vorige vergadering.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "Er ontbreekt een HDMI-adapter. Er ontbreekt altijd een HDMI-adapter."
-          },
-          {
-            "when": {
-              "has_item": [
-                "productdata"
-              ]
-            },
-            "text": "Op de muur staat de productlijst geprojecteerd. Vier supplementen, met prijzen erbij."
-          },
-          {
-            "text": "Op de muur staat het bureaublad van iemand anders geprojecteerd."
-          }
-        ]
-      }
-    }
-  },
-  "whiteboard": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "tickets_done": [
-                "t01"
-              ]
-            },
-            "text": "Op het whiteboard staat de user story. Met een 'zodat'. Er staat een streep onder."
-          },
-          {
-            "text": "Op het whiteboard staan een pijl, een wolk en het woord 'later'."
-          }
-        ],
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "has_item": [
-                "user_story"
-              ]
-            },
-            "text": "Naast NIET UITVEGEN staat nu de user story. In je tas zit dezelfde tekst, uitgeprint."
-          },
-          {
-            "text": "In de hoek staat NIET UITVEGEN. Dat staat er zo lang dat niemand meer weet waarom."
-          }
-        ]
-      }
-    }
-  },
-  "serverrack_b": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Het tweede rack. Er hangt een label op: oud, niet uitzetten.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "character": [
-                "koen"
-              ]
-            },
-            "text": "Jouw rack. Jij weet waar die ene kabel heen gaat. Je hebt het nooit verteld."
-          },
-          {
-            "when": {
-              "character": [
-                "jonathan"
-              ]
-            },
-            "text": "Het tweede rack. Ben benieuwd wat daar allemaal nog op draait."
-          },
-          {
-            "when": {
-              "character": [
-                "victor"
-              ]
-            },
-            "text": "Het label hangt een halve graad scheef. Jij hebt het al gezien."
-          },
-          {
-            "when": {
-              "trait": [
-                "technisch"
-              ]
-            },
-            "text": "Er loopt één kabel naar buiten waarvan niemand het einde kent."
-          },
-          {
-            "when": {
-              "flags_all": [
-                "backend_ok"
-              ]
-            },
-            "text": "Het rack ernaast is stil sinds vanmiddag. Je hoort nu alleen deze nog zoemen."
-          },
-          {
-            "text": "Het zoemt op een andere toon dan het rack ernaast."
-          }
-        ]
-      }
-    }
-  },
-  "badgelezer": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "De badgelezer bij het Patchhok. Groen lampje, dus vandaag doet hij het.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "text": "Eronder hangt een briefje: twee keer piepen is ook goed."
-          }
-        ]
-      }
-    }
-  },
-  "wc_poster": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Een poster naast de spiegel: elk idee begint met een goede vraag.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "trait": [
-                "proces"
-              ]
-            },
-            "text": "Iemand heeft eronder geschreven: en eindigt in Jira."
-          },
-          {
-            "text": "Iemand heeft de tekst verbeterd met balpen. Twee keer."
-          }
-        ]
-      }
-    }
-  },
-  "wastafel": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "De kraan loopt drie seconden na. Elke keer precies drie.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "Boven de kraan hangt een sticker: gemeld bij de beheerder, 2019."
-      }
-    }
-  },
-  "plotter": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "De grootformaatplotter. Aangeschaft voor één klant, in 2019.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "has_item": [
-                "videobestand"
-              ]
-            },
-            "text": "Naast de proefdruk hangt een still uit de video. Op grootformaat, want dat kon."
-          },
-          {
-            "text": "Er hangt nog een proefdruk. Een logo, twee keer zo groot als nodig. Toen ook al."
-          }
-        ]
-      }
-    }
-  },
-  "paardenkostuum": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Aan een haak hangt een paardenkostuum. Van de kerstborrel. Waarschijnlijk.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "tickets_done": [
-                "t09"
-              ]
-            },
-            "text": "Het hangt er anders bij dan vanochtend. Alsof iemand het met haast heeft teruggehangen."
-          },
-          {
-            "text": "Het hoofd ligt ernaast, op een doos. Het kijkt richting de deur."
-          }
-        ]
-      }
-    }
-  },
-  "gang_plant": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Een plant in de gang. Kunststof, en toch krijgt hij water.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "In de pot ligt een lepel. Daar is geen verklaring voor."
-      }
-    }
-  },
-  "muurschildering": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Een muurschildering: een blauwe vogel boven een stad. Gemaakt door iemand van het eerste uur.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "flags_all": [
-                "alle_tickets_klaar"
-              ]
-            },
-            "text": "De vogel vliegt richting de voordeur. Dat was je nooit eerder opgevallen."
-          },
-          {
-            "text": "De vogel vliegt richting de vergaderruimte. Daar is destijds over vergaderd."
-          }
-        ]
-      }
-    }
-  },
-  "plantenkast": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "has_item": [
-                "deploysleutel"
-              ]
-            },
-            "text": "De plantenkast. Het speelgoedpaard staat er nog. De sleutel eronder is weg."
-          },
-          {
-            "text": "De plantenkast. Klimop, een clown van karton, en bovenop een speelgoedpaard."
-          }
-        ],
-        "next": "pak"
-      },
-      "pak": {
-        "variants": [
-          {
-            "when": {
-              "has_item": [
-                "deploysleutel"
-              ]
-            },
-            "speaker": "speler",
-            "text": "Ik heb hem al. Hij zit in mijn zak en daar blijft hij."
-          },
-          {
-            "speaker": "",
-            "text": "Er ligt een sleutel aan een blokje hout. Met watervaste stift: DEPLOY. NIET KWIJTRAKEN. Je neemt hem mee.",
-            "effects": [
-              {
-                "op": "add_item",
-                "item": "deploysleutel"
-              },
-              {
-                "op": "toast",
-                "text": "Deploysleutel meegenomen"
-              },
-              {
-                "op": "cue",
-                "cue": "klik"
-              }
-            ]
-          }
-        ],
-        "next": "slot"
-      },
-      "slot": {
-        "speaker": "",
-        "text": "Verder liggen er alleen ordners. Van projecten die niemand meer kan uitleggen."
-      }
-    }
-  },
-  "urinoirs": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Twee urinoirs en één pot, in een ruimte zo groot als een vergaderzaal.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "Er is één deur. Voor het geheel. Daar is ooit over vergaderd."
-      }
-    }
-  },
-  "tribune": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "De tribune. Teal, met kussens die niemand rechtlegt.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "Bovenop staan de DIA-awards. Ernaast staat de Jura. Die wordt vaker aangeraakt."
-      }
-    }
-  },
-  "blauwe_tijger": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Een blauwe tijger, levensgroot, midden in de gang.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "Niemand weet meer waarom. Iedereen loopt er netjes omheen."
-      }
-    }
-  },
-  "samen_bingo_poster": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Op de houten zijde van het hokje hangt een poster: SAMEN BINGO.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "text": "Er staat geen datum op. Dat maakt het dreigender."
-      }
-    }
-  },
-  "hokje_telefoon": {
-    "start": "start",
-    "nodes": {
-      "start": {
-        "speaker": "",
-        "text": "Een vaste telefoon in het vergaderhokje. Er zit nog een snoer aan.",
-        "next": "tweede"
-      },
-      "tweede": {
-        "speaker": "",
-        "variants": [
-          {
-            "when": {
-              "character": [
-                "willem"
-              ]
-            },
-            "text": "Jouw hok. Je herkent de deuk in het bureaublad."
-          },
-          {
-            "when": {
-              "character": [
-                "koen"
-              ]
-            },
-            "text": "Jij belt hier weleens vanaf. Niemand weet dat en zo houden we het."
-          },
-          {
-            "when": {
-              "character": [
-                "bastiaan"
-              ]
-            },
-            "text": "Op het toestel zit een geeltje met een telefoonnummer. Het hangt scheef."
-          },
-          {
-            "text": "Op het toestel zit een geeltje met één telefoonnummer. Geen naam."
-          }
-        ]
-      }
-    }
+      "text": "Je pakt je jas van de kapstok. De rest kan wachten tot morgen."
+     },
+     {
+      "text": "Je loopt terug de gang in. Er staat nog werk open."
+     }
+    ]
+   }
   }
+ },
+ "nooduitgang": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Nooduitgang. Op het bordje staat: alleen bij brand.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "speler",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "proces"
+       ]
+      },
+      "text": "Dit is geen brand. Dit is een sprint."
+     },
+     {
+      "text": "Er staat niet bij wat je moet doen als het geen brand is."
+     }
+    ]
+   }
+  }
+ },
+ "ticketbord": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Het ticketbord. Tien tickets, allemaal met BBD ervoor.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "tickets_not_done": [
+        "t01"
+       ]
+      },
+      "text": "Bovenaan staat BBD-201. Summit is de vergaderruimte achter het glas, halverwege de gang."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "alle_tickets_klaar"
+       ]
+      },
+      "text": "Alles staat op Done. Iemand heeft er met potlood 'echt?' bij gezet."
+     },
+     {
+      "when": {
+       "min_tickets_done": 5
+      },
+      "text": "De helft is naar rechts geschoven. De andere helft staat er nog precies zo bij."
+     },
+     {
+      "text": "Ze staan allemaal links. Links betekent hier: nog niets van waar."
+     }
+    ],
+    "next": "derde"
+   },
+   "derde": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "tickets_not_done": [
+        "t01"
+       ]
+      },
+      "text": "Daar wacht iemand tot iemand beslist wat we bouwen."
+     },
+     {
+      "text": ""
+     }
+    ]
+   }
+  }
+ },
+ "printer": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "De printer meldt een storing. Welke storing staat er niet bij.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "In de lade ligt een stapel testpagina's. Geprint, nooit opgehaald."
+   }
+  }
+ },
+ "prijzenkast": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Een kast met vier prijzen. Twee ervan zijn van een bureau dat is overgenomen.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "Op de onderste plank staat een beker met 'Deelnemer'. Die staat vooraan."
+   }
+  }
+ },
+ "kapstok": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Vier jassen. Drie ervan hangen hier het hele jaar.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "alle_tickets_klaar"
+       ]
+      },
+      "text": "Jouw jas hangt er ook. Die mag straks mee."
+     },
+     {
+      "text": "Er hangt ook een winterjas. Het is juni."
+     }
+    ]
+   }
+  }
+ },
+ "prikbord": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Een prikbord vol losse briefjes. Niemand weet meer welke nog geldig zijn.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "has_item": [
+        "planning"
+       ]
+      },
+      "text": "Tussen de briefjes hangt de planning van vandaag. Iemand heeft er al een vraagteken bij gezet."
+     },
+     {
+      "text": "Bovenaan hangt een hart-sticker naast een briefje: 'Wie heeft mijn koffiemok'."
+     }
+    ]
+   }
+  }
+ },
+ "scherm_entree": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "tickets_done": [
+        "t08"
+       ]
+      },
+      "text": "Op het scherm rent een paard door een weiland. De lus duurt twaalf seconden."
+     },
+     {
+      "text": "Op het scherm staat 'Welkom' en de datum. De datum klopt niet."
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "has_item": [
+        "klantfeedback"
+       ]
+      },
+      "text": "Op het scherm staat de nieuwe tekst. Precies zoals de klant hem drie keer anders wilde."
+     },
+     {
+      "when": {
+       "tickets_done": [
+        "t08"
+       ]
+      },
+      "text": "Bezoekers kijken er langer naar dan de bedoeling was."
+     },
+     {
+      "text": "Eronder staat een quote. Er staat niet bij van wie."
+     }
+    ]
+   }
+  }
+ },
+ "koffiemachine": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "De koffiemachine. Er zit een sticker op: niet de middelste knop.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "has_item": [
+        "audiobestand"
+       ]
+      },
+      "text": "Uit de speaker komt de nieuwe merksound. Iemand heeft het volume alweer lager gezet."
+     },
+     {
+      "when": {
+       "min_tickets_done": 3
+      },
+      "text": "Er staat een schaal koeken naast. Briefje van Dennis: omdat ik gisteren weer een jaartje ouder ben geworden."
+     },
+     {
+      "when": {
+       "trait": [
+        "detail"
+       ]
+      },
+      "text": "Nergens staat waarom niet. Dat is erger dan de knop zelf."
+     },
+     {
+      "text": "Je drukt de tweede knop. Er komt soep uit. Dat is bekend."
+     }
+    ]
+   }
+  }
+ },
+ "koelkast": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "In de koelkast staat melk met een naam erop. De naam is doorgestreept en vervangen.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "Achterin staat een bakje met de datum 14-03. Het jaartal is weggekrast."
+   }
+  }
+ },
+ "lunchtafel": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "De lunchtafel. Om twaalf uur zit hier iedereen, om vijf over twaalf niemand.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "Op tafel staat een pot pindakaas zonder deksel. Het deksel is nooit teruggevonden."
+   }
+  }
+ },
+ "bureau_victor": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Twee schermen, precies even hoog afgesteld. Met een waterpas.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "character": [
+        "victor"
+       ]
+      },
+      "text": "Jouw bureau. Het toetsenbord ligt evenwijdig aan de rand. Zo hoort dat."
+     },
+     {
+      "when": {
+       "character": [
+        "koen"
+       ]
+      },
+      "text": "Twee schermen op precies dezelfde hoogte. Jij zou er niet aan durven komen."
+     },
+     {
+      "when": {
+       "character": [
+        "bastiaan"
+       ]
+      },
+      "text": "Op een geeltje staat: 4px. Jij ziet er zeven en je zegt niets."
+     },
+     {
+      "when": {
+       "character": [
+        "jonathan"
+       ]
+      },
+      "text": "Twee schermen op precies dezelfde hoogte. Moet zeggen, knap werk."
+     },
+     {
+      "when": {
+       "character": [
+        "willem"
+       ]
+      },
+      "text": "Twee schermen op precies dezelfde hoogte. Daar heeft nog nooit een klant naar gevraagd."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "frontend_ok"
+       ]
+      },
+      "text": "Op het scherm staat de webshop. Alles ligt op één lijn. Victor heeft er niets over gezegd."
+     },
+     {
+      "text": "Op een geeltje staat: 4px. Ik weet dat je het ziet."
+     }
+    ]
+   }
+  }
+ },
+ "bureau_bastiaan": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Zes koffiebekers, netjes op een rij. Van links naar rechts steeds ouder.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "character": [
+        "bastiaan"
+       ]
+      },
+      "text": "Jouw bureau. Vier knoppen die er hetzelfde uitzien. Jij weet welke drie fout zijn."
+     },
+     {
+      "text": "Op het scherm staat een componentbibliotheek. Vier knoppen die er hetzelfde uitzien."
+     }
+    ]
+   }
+  }
+ },
+ "bureau_danny": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Drie dashboards en één plant. De plant heeft geen dashboard.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "character": [
+        "danny"
+       ]
+      },
+      "text": "Jouw bureau. Je weet nog precies wanneer je hier voor het laatst hebt gezeten."
+     },
+     {
+      "when": {
+       "character": [
+        "koen"
+       ]
+      },
+      "text": "Op een geeltje: meningen zijn geen data. Jij vindt dat wel meevallen."
+     },
+     {
+      "when": {
+       "character": [
+        "bastiaan"
+       ]
+      },
+      "text": "Op een geeltje: meningen zijn geen data. Jij hebt er drie."
+     },
+     {
+      "when": {
+       "character": [
+        "victor"
+       ]
+      },
+      "text": "Drie dashboards, drie verschillende fonts. Dat kan geen toeval zijn."
+     },
+     {
+      "when": {
+       "character": [
+        "willem"
+       ]
+      },
+      "text": "Drie dashboards. Jij kunt de klant door twee ervan heen praten zonder dat hij het merkt."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "cro_ok"
+       ]
+      },
+      "text": "Op het middelste dashboard loopt een groene lijn. Danny heeft er een geeltje op geplakt: KIJK."
+     },
+     {
+      "text": "Op een geeltje: meningen zijn geen data. In zijn eigen handschrift."
+     }
+    ]
+   }
+  }
+ },
+ "loungehoek": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Twee banken en een lage tafel. Op tafel ligt een boek over merkstrategie. Ongelezen.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "In het kussen zit de afdruk van iemand die hier langer heeft gezeten dan gepland."
+   }
+  }
+ },
+ "beamer": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "De beamer staat aan sinds de vorige vergadering.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "Er ontbreekt een HDMI-adapter. Er ontbreekt altijd een HDMI-adapter."
+     },
+     {
+      "when": {
+       "has_item": [
+        "productdata"
+       ]
+      },
+      "text": "Op de muur staat de productlijst geprojecteerd. Vier supplementen, met prijzen erbij."
+     },
+     {
+      "text": "Op de muur staat het bureaublad van iemand anders geprojecteerd."
+     }
+    ]
+   }
+  }
+ },
+ "whiteboard": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "tickets_done": [
+        "t01"
+       ]
+      },
+      "text": "Op het whiteboard staat de user story. Met een 'zodat'. Er staat een streep onder."
+     },
+     {
+      "text": "Op het whiteboard staan een pijl, een wolk en het woord 'later'."
+     }
+    ],
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "has_item": [
+        "user_story"
+       ]
+      },
+      "text": "Naast NIET UITVEGEN staat nu de user story. In je tas zit dezelfde tekst, uitgeprint."
+     },
+     {
+      "text": "In de hoek staat NIET UITVEGEN. Dat staat er zo lang dat niemand meer weet waarom."
+     }
+    ]
+   }
+  }
+ },
+ "serverrack_b": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Het tweede rack. Er hangt een label op: oud, niet uitzetten.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "character": [
+        "koen"
+       ]
+      },
+      "text": "Jouw rack. Jij weet waar die ene kabel heen gaat. Je hebt het nooit verteld."
+     },
+     {
+      "when": {
+       "character": [
+        "jonathan"
+       ]
+      },
+      "text": "Het tweede rack. Ben benieuwd wat daar allemaal nog op draait."
+     },
+     {
+      "when": {
+       "character": [
+        "victor"
+       ]
+      },
+      "text": "Het label hangt een halve graad scheef. Jij hebt het al gezien."
+     },
+     {
+      "when": {
+       "trait": [
+        "technisch"
+       ]
+      },
+      "text": "Er loopt één kabel naar buiten waarvan niemand het einde kent."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "backend_ok"
+       ]
+      },
+      "text": "Het rack ernaast is stil sinds vanmiddag. Je hoort nu alleen deze nog zoemen."
+     },
+     {
+      "text": "Het zoemt op een andere toon dan het rack ernaast."
+     }
+    ]
+   }
+  }
+ },
+ "badgelezer": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "De badgelezer bij het Patchhok. Groen lampje, dus vandaag doet hij het.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "text": "Eronder hangt een briefje: twee keer piepen is ook goed."
+     }
+    ]
+   }
+  }
+ },
+ "wc_poster": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Een poster naast de spiegel: elk idee begint met een goede vraag.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "trait": [
+        "proces"
+       ]
+      },
+      "text": "Iemand heeft eronder geschreven: en eindigt in Jira."
+     },
+     {
+      "text": "Iemand heeft de tekst verbeterd met balpen. Twee keer."
+     }
+    ]
+   }
+  }
+ },
+ "wastafel": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "De kraan loopt drie seconden na. Elke keer precies drie.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "Boven de kraan hangt een sticker: gemeld bij de beheerder, 2019."
+   }
+  }
+ },
+ "plotter": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "De grootformaatplotter. Aangeschaft voor één klant, in 2019.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "has_item": [
+        "videobestand"
+       ]
+      },
+      "text": "Naast de proefdruk hangt een still uit de video. Op grootformaat, want dat kon."
+     },
+     {
+      "text": "Er hangt nog een proefdruk. Een logo, twee keer zo groot als nodig. Toen ook al."
+     }
+    ]
+   }
+  }
+ },
+ "paardenkostuum": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Aan een haak hangt een paardenkostuum. Van de kerstborrel. Waarschijnlijk.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "tickets_done": [
+        "t09"
+       ]
+      },
+      "text": "Het hangt er anders bij dan vanochtend. Alsof iemand het met haast heeft teruggehangen."
+     },
+     {
+      "text": "Het hoofd ligt ernaast, op een doos. Het kijkt richting de deur."
+     }
+    ]
+   }
+  }
+ },
+ "gang_plant": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Een plant in de gang. Kunststof, en toch krijgt hij water.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "In de pot ligt een lepel. Daar is geen verklaring voor."
+   }
+  }
+ },
+ "muurschildering": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Een muurschildering: een blauwe vogel boven een stad. Gemaakt door iemand van het eerste uur.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "alle_tickets_klaar"
+       ]
+      },
+      "text": "De vogel vliegt richting de voordeur. Dat was je nooit eerder opgevallen."
+     },
+     {
+      "text": "De vogel vliegt richting de vergaderruimte. Daar is destijds over vergaderd."
+     }
+    ]
+   }
+  }
+ },
+ "plantenkast": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "has_item": [
+        "deploysleutel"
+       ]
+      },
+      "text": "De plantenkast. Het speelgoedpaard staat er nog. De sleutel eronder is weg."
+     },
+     {
+      "text": "De plantenkast. Klimop, een clown van karton, en bovenop een speelgoedpaard."
+     }
+    ],
+    "next": "pak"
+   },
+   "pak": {
+    "variants": [
+     {
+      "when": {
+       "has_item": [
+        "deploysleutel"
+       ]
+      },
+      "speaker": "speler",
+      "text": "Ik heb hem al. Hij zit in mijn zak en daar blijft hij."
+     },
+     {
+      "speaker": "",
+      "text": "Er ligt een sleutel aan een blokje hout. Met watervaste stift: DEPLOY. NIET KWIJTRAKEN. Je neemt hem mee.",
+      "effects": [
+       {
+        "op": "add_item",
+        "item": "deploysleutel"
+       },
+       {
+        "op": "toast",
+        "text": "Deploysleutel meegenomen"
+       },
+       {
+        "op": "cue",
+        "cue": "klik"
+       }
+      ]
+     }
+    ],
+    "next": "slot"
+   },
+   "slot": {
+    "speaker": "",
+    "text": "Verder liggen er alleen ordners. Van projecten die niemand meer kan uitleggen."
+   }
+  }
+ },
+ "urinoirs": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Twee urinoirs en één pot, in een ruimte zo groot als een vergaderzaal.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "Er is één deur. Voor het geheel. Daar is ooit over vergaderd."
+   }
+  }
+ },
+ "tribune": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "De tribune. Teal, met kussens die niemand rechtlegt.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "Bovenop staan de DIA-awards. Ernaast staat de Jura. Die wordt vaker aangeraakt."
+   }
+  }
+ },
+ "blauwe_tijger": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Een blauwe tijger, levensgroot, midden in de gang.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "Niemand weet meer waarom. Iedereen loopt er netjes omheen."
+   }
+  }
+ },
+ "samen_bingo_poster": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Op de houten zijde van het hokje hangt een poster: SAMEN BINGO.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "text": "Er staat geen datum op. Dat maakt het dreigender."
+   }
+  }
+ },
+ "hokje_telefoon": {
+  "start": "start",
+  "nodes": {
+   "start": {
+    "speaker": "",
+    "text": "Een vaste telefoon in het vergaderhokje. Er zit nog een snoer aan.",
+    "next": "tweede"
+   },
+   "tweede": {
+    "speaker": "",
+    "variants": [
+     {
+      "when": {
+       "character": [
+        "willem"
+       ]
+      },
+      "text": "Jouw hok. Je herkent de deuk in het bureaublad."
+     },
+     {
+      "when": {
+       "character": [
+        "koen"
+       ]
+      },
+      "text": "Jij belt hier weleens vanaf. Niemand weet dat en zo houden we het."
+     },
+     {
+      "when": {
+       "character": [
+        "bastiaan"
+       ]
+      },
+      "text": "Op het toestel zit een geeltje met een telefoonnummer. Het hangt scheef."
+     },
+     {
+      "text": "Op het toestel zit een geeltje met één telefoonnummer. Geen naam."
+     }
+    ]
+   }
+  }
+ }
 }

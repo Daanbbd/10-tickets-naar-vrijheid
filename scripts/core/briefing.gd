@@ -64,6 +64,7 @@ static func _feiten(c: Dictionary) -> Dictionary:
 			f["ingrepen"] = int(c.get("ingrepen", 0))
 			f["belangrijk"] = _belangrijke_aanwijzing(c)
 			f["praattijd"] = _praattijd(c)
+			f["sprekers"] = (c.get("sprekers", []) as Array).size()
 		"choicescene":
 			f["drempel"] = int(c.get("drempel", 0))
 			f["rondes"] = (c.get("rondes", []) as Array).size()

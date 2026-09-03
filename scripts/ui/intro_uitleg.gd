@@ -120,6 +120,21 @@ func _blok(ouder: VBoxContainer, kop: String, regels: Array[String], kleur: Colo
 		ouder.add_child(UiKit.spacer(3))
 
 
+## Waar "Begrepen" naartoe gaat. Bij een nieuwe dag naar de personagekeuze; bij
+## "Doorgaan" is die keuze al gemaakt en gaat hij het spel in.
+##
+## Dit scherm zat alleen op de route Titel -> Uitleg -> Keuze, en "Doorgaan"
+## ging rechtstreeks naar de wereld. Wie op een save terugkwam kreeg de
+## opdracht dus nooit te zien — en dat is precies de speler die er het meest
+## aan heeft, want die was hem misschien al vergeten. Bij een save die al
+## onderweg is (`done_count() > 0`) blijft hij weg: dan is het een tolpoort.
+static var na_uitleg_het_spel_in: bool = false
+
+
 func _on_verder() -> void:
 	AudioDirector.play_ui(&"klik")
+	if na_uitleg_het_spel_in:
+		na_uitleg_het_spel_in = false
+		Shell.goto_game()
+		return
 	Shell.goto_character_select()

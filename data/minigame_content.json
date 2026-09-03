@@ -1,9 +1,9 @@
 {
  "mg_user_story": {
   "type": "scope",
-  "briefing": "{capaciteit} punten past erin, en zij wil er {tevreden_min} blij van worden. Van de {wensen} dingen die ze noemt zijn er {zwaar} geen wens maar een project. Als ze 'een app' zegt: sorry wat.",
-  "intro": "Zij noemt {wensen} dingen. Er past {capaciteit} punten in de sprint, en ze moet op {tevreden_min} punten blij zijn.",
-  "waarom": "Van die {wensen} zijn er {zwaar} geen wens maar een project. Wat je nu belooft, bouw je vandaag — of kom je later tegen.",
+  "briefing": "{capaciteit} punten passen erin, en zij wil er {tevreden_min} blij van worden. Van de {wensen} dingen die ze noemt zijn er {zwaar} geen wens maar een project. Als ze 'een app' zegt: sorry wat.",
+  "intro": "Zij noemt {wensen} dingen. Er passen {capaciteit} punten in de sprint, en ze moet op {tevreden_min} punten blij zijn.",
+  "waarom": "Van die {wensen} zijn er {zwaar} geen wens maar een project. Wat je nu belooft, bouw je vandaag. Of kom je later tegen.",
   "capaciteit": 13,
   "tevreden_min": 10,
   "eenheid": "punten",
@@ -63,16 +63,16 @@
     "blij": 2
    }
   ],
-  "success": "Je hebt een scope. Op papier. Dennis schat hem in op tweeenhalf keer wat je hebt opgeschreven.",
+  "success": "Je hebt een scope. Op papier. Dennis schat hem in op tweeënhalf keer wat je hebt opgeschreven.",
   "failure": "Zij gaat hier niet blij van worden. Dennis zegt dat dat mag, maar dan wel voor honderdtwintig procent.",
   "te_vol": "Dit past niet in de sprint.",
   "te_weinig": "Hier gaat zij niet blij van worden."
  },
  "mg_planning": {
   "type": "standup",
-  "briefing": "Er staat {praattijd} seconden aan verhaal en de stand-up mag er {tijd}. Let op {belangrijk}: die kap je niet af.",
-  "intro": "Jij bewaakt de klok. Er staat {praattijd} seconden aan verhaal, en de stand-up mag er {tijd} duren.",
-  "waarom": "Het past dus niet. Kap {ingrepen} keer iemand af en je haalt het — maar twee van hen melden iets dat later stukgaat, en dat hoor je dan niet.",
+  "briefing": "Samen praten ze {praattijd} seconden en de stand-up duurt maar {tijd}. Je moet dus afkappen, alleen niet bij {belangrijk}.",
+  "intro": "{sprekers} collega's doen hun rondje. Samen praten ze {praattijd} seconden, en de stand-up duurt maar {tijd}. Je mag {ingrepen} keer iemand afkappen.",
+  "waarom": "Het past dus niet: er moet iemand af. Maar twee van hen melden iets wat later stukgaat. Kap je die af, dan hoor je het niet.",
   "tijd": 30.0,
   "ingrepen": 3,
   "kap_regel": "Je kapt hem af. Hij knikt.",
@@ -157,14 +157,14 @@
    }
   ],
   "success": "Binnen de tijd. Dennis: done.",
-  "failure": "Drieentwintig minuten. Victor kijkt je aan zonder iets te zeggen.",
+  "failure": "Drieëntwintig minuten. Victor kijkt je aan zonder iets te zeggen.",
   "gemist": "Afgekapt. Dat had je moeten horen.",
   "nuttig": "Dit komt nog terug."
  },
  "mg_klantfeedback": {
   "type": "choicescene",
-  "briefing": "Zij zegt straks {rondes} keer twee dingen die niet samen kunnen. Je moet op {drempel} punten uitkomen. Ik zit erbij en ik zeg niks — dat werkt bij haar beter. Dat is wel top.",
-  "intro": "Mevrouw P. Aardenmens zit in de entree met een uitgeprinte screenshot en elf punten. Drie ervan spreken elkaar tegen. Vertaal wat ze zegt naar iets dat je kunt bouwen.",
+  "briefing": "Zij zegt straks {rondes} keer twee dingen die niet samen kunnen. Je moet op {drempel} punten uitkomen. Ik zit erbij en ik zeg niks. Dat werkt bij haar beter. Dat is wel top.",
+  "intro": "Mevrouw P. Aardenmens zit in de entree met een uitgeprinte screenshot en elf punten. Drie ervan spreken elkaar tegen. Vertaal wat ze zegt naar iets wat je kunt bouwen.",
   "waarom": "Zij zegt twee dingen tegelijk die niet allebei kunnen. Wat jij opschrijft, wordt gebouwd.",
   "rondes": [
    {
@@ -245,13 +245,13 @@
   ],
   "drempel": 6,
   "success": "Elf punten zijn drie concrete requirements geworden. Mevrouw P. Aardenmens voelt zich gehoord en jij hebt iets om te bouwen. Beide waar, tegelijk.",
-  "failure": "Het gesprek is heel gezellig geweest. Er is niets besloten. Willem schrijft er zelf drie requirements bij elkaar — geen daarvan is wat ze bedoelde, en jij bouwt ze toch."
+  "failure": "Het gesprek is heel gezellig geweest. Er is niets besloten. Willem schrijft er zelf drie requirements bij elkaar. Geen daarvan is wat ze bedoelde, en jij bouwt ze toch."
  },
  "mg_frontend_fix": {
   "type": "uitlijnen",
   "briefing": "Raster van {raster}. Speling {tolerantie}. {elementen} dingen staan scheef. manmanman.",
   "intro": "Iemand heeft de stylesheet even opgeschoond. Zet de pagina terug op zijn raster.",
-  "waarom": "Een paar pixels schelen lijkt onbelangrijk — tot iemand er met de neus bovenop staat.",
+  "waarom": "Een paar pixels schelen lijkt onbelangrijk, tot iemand er met de neus bovenop staat.",
   "tolerantie": 2,
   "raster": 4,
   "elementen": [
@@ -301,9 +301,9 @@
  },
  "mg_backend_fix": {
   "type": "cableboard",
-  "briefing": "{verbindingen} verbindingen kloppen niet. Er liggen {afleiders} draden bij die er niets mee te maken hebben — dat is het symptoom, niet de oorzaak. Best wel structureel ^.^",
+  "briefing": "{verbindingen} verbindingen kloppen niet. Er liggen {afleiders} draden bij die er niets mee te maken hebben. Dat is het symptoom, niet de oorzaak. Best wel structureel ^.^",
   "intro": "Product: undefined. Prijs: NaN. Voorraad: null. Ergens tussen de webshop en de database is de draad kwijt. Verbind de lagen weer met elkaar.",
-  "waarom": "De verkeerde verbinding kan het probleem verbergen in plaats van oplossen — dat merk je pas later.",
+  "waarom": "De verkeerde verbinding kan het probleem verbergen in plaats van oplossen. Dat merk je pas later.",
   "nodes": [
    {
     "id": "webshop",
@@ -461,7 +461,7 @@
   "type": "tagpicker",
   "briefing": "{tags} woorden, je kiest er {kies}, en je hebt {pogingen} pogingen. Aanzetten en kijken. Is het niks, dan doen we het anders.",
   "intro": "Er moet een merksound komen. Niemand weet waarom. Het staat in Jira, dus het gebeurt. Kies drie tags en druk op genereren.",
-  "waarom": "Het staat in Jira, dus het gebeurt — maar het moet ook echt aan een klant te laten horen zijn.",
+  "waarom": "Het staat in Jira, dus het gebeurt. Maar het moet wel aan een klant te laten horen zijn.",
   "kies": 3,
   "tags": [
    {
@@ -588,7 +588,7 @@
  },
  "mg_video": {
   "type": "pijplijn",
-  "briefing": "{doel} clips en {credits} credits. Het knelpunt zit bij {knelpunt}: daar staat de rij stil. Ik zou daar beginnen — en er daarna piepelienies om zetten, dan hoeft dit nooit meer met de hand.",
+  "briefing": "{doel} clips en {credits} credits. Het knelpunt zit bij {knelpunt}: daar staat de rij stil. Ik zou daar beginnen. En er daarna piepelienies om zetten, dan hoeft dit nooit meer met de hand.",
   "intro": "Zes clips door de pijplijn. Elke stap heeft plek voor twee. Wat in Render blijft staan kost credits.",
   "waarom": "Eén trage stap houdt de hele pijplijn op. Vind 'm, of de credits raken op voor je klaar bent.",
   "tijd": 60.0,
@@ -634,7 +634,7 @@
   "type": "whack",
   "briefing": "hiya,, {doel} bugs binnen {duur} seconden. En niet op de klantpaarden slaan. Die lijken erop. Dat is de grap.",
   "intro": "Door alle wijzigingen zijn er letterlijk paarden in de build gekomen. Ze staan nu op de verdieping. Sla de bugpaarden weg. Let op: er loopt ook een klantpaard rond.",
-  "waarom": "Niet alles dat er hetzelfde uitziet, hoort opgeruimd te worden.",
+  "waarom": "Niet alles wat er hetzelfde uitziet, hoort opgeruimd te worden.",
   "doel": 10,
   "duur": 60,
   "spawn_start": 1.3,
@@ -756,17 +756,17 @@
   "uitkomsten": [
    {
     "min": 10,
-    "titel": "OPGELEVERD — VLEKKELOOS",
+    "titel": "OPGELEVERD: VLEKKELOOS",
     "tekst": "Het staat live en het werkt. Zij stuurt een paardje. Alleen een paardje."
    },
    {
     "min": 7,
-    "titel": "OPGELEVERD — MET EEN SMETJE",
+    "titel": "OPGELEVERD: MET EEN SMETJE",
     "tekst": "Het staat live. Er zit een dingetje in dat maandag opvalt, en dat weet je."
    },
    {
     "min": 4,
-    "titel": "OPGELEVERD — KRAP",
+    "titel": "OPGELEVERD: KRAP",
     "tekst": "Het staat live. Je hebt het zelf niet meer aangeklikt."
    },
    {
@@ -825,7 +825,7 @@
   "type": "slotboard",
   "titel": "Urenstaat",
   "intro": "Dirk wil weten waar de acht uur heen gingen. Kies wat er het dichtst bij in de buurt komt.",
-  "waarom": "Dirk vraagt het je toch. Een eerlijk antwoord is minder werk dan een verzonnen.",
+  "waarom": "Dirk vraagt het je toch. Een eerlijk antwoord is minder werk dan een verzonnen antwoord.",
   "success": "Ingediend. Dirk heeft het gezien.",
   "opties": [
    {

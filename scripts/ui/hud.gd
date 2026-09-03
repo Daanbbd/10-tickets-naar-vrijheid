@@ -237,6 +237,15 @@ func setup() -> void:
 	Bus.toast_requested.connect(_on_toast)
 	Bus.zone_entered.connect(_on_zone)
 	Bus.hint_requested.connect(_on_hint)
+	# Een hint die over een ander ticket gaat dan waar je nu mee bezig bent, is
+	# geen hulp maar tegenspraak. Het briefje blijft staan tot je het weglegt,
+	# en dat is goed zolang het klopt: er stond "BBD-201 — Summit. Haal Daan uit
+	# Summit." in beeld terwijl de doelregel er vlak boven "Nu: BBD-205 · Het
+	# Patchhok · Jonathan loopt mee" zei. Zodra het doel verschuift, gaat hij weg.
+	Bus.ticket_pinned.connect(func(_a: StringName) -> void: _leg_hint_weg())
+	Bus.ticket_completed.connect(
+		func(_a: StringName, _b: MinigameResult) -> void: _leg_hint_weg())
+	Bus.follower_joined.connect(func(_a: StringName) -> void: _leg_hint_weg())
 	Bus.input_lock_changed.connect(_on_input_lock)
 	Bus.follower_joined.connect(func(_a: StringName) -> void: _volgers_veranderd())
 	Bus.follower_released.connect(func(_a: StringName) -> void: _volgers_veranderd())
@@ -939,7 +948,7 @@ func _refresh() -> void:
 ## het kantoor in.
 func _refresh_objective() -> void:
 	if Session.all_done():
-		_zet_objective("Nu:  alles is opgelost — ga naar de voordeur")
+		_zet_objective("Nu:  alles is opgelost. Ga naar de voordeur.")
 		return
 
 	if Session.pinned_ticket != &"" and Session.is_available(Session.pinned_ticket):
@@ -1228,7 +1237,12 @@ func _on_hint() -> void:
 		Bus.toast_requested.emit("Er ligt nog werk in %s. %s" % [t.zone_name, t.hint], &"hint")
 		return
 	# De hint zelf hoort erbij: die stond alleen op het TAB-bord.
-	Bus.toast_requested.emit("%s — %s. %s %s" % [t.code, t.zone_name, _wie(t) + ".", t.hint], &"hint")
+	#
+	# Zonder `t.zone_name` in de kop. Die stond er wél, en samen met `_wie()`
+	# ("Haal Daan uit Summit") en de hinttekst zelf noemde één briefje de ruimte
+	# drie keer: "BBD-201 — Summit. Haal Daan uit Summit. Op de tafel in Summit:
+	# ...". De hinttekst wijst de plek al aan; dat is waar hij voor is.
+	Bus.toast_requested.emit("%s. %s %s" % [t.code, _wie(t) + ".", t.hint], &"hint")
 
 
 ## De verticale band die vrij is van HUD-chrome, in canvaspixels: x is de

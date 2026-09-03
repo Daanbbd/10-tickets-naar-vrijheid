@@ -1,59 +1,59 @@
 {
-  "available_when": {
-    "tickets_done": [
-      "t02"
-    ]
+ "available_when": {
+  "tickets_done": [
+   "t02"
+  ]
+ },
+ "requirements": {},
+ "dialogue_ids": {
+  "offer": "t09_offer",
+  "fetch": "t09_fetch",
+  "recruit": "t09_recruit",
+  "complete": "t09_complete",
+  "fail": "t09_fail",
+  "done": "t09_done"
+ },
+ "minigame_config": {},
+ "reward_effects": [
+  {
+   "op": "toast",
+   "text": "BBD-209 opgelost. De paarden staan in de vergaderruimte."
   },
-  "requirements": {},
-  "dialogue_ids": {
-    "offer": "t09_offer",
-    "fetch": "t09_fetch",
-    "recruit": "t09_recruit",
-    "complete": "t09_complete",
-    "fail": "t09_fail",
-    "done": "t09_done"
+  {
+   "op": "cue",
+   "cue": "ticket_klaar"
+  }
+ ],
+ "unlocks": [],
+ "world_changes": [
+  {
+   "op": "set_text",
+   "target": "vergadertafel",
+   "value": "Bezet: 8 pony's"
   },
-  "minigame_config": {},
-  "reward_effects": [
-    {
-      "op": "toast",
-      "text": "BBD-209 opgelost. De paarden staan in de vergaderruimte."
-    },
-    {
-      "op": "cue",
-      "cue": "ticket_klaar"
-    }
-  ],
-  "unlocks": [],
-  "world_changes": [
-    {
-      "op": "set_text",
-      "target": "vergadertafel",
-      "value": "Bezet: 8 pony's"
-    },
-    {
-      "op": "despawn_npc",
-      "npc": "paard_bug_1"
-    },
-    {
-      "op": "despawn_npc",
-      "npc": "paard_bug_2"
-    },
-    {
-      "op": "despawn_npc",
-      "npc": "paard_klant_decoy"
-    }
-  ],
-  "hint": "Ze zijn overal. Je vindt ze vanzelf.",
-  "id": "t09",
-  "code": "BBD-209",
-  "order": 9,
-  "title": "Er lopen paardenbugs door het kantoor",
-  "summary": "Door alle wijzigingen zijn er letterlijk paarden in de build gekomen. Ze staan nu op de verdieping.",
-  "anchor": "scrumbord_gang",
-  "owner_character": "bastiaan",
-  "minigame_id": "mg_paarden",
-  "zone": "z9_vloer",
-  "zone_name": "De Vloer",
-  "wereldhandeling": true
+  {
+   "op": "despawn_npc",
+   "npc": "paard_bug_1"
+  },
+  {
+   "op": "despawn_npc",
+   "npc": "paard_bug_2"
+  },
+  {
+   "op": "despawn_npc",
+   "npc": "paard_klant_decoy"
+  }
+ ],
+ "hint": "Ze zijn overal. Je vindt ze vanzelf.",
+ "id": "t09",
+ "code": "BBD-209",
+ "order": 9,
+ "title": "Er lopen paardenbugs door het kantoor",
+ "summary": "Door alle wijzigingen zijn er letterlijk paarden in de build gekomen. Ze staan nu op de verdieping.",
+ "anchor": "scrumbord_gang",
+ "owner_character": "bastiaan",
+ "minigame_id": "mg_paarden",
+ "zone": "z9_vloer",
+ "zone_name": "De Vloer",
+ "wereldhandeling": true
 }
