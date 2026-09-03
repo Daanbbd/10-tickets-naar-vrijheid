@@ -243,7 +243,7 @@ arrangementen en worden bij het genereren meegeprint.
   het commentaar erboven zei dat ook zo. Maar `set_size()` rekent **alle vier**
   de offsets opnieuw uit de gevraagde maat, dus die ene regel overschreef de
   ondermarge: de balk landde op y408 in een viewport van 416. Van elke knop van
-  30 px stonden er 24 onder het scherm, en op een telefoon zag je van ▤ ? ≡ nog
+  30 px stonden er 24 onder het scherm, en op een telefoon zag je van ▤ ? ☰ nog
   net de bovenrand.
 
   Wil je één as zetten en de andere aan de ankers laten, zet dan de offset van

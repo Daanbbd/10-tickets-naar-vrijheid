@@ -27,7 +27,7 @@ pauzemenu, en een minigame afbreken.
 
 **Besturing (telefoon)** — duim links om te lopen, ver uitduwen is rennen · de
 knop rechtsonder draagt het werkwoord van waar je voor staat · **▤** je tickets
-· **?** hint · **≡** pauze.
+· **?** hint · **☰** pauze.
 
 Je dag wordt bij elk opgelost ticket bewaard, en ook als je de app wegdrukt.
 **Doorgaan** op het titelscherm zet je terug waar je gebleven was.

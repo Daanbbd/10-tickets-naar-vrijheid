@@ -478,7 +478,7 @@ func _build_card(root: Control) -> void:
 	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(kop)
 
-	for regel: String in _kaartregels():
+	for regel: String in kaartregels():
 		v.add_child(UiKit.label(regel, UiKit.FS_SMALL, UiKit.WIT))
 
 	v.add_child(UiKit.spacer(3))
@@ -496,27 +496,43 @@ func _build_card(root: Control) -> void:
 ## Eén kaart, en die noemt alleen wat je niet kunt zien.
 ##
 ## De contextknop bij een object staat in beeld met zijn werkwoord erop
-## ("Praten", "Openen"), dus die hoeft niet uitgelegd te worden. ▤, ? en ≡
-## zijn dat niet: drie pure symbolen zonder tekst, en ≡ stond hier tot P3 niet
+## ("Praten", "Openen"), dus die hoeft niet uitgelegd te worden. ▤, ? en ☰
+## zijn dat niet: drie pure symbolen zonder tekst, en ☰ stond hier tot P3 niet
 ## bij — een hamburgermenu leest voor wie het kent als "meer", maar zegt zelf
 ## nergens dat het specifiek naar pauze/volume/stoppen leidt. Wat verder
 ## onzichtbaar is: dat de stick overal in de rechterhelft opkomt, dat ver
 ## uitduwen rennen is, en dat je direct op een oplichtend object kunt tikken
 ## in plaats van er een knop voor te zoeken.
 ##
-## Dit spel is mobile-only; er staat hier bewust geen toetsenregel meer. WASD/
-## E/Tab/Q blijven in de InputMap staan als stille sneltoetsen zodat jij tijdens
-## development nog met een toetsenbord kunt testen (zie `Invoer.muis_als_vinger()`
-## voor hetzelfde idee met de muis), maar een speler ziet er nooit iets van —
-## en een kaart die naar een toetsenbord verwijst hoort dus niet in een spel dat
-## er geen heeft, ook al was die regel al onzichtbaar op een echt toestel.
-func _kaartregels() -> Array[String]:
+## **De kaart noemt het apparaat waarop je speelt.** Hier stond alleen de
+## duimversie, met "dit spel is mobile-only" als reden en de toetsen als stille
+## sneltoetsen "voor development". Dat is niet waar en het kostte de besturing:
+## op een laptop is de enige uitleg die het spel geeft "Duim rechts → lopen" en
+## "Ver uitduwen → rennen", over een stick die daar (sinds
+## `Invoer.muis_stuurt_stick()`) niet eens meer bestaat. Je krijgt dus
+## instructies voor een duim die je niet hebt, en over WASD — waar de README wél
+## mee opent — geen woord. Dat is de "besturing voelt raar" in één scherm.
+##
+## De staande regel was "nergens een toetsnaam, want een toets bestaat niet op
+## elk apparaat". Het antwoord daarop is niet zwijgen maar noemen wat er hier
+## wél is: `DisplayServer.is_touchscreen_available()` weet dat. De regel blijft
+## overeind waar hij hoort — in `IntroUitleg` en in alle dialoog, die op beide
+## apparaten dezelfde tekst tonen.
+static func kaartregels() -> Array[String]:
+	if DisplayServer.is_touchscreen_available():
+		return [
+			"Duim rechts     lopen",
+			"Ver uitduwen    rennen",
+			"Tik op object   interactie",
+			"▤ ticketbord    ? hint",
+			"☰ pauze, volume, stoppen",
+		]
 	return [
-		"Duim rechts     lopen",
-		"Ver uitduwen    rennen",
-		"Tik op object   interactie",
-		"▤ ticketbord    ? hint",
-		"≡ pauze, volume, stoppen",
+		"WASD of pijltjes  lopen",
+		"Shift             rennen",
+		"E                 interactie",
+		"Tab ticketbord    Q hint",
+		"Esc of ☰  pauze, volume, stoppen",
 	]
 
 

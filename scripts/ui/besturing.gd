@@ -43,6 +43,22 @@ const MARGE := 4
 ## meer die de rest opeist.
 const HULP_BREEDTE := 26
 
+## De drie glyphs, als constante en niet als letterlijke tekst in `_bouw_balk()`.
+##
+## Reden: het pixelfont dekt ze niet allemaal, en dan tekent Godot stil een
+## tofu-blokje met de hex-code erin. De pauzeknop stond op ≡ (U+2261, MATH
+## OPERATORS) en dat zit **niet** in `ark-pixel-*-proportional-latin.ttf` — de
+## enige manier om het spel te pauzeren op een telefoon was dus een vakje met
+## "2261" erin, op elk apparaat, zonder foutmelding. ☰ (U+2630) is de echte
+## hamburger en zit er wél in.
+##
+## Nu ze constanten zijn kan `_test_glyphdekking()` ze aan het font houden
+## zonder de scene te bouwen, en valt een volgende symboolkeuze om in de tests
+## in plaats van in beeld.
+const GLYPH_BORD := "▤"
+const GLYPH_HINT := "?"
+const GLYPH_PAUZE := "☰"
+
 ## Wat een knop hier werkelijk hoog is.
 ##
 ## Twee getallen strijden hier: `UiKit.KNOP_MIN_H` is de duimondergrens, en een
@@ -75,7 +91,7 @@ const BALK_RUIMTE := MARGE + BALK_HOOGTE + 2
 ## zonder dat er een stick onder je duim ontstaat. De balk zelf is apart
 ## uitgesloten — zie `_in_zone()`.
 ##
-## Rechts en niet links: de knoppenbalk (▤ ? ≡) staat linksonder, en een
+## Rechts en niet links: de knoppenbalk (▤ ? ☰) staat linksonder, en een
 ## duimzone die daar bovenop ligt laat de twee om dezelfde pixels vechten.
 ## Rechtsonder is voor de meeste mensen ook simpelweg waar de duim al ligt.
 const ZONE_BREEDTE := 0.5
@@ -173,7 +189,7 @@ func _bouw_balk(ouder: Control) -> void:
 	# overschreef die weer: `Control.set_size()` rekent alle vier de offsets
 	# opnieuw uit de gevraagde maat, dus de bovenrand won en de balk landde op
 	# y408 in een viewport van 416 — 24 van de 30 px van elke knop stonden onder
-	# het scherm. Op een telefoon zag je van ▤ ? ≡ nog net de bovenrand.
+	# het scherm. Op een telefoon zag je van ▤ ? ☰ nog net de bovenrand.
 	#
 	# `BALK_HOOGTE` is hier de maat en niet alleen een ondergrens; datzelfde
 	# getal legt `_test_balkmaat()` vast tegen de gemeten knophoogte, dus een
@@ -190,14 +206,14 @@ func _bouw_balk(ouder: Control) -> void:
 	rij.add_theme_constant_override("separation", 2)
 	_balk.add_child(rij)
 
-	_bord_knop = _knop(rij, "▤", &"ticketboard", HULP_BREEDTE)
+	_bord_knop = _knop(rij, GLYPH_BORD, &"ticketboard", HULP_BREEDTE)
 	_bouw_badge(_bord_knop)
-	_knop(rij, "?", &"hint", HULP_BREEDTE)
+	_knop(rij, GLYPH_HINT, &"hint", HULP_BREEDTE)
 	# Pauze. Op een telefoon bestaat ESC niet, en het pauzemenu is de enige plek
 	# waar je het volume kunt zetten en de run kunt verlaten — dat mag geen
 	# functie zijn die alleen met een toetsenbord bereikbaar is. Sluiten gebeurt
 	# in het menu zelf: dan staat deze balk op pauze.
-	_knop(rij, "≡", &"cancel", HULP_BREEDTE)
+	_knop(rij, GLYPH_PAUZE, &"cancel", HULP_BREEDTE)
 
 	# Horizontaal anchor_left == anchor_right (BOTTOM_LEFT), dus de breedte komt
 	# uitsluitend hiervandaan; get_combined_minimum_size() is een zuivere
@@ -302,9 +318,9 @@ func _actie(actie: StringName, ingedrukt: bool) -> void:
 
 # --- Joystick + tikken ------------------------------------------------------
 
-## De muis mag de joystick aandrijven zolang er geen aanraakscherm is; de
-## afweging daarachter staat bij `Invoer.muis_als_vinger()`. Een eigen index,
-## want een echte vingerindex is nooit negatief.
+## De muis mag tikken zolang er geen aanraakscherm is, maar de joystick alleen
+## onder `--stick-muis`; de afweging staat bij `Invoer.muis_stuurt_stick()`.
+## Een eigen index, want een echte vingerindex is nooit negatief.
 const MUIS_INDEX := -2
 
 
@@ -320,6 +336,8 @@ func _input(event: InputEvent) -> void:
 	var positie := Vector2.ZERO
 	var neer := false
 	var sleep := false
+	# Een muis mag tikken maar niet sturen; zie `Invoer.muis_stuurt_stick()`.
+	var van_muis := false
 
 	if event is InputEventScreenTouch:
 		var t := event as InputEventScreenTouch
@@ -337,10 +355,15 @@ func _input(event: InputEvent) -> void:
 		index = MUIS_INDEX
 		positie = m.position
 		neer = m.pressed
-	elif Invoer.muis_als_vinger() and event is InputEventMouseMotion and _vinger == MUIS_INDEX:
+		van_muis = true
+	elif Invoer.muis_als_vinger() and event is InputEventMouseMotion:
+		# Ook zonder joystick onder de cursor: een klik die wégsleept is geen
+		# tik, en zonder deze tak zou een sleep over de wereld bij het loslaten
+		# alsnog als tik gelden.
 		index = MUIS_INDEX
 		positie = (event as InputEventMouseMotion).position
 		sleep = true
+		van_muis = true
 	else:
 		return
 
@@ -354,7 +377,8 @@ func _input(event: InputEvent) -> void:
 			# over lege wereld beweegt.
 			_tik_index = -99
 	elif neer:
-		if _vinger == -1 and _in_zone(positie):
+		if _vinger == -1 and _in_zone(positie) \
+				and (not van_muis or Invoer.muis_stuurt_stick()):
 			_vinger = index
 			_midden = positie
 			_stuur(Vector2.ZERO)
