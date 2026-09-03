@@ -24,6 +24,16 @@ var _box: DialogueBox
 var _active: bool = false
 var _choice_index: int = -1
 
+## Hoeveel geschreven regels en keuzevragen dit gesprek heeft gewéigerd omdat er
+## al een gesprek liep. Elke weigering is een regel die de speler nooit ziet, of
+## een keuze die als -1 terugkomt en dus stil de eerste optie wordt.
+##
+## Dit staat er omdat `push_error()` de exitcode niet raakt: op het BBD-203-pad
+## vielen alle authored regels én alle drie keuzerondes weg, en de
+## geautomatiseerde speelbeurt meldde dat als "10/10, exit 0". Een teller kan de
+## speelbeurt wél laten falen -- zie `_speelbeurt()` in main.gd.
+var _geweigerd: int = 0
+
 
 func setup() -> void:
 	_layer = CanvasLayer.new()
@@ -41,6 +51,11 @@ func setup() -> void:
 
 func is_active() -> bool:
 	return _active
+
+
+## Het aantal geweigerde regels en keuzevragen sinds het begin van de run.
+func geweigerd() -> int:
+	return _geweigerd
 
 
 func _op_dialoog_start(_dialogue_id: StringName, _speaker_id: StringName) -> void:
@@ -131,6 +146,7 @@ func say(speaker: String, text: String, speaker_id: StringName = &"",
 	# drie wachten netjes op elkaar -- maar dan hoort het ook hoorbaar te zijn
 	# als er ooit eentje bijkomt, in plaats van als een halve speelbeurt.
 	if _active:
+		_geweigerd += 1
 		push_error("DialogueController: say() tijdens een lopend gesprek: '%s'" % text)
 		return
 	await _play_single(speaker, text, speaker_id, portret)
@@ -168,7 +184,14 @@ func _show_and_wait(speaker: String, text: String, portrait: Texture2D = null) -
 ## is er zowel voor de planning als voor de paardenbugs), en dan moet de speler
 ## zeggen welke hij bedoelt. Hergebruikt de keuzeknoppen van de dialoogbox.
 func ask_choice(vraag: String, labels: Array[String]) -> int:
-	if _active or labels.is_empty():
+	if _active:
+		# Alleen deze helft telt als weigering: een lege labellijst is een
+		# aanroepfout van de opgave zelf, geen regel die door een lopend
+		# gesprek wordt platgedrukt.
+		_geweigerd += 1
+		push_error("DialogueController: ask_choice() tijdens een lopend gesprek: '%s'" % vraag)
+		return -1
+	if labels.is_empty():
 		return -1
 	_active = true
 	Session.lock_input()
