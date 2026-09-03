@@ -241,3 +241,25 @@ static func druk() -> int:
 		if n >= d:
 			fase += 1
 	return fase
+
+
+## P1-8: tot nu toe had `druk()` precies één afnemer — De Klants
+## telefoonberichten. De escalatie was daarmee bijna volledig tekst, terwijl
+## GAME_DESIGN.md ook "hoe zwaar de finale begint" aan de opgetelde dag hangt.
+## Deze functie geeft elke zone-tint (`scripts/world/main.gd._tint_zone()`)
+## dezelfde fase mee: hoe verder de dag gevorderd is, hoe meer een zone naar
+## `DRUK_GLOED` toe kantelt.
+##
+## Puur sfeer, met opzet: `Urenstaat` staat er expliciet bij dat tijd en
+## voortgang nooit meer dan een gevoel mogen zijn, nooit een grondstof die iets
+## blokkeert. Vandaar een kleurmenging en geen enkele nieuwe conditie.
+const DRUK_GLOED := Color(1.05, 0.94, 0.90)
+## Bij de zwaarste fase mag de gloed hoogstens dit aandeel van de zone-tint
+## overnemen. Hoger voelde bij het uitproberen als een filter over het beeld,
+## niet als een kantoor dat drukker aanvoelt.
+const DRUK_MAX_MENGING := 0.35
+
+
+static func tint(zone_kleur: Color) -> Color:
+	var sterkte := (float(druk()) / float(DREMPELS.size())) * DRUK_MAX_MENGING
+	return zone_kleur.lerp(DRUK_GLOED, sterkte)

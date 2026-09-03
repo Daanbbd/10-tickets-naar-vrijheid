@@ -31,6 +31,7 @@ func _ready() -> void:
 	_test_abtest_spreiding()
 	_test_urenstaat()
 	_test_klok()
+	_test_druk_tint()
 	# Beide draaien een echte minigame via Shell.run_minigame() en wachten op
 	# zijn `finished`-signaal — zonder `await` hier loopt hun staart pas ná
 	# _rapport()/quit(), en dan tellen die controles nooit mee (zie de
@@ -1434,6 +1435,33 @@ func _test_urenstaat() -> void:
 	_ok(Conditions.check({}), "een lege conditie wordt onwaar in overwerk")
 	_ok(Conditions.check({"overwerk": true}), "overwerk is onwaar terwijl je budget op is")
 	_ok(not Conditions.check({"overwerk": false}), "overwerk:false is waar terwijl je budget op is")
+
+
+## P1-8: `Gevolgen.tint()` moet bij druk() == 0 de zone-kleur exact
+## teruggeven (geen ongewenste gloed op een verse dag), en bij de zwaarste
+## fase precies `DRUK_MAX_MENGING` van `DRUK_GLOED` erin mengen — nooit meer,
+## want dat is het verschil tussen sfeer en een filter over het beeld.
+func _test_druk_tint() -> void:
+	_kop("de escalatiegloed (P1-8)")
+	QuestEngine.start_run(&"daan")
+
+	var basis := Color(0.98, 1.00, 1.03)  # "koel", een van de LICHT-moods
+	_ok(Gevolgen.druk() == 0, "verse run: druk() is niet 0")
+	_ok(Gevolgen.tint(basis).is_equal_approx(basis),
+		"druk() == 0 en Gevolgen.tint() verandert de zone-kleur toch")
+
+	for tid: StringName in GameData.ticket_ids():
+		QuestEngine.unlock(tid)
+		QuestEngine.mark_helper_present(tid)
+		QuestEngine.complete(tid, MinigameResult.new())
+	_ok(Gevolgen.druk() == Gevolgen.DREMPELS.size(),
+		"alle tickets klaar: druk() zit niet op zijn eigen plafond")
+
+	var verwacht := basis.lerp(Gevolgen.DRUK_GLOED, Gevolgen.DRUK_MAX_MENGING)
+	_ok(Gevolgen.tint(basis).is_equal_approx(verwacht),
+		"op het plafond mengt Gevolgen.tint() niet precies DRUK_MAX_MENGING van de gloed erin")
+
+	QuestEngine.start_run(&"daan")
 
 
 func _test_questketen_alle_personages() -> void:

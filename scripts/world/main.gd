@@ -41,6 +41,10 @@ var player: Player = null
 var _pauzemenu: Pauzemenu = null
 
 var _zone_id: StringName = &""
+## De mood-naam van de huidige zone, apart van `_zone_id` bewaard zodat een
+## voltooid ticket de tint van de zone waar je nu staat opnieuw kan zetten —
+## met de nieuwe `Gevolgen.druk()`-fase erin — zonder dat je hoeft te bewegen.
+var _zone_mood: String = "neutraal"
 ## Waar de doelwijzer nu aan hangt. Ook de bron van de kompasstrip, zodat die
 ## twee nooit uit elkaar kunnen lopen.
 var _doelwit: Node2D = null
@@ -868,7 +872,8 @@ func _on_player_tile(t: Vector2i) -> void:
 	var zid := StringName(z.get("id", ""))
 	if zid != _zone_id and zid != &"":
 		_zone_id = zid
-		_tint_zone(String(z.get("light", "neutraal")))
+		_zone_mood = String(z.get("light", "neutraal"))
+		_tint_zone(_zone_mood)
 		Bus.zone_entered.emit(zid, String(z.get("name", "")))
 		_meld_vondst(_vind_werk(zid), String(z.get("name", "")))
 	if zid == &"z10_weekend":
@@ -932,10 +937,12 @@ func _weekend_duwt_terug() -> void:
 	_weekend_i += 1
 
 
+## Vult elke zone-mood aan met `Gevolgen.tint()`: hoe verder de dag gevorderd
+## is, hoe meer de kleur naar de escalatiegloed toe kantelt (P1-8).
 func _tint_zone(mood: String) -> void:
 	if licht == null:
 		return
-	var doel: Color = LICHT.get(mood, Color.WHITE)
+	var doel := Gevolgen.tint(LICHT.get(mood, Color.WHITE))
 	# Kill-before-recreate: langs een deuropening lopen hertriggert dit op elke
 	# tile-overgang, en stapelende tweens vechten om dezelfde kleur.
 	if _licht_tween != null and _licht_tween.is_running():
@@ -946,6 +953,10 @@ func _tint_zone(mood: String) -> void:
 
 func _on_ticket_completed(id: StringName, _r: MinigameResult) -> void:
 	npc_layer.refresh_conditional()
+	# Gevolgen.druk() is net weer een fase verder; de zone waar je nu staat
+	# krijgt dezelfde mood opnieuw, maar dan met de nieuwe fase erin gemengd.
+	# Zonder dit wacht de gloed tot je toevallig een deur door loopt.
+	_tint_zone(_zone_mood)
 	# Alleen de collega van dít ticket gaat terug naar zijn post. _handle_inner
 	# heeft hem meestal al losgelaten; dit is het vangnet. Iemand die je voor
 	# een ánder ticket hebt opgehaald blijft lopen — hem stilletjes naar huis

@@ -78,8 +78,9 @@ dit spel niet — hij hangt aan je **voortgang** en aan je
 
 | Wat | Waar het aan hangt |
 |---|---|
-| wanneer de druk oploopt | hoeveel tickets je klaar hebt: 3, 5, 7, 9 |
+| wanneer de druk oploopt | hoeveel tickets je klaar hebt: 1, 3, 5, 6, 7, 9 (`Gevolgen.DREMPELS`) |
 | hoe de druk klinkt | wat je onderweg besloten hebt |
+| hoe de druk voelt | een steeds warmere gloed over elke zone (`Gevolgen.tint()`, toegepast in `_tint_zone()` in `scripts/world/main.gd`) — subtiel, puur sfeer: de urenstaat/voortgang blokkeert nooit iets, dit ook niet |
 | hoe zwaar de finale begint | de opgetelde gevolgen van je hele dag |
 
 Dat is de reden dat er geen enkel ticket achter een ander zit en er toch een
