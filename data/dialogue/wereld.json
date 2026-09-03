@@ -61,7 +61,7 @@
    "start": {
     "speaker": "",
     "text": "Nooduitgang. Op het bordje staat: alleen bij brand.",
-    "next": "tweede"
+    "next": "keuze"
    },
    "tweede": {
     "speaker": "speler",
@@ -78,6 +78,45 @@
       "text": "Er staat niet bij wat je moet doen als het geen brand is."
      }
     ]
+   },
+   "keuze": {
+    "speaker": "",
+    "text": "De stang zit op borsthoogte. Er hangt geen slot op.",
+    "choices": [
+     {
+      "text": "De deur opendoen.",
+      "next": "alarm",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "alarm_af",
+        "value": true
+       },
+       {
+        "op": "kost_tijd",
+        "minuten": 15,
+        "reden": "ontruiming"
+       },
+       {
+        "op": "toast",
+        "text": "Iedereen staat buiten. Vijftien minuten.",
+        "icon": "tijd"
+       },
+       {
+        "op": "cue",
+        "cue": "fout"
+       }
+      ]
+     },
+     {
+      "text": "Er niet aan komen.",
+      "next": "tweede"
+     }
+    ]
+   },
+   "alarm": {
+    "speaker": "",
+    "text": "Het alarm gaat. Iedereen loopt naar buiten, ook de mensen van het bureau hiernaast. Dennis telt ze. Er is geen brand, en dat moet ook geteld worden."
    }
   }
  },
@@ -198,7 +237,7 @@
    "start": {
     "speaker": "",
     "text": "Een prikbord vol losse briefjes. Niemand weet meer welke nog geldig zijn.",
-    "next": "tweede"
+    "next": "keuze"
    },
    "tweede": {
     "speaker": "",
@@ -215,6 +254,31 @@
       "text": "Bovenaan hangt een hart-sticker naast een briefje: 'Wie heeft mijn koffiemok'."
      }
     ]
+   },
+   "keuze": {
+    "speaker": "",
+    "text": "Tussen de briefjes hangt een inschrijflijst voor padel. Twee plekken vrij.",
+    "choices": [
+     {
+      "text": "Je naam erbij zetten.",
+      "next": "padel",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "padel_ingeschreven",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "De rest van het bord lezen.",
+      "next": "tweede"
+     }
+    ]
+   },
+   "padel": {
+    "speaker": "",
+    "text": "Je zet je naam op de laatste regel. Er staat nu één plek open, en een datum die niemand heeft bevestigd."
    }
   }
  },
@@ -270,11 +334,27 @@
    "start": {
     "speaker": "",
     "text": "De koffiemachine. Er zit een sticker op: niet de middelste knop.",
-    "next": "tweede"
+    "next": "keuze"
    },
    "tweede": {
     "speaker": "",
     "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "koffie_middelste"
+       ]
+      },
+      "text": "De middelste knop doet het gewoon. Je zegt er niets over."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "koffie_gehaald"
+       ]
+      },
+      "text": "Je hebt vandaag al koffie gehad. Dat weerhoudt niemand hier."
+     },
      {
       "when": {
        "has_item": [
@@ -301,6 +381,64 @@
       "text": "Je drukt de tweede knop. Er komt soep uit. Dat is bekend."
      }
     ]
+   },
+   "keuze": {
+    "speaker": "",
+    "text": "Er staan drie knoppen. Eén ervan mag niet.",
+    "choices": [
+     {
+      "text": "De middelste knop indrukken.",
+      "next": "middelste",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "koffie_middelste",
+        "value": true
+       },
+       {
+        "op": "kost_tijd",
+        "minuten": 5,
+        "reden": "koffie"
+       },
+       {
+        "op": "cue",
+        "cue": "koffie"
+       }
+      ]
+     },
+     {
+      "text": "Gewoon een koffie halen.",
+      "next": "gewoon",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "koffie_gehaald",
+        "value": true
+       },
+       {
+        "op": "kost_tijd",
+        "minuten": 5,
+        "reden": "koffie"
+       },
+       {
+        "op": "cue",
+        "cue": "koffie"
+       }
+      ]
+     },
+     {
+      "text": "Niets nemen.",
+      "next": "tweede"
+     }
+    ]
+   },
+   "middelste": {
+    "speaker": "",
+    "text": "Er gebeurt drie seconden niets. Dan komt er koffie uit, gewoon koffie, en een geluid dat een machine niet hoort te maken. De sticker hangt er nog."
+   },
+   "gewoon": {
+    "speaker": "",
+    "text": "Koffie. Vijf minuten van je dag, en dat is hem waard."
    }
   }
  },
@@ -556,7 +694,7 @@
       "text": "Op het whiteboard staan een pijl, een wolk en het woord 'later'."
      }
     ],
-    "next": "tweede"
+    "next": "keuze"
    },
    "tweede": {
     "speaker": "",
@@ -573,6 +711,36 @@
       "text": "In de hoek staat NIET UITVEGEN. Dat staat er zo lang dat niemand meer weet waarom."
      }
     ]
+   },
+   "keuze": {
+    "speaker": "",
+    "text": "In de hoek staat NIET UITVEGEN. De wisser ligt eronder.",
+    "choices": [
+     {
+      "when": {
+       "tickets_not_done": [
+        "t01"
+       ]
+      },
+      "text": "Uitvegen.",
+      "next": "uitgeveegd",
+      "effects": [
+       {
+        "op": "set_flag",
+        "flag": "whiteboard_uitgeveegd",
+        "value": true
+       }
+      ]
+     },
+     {
+      "text": "Laten staan.",
+      "next": "tweede"
+     }
+    ]
+   },
+   "uitgeveegd": {
+    "speaker": "",
+    "text": "Het gaat er in één haal af. Eronder komt niets tevoorschijn. Het stond er dus voor niets, of het stond er ergens voor en dat weet nu niemand meer."
    }
   }
  },

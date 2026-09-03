@@ -153,6 +153,32 @@ balans — dat is de grap, en hij komt drie keer terug: Bastiaan heeft er een
 mening over, zij vraagt op de avond voor de oplevering of mensen wel iets
 kunnen kopen, en de finale begint met minder vertrouwen.
 
+### En de wereld vraagt ook iets
+
+Lang gold dit alleen voor minigames en voor de collega's. `wereld.json` had
+**nul** keuzes: elk object was een tweeslag die je las en daarna achterliet. Dat
+is waar "keuzes hebben geen gevolgen" vandaan kwam — niet omdat het systeem niet
+werkte, maar omdat de wereld je nooit iets vroeg.
+
+Vier objecten vragen nu wél iets, en ze delen dezelfde inzet: **tijd** (je dag is
+acht uur en je haalt het nooit) en **wat collega's later over je zeggen**.
+
+| Waar | Wat je kiest | Wat het kost | Waar het terugkomt |
+|---|---|---|---|
+| Koffiemachine | de verboden middelste knop, of gewoon koffie | 5 min | Victor hoort het geluid; de machine onthoudt je bezoek |
+| Prikbord | je naam bij padel zetten | niets | Willem, die padel zelf aankaartte in de stand-up |
+| Whiteboard | NIET UITVEGEN uitvegen | niets | Daan, die niet meer weet wat er stond |
+| Nooduitgang | de deur opendoen | 15 min, het hele kantoor staat buiten | Dennis, die ze geteld heeft |
+
+**Niet alle dertig objecten krijgen er een.** Een poster is aankleding, en een
+keuze bij een poster is een keuze zonder inzet — precies het probleem dat we
+hier oplossen, dan in het klein.
+
+De regel die dit afdwingt staat in de testsuite: een vlag die door een keuze
+gezet wordt maar door geen enkele conditie gelezen, is per definitie een keuze
+zonder gevolg, en de suite laat die niet door. De vier vlaggen hierboven zijn
+alle vier op die eis stukgelopen voordat de terugkomers er waren.
+
 ## Toon
 
 Droog, herkenbaar, understated. De humor komt uit serieuze mensen die volstrekt

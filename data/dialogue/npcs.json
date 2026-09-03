@@ -16,6 +16,14 @@
      {
       "when": {
        "flags_all": [
+        "alarm_af"
+       ]
+      },
+      "text": "Ontruiming geteld. Iedereen was er. Ik heb het genoteerd als oefening, dan klopt het jaarverslag ook weer."
+     },
+     {
+      "when": {
+       "flags_all": [
         "gevolg_scope_te_groot"
        ]
       },
@@ -255,6 +263,14 @@
        ]
       },
       "text": "Al iets gevonden?"
+     },
+     {
+      "when": {
+       "flags_all": [
+        "whiteboard_uitgeveegd"
+       ]
+      },
+      "text": "Iemand heeft NIET UITVEGEN uitgeveegd. Ik weet nog steeds niet wat er stond. Dat zit me meer dwars dan het zou moeten."
      },
      {
       "when": {
@@ -710,6 +726,14 @@
      {
       "when": {
        "flags_all": [
+        "koffie_middelste"
+       ]
+      },
+      "text": "De koffiemachine maakte net een geluid dat hij niet eerder maakte. Ik ga er niet naartoe. manmanman."
+     },
+     {
+      "when": {
+       "flags_all": [
         "gevolg_uitlijn_perfect"
        ]
       },
@@ -1104,6 +1128,14 @@
        ]
       },
       "text": "Ben net terug. Ze is rustig. Voorlopig."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "padel_ingeschreven"
+       ]
+      },
+      "text": "Ik zag je naam bij padel staan. Nog één plek. Dat is wel top."
      },
      {
       "when": {
