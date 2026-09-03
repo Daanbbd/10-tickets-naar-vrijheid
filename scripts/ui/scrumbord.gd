@@ -168,7 +168,9 @@ func _restregel() -> String:
 		return "Alles gevonden."
 	var regel := "Nog %s op de vloer." % ("één" if rest == 1 else str(rest))
 	if op_slot > 0:
-		regel += " %d wacht nog." % op_slot
+		# "6 wacht nog" stond hier: het getal bepaalt het werkwoord, niet het
+		# ticket. Eén wacht, meer wachten.
+		regel += " %s nog." % ("één wacht" if op_slot == 1 else "%d wachten" % op_slot)
 	return regel
 
 
