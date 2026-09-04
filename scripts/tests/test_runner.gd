@@ -1676,40 +1676,50 @@ func _test_geen_dood_punt() -> void:
 			% bezocht.size())
 
 
-## Het scrumbord in de gang draagt er twee. Zonder een resolver die dat ziet is
-## het tweede ticket onbereikbaar zodra beide openstaan.
+## Sinds P1-10 (het scrumbord had er twee: BBD-202 en BBD-209, tot BBD-209
+## naar het paardenkostuum verhuisde) draagt geen enkel anker in de data meer
+## twee tickets tegelijk. De resolver in `_ticket_for_anchor()`
+## (`ticket_controller.gd`) blijft met opzet staan als vangnet voor een
+## toekomstig anker met wél twee gelijktijdig open tickets, dus deze test
+## synthetiseert zo'n anker in plaats van er een in de data te zoeken: hij
+## zet twee bestaande tickets tijdelijk op hetzelfde anker, toetst de resolver,
+## en zet de anchors meteen terug — geen enkele andere test na deze mag een
+## gewijzigd anker zien.
 func _test_gedeelde_ankers() -> void:
 	_kop("gedeelde ankers")
 	QuestEngine.start_run(&"daan")
 	# Dit gaat over de resolver, niet over de startstand (F3-a): ontgrendel
-	# alles zodat gedeelde ankers ook echt met twee open tickets getest worden.
+	# alles zodat het geleende paar ook echt met twee open tickets getest wordt.
 	for id: StringName in GameData.ticket_ids():
 		QuestEngine.unlock(id)
 
-	var ankers: Dictionary = {}
-	for id: StringName in GameData.ticket_ids():
-		var t: TicketDef = GameData.ticket(id)
-		if t == null:
-			continue
-		ankers[t.anchor] = int(ankers.get(t.anchor, 0)) + 1
+	var a: TicketDef = GameData.ticket(&"t01")
+	var b: TicketDef = GameData.ticket(&"t04")
+	_ok(a != null and b != null, "t01/t04 niet gevonden — test kan zijn geleende paar niet zetten")
+	if a == null or b == null:
+		return
 
-	var gedeeld := 0
-	for anker: Variant in ankers.keys():
-		var wid := StringName(anker)
-		var hier := QuestEngine.tickets_at_anchor(wid)
-		if int(ankers[anker]) <= 1:
-			continue
-		gedeeld += 1
-		_ok(hier.size() >= 2,
-			"anker '%s' draagt %d tickets maar levert er %d op" % [wid, ankers[anker], hier.size()])
-		# een pin bepaalt welke van de twee je krijgt
-		for t: TicketDef in hier:
-			Session.pin(t.id)
-			var gekozen := QuestEngine.preferred_at_anchor(wid)
-			_ok(gekozen != null and gekozen.id == t.id,
-				"pin op %s wint niet op anker '%s'" % [t.code, wid])
-		Session.unpin()
-	_ok(gedeeld >= 1, "geen enkel anker draagt meer dan één ticket — test is zinloos geworden")
+	var oud_a := a.anchor
+	var oud_b := b.anchor
+	var wid := &"__test_gedeeld_anker__"
+	a.anchor = wid
+	b.anchor = wid
+
+	var hier := QuestEngine.tickets_at_anchor(wid)
+	_ok(hier.size() == 2,
+		"geleend anker '%s' draagt 2 tickets maar levert er %d op" % [wid, hier.size()])
+	# een pin bepaalt welke van de twee je krijgt
+	for t: TicketDef in [a, b]:
+		Session.pin(t.id)
+		var gekozen := QuestEngine.preferred_at_anchor(wid)
+		_ok(gekozen != null and gekozen.id == t.id,
+			"pin op %s wint niet op geleend anker '%s'" % [t.code, wid])
+	Session.unpin()
+
+	a.anchor = oud_a
+	b.anchor = oud_b
+	_ok(GameData.ticket(&"t01").anchor == oud_a and GameData.ticket(&"t04").anchor == oud_b,
+		"het geleende anker is niet teruggezet — volgende tests zien vervuilde data")
 
 
 ## Verkennen moet werk opleveren, en elk ticket moet in precies één ruimte

@@ -55,12 +55,15 @@ func handle(ticket_id: StringName, source: Interactable) -> void:
 ## ticket (voor de 'nog niet'-regel), anders het laatst opgeloste.
 ##
 ## Draagt dit object er meer dan één die openstaat, dan kiest de speler.
-## `scrumbord_gang` is het enige anker met twee tickets (t02 en t09), maar t09
-## is gated op `tickets_done: [t02]` — t02 is dus altijd al dicht tegen de tijd
-## dat t09 opengaat, en `open.size() > 1` hieronder valt daardoor nooit voor.
-## P1-10: dit is dus vandaag dode code, geen actieve "welke bedoel je?"-vraag.
-## Hij blijft staan als vangnet voor een toekomstig anker met wél twee
-## gelijktijdig open tickets — verwijder deze tak niet zonder dat na te gaan.
+## `scrumbord_gang` droeg ooit twee tickets (t02 en t09), maar t09 was gated op
+## `tickets_done: [t02]` — t02 was dus altijd al dicht tegen de tijd dat t09
+## openging, en `open.size() > 1` hieronder viel daardoor nooit voor. Sinds
+## P1-10 (t09 verhuisde naar het paardenkostuum) is er in de data geen enkel
+## gedeeld anker meer. Deze tak is dus dode code, geen actieve
+## "welke bedoel je?"-vraag — maar hij blijft staan als vangnet voor een
+## toekomstig anker met wél twee gelijktijdig open tickets. Zie
+## `_test_gedeelde_ankers()` in `test_runner.gd`, die dat leent in plaats van
+## het in de data te zoeken. Verwijder deze tak niet zonder dat na te gaan.
 func _ticket_for_anchor(world_id: StringName, fallback: StringName) -> TicketDef:
 	var open := QuestEngine.tickets_at_anchor(world_id)
 	if open.size() > 1:

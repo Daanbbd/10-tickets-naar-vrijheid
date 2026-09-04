@@ -613,10 +613,11 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 		if not Session.has_item(StringName(item)):
 			Session.add_item(StringName(item))
 
-	# BBD-209 (F4-b) lost niet meer op via zijn anker: het scrumbord vertelt je
-	# alleen dat er ergens een paard loopt. De echte handeling is een dwalende
-	# paardenbug aanspreken, dus de speelbeurt doet hier hetzelfde als een
-	# speler zou doen — op een paard af lopen in plaats van op het bord.
+	# BBD-209 (F4-b) lost niet meer op via zijn anker: het paardenkostuum
+	# vertelt je alleen dat er ergens een paard loopt. De echte handeling is
+	# een dwalende paardenbug aanspreken, dus de speelbeurt doet hier hetzelfde
+	# als een speler zou doen — op een paard af lopen in plaats van op het
+	# kostuum.
 	if t.minigame_id == &"mg_paarden":
 		var paard := npc_layer.find_npc(&"paard_bug_1")
 		if paard == null:
@@ -727,7 +728,16 @@ func _interact_with(it: Interactable) -> void:
 		it.markeer_getikt()
 	match it.kind:
 		Interactable.Kind.TICKET:
-			tickets.handle(it.ticket_id, it)
+			# Het scrumbord draagt `action: "board"` én een ticket. Zolang t02
+			# openstaat is dit gewoon een ticket-object; is dat opgelost, dan
+			# zou `tickets.handle()` hier de "opgelost, niet aanzitten"-regel
+			# afspelen (`_handle_inner()` bij `Session.is_done()`), en dat is
+			# voor hét bord een doodlopend antwoord. Val dan terug op
+			# `_examine()`, precies zoals elk ander `action: "board"`-object.
+			if it.action == &"board" and it.ticket_here() == null:
+				_examine(it)
+			else:
+				tickets.handle(it.ticket_id, it)
 		Interactable.Kind.TALK:
 			tickets.handle_npc_talk(it)
 		_:

@@ -67,7 +67,16 @@ func set_enabled(v: bool) -> void:
 	_enabled = v
 
 
+## Bij een ticket noemt de prompt het ticket, niet het meubel waar het op
+## ligt: "BBD-202 oppakken" in plaats van "Oppakken  Scrumbord". Dat voorkomt
+## dat een ticket-object leest als een instructie om het object zelf op te
+## tillen, en werkt voor alle tien de ankers tegelijk in plaats van per label.
+## Staat er geen ticket (meer) open, dan blijft het label het antwoord.
 func prompt_text() -> String:
+	if kind == Kind.TICKET:
+		var t := ticket_here()
+		if t != null:
+			return "%s oppakken" % t.code
 	return "%s  %s" % [verb(), label] if label != "" else verb()
 
 

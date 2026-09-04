@@ -140,12 +140,17 @@ koelkast.
 
 ## Twee tickets op één object
 
-Het scrumbord in de gang (`scrumbord_gang`) draagt er twee: BBD-202 en BBD-209.
-Zolang beide openstaan vraagt het spel welke je bedoelt; heb je er één gekozen
-op het bord, dan wint die keuze en blijft de vraag uit. Danny en Daan bezitten
-allebei twee tickets, dus dezelfde vraag kan bij een collega vallen.
-`QuestEngine.tickets_at_anchor()` is de enige plek die een object naar tickets
-vertaalt.
+`QuestEngine.tickets_at_anchor()` is de enige plek die een object naar
+tickets vertaalt, en de resolver die "welke bedoel je?" vraagt bestaat nog
+steeds (`TicketController._ticket_for_anchor()`): staan er op één anker twee
+open tickets, dan vraagt het spel het; heb je er één gekozen op het bord, dan
+wint die keuze en blijft de vraag uit. Het scrumbord in de gang
+(`scrumbord_gang`) droeg ooit zo'n paar (BBD-202 en BBD-209), maar BBD-209 was
+altijd al gated op `tickets_done: [t02]` — de vraag viel dus nooit echt. Sinds
+BBD-209 naar het paardenkostuum verhuisde is er in de data geen gedeeld anker
+meer over; de resolver blijft staan als vangnet. Danny en Daan bezitten allebei
+twee tickets, dus dezelfde vraag kan nog wél bij een collega vallen
+(`_ticket_waiting_for()`).
 
 ## Vakgebied en ophalen
 

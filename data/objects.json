@@ -326,10 +326,9 @@
    17,
    24
   ],
-  "kind": "use",
+  "kind": "examine",
   "label": "Ticketbord",
-  "dialogue": "ticketbord",
-  "action": "board"
+  "dialogue": "ticketbord"
  },
  {
   "world_id": "scrumbord_gang",
@@ -339,7 +338,8 @@
   ],
   "kind": "ticket",
   "label": "Scrumbord",
-  "ticket": "t02"
+  "ticket": "t02",
+  "action": "board"
  },
  {
   "world_id": "wandmonitor_vloer",
@@ -387,9 +387,10 @@
    43,
    19
   ],
-  "kind": "examine",
+  "kind": "ticket",
   "label": "Paardenkostuum",
-  "dialogue": "paardenkostuum"
+  "dialogue": "paardenkostuum",
+  "ticket": "t09"
  },
  {
   "world_id": "plotter",
