@@ -230,6 +230,26 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 			pass   # afgebroken: ticket blijft ACTIVE, opnieuw proberen mag
 
 
+## Waar je met deze collega naartoe gaat: de ruimte, of het object als je daar
+## al staat.
+##
+## Dit noemde altijd `zone_name`, en dat gaat mis zodra de collega in dezelfde
+## ruimte zit als zijn eigen ticket. Daan zit in Summit en BBD-201 ligt op de
+## vergadertafel in Summit: je haalde hem daar op en kreeg "Daan loopt mee naar
+## Summit" terwijl je er middenin stond. Dat leest als een aanwijzing die je
+## nergens heen stuurt.
+##
+## Dezelfde regel als `Main._wijzer_plek()`: de ruimtenaam beantwoordt "welke
+## kant op", en sta je er al, dan is de vraag "wat zoek ik" en is het object het
+## betere antwoord.
+static func _bestemming(d: NpcDef, t: TicketDef) -> String:
+	if d != null and d.zone == t.zone:
+		var label := GameData.object_label(t.anchor)
+		if label != "":
+			return label
+	return t.zone_name
+
+
 ## Eén waar feit over dit ticket, in de stem van degene van wie het is.
 ##
 ## De feiten komen uit dezelfde config die de minigame straks draait, dus deze
@@ -465,7 +485,8 @@ func handle_npc_talk(source: Interactable) -> void:
 		# De bestemming erbij: de toast is vluchtig, dus hij moet iets zeggen wat
 		# nergens anders staat. Wie er meeloopt staat vanaf nu permanent op de
 		# doelregel en op het bord.
-		Bus.toast_requested.emit("%s loopt mee naar %s" % [npc.def.name, wanted.zone_name], &"volgen")
+		Bus.toast_requested.emit(
+			"%s loopt mee naar %s" % [npc.def.name, _bestemming(npc.def, wanted)], &"volgen")
 		# Het briefje ná het gesprek: bij een object is het briefje de vondst,
 		# hier is het gesprek de werving en het briefje het gevolg. En hier heeft
 		# de melding een echte afzender — dit ticket komt van deze collega.
