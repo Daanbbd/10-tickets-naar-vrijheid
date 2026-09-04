@@ -63,6 +63,7 @@ func _ready() -> void:
 	_test_save_verwijderen()
 	_test_uitlijnen_perfect()
 	_test_wereldhandelingen()
+	_test_ab_escalatie()
 	_test_urenstaat_scherm()
 	_test_werving_begint_met_de_vraag()
 	_test_klant_is_een_persoon()
@@ -3250,6 +3251,53 @@ func _test_uitlijnen_perfect() -> void:
 			"%s: staat na een exacte sleep niet 'vast', terwijl de rest al op nul staat" % id)
 
 	mg.queue_free()
+
+
+## BBD-207 (Deel 3): vier oplopende Danny-regels bij `t07_fail`, gestuurd door
+## `min_counter` op `Session.get_counter(&"ab_pogingen")`. Vier onbereikbare
+## grappen is hetzelfde probleem als de dode `gemist`-vlaggen hierboven — dus
+## dit speelt `Conditions.pick_variant()` na bij elke stand van de teller en
+## bewijst dat elke drempel ook echt zijn eigen regel oplevert, oplopend, en
+## dat de speler-versie (character: danny) niet per ongeluk dezelfde tekst
+## teruggeeft als de collega-versie.
+func _test_ab_escalatie() -> void:
+	_kop("Danny's A/B-escalatie")
+
+	var d: DialogueDef = GameData.dialogue(&"t07_fail")
+	_ok(d != null, "t07_fail bestaat niet")
+	if d == null:
+		return
+	var n := d.node(&"start")
+	var varianten := n.get("variants", []) as Array
+	_ok(varianten.size() >= 4, "t07_fail heeft minder dan vier varianten")
+
+	for cid: StringName in [&"victor", &"danny"]:
+		QuestEngine.start_run(cid)
+		var geziene_teksten: Dictionary = {}
+		for stand: int in range(1, 6):
+			Session.counters[&"ab_pogingen"] = stand
+			var v := Conditions.pick_variant(varianten)
+			var tekst := String(v.get("text", ""))
+			_ok(tekst != "", "%s: geen variant matcht bij ab_pogingen=%d" % [cid, stand])
+			# Vanaf de vierde drempel blijft dezelfde tekst staan (geen vijfde
+			# tier), dus alleen de eerste drie standen moeten elk een nieuwe
+			# tekst opleveren.
+			if stand <= 3:
+				_ok(not geziene_teksten.has(tekst),
+					"%s: ab_pogingen=%d herhaalt een eerder geziene regel — geen echte escalatie" % [cid, stand])
+			geziene_teksten[tekst] = true
+
+	# De speler-versie (danny) en de collega-versie (iedereen anders) moeten
+	# op dezelfde stand van de teller verschillende teksten geven — anders
+	# praat Danny in de derde persoon over zichzelf.
+	for stand: int in range(1, 5):
+		Session.counters[&"ab_pogingen"] = stand
+		QuestEngine.start_run(&"danny")
+		var tekst_zelf := String(Conditions.pick_variant(varianten).get("text", ""))
+		QuestEngine.start_run(&"victor")
+		var tekst_ander := String(Conditions.pick_variant(varianten).get("text", ""))
+		_ok(tekst_zelf != tekst_ander,
+			"ab_pogingen=%d: de danny-versie en de collega-versie zijn identiek" % stand)
 
 
 ## F4-b: BBD-203, BBD-205 en BBD-209 lossen op dóór in de wereld te handelen,
