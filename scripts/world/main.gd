@@ -516,6 +516,13 @@ func _intro_beat() -> void:
 	if bord_def != null:
 		await dialogue.say(bord_def.name,
 				"Dit is het bord. Alles wat vandaag moet, hangt hier.", &"dennis")
+		# Waar je terugkomt, en dat is sinds de ▤-knop weg is de enige plek in de
+		# wereld die dit scherm opent. Wie dat niet te horen krijgt, weet niet
+		# dat hij ergens naartoe kan om te kiezen.
+		await dialogue.say(bord_def.name,
+				"Kom hier terug als je niet weet wat je moet doen. "
+				+ "Wat je oppakt schuif je naar Doing, wat af is naar Done.",
+				&"dennis")
 
 	hud.zet_bord(true)
 	await get_tree().create_timer(BEAT_BORD_NA, true, false, true).timeout

@@ -160,6 +160,13 @@ var _root: Control = null
 var _besturing: Besturing = null
 var _bovenbalk: HBoxContainer = null
 var _teller_chip: PanelContainer = null
+## Het aantal tickets dat je nog niet op het bord hebt bekeken, als rondje op de
+## tellerchip. Hing hiervoor op de ▤-knop in de knoppenbalk; die knop is weg,
+## omdat het bord in de wereld hetzelfde scherm opent en de vloer klein genoeg
+## is om ernaartoe te lopen. De teller draagt het ▤-teken toch al, dus dit is de
+## plek waar "er ligt nieuw werk" hoort te staan.
+var _badge: Label = null
+var _badge_tween: Tween = null
 var _klok_chip: PanelContainer = null
 var _objective: PanelContainer
 var _objective_label: Label
@@ -320,6 +327,7 @@ func _bouw_bovenstapel(veilig: Control) -> void:
 	UiKit.full_rect(teller_knop)
 	teller_knop.pressed.connect(toggle_objective)
 	_teller_chip.add_child(teller_knop)
+	_bouw_badge(_counter)
 
 	# --- kompasstrip, tussen de chips in, zonder paneel ---
 	# De strip is niets dan lijntjes, dus hij heeft geen ondergrond nodig om op
@@ -707,8 +715,7 @@ func toon_ticket_melding(t: TicketDef, van: String, extra: int = 0) -> void:
 	tw.tween_callback(func() -> void:
 		kaart.queue_free()
 		AudioDirector.play_ui(&"klik")
-		if _besturing != null:
-			_besturing.pols_bord_knop())
+		_pols_teller())
 	await tw.finished
 
 
@@ -735,29 +742,34 @@ func _meldingsplek(maat: Vector2) -> Vector2:
 	return Vector2(floorf((vp.x - maat.x) * 0.5), floorf(y))
 
 
-## Het midden van de ▤-knop, omgerekend naar de linkerbovenhoek van het briefje.
+## Het midden van de tellerchip, omgerekend naar de linkerbovenhoek van het
+## briefje.
 ##
-## De knop leeft in `Besturing` (laag 9) en dit briefje in de HUD (laag 10),
-## maar beide lagen rekenen in hetzelfde canvas van 192x416 — een globale rect
-## uit de ene laag is dus direct bruikbaar in de andere. Zonder besturing (de
-## testsuite bouwt de HUD los) valt hij terug op de linkeronderhoek, waar die
-## knop staat.
+## Dit was het midden van de ▤-knop in de knoppenbalk (laag 9). Die knop bestaat
+## niet meer, en de landingsplek is mee verhuisd naar de teller linksboven — het
+## enige andere ding in beeld dat ▤ draagt en dat je aan kunt tikken. Zonder
+## chip (de testsuite bouwt de HUD los) valt hij terug op de linkerbovenhoek,
+## waar die chip staat.
 func _bordknop_midden(maat: Vector2) -> Vector2:
-	var vp := get_viewport().get_visible_rect().size
-	var midden := Vector2(MARGE + 17.0, vp.y - MARGE - 17.0)
-	if _besturing != null:
-		var r := _besturing.bord_knop_rect()
+	var midden := Vector2(MARGE + 17.0, MARGE + 9.0)
+	if _teller_chip != null:
+		var r := _teller_chip.get_global_rect()
 		if r.size.x > 0.0:
 			midden = r.get_center()
 	return midden - maat * 0.5
 
 
-## De badge op ▤ bijwerken. Eén plek, want vier dingen veranderen het aantal:
+## De badge bijwerken. Eén plek, want vier dingen veranderen het aantal:
 ## een vondst, een werving, het bord openen, en een storing die een ticket
 ## teruggeeft.
 func _bijwerk_badge() -> void:
-	if _besturing != null:
-		_besturing.zet_ongelezen(QuestEngine.ongelezen_count())
+	if _badge == null:
+		return
+	var aantal := QuestEngine.ongelezen_count()
+	_badge.visible = aantal > 0
+	# Boven de negen wordt het cijfer breder dan het rondje, en tien ongelezen
+	# tickets zeggen niets anders dan negen: ga kijken.
+	_badge.text = str(aantal) if aantal <= 9 else "9+"
 
 
 # --- De urenstaat ---------------------------------------------------------
@@ -1271,6 +1283,52 @@ func _on_hint() -> void:
 	# drie keer: "BBD-201 — Summit. Haal Daan uit Summit. Op de tafel in Summit:
 	# ...". De hinttekst wijst de plek al aan; dat is waar hij voor is.
 	Bus.toast_requested.emit("%s. %s %s" % [t.code, _wie(t) + ".", t.hint], &"hint")
+
+
+## Een gevuld rondje rechtsboven op de teller: de enige plek in de bovenbalk met
+## een vulling, dus hij trekt de aandacht zonder een nieuwe kleur te
+## introduceren.
+##
+## Kind van het Label en niet van de `PanelContainer` eromheen. Dat is geen
+## detail: een PanelContainer is een Container en legt zijn kinderen zelf neer,
+## ankers en offsets genegeerd. Als kind van de chip vulde deze badge dus de
+## hele chip en dekte hij de teller af — je zag een blauwe balk met "1" erin
+## waar "▤ 4/10" hoorde te staan. Een Label is geen Container, dus daar doen de
+## ankers wél wat ze zeggen. Dezelfde reden dat dit vroeger aan de ▤-knop hing.
+func _bouw_badge(chip: Control) -> void:
+	_badge = UiKit.label("", UiKit.FS_SMALL, UiKit.INK)
+	_badge.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_badge.visible = false
+	var vulling := StyleBoxFlat.new()
+	vulling.bg_color = UiKit.BLUEBIRD_BRIGHT
+	vulling.set_corner_radius_all(4)
+	_badge.add_theme_stylebox_override("normal", vulling)
+	_badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_badge.anchor_left = 1.0
+	# Net buiten de rechterbovenhoek van de teller: binnen de chip past hij nog,
+	# en over het laatste cijfer heen zou hij van "4/10" een "4/1" maken.
+	_badge.offset_left = -3.0
+	_badge.offset_right = 7.0
+	_badge.offset_top = -5.0
+	_badge.offset_bottom = 5.0
+	chip.add_child(_badge)
+
+
+## Kort opveren, als een briefje net geland is.
+func _pols_teller() -> void:
+	if _teller_chip == null:
+		return
+	if _badge_tween != null and _badge_tween.is_running():
+		_badge_tween.kill()
+	_teller_chip.pivot_offset = _teller_chip.size * 0.5
+	_badge_tween = create_tween()
+	_badge_tween.tween_property(_teller_chip, "scale", Vector2(1.10, 1.10), 0.12) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_badge_tween.tween_property(_teller_chip, "scale", Vector2.ONE, 0.16) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## De verticale band die vrij is van HUD-chrome, in canvaspixels: x is de

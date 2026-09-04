@@ -34,15 +34,17 @@ static func regels() -> Array[String]:
 			"Duim rechts     lopen",
 			"Ver uitduwen    rennen",
 			"Tik op object   interactie",
-			"▤ ticketbord    ? hint",
-			"☰ pauze, volume, stoppen",
+			"?               hint",
+			"☰               pauze, stoppen",
+			"Ticketbord      bij het bord",
 		]
 	return [
 		"WASD of pijltjes  lopen",
 		"Shift             rennen",
 		"E                 interactie",
-		"Tab ticketbord    Q hint",
-		"Esc of ☰  pauze, volume, stoppen",
+		"Tab               ticketbord",
+		"Q                 hint",
+		"Esc of ☰          pauze, stoppen",
 	]
 
 

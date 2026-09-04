@@ -3989,14 +3989,18 @@ func _test_duimzone_rechts() -> void:
 			rechtsboven.x, rechtsboven.y])
 
 	# De knoppenbalk zelf blijft uitgezonderd: dáár mag geen stick opkomen,
-	# anders vechten ▤ ? ☰ en de joystick om dezelfde pixels. Dat is wat de
+	# anders vechten ? en ☰ en de joystick om dezelfde pixels. Dat is wat de
 	# oude alleen-rechts-regel probeerde te bereiken, en wat `_op_chrome()`
 	# preciezer doet.
-	var balk := b.bord_knop_rect()
-	_ok(balk.size != Vector2.ZERO, "de ▤-knop heeft geen rect om op te meten")
+	#
+	# Gemeten aan de balk en niet meer aan de ▤-knop: die knop is weg (het bord
+	# open je bij het bord in de wereld), en een test die aan een verdwenen knop
+	# hing zou de balk voortaan helemaal niet meer controleren.
+	var balk: Rect2 = (b._balk as Control).get_global_rect()
+	_ok(balk.size != Vector2.ZERO, "de knoppenbalk heeft geen rect om op te meten")
 	if balk.size != Vector2.ZERO:
 		_ok(not b._in_zone(balk.get_center()),
-			"midden op de ▤-knop (%.0f,%.0f) komt een stick op" % [
+			"midden op de knoppenbalk (%.0f,%.0f) komt een stick op" % [
 				balk.get_center().x, balk.get_center().y])
 
 	# Zelfde reden als in `_test_hudband()`: synchrone suite, dus meteen vrijgeven.
@@ -4406,13 +4410,19 @@ func _test_wereldchrome_past() -> void:
 
 ## De knoppenbalk is de PanelContainer met de drie knoppen erin. Op vorm
 ## gezocht en niet op kindpad, net als `_vind_knop()`.
+## Zoekt de knoppenbalk: de enige PanelContainer in `Besturing` met knoppen erin.
+##
+## Stond op `>= 3`, want de balk droeg ▤, ? en ☰. Sinds ▤ weg is (het bord open
+## je bij het bord in de wereld) zijn het er twee, en zocht deze helper naar een
+## balk die niet meer bestond — waarna `_test_wereldchrome_past()` de balk
+## helemaal niet meer mat in plaats van hem af te keuren.
 func _vind_balk(root: Node) -> PanelContainer:
 	if root is PanelContainer:
 		var knoppen := 0
 		for c: Control in _controls(root):
 			if c is Button:
 				knoppen += 1
-		if knoppen >= 3:
+		if knoppen >= 2:
 			return root as PanelContainer
 	for kind: Node in root.get_children():
 		var g := _vind_balk(kind)

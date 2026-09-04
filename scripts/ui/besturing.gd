@@ -43,7 +43,7 @@ const MARGE := 4
 ## meer die de rest opeist.
 const HULP_BREEDTE := 26
 
-## De drie glyphs, als constante en niet als letterlijke tekst in `_bouw_balk()`.
+## De glyphs, als constante en niet als letterlijke tekst in `_bouw_balk()`.
 ##
 ## Reden: het pixelfont dekt ze niet allemaal, en dan tekent Godot stil een
 ## tofu-blokje met de hex-code erin. De pauzeknop stond op ≡ (U+2261, MATH
@@ -55,6 +55,10 @@ const HULP_BREEDTE := 26
 ## Nu ze constanten zijn kan `_test_glyphdekking()` ze aan het font houden
 ## zonder de scene te bouwen, en valt een volgende symboolkeuze om in de tests
 ## in plaats van in beeld.
+## Staat niet meer op een knop in deze balk: het ticketbord open je bij het bord
+## in de wereld, en de teller linksboven in de HUD draagt dit teken. Blijft hier
+## staan omdat `Hud._counter` hem toont en `_test_glyphdekking()` hem daar aan
+## het font houdt — één plek waar dit teken vandaan komt.
 const GLYPH_BORD := "▤"
 const GLYPH_HINT := "?"
 const GLYPH_PAUZE := "☰"
@@ -117,11 +121,6 @@ const TIK_STRAAL := UiKit.KNOP_MIN_H
 
 var _stick: Control
 var _balk: PanelContainer
-## De ▤-knop. Bewaard omdat de HUD hem als landingsplek gebruikt voor een nieuw
-## ticket en er een ongelezen-teller op zet — zie `bord_knop_rect()`.
-var _bord_knop: Button = null
-var _badge: Label = null
-var _badge_tween: Tween = null
 var _vinger: int = -1
 var _midden: Vector2 = Vector2.ZERO
 var _uitslag: Vector2 = Vector2.ZERO
@@ -214,8 +213,11 @@ func _bouw_balk(ouder: Control) -> void:
 	rij.add_theme_constant_override("separation", 2)
 	_balk.add_child(rij)
 
-	_bord_knop = _knop(rij, GLYPH_BORD, &"ticketboard", HULP_BREEDTE)
-	_bouw_badge(_bord_knop)
+	# Geen ▤ meer. Die knop deed hetzelfde als het scrumbord dat vijf tegels van
+	# je vandaan hangt, en de vloer is klein genoeg om daarheen te lopen: twee
+	# ingangen naar hetzelfde scherm, waarvan er één permanent een duimplek
+	# opeiste. De ongelezen-teller en het briefje dat hierheen vloog zijn mee
+	# verhuisd naar de tellerchip linksboven, die dat teken toch al draagt.
 	_knop(rij, GLYPH_HINT, &"hint", HULP_BREEDTE)
 	# Pauze. Op een telefoon bestaat ESC niet, en het pauzemenu is de enige plek
 	# waar je het volume kunt zetten en de run kunt verlaten — dat mag geen
@@ -244,72 +246,6 @@ func _knop(rij: HBoxContainer, tekst: String, actie: StringName, breedte: int) -
 	b.button_up.connect(func() -> void: _actie(actie, false))
 	rij.add_child(b)
 	return b
-
-
-## Het aantal tickets dat je nog niet op het bord hebt bekeken, rechtsboven op
-## de ▤-knop.
-##
-## Dit is het antwoord op "waarom zou ik dat bord openen". Het bord popte eerst
-## elf keer per speelbeurt zelf open bij elk ticket dat je kreeg; nu vliegt het
-## briefje hiernaartoe en blijft dít staan tot je gaat kijken.
-##
-## Kind van de knop en niet van de rij: dan schuift hij mee als de balk van
-## indeling verandert, en hij mag over de knoprand heen hangen.
-func _bouw_badge(knop: Button) -> void:
-	_badge = UiKit.label("", UiKit.FS_SMALL, UiKit.INK)
-	_badge.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_badge.visible = false
-	# Een gevuld rondje in bb-blue: de enige plek in de balk met een vulling, dus
-	# hij trekt de aandacht zonder een nieuwe kleur te introduceren.
-	var vulling := StyleBoxFlat.new()
-	vulling.bg_color = UiKit.BLUEBIRD_BRIGHT
-	vulling.set_corner_radius_all(4)
-	_badge.add_theme_stylebox_override("normal", vulling)
-	_badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_badge.anchor_left = 1.0
-	_badge.offset_left = -9.0
-	_badge.offset_right = 1.0
-	_badge.offset_top = -1.0
-	_badge.offset_bottom = 9.0
-	knop.add_child(_badge)
-
-
-## Waar een nieuw ticket naartoe vliegt, in canvaspixels.
-##
-## De HUD (laag 10) en deze balk (laag 9) rekenen in hetzelfde canvas van
-## 192x416, dus een globale rect uit deze laag is daar direct bruikbaar.
-func bord_knop_rect() -> Rect2:
-	if _bord_knop == null:
-		return Rect2()
-	return _bord_knop.get_global_rect()
-
-
-## Het aantal ongelezen tickets op de ▤-knop. 0 verbergt de badge.
-func zet_ongelezen(aantal: int) -> void:
-	if _badge == null:
-		return
-	_badge.visible = aantal > 0
-	# Boven de negen wordt het cijfer breder dan het rondje, en tien ongelezen
-	# tickets zeggen niets anders dan negen: ga kijken.
-	_badge.text = str(aantal) if aantal <= 9 else "9+"
-
-
-## Kort opveren, als een briefje net geland is. Zelfde vorm als de pop in
-## `mg_standup`: `TRANS_BACK` heen en terug, geen nieuwe curve.
-func pols_bord_knop() -> void:
-	if _bord_knop == null:
-		return
-	if _badge_tween != null and _badge_tween.is_running():
-		_badge_tween.kill()
-	_bord_knop.pivot_offset = _bord_knop.size * 0.5
-	_badge_tween = create_tween()
-	_badge_tween.tween_property(_bord_knop, "scale", Vector2(1.14, 1.14), 0.12) \
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_badge_tween.tween_property(_bord_knop, "scale", Vector2.ONE, 0.16) \
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## Een echte InputEventAction, geen Input.action_press: main.gd leest deze
