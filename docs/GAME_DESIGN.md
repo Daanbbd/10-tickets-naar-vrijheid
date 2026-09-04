@@ -69,15 +69,23 @@ Wat overblijft in de wereld zelf, in `Main._intro_beat()`
    Hij staat nooit zelf in de zeven speelbare personages, dus deze beat werkt
    voor elke speelbeurt zonder uitzondering — in tegenstelling tot elke andere
    collega, die wegvalt zodra je hém speelt.
-3. **De tocht naar het bord.** De besturing blijft vrij: de wijzer wijst al
-   naar `scrumbord_gang` (BBD-202 is Daans eigen ticket en staat al open),
-   Dennis is gezelschap, geen gids. Aankomst hangt aan de speler.
+3. **De tocht naar het bord, en hij loopt voorop.** Dit was een beat waarin
+   Dennis "ik loop met je mee" zei en daarna achter je aan sjokte terwijl jij
+   zelf mocht uitzoeken waar dat bord stond. Nu gaat de invoer op slot, loopt
+   Dennis zijn eigen route (`Npc.loop_naar()` over `WorldBuilder.pad()`) en
+   komt je personage erachteraan (`Player.volg()`). Een cutscene dus, en de
+   eerste minuut van het spel hoeft niet meer geraden te worden.
 4. **Het bord is leeg**, en dat is bewust: het spel moet leren dát het bestaat
-   vóórdat het iets bevat.
+   vóórdat het iets bevat. Dennis zegt hier wát het is; ook dat ontbrak.
 5. **BBD-201 en BBD-202 landen**, één voor één, met de detailtekst van het
    ticket zelf als toelichting — geen dialoogbox over het bord heen.
-6. **Kiezen.** Dennis zegt één regel over pinnen, dan de besturingskaart
-   (`Hud.show_controls_card()`).
+6. **Kiezen.** Dennis zegt één regel over pinnen.
+
+De besturingsuitleg zat aan het eind van deze reeks (`Hud.show_controls_card()`)
+en staat nu vóór de start, op een eigen scherm tussen de personagekeuze en het
+spel (`BesturingUitleg`). Uitleg over hóé je loopt hoort niet te komen nadat je
+al een minuut hebt lopen lopen. In het spel blijft de kaart bestaan als naslag
+achter F1; beide lezen dezelfde vijf regels.
 
 Zone-vondsten die tijdens de tocht naar het bord toch vallen (bijvoorbeeld
 BBD-204, gewoon door over De Werkvloer te lopen) worden vastgehouden en pas na
