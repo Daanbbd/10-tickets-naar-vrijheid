@@ -56,14 +56,24 @@ func _notification(what: int) -> void:
 			# Op de desktop is focusverlies geen achtergrond: daar zou dit de
 			# QA-shots en het spelen naast een editor stukmaken.
 			#
-			# `Invoer.is_telefoon()` en niet `OS.has_feature("mobile")`: die
-			# feature-tag is nooit waar voor een webbuild, dus zonder deze
-			# aanvulling gedroeg een telefoon-browser zich hier altijd als
-			# desktop en bleef de tree ook na het wisselen van app doorlopen.
-			if Invoer.is_telefoon():
+			# Hier blijft het `OS.has_feature("mobile")` — dus native
+			# Android/iOS — en wordt het NIET `Invoer.is_telefoon()`. Op een
+			# app is focus-uit/-in een symmetrisch OS-signaal (Activity
+			# pauzeert, Activity hervat). In een mobiele BROWSER is
+			# window-focus veel wispelturiger: een permissiedialoog (zoals
+			# de trilling die `Haptiek.tril()` nu ook op Web aanvraagt), het
+			# toetsenbord, of simpelweg een tik op de adresbalk kan een
+			# focus-uit sturen zonder de gegarandeerde focus-in erna. Zet je
+			# dat hier ook aan, dan pauzeert de tree op een telefoon-browser
+			# soms wél en komt er nooit meer een `_naar_voorgrond()` — precies
+			# het "na het intro-gesprek reageert niets meer" dat dit
+			# veroorzaakte. Echt naar de achtergrond gaan op mobiel web (de
+			# tab verlaten) loopt toch al via `NOTIFICATION_APPLICATION_PAUSED`
+			# hieronder, dat geen featurecheck heeft.
+			if OS.has_feature("mobile"):
 				_naar_achtergrond()
 		NOTIFICATION_WM_WINDOW_FOCUS_IN:
-			if Invoer.is_telefoon():
+			if OS.has_feature("mobile"):
 				_naar_voorgrond()
 		NOTIFICATION_WM_CLOSE_REQUEST:
 			# Het kruisje op de desktop. Zonder dit gaat alles verloren sinds het
