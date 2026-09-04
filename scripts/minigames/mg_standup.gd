@@ -43,6 +43,8 @@ var _qa: bool = false
 # seconden, en dat afwachten hoort in _process en niet halverwege een tween.
 var _uitslag: int = 0
 var _afgerond: bool = false
+# Zie de toelichting bij `_running = true` onderaan `_on_setup()`.
+var _running: bool = false
 
 # Elke belangrijke spreker krijgt precies één segment op de infobalk, in
 # sprekervolgorde. "open" = nog onbeslist, "gevangen" = zijn regel is gehoord,
@@ -103,6 +105,13 @@ func _on_setup() -> void:
 	_werk_balk_bij()
 	_werk_status_bij()
 	_werk_info_balk_bij()
+	# Pas nu, aan het eind: `Shell.run_minigame()` voegt deze node toe en wacht
+	# daarna een frame (`await get_tree().process_frame`) vóórdat hij
+	# `setup()`/`_on_setup()` aanroept, en `_process()` draait al zodra de node
+	# in de tree hangt. Zonder deze vlag greep `_werk_balk_bij()` in dat ene
+	# frame naar `_balk` terwijl die nog null was — hetzelfde patroon als
+	# `_running` in `mg_whack.gd` en `mg_pijplijn.gd`.
+	_running = true
 
 
 ## QA kapt nooit een belangrijke spreker af, en kiest onder de rest de langste
@@ -283,7 +292,7 @@ func _bouw_flits(kol: VBoxContainer) -> void:
 
 
 func _process(delta: float) -> void:
-	if _afgerond:
+	if not _running or _afgerond:
 		return
 
 	if _uitslag != 0:
