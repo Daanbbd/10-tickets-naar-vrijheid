@@ -77,6 +77,7 @@ func _ready() -> void:
 	_test_tweede_oplevering_betaalt_niet_opnieuw()
 	_test_keten_is_bereikbaar_en_afgeleid()
 	_test_duimzone_rechts()
+	_test_chrome_volgt_ouder_niet_alleen_zichzelf()
 	await _test_weggevallen_regel_telt()
 	_test_hokjedak_dekt_de_zone()
 	_test_wijzer_kiest_het_dichtste()
@@ -3872,6 +3873,51 @@ func _test_duimzone_rechts() -> void:
 				balk.get_center().x, balk.get_center().y])
 
 	# Zelfde reden als in `_test_hudband()`: synchrone suite, dus meteen vrijgeven.
+	remove_child(b)
+	b.free()
+
+
+## Ving op een echt toestel niets: `Hud.chrome_vlakken()` meldt `_card_dim`
+## aan bij `meld_chrome()`, en `_card_dim` is een kind van `_card_root` wiens
+## eigen `.visible` nooit ergens wordt aangeraakt — alleen `_card_root.visible`
+## gaat open/dicht. `_op_chrome()` las `c.visible` in plaats van
+## `c.is_visible_in_tree()`, dus dat kind bleef "zichtbaar" (en dus chrome,
+## schermvullend) op elk punt van het scherm, ook nadat de ouder allang dicht
+## was. Geen stick, geen tik op een object, nergens, voorgoed — dat is precies
+## "de besturing doet na het intro helemaal niets meer" zoals gemeld.
+func _test_chrome_volgt_ouder_niet_alleen_zichzelf() -> void:
+	_kop("een aangemeld chrome-vlak volgt de zichtbaarheid van zijn ouder")
+
+	var b := Besturing.new()
+	add_child(b)
+	b.setup()
+
+	# Nabootsing van `_card_root` (de kaart) met `_card_dim` (de verduistering)
+	# erin — precies de opbouw uit `Hud._build_card()`. `dim.visible` wordt
+	# expres nooit gezet: dat is exact de fout die dit test.
+	var root := UiKit.fill_viewport(Control.new())
+	add_child(root)
+	var dim := UiKit.fill_viewport(ColorRect.new())
+	root.add_child(dim)
+
+	var midden: Vector2 = b.get_viewport().get_visible_rect().size * 0.5
+	var chrome: Array[Control] = [dim]
+	b.meld_chrome(chrome)
+
+	_ok(b._in_zone(midden) == false,
+		"terwijl de kaart open staat, komt er tóch een stick op (%.0f,%.0f)" % [
+			midden.x, midden.y])
+
+	# De kaart gaat dicht zoals `Hud.hide_controls_card()` dat doet: alleen
+	# `_card_root.visible = false`, nooit `dim.visible` zelf.
+	root.visible = false
+
+	_ok(b._in_zone(midden),
+		"na het sluiten van de kaart (%.0f,%.0f) blijft alles chrome" % [
+			midden.x, midden.y])
+
+	remove_child(root)
+	root.free()
 	remove_child(b)
 	b.free()
 

@@ -442,11 +442,23 @@ func _probeer_tik(scherm_positie: Vector2) -> void:
 ## huidige interactable valt. Sta je in de Koffiecorner naast de koffiemachine,
 ## dan ligt die projectie een rij onder de tellerchip: uitklappen van de
 ## doelregel zou dan tegelijk een gesprek starten.
+## `is_visible_in_tree()` en niet `.visible`: de verduistering achter de
+## besturingskaart (`Hud._card_dim`) hangt onder `_card_root`, en alleen dát
+## ouder-vlak gaat open/dicht — `_card_dim.visible` zelf staat sinds zijn
+## constructie op `true` en is nooit ergens anders aangeraakt. Met `.visible`
+## las dit dus altijd "chrome", schermvullend, vanaf het moment dat
+## `main.gd` deze rechthoek aanmeldt bij `meld_chrome()` — vóórdat de kaart
+## ooit getoond is en ook nadat hij weer dicht is. Geen stick, geen tik op een
+## object, op geen enkel punt van het scherm, voorgoed: precies de "besturing
+## doet na het intro helemaal niets meer" die op een echt toestel gemeld werd.
+## `is_visible_in_tree()` telt de zichtbaarheid van de hele ouderketen mee en
+## klopt dus ook wanneer een aangemeld vlak zelf nooit expliciet verborgen
+## wordt, alleen zijn ouder.
 func _op_chrome(p: Vector2) -> bool:
 	if _balk != null and _balk.get_global_rect().has_point(p):
 		return true
 	for c: Control in _chrome:
-		if is_instance_valid(c) and c.visible and c.get_global_rect().has_point(p):
+		if is_instance_valid(c) and c.is_visible_in_tree() and c.get_global_rect().has_point(p):
 			return true
 	return false
 
