@@ -64,8 +64,15 @@ var _tikmarker: TapMarker = null
 ## _report_tile() op physics-frame 1 al een toast af over BBD-203: boven de
 ## infade, voordat het spel het woord "ticket" heeft gezegd, en zonder dat de
 ## speler een stap heeft gezet. Precies de omgekeerde les.
+##
+## De intro duurt sinds de bordintroductie langer dan één fade-in: Dennis
+## begeleidt de speler naar het scrumbord, en die tocht steekt zelf een of
+## meer echte ruimtes over. Elke overgang zou zonder deze array zijn vondst
+## kwijtraken — `_uitgestelde_zone` hield er maar één vast, en een tweede
+## overgang overschreef de eerste stilletjes. Elk element onthoudt zowel de
+## zone-id (om opnieuw te ontdekken) als de mensentaal-naam (om te melden).
 var _intro_loopt: bool = false
-var _uitgestelde_zone: StringName = &""
+var _uitgestelde_zones: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -348,26 +355,42 @@ func _kompas_bijwerken() -> void:
 ## character select op een eigen scherm (`IntroUitleg`); hier blijft alleen het
 ## mechanische deel over: de eerste vondst niet als toast tijdens de infade,
 ## maar als bordbeat zodra de speler kan kijken.
+## De tegel waar Dennis op de speler staat te wachten. Vlak bij de voordeur
+## (spawn: (2,17), zie `data/floor.json`), zodat hij er al staat tegen de tijd
+## dat de begroeting uit is.
+const DENNIS_WACHTPLEK := Vector2i(4, 17)
+
+## Hoe lang de speler onderweg naar het bord mag zijn voor beat 3 opgeeft. Ruim
+## boven wat lopen ooit kost — dit is geen tijdsdruk, alleen een noodrem tegen
+## een NPC die eeuwig blijft volgen als er ooit iets misgaat met de aankomst.
+const DENNIS_WACHT_TIMEOUT := 120.0
+
+
+## Elke ochtend, voor elk van de zeven personages. Twee dingen maken dat waar:
+## Dennis is nooit zelf speelbaar (`data/characters.json` kent hem niet), dus
+## `npc_layer.find_npc(&"dennis")` levert nooit null op doordat je hém speelt
+## — in tegenstelling tot elke andere collega, die `NpcLayer.spawn_initial()`
+## overslaat zodra zijn npc_id op je personage past (`npc_layer.gd:21`). En
+## geen enkele regel hieronder neemt aan wie je bent; het enige dat wisselt is
+## wíe de deadline uitspreekt (beat 1, al zo) en één bijzin bij het kiezen
+## (beat 6).
 func _intro_beat() -> void:
-	if Session.done_count() > 0:
-		return
-	for a: String in OS.get_cmdline_user_args():
-		if a.begins_with("--auto=") or a.begins_with("--kijk=") or a.begins_with("--praat=") \
-				or a == "--autoplay" or a == "--playthrough":
+	var qa_args := OS.get_cmdline_user_args()
+	# `--intro` speelt de beat opnieuw af zonder een verse save nodig te
+	# hebben — voor QA en voor het nalopen van deze introductie zelf.
+	var geforceerd := "--intro" in qa_args
+	if not geforceerd:
+		if Session.done_count() > 0:
 			return
+		for a: String in qa_args:
+			if a.begins_with("--auto=") or a.begins_with("--kijk=") or a.begins_with("--praat=") \
+					or a == "--autoplay" or a == "--playthrough":
+				return
 
 	_intro_loopt = true
 	await get_tree().create_timer(0.4).timeout
 
-	# De vondst is nu het gevolg van de infade in plaats van een toast die eraan
-	# voorafgaat. Sinds de kickoff (BBD-201) de dag opent staat er in de entree
-	# geen open ticket meer — BBD-203 wacht op die kickoff — dus dit levert bij
-	# een verse dag niets op, en dat is goed: je loopt de gang in en krijgt daar
-	# meteen drie briefjes. "Een ruimte binnenlopen levert werk op" leert zich
-	# beter aan een ruimte waar je zelf naartoe gelopen bent.
-	_intro_loopt = false
-
-	# Ochtendbegroeting. Daan is de enige van de zeven personages die nooit
+	# Beat 1 — de opdracht. Daan is de enige van de zeven personages die nooit
 	# meespreekt bij de stand-up (BBD-202, de planning, is zíjn ticket — geen
 	# sprekersrol in `mg_planning`) en die dus, tenzij je hem zelf speelt, de
 	# hele ochtend ongezien blijft. Speel je hem zelf, dan groet hij zichzelf
@@ -398,11 +421,71 @@ func _intro_beat() -> void:
 					+ "manege moet morgen live. Verder heb ik niks nodig.",
 					&"dennis")
 
+	# Beat 2 — Dennis komt je halen. Hij staat al ergens op De Werkvloer te
+	# patrouilleren (`data/npcs.json`); voor de duur van de intro zet deze
+	# beat hem bij de voordeur en laat hem meelopen, net als elke andere
+	# collega die je onderweg ophaalt (`Npc.start_following()`).
+	var dennis := npc_layer.find_npc(&"dennis")
+	if dennis != null:
+		dennis.global_position = builder.tile_to_world(builder.nearest_walkable(DENNIS_WACHTPLEK))
+		var begroeting_def: NpcDef = GameData.npc(&"dennis")
+		if begroeting_def != null:
+			await dialogue.say(begroeting_def.name,
+					"Kom, ik loop met je mee naar het bord.", &"dennis")
+		dennis.start_following(player)
+
+		# Beat 3 — de tocht naar het bord. De besturing blijft vrij: t02
+		# (BBD-202) staat al open en is Daans eigen ticket, dus de wijzer wijst
+		# al naar het scrumbord voordat deze beat begint (`_doel_node()`) —
+		# Dennis is gezelschap, geen gids. Aankomst hangt aan de speler, niet
+		# aan een timer.
+		var bij_het_bord := func() -> bool:
+			var doel := GameData.object_tile(&"scrumbord_gang")
+			if doel.x < 0 or Session.player_tile.x < 0:
+				return false
+			return absi(doel.x - Session.player_tile.x) \
+					+ absi(doel.y - Session.player_tile.y) <= 3
+		await _qa_wacht_tot(bij_het_bord, DENNIS_WACHT_TIMEOUT)
+		dennis.stop_following(true)
+
+	# Discovery is niet langer uitgesteld. Wat de tocht naar het bord aan
+	# zone-vondsten opleverde (bijvoorbeeld BBD-204, gewoon door over De
+	# Werkvloer te lopen) meldt zich nu op de normale, lichte manier — dezelfde
+	# `toon_ticket_melding()` als op elk ander moment in de speelbeurt.
+	_intro_loopt = false
+	for entry: Dictionary in _uitgestelde_zones:
+		_meld_vondst(_vind_werk(StringName(entry.get("zone", &""))), String(entry.get("naam", "")))
+	_uitgestelde_zones.clear()
+
+	# Beat 4/5 — het bord is leeg, en wordt gevuld. BBD-201 en BBD-202 zijn
+	# allebei van Daan en allebei open vanaf minuut één (`available_when: {}`),
+	# ongeacht wie je speelt: Dennis hangt dezelfde twee op of je nu voor het
+	# eerst van Daans tickets hoort, of ze zelf al kent. De toelichting is de
+	# detailtekst van het ticket zelf — `laat_landen()` roept via
+	# `Scrumbord.laat_briefje_landen()` alsnog `toon_detail()` aan, dus er komt
+	# geen dialoogbox over het bord heen te staan.
 	Session.lock_input()
-	var nieuw := _vind_werk(_uitgestelde_zone)
-	if not nieuw.is_empty():
-		await hud.toon_nieuw_briefje(nieuw[0], 2.6)
+	hud.zet_bord(true)
+	for id: StringName in [&"t01", &"t02"]:
+		if Session.discover(id):
+			hud.laat_landen(GameData.ticket(id))
+			await get_tree().create_timer(0.9, true, false, true).timeout
+	await get_tree().create_timer(0.5, true, false, true).timeout
+	hud.zet_bord(false)
 	Session.unlock_input()
+
+	# Beat 6 — kiezen. Dezelfde vorm voor iedereen; alleen wie Daan zelf
+	# speelt krijgt de bijzin dat het zíjn eigen twee tickets zijn.
+	var sluit_def: NpcDef = GameData.npc(&"dennis")
+	if sluit_def != null:
+		if Session.character_id == &"daan":
+			await dialogue.say(sluit_def.name,
+					"Die twee zijn van jou. Kies er een, dan gaan we los.",
+					&"dennis")
+		else:
+			await dialogue.say(sluit_def.name,
+					"Kies er een op het bord. Wat je vastzet, blijft bovenaan staan.",
+					&"dennis")
 
 	# Alleen bij een nieuwe dag. Wie "Doorgaan" heeft gekozen weet al hoe hij
 	# loopt, en een modaal venster dat je bij elke hervatting opnieuw moet
@@ -1000,7 +1083,7 @@ func _on_player_tile(t: Vector2i) -> void:
 ## datzelfde briefje op het open bord neerkomt.
 func _vind_werk(zone_id: StringName) -> Array[TicketDef]:
 	if _intro_loopt:
-		_uitgestelde_zone = zone_id
+		_uitgestelde_zones.append({"zone": zone_id, "naam": _zone_naam})
 		return []
 	var nieuw := QuestEngine.discover_in_zone(zone_id)
 	if nieuw.is_empty():

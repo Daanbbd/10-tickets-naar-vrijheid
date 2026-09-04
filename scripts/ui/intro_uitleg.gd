@@ -57,17 +57,23 @@ static func opdracht() -> Array[String]:
 ##
 ## Regel 3 leest zijn getal uit de ticketdata en staat er niet meer hard in.
 ## Er stond "Negen staan meteen open", en dat was waar tot F3-a de inbox liet
-## vollopen: sindsdien hebben alleen t02, t03, t04 en t05 een lege
+## vollopen: sindsdien hebben alleen t01, t02, t04 en t05 een lege
 ## `available_when` en staan er vier open. Het uitlegscherm is het eerste en
 ## enige dat een nieuwe speler over het keuzemechaniek vertelt, dus dat getal
 ## moet uit de data komen — een tweede kopie gaat een tweede keer stilstaan.
+##
+## Sinds de bordintroductie (`Main._intro_beat()`) begint het ticketbord leeg
+## en hangt Dennis er de eerste twee zelf op — dit scherm mag dus niet meer
+## zeggen dat je zelf naar het bord loopt om uit vier te kiezen. Het getal
+## blijft wel de moeite waard om te noemen: het is de eerste indruk van de
+## schaal van de dag ("dit is groter dan de twee die je net kreeg").
 static func lessen() -> Array[String]:
 	var open := open_bij_start()
 	var telwoord := TELWOORDEN[open] if open < TELWOORDEN.size() else str(open)
 	return [
 		"Tien tickets, verspreid door het kantoor. Vind ze door rond te lopen.",
 		"Zijn ze alle tien opgelost, dan mag je naar buiten.",
-		"%s staan meteen open. Op het ticketbord kies je wat je oppakt." % telwoord,
+		"Dennis hangt je eerste twee tickets op het ticketbord. Daarna staan er %s open — kies zelf wat je oppakt." % telwoord,
 		"Niet jouw vak? Haal er een collega bij.",
 	]
 

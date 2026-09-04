@@ -46,8 +46,9 @@ AI-video. Wie de opdracht niet kent ziet losse sketches.
 1. **Tien tickets, dan mag je naar buiten.** De wincondititie.
 2. **Ze liggen verspreid; een ruimte binnenlopen levert er een op.** Zonder dit
    leest "verkennen" niet als de manier om werk te vinden.
-3. **Het ticketbord is je inventaris en waar je kiest.** Vier van de tien staan
-   vanaf minuut één open — er is geen volgorde, alleen een keuze.
+3. **Het ticketbord is je inventaris en waar je kiest.** Dennis hangt je eerste
+   twee tickets er zelf op; daarna staan er vier van de tien vanaf minuut één
+   open — er is geen volgorde, alleen een keuze.
 4. **Niet je vakgebied? Dan haal je er iemand bij.** De centrale spanning
    hierboven.
 
@@ -58,19 +59,32 @@ de tekst. Eén statisch scherm, geen wizard: twee blokken, één knop ("Begrepen
 terug naar de personagekeuze.
 
 Wat overblijft in de wereld zelf, in `Main._intro_beat()`
-(`scripts/world/main.gd`): de **deadline**, uit een mond in plaats van van een
-dia. Daan (of Dennis, als je Daan zelf speelt) zegt dat de webshop morgen live
-moet en dat dit de laatste dag van sprint veertien is. Dat is de klok van de
-hele dag, en die stond nergens.
+(`scripts/world/main.gd`), is een reeks beats in plaats van één regel:
 
-Bij een verse dag levert de entree geen ticket op: BBD-203 wacht sinds de
-herordening op de kickoff (zie QUESTS.md). Je loopt de gang in en krijgt daar
-meteen drie briefjes — "een ruimte binnenlopen levert werk op" leert zich beter
-aan een ruimte waar je zelf naartoe gelopen bent. Een vondst die tóch tijdens de
-infade valt wordt vastgehouden en pas daarna als bordbeat getoond; zonder dat
-uitstel vuurt `_report_tile()` op physics-frame 1 al een toast af boven de
-infade, voordat de speler een stap heeft gezet. Pas daarna verschijnt de
-besturingskaart (`Hud.show_controls_card()`).
+1. **De deadline**, uit een mond in plaats van van een dia. Daan (of Dennis,
+   als je Daan zelf speelt) zegt dat de webshop morgen live moet en dat dit de
+   laatste dag van sprint veertien is. Dat is de klok van de hele dag, en die
+   stond nergens.
+2. **Dennis komt je halen.** Hij is scrum master, dus het bord is zijn bord.
+   Hij staat nooit zelf in de zeven speelbare personages, dus deze beat werkt
+   voor elke speelbeurt zonder uitzondering — in tegenstelling tot elke andere
+   collega, die wegvalt zodra je hém speelt.
+3. **De tocht naar het bord.** De besturing blijft vrij: de wijzer wijst al
+   naar `scrumbord_gang` (BBD-202 is Daans eigen ticket en staat al open),
+   Dennis is gezelschap, geen gids. Aankomst hangt aan de speler.
+4. **Het bord is leeg**, en dat is bewust: het spel moet leren dát het bestaat
+   vóórdat het iets bevat.
+5. **BBD-201 en BBD-202 landen**, één voor één, met de detailtekst van het
+   ticket zelf als toelichting — geen dialoogbox over het bord heen.
+6. **Kiezen.** Dennis zegt één regel over pinnen, dan de besturingskaart
+   (`Hud.show_controls_card()`).
+
+Zone-vondsten die tijdens de tocht naar het bord toch vallen (bijvoorbeeld
+BBD-204, gewoon door over De Werkvloer te lopen) worden vastgehouden en pas na
+de bordonthulling gemeld, op de normale lichte manier — anders zou een gewone
+zone-toast de aankomst bij het bord al spoilen. Zonder dat uitstel vuurt
+`_report_tile()` bovendien op physics-frame 1 al een toast af boven de infade,
+voordat de speler een stap heeft gezet.
 
 **Staande regel: nergens in dit scherm of in de nabeat staat een toetsnaam.**
 Dit scherm en alle dialoog tonen op elk apparaat dezelfde tekst, dus een

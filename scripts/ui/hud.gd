@@ -12,10 +12,6 @@ const MARGE := 4
 ## Hoe ver de onderste stapel van de knoppenbalk af blijft.
 const ONDERMARGE := 16
 
-## Hoe lang een nieuw briefje in beeld blijft. Dit gebeurt tien keer per
-## speelbeurt, dus het mag nooit in de weg gaan zitten.
-const BRIEFJE_ZICHTBAAR := 1.4
-
 const NUDGE_NA := 45.0          ## seconden zonder voortgang voor een gratis hint
 
 ## Hoe lang de klok vooruitrolt na een opgelost ticket. Dit is de sleutelbeat
@@ -616,24 +612,30 @@ func toggle_board() -> void:
 	_bijwerk_badge()
 
 
-## Het bord openen en, als het al open staat, een net gevonden briefje zien
-## landen. Alleen nog de intro-beat gebruikt de eerste helft hiervan: dat is de
-## ene plek waar het spel moet leren dát er een bord is en dat je daar kiest.
-##
-## `duur` is instelbaar zodat dat eerste briefje langer mag blijven staan dan de
-## routineuze vondsten erna — die krijgen sinds kort `toon_ticket_melding()`.
-func toon_nieuw_briefje(t: TicketDef, duur: float = BRIEFJE_ZICHTBAAR) -> void:
-	# Tijdens een geautomatiseerde speelbeurt niets tonen: die drukt geen toets
-	# in om weg te klikken en zou hier blijven hangen.
-	if t == null or _board.visible or Autopilot.gevraagd():
+## Het bord expliciet open of dicht zetten, in plaats van `toggle_board()`'s
+## "wissel de huidige staat om". De introductie van het bord (`Main._intro_beat()`)
+## heeft die precisie nodig: zij opent het bord terwijl het nog leeg is, laat er
+## dan een voor een briefjes op landen, en sluit het pas als ze allemaal
+## toegelicht zijn — een toggle zou daar per stap moeten weten in welke staat
+## hij al zat.
+func zet_bord(zichtbaar: bool) -> void:
+	_board.visible = zichtbaar
+	if not zichtbaar:
 		return
-	_board.visible = true
 	_fill_board()
 	QuestEngine.markeer_bord_gelezen()
-	_bord.laat_briefje_landen(t)
-	await get_tree().create_timer(duur, true, false, true).timeout
-	_board.visible = false
 	_bijwerk_badge()
+
+
+## Eén briefje laten landen op een bord dat al open staat (zie `zet_bord()`).
+## Vult eerst opnieuw, want het briefje moet in zijn kolom staan vóór het kan
+## landen — `Scrumbord.laat_briefje_landen()` verplaatst een bestaand kind, het
+## bouwt er geen.
+func laat_landen(t: TicketDef) -> void:
+	if t == null:
+		return
+	_fill_board()
+	_bord.laat_briefje_landen(t)
 
 
 ## "Je hebt een ticket gekregen van Victor", en dan het briefje dat naar de

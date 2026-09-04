@@ -2369,8 +2369,8 @@ func _test_intro() -> void:
 	_ok(open_nu > 0 and open_nu < GameData.ticket_ids().size(),
 		"open_bij_start() geeft %d van %d; klopt de available_when-keten nog?" % [
 			open_nu, GameData.ticket_ids().size()])
-	_ok(eigen.contains("%s staan meteen open" % IntroUitleg.TELWOORDEN[open_nu]),
-		"de uitleg noemt niet '%s staan meteen open' terwijl er %d openstaan" % [
+	_ok(eigen.contains("Daarna staan er %s open" % IntroUitleg.TELWOORDEN[open_nu]),
+		"de uitleg noemt niet 'Daarna staan er %s open' terwijl er %d openstaan" % [
 			IntroUitleg.TELWOORDEN[open_nu], open_nu])
 
 	# De knoppenbalk (Besturing) staat er op elk apparaat; een toetsnaam
