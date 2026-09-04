@@ -150,16 +150,6 @@
   "dialogue": "koelkast"
  },
  {
-  "world_id": "lunchtafel",
-  "tile": [
-   20,
-   5
-  ],
-  "kind": "examine",
-  "label": "Lunchtafel",
-  "dialogue": "lunchtafel"
- },
- {
   "world_id": "prikbord",
   "tile": [
    11,
@@ -309,16 +299,6 @@
   "kind": "examine",
   "label": "Plant",
   "dialogue": "gang_plant"
- },
- {
-  "world_id": "plant_nw",
-  "tile": [
-   14,
-   10
-  ],
-  "kind": "examine",
-  "label": "Muurschildering",
-  "dialogue": "muurschildering"
  },
  {
   "world_id": "ticketbord",
