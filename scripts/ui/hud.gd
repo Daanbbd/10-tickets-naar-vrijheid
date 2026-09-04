@@ -523,22 +523,12 @@ func _build_card(root: Control) -> void:
 ## wél is: `DisplayServer.is_touchscreen_available()` weet dat. De regel blijft
 ## overeind waar hij hoort — in `IntroUitleg` en in alle dialoog, die op beide
 ## apparaten dezelfde tekst tonen.
+## Sinds de uitleg een eigen scherm vóór de start is (`BesturingUitleg`) staat
+## de tekst daar en niet meer hier. Deze kaart is wat ervan overblijft in het
+## spel zelf: naslag achter F1 en `--kaart`. Twee kopieën van dezelfde vijf
+## regels zouden uit elkaar lopen zodra er één toets bij komt.
 static func kaartregels() -> Array[String]:
-	if DisplayServer.is_touchscreen_available():
-		return [
-			"Duim rechts     lopen",
-			"Ver uitduwen    rennen",
-			"Tik op object   interactie",
-			"▤ ticketbord    ? hint",
-			"☰ pauze, volume, stoppen",
-		]
-	return [
-		"WASD of pijltjes  lopen",
-		"Shift             rennen",
-		"E                 interactie",
-		"Tab ticketbord    Q hint",
-		"Esc of ☰  pauze, volume, stoppen",
-	]
+	return BesturingUitleg.regels()
 
 
 ## Zet de uitleg in beeld. Blijft staan tot de speler hem wegklikt.

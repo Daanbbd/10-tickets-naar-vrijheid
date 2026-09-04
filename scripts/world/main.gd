@@ -540,12 +540,10 @@ func _intro_beat() -> void:
 					"Kies er een op het bord. Wat je vastzet, blijft bovenaan staan.",
 					&"dennis")
 
-	# Alleen bij een nieuwe dag. Wie "Doorgaan" heeft gekozen weet al hoe hij
-	# loopt, en een modaal venster dat je bij elke hervatting opnieuw moet
-	# wegklikken is een tolpoort. `Session.hervat` en niet `done_count()`: wie
-	# opnieuw laadt vóór zijn eerste opgeloste ticket staat ook op nul.
-	if not Session.hervat:
-		hud.show_controls_card()
+	# Hier stond `hud.show_controls_card()`. De besturingsuitleg is nu een eigen
+	# scherm tussen de personagekeuze en het spel (`BesturingUitleg`): uitleg
+	# over hoe je loopt hoort niet te komen nadat je al zes dialoogregels lang
+	# hebt lopen lopen. De kaart bestaat nog als naslag achter F1 en `--kaart`.
 
 
 ## QA: `-- --speler=x --kijk=<x>,<y>` zet de speler op die tegel en kijkt verder

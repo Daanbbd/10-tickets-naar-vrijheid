@@ -153,7 +153,7 @@ Alles achter `--` en alleen voor testen:
 | `--ticket=<id>` | vinkt alle eerdere tickets af |
 | `--minigame=<id>` | draait één minigame los |
 | `--gedaan=<n>` | zet eerst n tickets op opgelost (voor `--minigame`) |
-| `--scherm=uitleg\|select\|einde` | opent dat scherm direct |
+| `--scherm=uitleg\|select\|besturing\|einde` | opent dat scherm direct |
 | `--doorgaan` | drukt "Doorgaan" op het titelscherm in, dus hervat de bewaarde run (combineer met `--scherm=titel`) |
 | `--klant=<1-6>` | legt die melding van De Klant klaar zonder er tickets voor op te lossen |
 | `--auto=<world_id>` | zet de speler bij dat object en interacteert |
