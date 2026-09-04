@@ -55,10 +55,15 @@ func _notification(what: int) -> void:
 		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
 			# Op de desktop is focusverlies geen achtergrond: daar zou dit de
 			# QA-shots en het spelen naast een editor stukmaken.
-			if OS.has_feature("mobile"):
+			#
+			# `Invoer.is_telefoon()` en niet `OS.has_feature("mobile")`: die
+			# feature-tag is nooit waar voor een webbuild, dus zonder deze
+			# aanvulling gedroeg een telefoon-browser zich hier altijd als
+			# desktop en bleef de tree ook na het wisselen van app doorlopen.
+			if Invoer.is_telefoon():
 				_naar_achtergrond()
 		NOTIFICATION_WM_WINDOW_FOCUS_IN:
-			if OS.has_feature("mobile"):
+			if Invoer.is_telefoon():
 				_naar_voorgrond()
 		NOTIFICATION_WM_CLOSE_REQUEST:
 			# Het kruisje op de desktop. Zonder dit gaat alles verloren sinds het

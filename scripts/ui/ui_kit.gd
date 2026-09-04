@@ -334,7 +334,7 @@ static func title_bar(text: String) -> PanelContainer:
 ## letterbox-offset meeneemt; een deling door de vensterbreedte doet dat niet
 ## en schuift de HUD op elk toestel met balken de verkeerde kant op.
 static func veilige_insets(c: Control) -> Vector4i:
-	if not OS.has_feature("mobile") or not c.is_inside_tree():
+	if not Invoer.is_telefoon() or not c.is_inside_tree():
 		return Vector4i.ZERO
 	var scherm := Rect2(DisplayServer.get_display_safe_area())
 	if scherm.size.x <= 0.0 or scherm.size.y <= 0.0:

@@ -46,3 +46,20 @@ static func muis_als_vinger() -> bool:
 ## stick mocht aandrijven, en dat is een QA-behoefte en geen spelregel.
 static func muis_stuurt_stick() -> bool:
 	return "--stick-muis" in OS.get_cmdline_user_args()
+
+
+## Is dit een telefoon — als losstaande app op Android/iOS, of als website in
+## een mobiele browser?
+##
+## `OS.has_feature("mobile")` alleen dekt de eerste twee: die feature-tag zegt
+## voor welk exportplatform dit gebouwd is, en "Web" is nooit "mobile" — ook
+## niet op een telefoon. Zonder de aanvulling hieronder denkt elke webbuild op
+## een telefoon dat hij op een desktop staat: geen trilling (`Haptiek.tril()`),
+## geen inkeping voor de safe area (`UiKit.veilige_laag()`), en geen
+## achtergrondpauze bij het wisselen van app (`Shell._notification()`).
+##
+## Een aanraakscherm heeft een laptop zelden en een telefoon altijd, dus die
+## aanvulling dekt precies het gat dat `has_feature("mobile")` op Web laat
+## liggen.
+static func is_telefoon() -> bool:
+	return OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()

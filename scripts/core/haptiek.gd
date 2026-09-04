@@ -21,13 +21,19 @@ const _DUUR := {
 }
 
 
-## Godot doet Android zelf. iOS heeft een native plugin nodig; zolang die er
-## niet is blijft het daar stil in plaats van dat het een fout oplevert.
+## Godot doet Android en Web (via `navigator.vibrate()`) zelf. iOS heeft een
+## native plugin nodig; zolang die er niet is blijft het daar stil in plaats
+## van dat het een fout oplevert.
+##
+## `Invoer.is_telefoon()` en niet `OS.has_feature("mobile")`: die feature-tag
+## is nooit waar voor een webbuild, ook niet in een telefoon-browser, en dan
+## trilt een website op een telefoon nooit — terwijl `navigator.vibrate()` daar
+## allang op wacht.
 static func tril(sterkte: Sterkte) -> void:
-	if not OS.has_feature("mobile"):
+	if not Invoer.is_telefoon():
 		return
 	match OS.get_name():
-		"Android":
+		"Android", "Web":
 			Input.vibrate_handheld(int(_DUUR[sterkte]))
 		"iOS":
 			if Engine.has_singleton("iOSHaptics"):
