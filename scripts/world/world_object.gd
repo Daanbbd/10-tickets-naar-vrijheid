@@ -8,8 +8,10 @@ extends Node2D
 
 @export var world_id: StringName = &""
 
-const LABEL_BREEDTE := 96.0
-const LABEL_HOOGTE := 30.0
+const LABEL_BREEDTE := 108.0
+
+## Ondergrens; de echte hoogte komt uit de tekst. Zie `_meet_label()`.
+const LABEL_HOOGTE := 14.0
 
 const SPRITE_NAAM := "Sprite"
 
@@ -82,6 +84,25 @@ func op_set_text(t: String) -> void:
 		_label = _maak_label()
 	_label.text = t
 	_label.visible = t != ""
+	_meet_label()
+
+
+## De hoogte volgt de tekst, en de tekst hangt met zijn onderrand boven het
+## object.
+##
+## Dit stond op een vaste 96x30 met `VERTICAL_ALIGNMENT_BOTTOM`. Negen van de
+## tien wereldteksten zijn kort ("A/B: A wint", "productie: live") en pasten
+## daar precies in. De tiende is de user story die BBD-201 op het whiteboard
+## zet: 85 tekens, op 96 px zes regels van elk twaalf. Die groeiden bóven de
+## doos uit, want een Label knipt niet: je kreeg zes regels contourtekst dwars
+## over het vergaderhok, de bureaus en de ticketbriefjes heen, zonder
+## achtergrond. Dat leest niet als een whiteboard maar als een renderfout.
+func _meet_label() -> void:
+	if _label == null:
+		return
+	var hoog := maxf(LABEL_HOOGTE, _label.get_minimum_size().y)
+	_label.size = Vector2(LABEL_BREEDTE, hoog)
+	_label.position = Vector2(-LABEL_BREEDTE * 0.5, -hoog - 6.0)
 
 
 func _maak_label() -> Label:
@@ -89,14 +110,30 @@ func _maak_label() -> Label:
 	l.name = "Label"
 	# Een Control onder een Node2D krijgt geen viewportformaat en geen anchors:
 	# formaat en positie moeten hier met de hand, in wereldcoordinaten.
+	# `custom_minimum_size.x` en niet alleen `size`: daar rekent
+	# `get_minimum_size()` de afgebroken hoogte uit, en die hebben we in
+	# `_meet_label()` nodig vóór de eerste layout-pas.
+	l.custom_minimum_size = Vector2(LABEL_BREEDTE, 0.0)
 	l.size = Vector2(LABEL_BREEDTE, LABEL_HOOGTE)
 	l.position = Vector2(-LABEL_BREEDTE * 0.5, -LABEL_HOOGTE - 6.0)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Contour in plaats van een paneel: leest op elke vloertegel, kost geen node.
-	l.add_theme_constant_override("outline_size", 3)
+	# Contour én een paneel. De contour stond hier alleen, met als reden dat hij
+	# op elke vloertegel leest en geen node kost. Dat klopt voor één regel op een
+	# egale vloer; het klopt niet voor vier regels over het dambordpatroon van de
+	# vergaderkamer met bureaustoelen eronder. Het paneel is halfdoorzichtig, dus
+	# je ziet nog steeds waar het op hangt.
+	var vlak := StyleBoxFlat.new()
+	vlak.bg_color = Color(UiKit.INK, 0.72)
+	vlak.set_corner_radius_all(2)
+	vlak.content_margin_left = 3.0
+	vlak.content_margin_right = 3.0
+	vlak.content_margin_top = 2.0
+	vlak.content_margin_bottom = 2.0
+	l.add_theme_stylebox_override("normal", vlak)
+	l.add_theme_constant_override("outline_size", 2)
 	l.add_theme_color_override("font_outline_color", UiKit.INK)
 	add_child(l)
 	return l
