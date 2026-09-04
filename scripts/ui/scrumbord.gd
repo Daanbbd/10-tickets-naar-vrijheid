@@ -18,7 +18,20 @@ extends Control
 ## Een briefje aantikken kiest het: dat wordt je doel, en de doelregel, de hint
 ## en de wijzer in de wereld volgen mee.
 
-const KOLOMMEN: Array[String] = ["BIJ JE", "OPGELOST"]
+## Drie banen, en dat is niet cosmetisch. Hier stond `["BIJ JE", "OPGELOST"]`,
+## en die eerste gooide twee dingen op één hoop: werk dat je gevonden hebt en
+## werk waar je nú mee bezig bent. Dat is precies het verschil dat een
+## scrumbord bestaat om te tonen, en het spel gaat erover.
+##
+## To do is gevonden en nog niet aangeraakt, Doing is opgepakt of vastgezet
+## (ACTIVE of gepind), Done is af.
+const KOLOMMEN: Array[String] = ["TO DO", "DOING", "DONE"]
+
+## Wat er in een lege baan staat. Per kolom, want "nog niets" onder Done
+## betekent iets anders dan onder To do.
+## Twee woorden per baan: een kolom is 56 px breed, dus alles wat langer is
+## breekt over drie regels en maakt de lege baan hoger dan de gevulde ernaast.
+const LEEG: Array[String] = ["niets gevonden", "niets gekozen", "niets af"]
 
 
 var _kolom: Array[VBoxContainer] = []
@@ -125,7 +138,7 @@ func vul() -> void:
 			continue
 		var t: TicketDef = GameData.ticket(id)
 		var st: GameEnums.TicketState = Session.ticket_state(id)
-		_kolom[_kolom_van(st)].add_child(_briefje(t, st))
+		_kolom[_kolom_van(id, st)].add_child(_briefje(t, st))
 		if st != GameEnums.TicketState.DONE and (eerste == null or Session.is_pinned(id)):
 			eerste = t
 
@@ -138,9 +151,7 @@ func vul() -> void:
 	for i: int in _kolom.size():
 		if _kolom[i].get_child_count() > 0:
 			continue
-		var leeg := UiKit.label(
-			"nog niets" if i == 0 else "nog niets af",
-			UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+		var leeg := UiKit.label(LEEG[i], UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 		leeg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_kolom[i].add_child(leeg)
 
@@ -191,8 +202,17 @@ func _restregel() -> String:
 	return regel + "."
 
 
-static func _kolom_van(st: GameEnums.TicketState) -> int:
-	return 1 if st == GameEnums.TicketState.DONE else 0
+## In welke baan dit briefje hangt.
+##
+## Doing is `ACTIVE` óf gepind: opgepakt bij het object, of op dit bord gekozen.
+## Allebei zijn "hier ben ik mee bezig", en een speler die er één van de twee
+## deed hoort zijn briefje niet meer bij de voorraad te zien liggen.
+static func _kolom_van(id: StringName, st: GameEnums.TicketState) -> int:
+	if st == GameEnums.TicketState.DONE:
+		return 2
+	if st == GameEnums.TicketState.ACTIVE or Session.is_pinned(id):
+		return 1
+	return 0
 
 
 func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
@@ -241,10 +261,10 @@ func _briefje(t: TicketDef, st: GameEnums.TicketState) -> Control:
 		w.clip_text = true
 		v.add_child(w)
 
-	if st == GameEnums.TicketState.DONE:
-		var vink := UiKit.label("klaar", UiKit.FS_SMALL, UiKit.GROEN_OP_LICHT)
-		vink.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		v.add_child(vink)
+	# Geen "klaar" meer onder de code. Dat stond er toen de kolom nog "OPGELOST"
+	# heette en naast "BIJ JE" hing; nu heet de baan DONE en zegt het briefje
+	# hetzelfde ding een tweede keer. Scheelt bovendien een regel per briefje,
+	# en dat is precies wat het archief stiller maakt dan je inventaris ernaast.
 
 	var knop := Button.new()
 	knop.flat = true
@@ -308,14 +328,40 @@ static func _korte_eigenaar(t: TicketDef) -> String:
 ## achter de hintknop én wordt door de wijzer in de wereld aangewezen. Dat drie
 ## keer herhalen onder aan een telefoonscherm maakt er geen keuzescherm van maar
 ## een lap tekst waar niemand iets mee doet.
+## Wat er onder de briefjes staat, en dat verschilt per baan.
+##
+## Een kolom die alleen zegt wáár iets ligt is voor Done onzin en voor Doing te
+## weinig. To do beantwoordt "waar moet ik heen en wie heb ik nodig", Doing zet
+## daar de concrete vindplaats bij (dat is het ticket waar je nu aan werkt, dus
+## dat is de regel die je nodig hebt), en Done vertelt wat het opleverde in
+## plaats van nog eens dat het opgelost is — dat zie je al aan de kolom.
 func toon_detail(t: TicketDef) -> void:
 	var regels := "%s\n" % t.title
 	if Session.is_done(t.id):
-		regels += "[color=#%s]Opgelost.[/color]" % UiKit.GROEN_OP_LICHT.to_html(false)
+		regels += "[color=#%s]%s[/color]" % [UiKit.GROEN_OP_LICHT.to_html(false), resolutie(t)]
 	else:
 		regels += "[color=#%s]%s  ·  %s[/color]" % [
 			UiKit.GRIJS_OP_LICHT.to_html(false), t.zone_name, _volledige_eigenaar(t)]
+		if _kolom_van(t.id, Session.ticket_state(t.id)) == 1 and t.hint != "":
+			regels += "\n[color=#%s]%s[/color]" % [UiKit.GRIJS_OP_LICHT.to_html(false), t.hint]
 	_detail.text = regels
+
+
+## Wat dit ticket opleverde, in de woorden die het spel er zelf al voor had: de
+## toast uit `reward_effects`. Eén tekst, twee plekken — een tweede kopie in de
+## kolom Done zou bij de eerste herschrijving uit de pas gaan lopen.
+##
+## Zonder het "BBD-201 opgelost. "-voorvoegsel: de code staat op het briefje en
+## de kolom heet Done, dus dat zijn twee dingen die je al weet.
+static func resolutie(t: TicketDef) -> String:
+	for raw: Variant in t.reward_effects:
+		var e := raw as Dictionary
+		if String(e.get("op", "")) != "toast":
+			continue
+		var tekst := String(e.get("text", ""))
+		var kop := "%s opgelost. " % t.code
+		return tekst.trim_prefix(kop)
+	return "Opgelost."
 
 
 static func _volledige_eigenaar(t: TicketDef) -> String:
