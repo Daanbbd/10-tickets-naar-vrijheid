@@ -39,7 +39,7 @@ SCHERMEN = {
 MINIGAMES = {
     "mg_user_story": "daan", "mg_planning": "daan", "mg_klantfeedback": "willem",
     "mg_frontend_fix": "victor", "mg_backend_fix": "jonathan", "mg_cro": "danny",
-    "mg_muziek": "danny", "mg_video": "koen", "mg_paarden": "bastiaan",
+    "mg_abgevecht": "danny", "mg_video": "koen", "mg_paarden": "bastiaan",
     "mg_deploy": "daan", "mg_urenstaat": "daan",
 }
 

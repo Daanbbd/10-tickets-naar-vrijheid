@@ -633,9 +633,12 @@ def mg_cro():
     return wrap(cv.out(), dur)
 
 
-def mg_muziek():
-    """De merksound in wording. Te veel noten, te veel vibrato, en op de
-    achtergrond loopt er alvast een paard mee."""
+def mg_abgevecht():
+    """Hergebruikt de oude mg_muziek-track (BBD-207 heette 'We hebben muziek
+    nodig' vóór Deel 3 er een gevecht van maakte): te veel noten, te veel
+    vibrato, en op de achtergrond loopt er alvast een paard mee. Geen nieuwe
+    compositie voor het gevecht zelf — dit voorkomt dat de minigame in
+    stilte speelt (zie AudioDirector._op_minigame_start())."""
     beat = 0.27
     plan = [A1, B1, A1]
     seclen = len(A1) * BAR * beat
@@ -764,7 +767,7 @@ MUSIC = {
     "mg_frontend_fix":   (mg_frontend_fix, 0.82),
     "mg_backend_fix":    (mg_backend_fix, 0.82),
     "mg_cro":            (mg_cro, 0.82),
-    "mg_muziek":         (mg_muziek, 0.82),
+    "mg_abgevecht":      (mg_abgevecht, 0.82),
     "mg_video":          (mg_video, 0.82),
     "mg_paarden":        (mg_paarden, 0.70),
     "mg_deploy":         (mg_deploy, 0.86),
