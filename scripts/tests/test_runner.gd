@@ -267,13 +267,16 @@ func _test_gevolgen() -> void:
 		"bij 10 tickets is de laatste drempel niet gevallen")
 
 	# --- boek() zet de vlaggen die de data verwacht ------------------------
+	# BBD-202/Deel 4: geen `gevolg_jonathan_gemist`/`gevolg_danny_gemist` meer
+	# — een SUCCESS op mg_planning kan `gemist` nooit meer gevuld hebben (de
+	# infobalk *is* de uitslag), dus deze twee vlaggen bestaan niet meer. Wat
+	# nog wél getest hoort te worden is dat de generieke GETALLEN-koppeling
+	# (`tijd_over` -> `standup_tijd_over`) intact blijft.
 	QuestEngine.start_run(&"daan")
 	Gevolgen.boek(&"mg_planning", MinigameResult.make(&"mg_planning",
-		GameEnums.Outcome.SUCCESS, 0, {&"gemist": ["jonathan"], &"tijd_over": 3.0}))
-	_ok(Session.get_flag(&"gevolg_jonathan_gemist"),
-		"Jonathan afkappen zet zijn gevolgvlag niet")
-	_ok(not Session.get_flag(&"gevolg_danny_gemist"),
-		"Danny krijgt een gevolgvlag zonder afgekapt te zijn")
+		GameEnums.Outcome.SUCCESS, 0, {&"gemist": [], &"tijd_over": 3.0}))
+	_ok(is_equal_approx(float(Gevolgen.getal(&"standup_tijd_over", -1.0)), 3.0),
+		"mg_planning's tijd_over komt niet aan als standup_tijd_over")
 
 	Gevolgen.boek(&"mg_user_story", MinigameResult.make(&"mg_user_story",
 		GameEnums.Outcome.SUCCESS, 0,
@@ -294,9 +297,9 @@ func _test_gevolgen() -> void:
 	_ok(not Session.gevolgen.has(&"iets_nieuws"),
 		"een onbekend payload-veld belandt toch in de gevolgen")
 
-	# --- F4-b: de vier wereldhandelingen boeken ook een gevolg -------------
+	# --- F4-b: de drie wereldhandelingen boeken ook een gevolg -------------
 	# Elk paar test eerst de goede kant, dan de slechte — en eindigt dus op de
-	# slechte kant. Dat is met opzet: de vier vlaggen moeten blijven staan voor
+	# slechte kant. Dat is met opzet: die vlaggen moeten blijven staan voor
 	# de "slechte dag"-berekening van finale_start() verderop.
 	Gevolgen.boek(&"mg_klantfeedback", MinigameResult.make(&"mg_klantfeedback",
 		GameEnums.Outcome.SUCCESS, 5, {&"score": 5, &"drempel": 3}))
@@ -318,17 +321,6 @@ func _test_gevolgen() -> void:
 	_ok(Session.get_flag(&"gevolg_backend_fout_gekozen"),
 		"de verkeerde kabel kiezen zet gevolg_backend_fout_gekozen niet")
 	_ok(not bool(Gevolgen.getal(&"backend_juist", true)), "backend_juist komt niet in de gevolgen terecht")
-
-	Gevolgen.boek(&"mg_muziek", MinigameResult.make(&"mg_muziek",
-		GameEnums.Outcome.SUCCESS, 1, {&"goed": true, &"titel": "Rustig Kantoor"}))
-	_ok(not Session.get_flag(&"gevolg_verkeerde_merksound"),
-		"de goede tags kiezen zet gevolg_verkeerde_merksound toch")
-	Gevolgen.boek(&"mg_muziek", MinigameResult.make(&"mg_muziek",
-		GameEnums.Outcome.SUCCESS, 0, {&"goed": false, &"titel": "Hardstyle Intro"}))
-	_ok(Session.get_flag(&"gevolg_verkeerde_merksound"),
-		"de verkeerde tags kiezen zet gevolg_verkeerde_merksound niet")
-	_ok(String(Gevolgen.getal(&"muziek_titel", "")) == "Hardstyle Intro",
-		"muziek_titel komt niet in de gevolgen terecht")
 
 	Gevolgen.boek(&"mg_paarden", MinigameResult.make(&"mg_paarden",
 		GameEnums.Outcome.SUCCESS, 1, {&"paard": true, &"zelf_gevonden": true}))
@@ -353,6 +345,24 @@ func _test_gevolgen() -> void:
 		"paard_zelf_gevonden komt niet in de gevolgen terecht")
 	_ok(int(Gevolgen.finale_start()[&"getest"]) == getest_voor,
 		"P1-6: gevolg_paard_gemist kost getest — Bastiaans voordeel is weer een straf")
+
+	# BBD-207/Deel 3: geen wereldhandeling meer, en geen "goed/fout gekozen"
+	# meer — het gevecht wint of het wint niet, en een geboekte SUCCESS is
+	# altijd A die wint (verliezen laat het ticket gewoon openstaan, zie
+	# `mg_abgevecht.gd::_afronden()`). Wat de gevolgvlag hier drijft is de
+	# teller die de minigame zelf ophoogt bij elk verlies vóór de winst.
+	Gevolgen.boek(&"mg_abgevecht", MinigameResult.make(&"mg_abgevecht",
+		GameEnums.Outcome.SUCCESS, 100, {&"a_wint": true, &"hp_a_over": 85.0, &"hp_b_over": 0.0}))
+	_ok(not Session.get_flag(&"gevolg_veel_geprobeerd"),
+		"winnen op de eerste poging zet gevolg_veel_geprobeerd toch")
+	Session.add_counter(&"ab_pogingen")
+	Session.add_counter(&"ab_pogingen")
+	Gevolgen.boek(&"mg_abgevecht", MinigameResult.make(&"mg_abgevecht",
+		GameEnums.Outcome.SUCCESS, 100, {&"a_wint": true, &"hp_a_over": 40.0, &"hp_b_over": 0.0}))
+	_ok(Session.get_flag(&"gevolg_veel_geprobeerd"),
+		"winnen na twee verliezen zet gevolg_veel_geprobeerd niet")
+	_ok(is_equal_approx(float(Gevolgen.getal(&"ab_hp_a_over", -1.0)), 40.0),
+		"hp_a_over komt niet als ab_hp_a_over in de gevolgen terecht")
 
 	# --- de finale begint met de opgetelde dag ----------------------------
 	var slecht := Gevolgen.finale_start()
@@ -717,24 +727,6 @@ func _test_minigame_inhoud() -> void:
 					ids[oid] = true
 					_ok(String(o.get("tekst", "")) != "", "%s/%s: optie zonder tekst" % [mid, oid])
 					_ok(String(o.get("reactie", "")) != "", "%s/%s: optie zonder reactie" % [mid, oid])
-			"tagpicker":
-				var tag_ids: Array[String] = []
-				for raw: Variant in c.get("tags", []):
-					tag_ids.append(String((raw as Dictionary).get("id", "")))
-				var goed := 0
-				var gedekt := {}
-				for raw: Variant in c.get("resultaten", []):
-					var r := raw as Dictionary
-					if bool(r.get("goed", false)):
-						goed += 1
-					for a: Variant in r.get("when_any", []):
-						_ok(String(a) in tag_ids, "%s: resultaat noemt onbekende tag '%s'" % [mid, a])
-						gedekt[String(a)] = true
-				_ok(goed >= 1, "%s: geen enkel resultaat is 'goed'" % mid)
-				for tg: String in tag_ids:
-					_ok(gedekt.has(tg), "%s: tag '%s' komt in geen enkel resultaat voor" % [mid, tg])
-				_ok(int(c.get("kies", 0)) > 0 and int(c.get("kies", 0)) < tag_ids.size(),
-					"%s: 'kies' is onzinnig" % mid)
 			"choicescene":
 				var maxpt := 0
 				for raw: Variant in c.get("rondes", []):
@@ -853,17 +845,13 @@ func _test_minigame_inhoud() -> void:
 			"standup":
 				var sprekers := c.get("sprekers", []) as Array
 				_ok(sprekers.size() >= 4, "%s: te weinig sprekers" % mid)
-				var spreektijd := 0.0
 				var belangrijk := 0
-				var langste_duur := 0.0
+				var niet_belangrijk_ids: Array[String] = []
 				for raw: Variant in sprekers:
 					var sp := raw as Dictionary
 					_ok(String(sp.get("naam", "")) != "", "%s: spreker zonder naam" % mid)
 					_ok(not (sp.get("regels", []) as Array).is_empty(),
 						"%s: %s zegt niets" % [mid, sp.get("naam", "?")])
-					var duur := float(sp.get("duur", 0.0))
-					spreektijd += duur
-					langste_duur = maxf(langste_duur, duur)
 					if bool(sp.get("belangrijk", false)):
 						belangrijk += 1
 						# De naam zelf hoort niet in de data-aanwijzing te lekken: die
@@ -872,30 +860,65 @@ func _test_minigame_inhoud() -> void:
 						_ok(String(sp.get("aanwijzing", "")) != "" or sp.get("id", "") == "danny",
 							"%s: belangrijke spreker %s heeft geen aanwijzing en is niet Danny" % [
 								mid, sp.get("naam", "?")])
-				# De grap staat of valt hiermee: wie niets doet moet verliezen.
-				#
-				# Met een marge en niet met `>=`. Dit stond op gelijk (42 tegen 42)
-				# en dat is geen "verliezen" maar een muntworp: de klok raakt nul
-				# in hetzelfde frame waarin de laatste spreker klaar is, en welke
-				# van die twee checks eerst draait bepaalt de uitslag. De uitkomst
-				# van de niets-doen-route hoort niet van een float-vergelijking af
-				# te hangen.
-				var marge := spreektijd - float(c.get("tijd", 0.0))
-				_ok(marge >= 2.0,
-					"%s: de spreektijd (%.0fs) loopt maar %.1fs over het budget (%.0fs) heen; niets doen moet met marge verliezen" % [
-						mid, spreektijd, marge, c.get("tijd", 0.0)])
-				# BBD-202/F4-a: één afkapping mag het nooit meer redden. Zelfs de
-				# langste spreker alleen eraf halen moet de rest nog steeds over het
-				# budget laten lopen, anders is "kap één keer de juiste af" weer de
-				# hele opgave.
-				_ok(marge > langste_duur,
-					"%s: de marge (%.1fs) is niet groter dan de langste spreker (%.1fs); één afkapping volstaat dan al" % [
-						mid, marge, langste_duur])
+						_ok(sp.has("nuttige_regel"),
+							"%s: belangrijke spreker %s heeft geen nuttige_regel-index" % [
+								mid, sp.get("naam", "?")])
+					else:
+						niet_belangrijk_ids.append(String(sp.get("id", "")))
 				_ok(belangrijk >= 1,
-					"%s: geen enkele spreker is belangrijk, dus afkappen heeft geen gevolgen" % mid)
-				_ok(int(c.get("ingrepen", 0)) > 0 and int(c.get("ingrepen", 0)) < sprekers.size(),
-					"%s: met %s ingrepen op %d sprekers valt er niets af te wegen" % [
-						mid, c.get("ingrepen", 0), sprekers.size()])
+					"%s: geen enkele spreker is belangrijk, dus de infobalk kan nooit vollopen" % mid)
+
+				var ingrepen := int(c.get("ingrepen", 0))
+				# Kun je met je ingrepen élke niet-belangrijke spreker wegknippen, dan
+				# is er niets meer af te wegen: je kapt gewoon alles af dat niet
+				# belangrijk is en wint altijd.
+				_ok(ingrepen > 0 and ingrepen < niet_belangrijk_ids.size(),
+					"%s: met %d ingrepen op %d niet-belangrijke sprekers kun je ze allemaal wegknippen" % [
+						mid, ingrepen, niet_belangrijk_ids.size()])
+
+				var tijd := float(c.get("tijd", 0.0))
+				# Wanneer valt de nuttige regel van de láátste belangrijke spreker,
+				# gegeven welke sprekers vóór hem genegeerd worden (afgekapt, dus met
+				# duur 0)? Dezelfde som als `Mg_standup._werk_regels_bij()`: een regel
+				# valt op `idx * (duur/aantal_regels)` binnen zijn eigen beurt, en de
+				# tijd tot dat moment is de opgetelde duur van alles ervoor.
+				var tijd_tot_laatste_belangrijk := func(genegeerd: Array) -> float:
+					var verstreken := 0.0
+					var laatste := 0.0
+					for raw2: Variant in sprekers:
+						var sp2 := raw2 as Dictionary
+						var duur2 := float(sp2.get("duur", 5.0))
+						if bool(sp2.get("belangrijk", false)):
+							var regels2 := (sp2.get("regels", []) as Array).size()
+							var per2 := maxf(0.3, duur2 / maxf(1.0, float(regels2)))
+							laatste = verstreken + int(sp2.get("nuttige_regel", 0)) * per2
+						if not (String(sp2.get("id", "")) in genegeerd):
+							verstreken += duur2
+					return laatste
+
+				# Niks doen — geen enkele spreker genegeerd — moet nog steeds
+				# verliezen. Anders is afkappen niet nodig en heeft de minigame geen
+				# opgave meer.
+				var zonder_afkappen: float = tijd_tot_laatste_belangrijk.call([])
+				_ok(zonder_afkappen > tijd,
+					"%s: zonder afkappen valt de laatste belangrijke regel al op %.1fs, ruim binnen de %.0fs — niets doen wint dan" % [
+						mid, zonder_afkappen, tijd])
+
+				# De QA-strategie (de langste niet-belangrijke sprekers eruit, zoveel
+				# als er ingrepen zijn — zie `Mg_standup._bepaal_qa_afkap()`) moet wél
+				# binnen het budget passen, anders faalt de autopilot op precies de
+				# data die hij zelf zou moeten oplossen.
+				var kandidaten := sprekers.filter(func(s: Variant) -> bool:
+					return not bool((s as Dictionary).get("belangrijk", false)))
+				kandidaten.sort_custom(func(a: Variant, b: Variant) -> bool:
+					return float((a as Dictionary).get("duur", 0.0)) > float((b as Dictionary).get("duur", 0.0)))
+				var genegeerd: Array[String] = []
+				for i: int in mini(ingrepen, kandidaten.size()):
+					genegeerd.append(String((kandidaten[i] as Dictionary).get("id", "")))
+				var met_afkappen: float = tijd_tot_laatste_belangrijk.call(genegeerd)
+				_ok(met_afkappen <= tijd,
+					"%s: zelfs met de QA-strategie (%s afgekapt) valt de laatste belangrijke regel op %.1fs, buiten de %.0fs" % [
+						mid, genegeerd, met_afkappen, tijd])
 			"uitlijnen":
 				var elementen := c.get("elementen", []) as Array
 				_ok(elementen.size() >= 3, "%s: te weinig elementen" % mid)
@@ -935,6 +958,47 @@ func _test_minigame_inhoud() -> void:
 				_ok(float(c.get("basis", 0.0)) + beste >= float(c.get("doel", 0.0)),
 					"%s: het doel is onhaalbaar (basis %.1f + best %.1f < doel %.1f)" % [
 						mid, c.get("basis", 0.0), beste, c.get("doel", 0.0)])
+			"abgevecht":
+				var hp_a := float(c.get("hp_a", 0.0))
+				var hp_b := float(c.get("hp_b", 0.0))
+				_ok(hp_a > 0.0 and hp_b > 0.0, "%s: hp_a/hp_b moeten positief zijn" % mid)
+				var rondes3 := c.get("rondes", []) as Array
+				_ok(rondes3.size() >= 2, "%s: te weinig rondes voor een gevecht" % mid)
+				var beste_schade := 0.0
+				var slechtste_a := hp_a
+				for raw: Variant in rondes3:
+					var r := raw as Dictionary
+					_ok(String(r.get("vraag", "")) != "", "%s: ronde zonder vraag" % mid)
+					var varianten3 := r.get("varianten", []) as Array
+					_ok(varianten3.size() >= 2, "%s: ronde met minder dan twee varianten" % mid)
+					var top_netto := -INF
+					var top_schade := 0.0
+					var slecht := false
+					var slechtste_tegenklap := 0.0
+					for raw2: Variant in varianten3:
+						var vr := raw2 as Dictionary
+						_ok(String(vr.get("label", "")) != "", "%s: variant zonder label" % mid)
+						_ok(String(vr.get("regel", "")) != "",
+							"%s: variant zonder regel, dus een klap zonder commentaar" % mid)
+						var schade := float(vr.get("schade", 0.0))
+						var tegenklap := float(vr.get("tegenklap", 0.0))
+						if schade - tegenklap > top_netto:
+							top_netto = schade - tegenklap
+							top_schade = schade
+						if tegenklap > schade:
+							slecht = true
+						slechtste_tegenklap = maxf(slechtste_tegenklap, tegenklap)
+					beste_schade += top_schade
+					slechtste_a -= slechtste_tegenklap
+					# Zonder een duidelijk slechte optie per ronde is elke klap
+					# een goede klap, en dan valt er niets af te wegen.
+					_ok(slecht, "%s: ronde zonder enige klap die meer terugslaat dan hij raakt" % mid)
+				_ok(beste_schade >= hp_b,
+					"%s: B is met de beste klappen niet knock-out te krijgen (%.0f schade tegen %.0f hp)" % [
+						mid, beste_schade, hp_b])
+				_ok(slechtste_a > 0.0,
+					"%s: A kan met de slechtste klappen alleen al knock-out gaan (%.0f hp over)" % [
+						mid, slechtste_a])
 			"pijplijn":
 				var stages := c.get("stages", []) as Array
 				_ok(stages.size() >= 3, "%s: te weinig stages" % mid)
@@ -1757,7 +1821,7 @@ func _test_vinden() -> void:
 	Session.pin(&"t07")
 	var doel := QuestEngine.next_hint_ticket()
 	_ok(doel != null and doel.id == &"t07", "de doelregel volgt de gekozen ticket niet")
-	QuestEngine.complete(&"t07", MinigameResult.make(&"mg_muziek", GameEnums.Outcome.SUCCESS))
+	QuestEngine.complete(&"t07", MinigameResult.make(&"mg_abgevecht", GameEnums.Outcome.SUCCESS))
 	_ok(Session.pinned_ticket == &"", "de keuze blijft hangen op een opgelost ticket")
 
 
@@ -3188,12 +3252,14 @@ func _test_uitlijnen_perfect() -> void:
 	mg.queue_free()
 
 
-## F4-b: BBD-203, BBD-205, BBD-207 en BBD-209 lossen op dóór in de wereld te
-## handelen, niet meer via een afgesloten minigame-overlay. Zonder
-## deze test kan een vijfde `wereldhandeling`-ticket stil op de
-## `push_error`-tak van `TicketController._resolve_wereldhandeling()` belanden
-## — onzichtbaar tot een echte speelbeurt erop stuit — of kan het paarden-drietal
-## uit `data/npcs.json` uit elkaar groeien met wat BBD-209 verwacht.
+## F4-b: BBD-203, BBD-205 en BBD-209 lossen op dóór in de wereld te handelen,
+## niet meer via een afgesloten minigame-overlay. BBD-207 hoorde hier ooit ook
+## bij (`mg_muziek`); sinds Deel 3 is dat weer een echte minigame-overlay
+## (`mg_abgevecht`). Zonder deze test kan een vierde `wereldhandeling`-ticket
+## stil op de `push_error`-tak van `TicketController._resolve_wereldhandeling()`
+## belanden — onzichtbaar tot een echte speelbeurt erop stuit — of kan het
+## paarden-drietal uit `data/npcs.json` uit elkaar groeien met wat BBD-209
+## verwacht.
 func _test_wereldhandelingen() -> void:
 	_kop("wereldhandelingen (F4-b)")
 
@@ -3201,7 +3267,7 @@ func _test_wereldhandelingen() -> void:
 	# herkent. Twee kanten op bewaakt: een ticket dat wereldhandeling:true
 	# draagt zonder hier te staan, én andersom.
 	const BEKEND: Array[StringName] = [
-		&"mg_klantfeedback", &"mg_backend_fix", &"mg_muziek", &"mg_paarden",
+		&"mg_klantfeedback", &"mg_backend_fix", &"mg_paarden",
 	]
 	for id: StringName in GameData.ticket_ids():
 		var t: TicketDef = GameData.ticket(id)
@@ -3213,10 +3279,10 @@ func _test_wereldhandelingen() -> void:
 				"%s: '%s' heeft een wereldhandeling-resolver, maar wereldhandeling staat niet aan" % [
 					t.code, t.minigame_id])
 
-	# De vier bekende eigenaren: een wereldhandeling is geen degradatie, het is
+	# De drie bekende eigenaren: een wereldhandeling is geen degradatie, het is
 	# nog steeds een werkwoord uit de mond van de eigenaar.
 	var verwacht_eigenaar := {
-		&"t03": &"willem", &"t05": &"jonathan", &"t07": &"danny", &"t09": &"bastiaan",
+		&"t03": &"willem", &"t05": &"jonathan", &"t09": &"bastiaan",
 	}
 	for id: StringName in verwacht_eigenaar.keys():
 		var t: TicketDef = GameData.ticket(id)

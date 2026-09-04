@@ -357,8 +357,8 @@
      },
      {
       "when": {
-       "has_item": [
-        "audiobestand"
+       "tickets_done": [
+        "t07"
        ]
       },
       "text": "Uit de speaker komt de nieuwe merksound. Iemand heeft het volume alweer lager gezet."
@@ -881,32 +881,6 @@
      },
      {
       "text": "Er hangt nog een proefdruk. Een logo, twee keer zo groot als nodig. Toen ook al."
-     }
-    ]
-   }
-  }
- },
- "paardenkostuum": {
-  "start": "start",
-  "nodes": {
-   "start": {
-    "speaker": "",
-    "text": "Aan een haak hangt een paardenkostuum. Van de kerstborrel. Waarschijnlijk.",
-    "next": "tweede"
-   },
-   "tweede": {
-    "speaker": "",
-    "variants": [
-     {
-      "when": {
-       "tickets_done": [
-        "t09"
-       ]
-      },
-      "text": "Het hangt er anders bij dan vanochtend. Alsof iemand het met haast heeft teruggehangen."
-     },
-     {
-      "text": "Het hoofd ligt ernaast, op een doos. Het kijkt richting de deur."
      }
     ]
    }

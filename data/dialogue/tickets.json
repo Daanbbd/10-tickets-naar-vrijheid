@@ -1687,7 +1687,7 @@
   "nodes": {
    "start": {
     "speaker": "",
-    "text": "In de koffiecorner hangt een speaker. In Jira staat: merksound. Er staat verder niets.",
+    "text": "In de koffiecorner staat een scherm aan. Op het scherm: A tegen B. In Jira staat verder niets.",
     "next": "herkomst"
    },
    "herkomst": {
@@ -1724,11 +1724,11 @@
        ]
       },
       "speaker": "",
-      "text": "Je opent de generator. Elf seconden, niet langer."
+      "text": "Je zet het scherm aan. A tegen B. Drie klappen, meer niet."
      },
      {
       "speaker": "danny",
-      "text": "Elf seconden. Niet langer. Anders wordt het een liedje."
+      "text": "A tegen B. Drie klappen. A moet winnen. psies"
      }
     ]
    }
@@ -1739,7 +1739,7 @@
   "nodes": {
    "start": {
     "speaker": "",
-    "text": "De speaker in de koffiecorner staat uit. Het ticket staat open.",
+    "text": "Het scherm in de koffiecorner staat op pauze. Het ticket staat open.",
     "next": "wie"
    },
    "wie": {
@@ -1751,10 +1751,10 @@
         "technisch"
        ]
       },
-      "text": "Ik kan geluid afspelen. Ik kan geen merk horen. Danny wel."
+      "text": "Ik kan wel klikken. Ik weet niet wie er moet winnen. Danny wel."
      },
      {
-      "text": "Merk is van Danny. Ik ga hem halen."
+      "text": "Dit is van Danny. Ik ga hem halen."
      }
     ]
    }
@@ -1772,7 +1772,7 @@
         "daan"
        ]
       },
-      "text": "Danny, BBD-207. Er moet een merksound komen. Niemand weet waarom. Sorry wat."
+      "text": "Danny, BBD-207. A tegen B. Sorry wat."
      },
      {
       "when": {
@@ -1780,7 +1780,7 @@
         "victor"
        ]
       },
-      "text": "Danny, BBD-207. Een merksound. Ik ga daar niks van vinden."
+      "text": "Danny, BBD-207. A tegen B. Ik ga daar niks van vinden."
      },
      {
       "when": {
@@ -1788,7 +1788,7 @@
         "jonathan"
        ]
       },
-      "text": "Danny, BBD-207. Er moet geluid komen. Nogmaals, niet mijn laag, maar het staat wel in Jira."
+      "text": "Danny, BBD-207. A tegen B. Nogmaals, niet mijn laag, maar het staat wel in Jira."
      },
      {
       "when": {
@@ -1796,7 +1796,7 @@
         "willem"
        ]
       },
-      "text": "Heeee Danny. BBD-207. De klant wil een geluidje en ik heb ja gezegd. Dat is wel top, toch?"
+      "text": "Heeee Danny. BBD-207. A tegen B, en ik heb ja gezegd. Dat is wel top, toch?"
      },
      {
       "when": {
@@ -1804,7 +1804,7 @@
         "bastiaan"
        ]
       },
-      "text": "danny,, BBD-207,, er moet een merksound komen,, vraag me niet waarom,,"
+      "text": "danny,, BBD-207,, a tegen b,, vraag me niet waarom,,"
      },
      {
       "when": {
@@ -1812,17 +1812,17 @@
         "koen"
        ]
       },
-      "text": "Danny, BBD-207. Er moet een merksound komen. Het staat in Jira, dus het gebeurt. Alleen het waarom check ik niet."
+      "text": "Danny, BBD-207. A tegen B. Het staat in Jira, dus het gebeurt. Alleen het waarom check ik niet."
      },
      {
-      "text": "Danny, ik loop vast op BBD-207. Er moet een merksound komen, niemand weet waarom, en het staat in Jira, dus het gebeurt."
+      "text": "Danny, ik loop vast op BBD-207. A tegen B, niemand weet waarom, en het staat in Jira, dus het gebeurt."
      }
     ],
     "next": "reactie"
    },
    "reactie": {
     "speaker": "danny",
-    "text": "De merksound.",
+    "text": "A tegen B.",
     "next": "antwoord"
    },
    "antwoord": {
@@ -1848,18 +1848,18 @@
        ]
       },
       "speaker": "speler",
-      "text": "Elf seconden. Herkenbaar en net niet vervelend. Dat was de hele opdracht."
+      "text": "A wint. Drie klappen, meer had ik niet nodig. Dat was de hele opdracht."
      },
      {
       "speaker": "danny",
-      "text": "Elf seconden. Herkenbaar en net niet vervelend."
+      "text": "A wint. Drie klappen, meer had je niet nodig."
      }
     ],
     "next": "keuken"
    },
    "keuken": {
     "speaker": "",
-    "text": "De speaker speelt het af. Twee mensen kijken op en gaan verder met hun brood.",
+    "text": "Het scherm toont de uitslag. Twee mensen kijken op en gaan verder met hun brood.",
     "next": "slot"
    },
    "slot": {
@@ -1871,7 +1871,7 @@
         "detail"
        ]
       },
-      "text": "Er zit een hoefslag in. Dat had niemand gevraagd."
+      "text": "B stond bij de laatste klap al op tien procent. Dat had niemand gevraagd."
      },
      {
       "when": {
@@ -1882,7 +1882,7 @@
       "text": "Dit kan ook onder de video."
      },
      {
-      "text": "Het staat erop."
+      "text": "A staat erop."
      }
     ]
    }
@@ -1897,32 +1897,77 @@
       "when": {
        "character": [
         "danny"
-       ]
+       ],
+       "min_counter": {
+        "ab_pogingen": 4
+       }
       },
       "speaker": "speler",
-      "text": "Zeventien seconden en een saxofoon. Dat is geen merk, dat is een sfeer."
+      "text": "ik heb mijn hypothese aangepast. de hypothese is nu dat b wint. dus als b wint, heb ik niets geleerd. dus meet ik opnieuw."
      },
      {
-      "speaker": "",
-      "text": "Het duurt nu zeventien seconden en er zit een saxofoon in."
-     }
-    ],
-    "next": "nog"
-   },
-   "nog": {
-    "variants": [
+      "when": {
+       "character": [
+        "danny"
+       ],
+       "min_counter": {
+        "ab_pogingen": 3
+       }
+      },
+      "speaker": "speler",
+      "text": "oké. b wint drie keer op rij. dat is precies wat een outlier doet als je hem drie keer meet. door."
+     },
+     {
+      "when": {
+       "character": [
+        "danny"
+       ],
+       "min_counter": {
+        "ab_pogingen": 2
+       }
+      },
+      "speaker": "speler",
+      "text": "b wint weer. maar de steekproef is klein. en het was maandag. nog een keer."
+     },
      {
       "when": {
        "character": [
         "danny"
        ]
       },
-      "speaker": "",
-      "text": "Je haalt de saxofoon eruit."
+      "speaker": "speler",
+      "text": "b wint. dat is data. één meting is geen meting."
+     },
+     {
+      "when": {
+       "min_counter": {
+        "ab_pogingen": 4
+       }
+      },
+      "speaker": "danny",
+      "text": "ik heb de hypothese aangepast. de hypothese is nu dat b wint. dus als b wint, hebben we niets geleerd. dus meten we opnieuw"
+     },
+     {
+      "when": {
+       "min_counter": {
+        "ab_pogingen": 3
+       }
+      },
+      "speaker": "danny",
+      "text": "oké. b wint consistent. dat is precies wat een outlier doet als je hem drie keer meet. we gaan door"
+     },
+     {
+      "when": {
+       "min_counter": {
+        "ab_pogingen": 2
+       }
+      },
+      "speaker": "danny",
+      "text": "b wint weer. maar de steekproef is klein. en het was maandag. psies, nog een keer"
      },
      {
       "speaker": "danny",
-      "text": "Saxofoon eruit. Opnieuw."
+      "text": "b wint. dat is data. laten we het nog een keer meten, want één meting is geen meting"
      }
     ]
    }
@@ -1933,7 +1978,7 @@
   "nodes": {
    "start": {
     "speaker": "",
-    "text": "De merksound speelt elke keer als de koffiemachine klaar is. Dat was niet de bedoeling."
+    "text": "Op het scherm in de koffiecorner staat nog steeds A tegen B, met A als winnaar. Niemand heeft het uitgezet."
    }
   }
  },

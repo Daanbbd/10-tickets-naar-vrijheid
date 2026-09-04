@@ -24,8 +24,6 @@ extends RefCounted
 ## een typefout in een `flags_all` is anders onzichtbaar: die variant valt
 ## gewoon nooit.
 const VLAGGEN: Array[StringName] = [
-	&"gevolg_jonathan_gemist",
-	&"gevolg_danny_gemist",
 	&"gevolg_geen_webshop",
 	&"gevolg_paard_beloofd",
 	&"gevolg_comicsans_beloofd",
@@ -35,7 +33,7 @@ const VLAGGEN: Array[StringName] = [
 	&"gevolg_credits_verbrand",
 	&"gevolg_klant_ontevreden",
 	&"gevolg_backend_fout_gekozen",
-	&"gevolg_verkeerde_merksound",
+	&"gevolg_veel_geprobeerd",
 	&"gevolg_paard_gemist",
 ]
 
@@ -50,7 +48,7 @@ const GETALLEN := {
 	&"mg_frontend_fix": {&"afwijking_totaal": &"uitlijn_afwijking"},
 	&"mg_klantfeedback": {&"score": &"klant_score", &"drempel": &"klant_drempel"},
 	&"mg_backend_fix": {&"juist": &"backend_juist"},
-	&"mg_muziek": {&"goed": &"muziek_goed", &"titel": &"muziek_titel"},
+	&"mg_abgevecht": {&"hp_a_over": &"ab_hp_a_over"},
 	&"mg_paarden": {&"zelf_gevonden": &"paard_zelf_gevonden"},
 }
 
@@ -74,13 +72,6 @@ static func boek(minigame_id: StringName, result: MinigameResult) -> void:
 			Session.gevolgen[sleutel] = p[veld]
 
 	match minigame_id:
-		&"mg_planning":
-			# Wie je afkapte weet je zelf; wát je daarmee misliep niet. Jonathan
-			# meldde een structurele bug, Danny dat de checkout wegvalt. Die
-			# informatie is precies wat de finale duurder maakt.
-			var gemist: Array = p.get(&"gemist", [])
-			Session.set_flag(&"gevolg_jonathan_gemist", "jonathan" in gemist)
-			Session.set_flag(&"gevolg_danny_gemist", "danny" in gemist)
 		&"mg_user_story":
 			var mee: Array = p.get(&"meegenomen", [])
 			# Je kunt deze minigame halen door het paard en Comic Sans te
@@ -121,10 +112,14 @@ static func boek(minigame_id: StringName, result: MinigameResult) -> void:
 			# Eén kabel, en die kun je goed of fout leggen. Fout gelegd betekent:
 			# het werkt zolang niemand er nog eens naar kijkt.
 			Session.set_flag(&"gevolg_backend_fout_gekozen", not bool(p.get(&"juist", true)))
-		&"mg_muziek":
-			# De grap blijft de grap; verkeerd gekozen betekent alleen dat de
-			# merksound niet is wat hij moest zijn.
-			Session.set_flag(&"gevolg_verkeerde_merksound", not bool(p.get(&"goed", true)))
+		&"mg_abgevecht":
+			# Elke oplevering hier is A die wint: verliezen laat het ticket gewoon
+			# openstaan voor een nieuwe poging (zie `mg_abgevecht.gd::_afronden()`),
+			# dus `a_wint` is bij een geboekte SUCCESS altijd waar — precies
+			# hetzelfde patroon als de stand-up (Deel 4). Wat wél varieert is hoe
+			# vaak het moest, via de teller die de minigame zelf ophoogt bij elk
+			# verlies (`Session.add_counter(&"ab_pogingen")`).
+			Session.set_flag(&"gevolg_veel_geprobeerd", Session.get_counter(&"ab_pogingen") >= 2)
 		&"mg_paarden":
 			# Via het scrumbord of via Bastiaans vakgebiedvoordeel kom je hier
 			# zonder ooit zelf een paard te hebben aangesproken. Dat is een
@@ -154,14 +149,23 @@ static func getal(sleutel: StringName, fallback: Variant = 0) -> Variant:
 ## De begintoestand van de oplevering, opgeteld uit de hele dag.
 ##
 ## Dit is waar de spanningsboog uitkomt. Een zorgvuldige dag begint met twee
-## bugs en zeven vertrouwen; een dag waarop je Jonathan afkapte en een app
-## beloofde begint met vijf bugs en drie vertrouwen. Dat is een merkbaar
-## andere finale, en geen van beide is onhaalbaar — er is geen game over, dus
-## een slechte dag maakt de oplevering duurder, niet onmogelijk.
+## bugs en zeven vertrouwen; een dag waarop je scope te groot liet worden en de
+## klant ontevreden hield begint met vier bugs en vier vertrouwen. Dat is een
+## merkbaar andere finale, en geen van beide is onhaalbaar — er is geen game
+## over, dus een slechte dag maakt de oplevering duurder, niet onmogelijk.
+## BBD-202 (Deel 4): de stand-up won ooit een `gevolg_jonathan_gemist`-bonusbug
+## op een geslaagde speelbeurt waarin je hem tóch had afgekapt. Die combinatie
+## bestaat niet meer: sinds de infobalk is het slagen van de minigame zelf al
+## "beide nuttige regels gehoord", dus een geboekte SUCCESS kan `gemist` nooit
+## meer gevuld hebben — precies zoals `gevolg_paard_gemist` hierboven (P1-6)
+## nooit een straf mocht worden omdat alleen een vakgebiedvoordeel 'm ooit zet.
+## Geen compensatie hier, met opzet: de makkelijker-wordende aftocht die deze
+## bug voorkwam bestaat niet meer als aftocht — wie Jonathan mist, verliest de
+## minigame nu meteen (een retry, geen finale-tax), dus de opgave werd op het
+## moment zelf strenger in plaats van dat er verderop iets zachter werd.
+## `gevolg_danny_gemist` (`getest` hieronder) is om dezelfde reden weg.
 static func finale_start() -> Dictionary:
 	var bugs := 3
-	if Session.get_flag(&"gevolg_jonathan_gemist"):
-		bugs += 1
 	if Session.get_flag(&"gevolg_scope_te_groot"):
 		bugs += 1
 	if Session.get_flag(&"gevolg_uitlijn_perfect"):
@@ -177,17 +181,20 @@ static func finale_start() -> Dictionary:
 		vertrouwen += 1
 	if Session.get_flag(&"gevolg_credits_verbrand"):
 		vertrouwen -= 1
-	# Een ontevreden klant en een verkeerde merksound zijn allebei iets dat
-	# zij hoort of ziet vóór jij het kunt gladstrijken.
+	# Een ontevreden klant is iets dat zij hoort of ziet vóór jij het kunt
+	# gladstrijken.
 	if Session.get_flag(&"gevolg_klant_ontevreden"):
-		vertrouwen -= 1
-	if Session.get_flag(&"gevolg_verkeerde_merksound"):
 		vertrouwen -= 1
 
 	var getest := 0
 	if Session.get_flag(&"gevolg_cro_gehaald"):
 		getest += 1
-	if Session.get_flag(&"gevolg_danny_gemist"):
+	# BBD-207 (Deel 3): geen client-gevolg meer — Danny's A/B-gevecht speelt
+	# zich intern af, dus wat langer duurde om A te laten winnen hoort bij
+	# zíjn testwerk (`getest`), niet bij klantvertrouwen (`vertrouwen`). Dat
+	# verving de oude `gevolg_verkeerde_merksound`, die client-facing was:
+	# een verkeerd gekozen merksound klonk letterlijk door het kantoor.
+	if Session.get_flag(&"gevolg_veel_geprobeerd"):
 		getest -= 1
 	# P1-6: hier stond een `getest -= 1` bij `gevolg_paard_gemist`. Alleen
 	# Bastiaans vakgebiedvoordeel (`geen_zoektocht`) kan die vlag ooit zetten —

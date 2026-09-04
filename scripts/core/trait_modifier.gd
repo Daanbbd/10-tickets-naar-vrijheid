@@ -29,7 +29,7 @@ extends RefCounted
 ## regel noemt wat er concreet anders is en niet dat er iets anders is.
 const VOORDEEL := {
 	"cableboard":  "Jouw vakgebied. Minder losse draden.",
-	"tagpicker":   "Jouw vakgebied. Eén afleider minder.",
+	"abgevecht":   "Jouw vakgebied. Je ziet de tegenklap van elke klap vooraf.",
 	"whack":       "Jouw vakgebied. Je hoeft ze niet op te zoeken.",
 	"choicescene": "Jouw vakgebied. Je hoeft minder te raden.",
 	"scope":       "Jouw vakgebied. Twee punten meer ruimte.",
@@ -91,7 +91,7 @@ static func pas_toe(t: TicketDef) -> Dictionary:
 
 	match soort:
 		"cableboard":  _cableboard(config)
-		"tagpicker":   _tagpicker(config)
+		"abgevecht":   _abgevecht(config)
 		"whack":       _whack(config)
 		"choicescene": _choicescene(config)
 		"scope":       _scope(config)
@@ -125,8 +125,13 @@ static func _cableboard(c: Dictionary) -> void:
 	c["afleiders"] = afleiders.slice(0, maxi(0, afleiders.size() - MINDER_AFLEIDERS))
 
 
-static func _tagpicker(c: Dictionary) -> void:
-	c["pogingen"] = int(c.get("pogingen", 2)) + 1
+## Danny's voordeel: hij ziet de tegenklap van elke klap vooraf, niet de
+## schade. Dat vertelt hem wat een klap kost zonder te verklappen wat hij
+## oplevert — genoeg om een dure klap te mijden, niet genoeg om de opgave over
+## te slaan. `mg_abgevecht.gd` leest `toon_tegenklap` bij het bouwen van de
+## knoppen.
+static func _abgevecht(c: Dictionary) -> void:
+	c["toon_tegenklap"] = true
 
 
 ## F4-b: BBD-209 is een wereldhandeling geworden, geen getimede minigame meer —

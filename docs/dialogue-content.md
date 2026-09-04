@@ -795,43 +795,43 @@ Danny [anderen]: "Terugzetten. En dan één ding tegelijk testen."
 
 ---
 
-## T07 — BBD-207: We hebben muziek nodig
-**Owner:** Danny | **Locatie:** Z4 Koffiecorner | **Minigame:** mg_muziek
+## T07 — BBD-207: A tegen B
+**Owner:** Danny | **Locatie:** Z4 Koffiecorner | **Minigame:** mg_abgevecht
 
 ### t07_offer
 
 ```
-[Omschrijving] In de koffiecorner hangt een speaker. In Jira staat: merksound. Er staat verder niets.
+[Omschrijving] In de koffiecorner staat een scherm aan. Op het scherm: A tegen B. In Jira staat verder niets.
 
 Speler [danny]: "Ik heb dit ticket zelf aangemaakt. In maart. Ik weet niet meer waarom."
 Speler [trait: technisch]: "Er staat geen aanvrager bij. Er staat helemaal niets bij."
 Speler [default]: "Niemand weet waar dit vandaan komt. Het staat in Jira, dus het gebeurt."
 
-[Omschrijving, danny]: "Je opent de generator. Elf seconden, niet langer."
-Danny [anderen]: "Elf seconden. Niet langer. Anders wordt het een liedje."
+[Omschrijving, danny]: "Je zet het scherm aan. A tegen B. Drie klappen, meer niet."
+Danny [anderen]: "A tegen B. Drie klappen. A moet winnen. psies"
 ```
 
 ### t07_fetch
 
 ```
-[Omschrijving] De speaker in de koffiecorner staat uit. Het ticket staat open.
+[Omschrijving] Het scherm in de koffiecorner staat op pauze. Het ticket staat open.
 
-Speler [trait: technisch]: "Ik kan geluid afspelen. Ik kan geen merk horen. Danny wel."
-Speler [default]: "Merk is van Danny. Ik ga hem halen."
+Speler [trait: technisch]: "Ik kan wel klikken. Ik weet niet wie er moet winnen. Danny wel."
+Speler [default]: "Dit is van Danny. Ik ga hem halen."
 ```
 
 ### t07_recruit
 
 ```
-Speler [Daan]: "Danny, BBD-207. Er moet een merksound komen. Niemand weet waarom. Sorry wat."
-Speler [Victor]: "Danny, BBD-207. Een merksound. Ik ga daar niks van vinden."
-Speler [Jonathan]: "Danny, BBD-207. Er moet geluid komen. Nogmaals, niet mijn laag, maar het staat wel in Jira."
-Speler [Willem]: "Heeee Danny. BBD-207. De klant wil een geluidje en ik heb ja gezegd. Dat is wel top, toch?"
-Speler [Bastiaan]: "danny,, BBD-207,, er moet een merksound komen,, vraag me niet waarom,,"
-Speler [Koen]: "Danny, BBD-207. Er moet een merksound komen. Het staat in Jira, dus het gebeurt. Alleen het waarom check ik niet."
-Speler [default]: "Danny, ik loop vast op BBD-207. Er moet een merksound komen, niemand weet waarom, en het staat in Jira, dus het gebeurt."
+Speler [Daan]: "Danny, BBD-207. A tegen B. Sorry wat."
+Speler [Victor]: "Danny, BBD-207. A tegen B. Ik ga daar niks van vinden."
+Speler [Jonathan]: "Danny, BBD-207. A tegen B. Nogmaals, niet mijn laag, maar het staat wel in Jira."
+Speler [Willem]: "Heeee Danny. BBD-207. A tegen B, en ik heb ja gezegd. Dat is wel top, toch?"
+Speler [Bastiaan]: "danny,, BBD-207,, a tegen b,, vraag me niet waarom,,"
+Speler [Koen]: "Danny, BBD-207. A tegen B. Het staat in Jira, dus het gebeurt. Alleen het waarom check ik niet."
+Speler [default]: "Danny, ik loop vast op BBD-207. A tegen B, niemand weet waarom, en het staat in Jira, dus het gebeurt."
 
-Danny: "De merksound."
+Danny: "A tegen B."
 Speler: "Ja."
 Danny: "ein-de-lijk. ik weet nog steeds niet waarom. biem"
 ```
@@ -839,30 +839,39 @@ Danny: "ein-de-lijk. ik weet nog steeds niet waarom. biem"
 ### t07_complete
 
 ```
-Speler [danny]: "Elf seconden. Herkenbaar en net niet vervelend. Dat was de hele opdracht."
-Danny [anderen]: "Elf seconden. Herkenbaar en net niet vervelend."
+Speler [danny]: "A wint. Drie klappen, meer had ik niet nodig. Dat was de hele opdracht."
+Danny [anderen]: "A wint. Drie klappen, meer had je niet nodig."
 
-[Omschrijving] De speaker speelt het af. Twee mensen kijken op en gaan verder met hun brood.
+[Omschrijving] Het scherm toont de uitslag. Twee mensen kijken op en gaan verder met hun brood.
 
-Speler [trait: detail]: "Er zit een hoefslag in. Dat had niemand gevraagd."
+Speler [trait: detail]: "B stond bij de laatste klap al op tien procent. Dat had niemand gevraagd."
 Speler [trait: commercieel]: "Dit kan ook onder de video."
-Speler [default]: "Het staat erop."
+Speler [default]: "A staat erop."
 ```
 
 ### t07_fail
 
-```
-Speler [danny]: "Zeventien seconden en een saxofoon. Dat is geen merk, dat is een sfeer."
-[Omschrijving, default]: "Het duurt nu zeventien seconden en er zit een saxofoon in."
+Vier oplopende varianten, gestuurd door `Session.get_counter(&"ab_pogingen")`
+(opgehoogd door `mg_abgevecht.gd` bij elk verlies, vóór deze dialoog speelt).
+Data die naar B wijst is voor Danny per definitie niet datagedreven genoeg —
+elke poging krijgt een absurdere reden om het nog een keer te proberen.
 
-[Omschrijving, danny]: "Je haalt de saxofoon eruit."
-Danny [anderen]: "Saxofoon eruit. Opnieuw."
+```
+Speler [danny, ≥4 verliezen]: "ik heb mijn hypothese aangepast. de hypothese is nu dat b wint. dus als b wint, heb ik niets geleerd. dus meet ik opnieuw."
+Speler [danny, ≥3]: "oké. b wint drie keer op rij. dat is precies wat een outlier doet als je hem drie keer meet. door."
+Speler [danny, ≥2]: "b wint weer. maar de steekproef is klein. en het was maandag. nog een keer."
+Speler [danny, default]: "b wint. dat is data. één meting is geen meting."
+
+Danny [anderen, ≥4]: "ik heb de hypothese aangepast. de hypothese is nu dat b wint. dus als b wint, hebben we niets geleerd. dus meten we opnieuw"
+Danny [anderen, ≥3]: "oké. b wint consistent. dat is precies wat een outlier doet als je hem drie keer meet. we gaan door"
+Danny [anderen, ≥2]: "b wint weer. maar de steekproef is klein. en het was maandag. psies, nog een keer"
+Danny [anderen, default]: "b wint. dat is data. laten we het nog een keer meten, want één meting is geen meting"
 ```
 
 ### t07_done
 
 ```
-[Omschrijving] De merksound speelt elke keer als de koffiemachine klaar is. Dat was niet de bedoeling.
+[Omschrijving] Op het scherm in de koffiecorner staat nog steeds A tegen B, met A als winnaar. Niemand heeft het uitgezet.
 ```
 
 ---

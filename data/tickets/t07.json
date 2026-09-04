@@ -16,12 +16,8 @@
  "minigame_config": {},
  "reward_effects": [
   {
-   "op": "add_item",
-   "item": "audiobestand"
-  },
-  {
    "op": "toast",
-   "text": "BBD-207 opgelost. De merksound staat aan."
+   "text": "BBD-207 opgelost. A heeft gewonnen."
   },
   {
    "op": "cue",
@@ -33,7 +29,7 @@
   {
    "op": "set_text",
    "target": "speaker_koffiecorner",
-   "value": "merksound: aan"
+   "value": "A/B: A wint"
   },
   {
    "op": "set_ambience",
@@ -49,12 +45,11 @@
  "id": "t07",
  "code": "BBD-207",
  "order": 7,
- "title": "We hebben muziek nodig",
- "summary": "Er moet een merksound komen. Niemand weet waarom. Het staat in Jira, dus het gebeurt.",
+ "title": "A tegen B",
+ "summary": "Danny wil weten of A wint. Aanzetten en kijken, alleen dan met vuisten.",
  "anchor": "speaker_koffiecorner",
  "owner_character": "danny",
- "minigame_id": "mg_muziek",
+ "minigame_id": "mg_abgevecht",
  "zone": "z4_koffiecorner",
- "zone_name": "Koffiecorner",
- "wereldhandeling": true
+ "zone_name": "Koffiecorner"
 }

@@ -25,7 +25,7 @@ plaats van uit de techniek.
 | BBD-204 | Uitlijnen | `mg_uitlijnen.gd` | ruimtelijke precisie | Victor *ís* uitlijning |
 | BBD-205 | CableBoard | `mg_cableboard.gd` | structuur herstellen | Jonathan vindt de oorzaak, niet het symptoom |
 | BBD-206 | A/B-test | `mg_abtest.gd` | meten, lezen, opnieuw | Danny: "aanzetten en kijken" |
-| BBD-207 | TagPicker | `mg_tagpicker.gd` | combineren | een merksound uit losse woorden |
+| BBD-207 | A tegen B | `mg_abgevecht.gd` | de juiste klap kiezen | Danny: "aanzetten en kijken", met vuisten |
 | BBD-208 | Renderpijplijn | `mg_pijplijn.gd` | doorstroom onder druk | Koen giet alles in piepelienies |
 | BBD-209 | WhackAHorse | `mg_whack.gd` | arcadereflex | Bastiaan ziet wat er beweegt |
 | BBD-210 | Oplevering | `mg_oplevering.gd` | beperkte acties met gevolgen | de finale, per personage anders |
@@ -56,7 +56,7 @@ dan krijg je de kennis van degene van wie het wél is.
 | BBD-204 | Victor | raster, speling en hoeveel er scheef staat |
 | BBD-205 | Jonathan | hoeveel verbindingen fout zijn en hoeveel draden afleiding zijn |
 | BBD-206 | Danny | je basislijn en je doel |
-| BBD-207 | Danny | hoeveel woorden, hoeveel je kiest, hoeveel pogingen |
+| BBD-207 | Danny | hoeveel HP A en B hebben |
 | BBD-208 | Koen | welke stap het knelpunt is |
 | BBD-209 | Bastiaan | het doel, de tijd, en dat de klantpaarden op bugs lijken |
 
@@ -155,12 +155,16 @@ is het paard (1 punt) en die maakt haar het blijst (4), dus je kunt slagen door
 het paard en Comic Sans op te leveren en de webshop weg te laten. Dat is geen
 gat in de balans maar het punt, en `Gevolgen` onthoudt het.
 
-**Stand-up** (BBD-202) — zeven collega's praten na elkaar in real-time. De
-totale spreektijd is gelijk aan het budget, dus wie niets doet verliest. Je
-hebt drie ingrepen. Twee sprekers melden iets dat later geld kost (Jonathan een
-structurele bug, Danny de checkout), en nergens staat wie dat zijn: dat moet je
-uit wat ze zeggen halen. Afkappen straft je niet direct — het komt terug in de
-finale.
+**Stand-up** (BBD-202) — zeven collega's praten na elkaar in real-time, en je
+hebt drie ingrepen om iemand af te kappen. Twee sprekers melden iets bruikbaars
+(Jonathan een structurele bug, Danny de checkout), en nergens staat wie dat
+zijn: dat moet je uit wat ze zeggen halen. Een balk "Nuttige info" vult zodra
+zo'n regel valt — dat ís de opgave, letterlijk zichtbaar. Sta hij vol als de
+stand-up afloopt (de klok op nul, of alle sprekers gehad), dan slaag je; anders
+niet, net als elke andere minigame gewoon een retry. Zonder afkappen halen de
+zeven sprekers de klok niet: Danny's regel valt pas als laatste, ruim buiten
+het budget. Wie iemand afkapt nádat zijn nuttige regel al gevallen is verliest
+niets — dat segment staat al groen.
 
 **ChoiceScene** (BBD-203) — dialoogkeuzes met punten tegen een drempel. Opties
 kunnen een `when` dragen, zodat sommige antwoorden alleen voor bepaalde
@@ -183,11 +187,13 @@ uitslag komt pas ná de meting. Je keuze in ronde twee zou anders zijn als je
 ronde één niet had gezien — dat is het verschil met een keuzemenu met verborgen
 punten.
 
-**TagPicker** (BBD-207) — kies N tags uit een pool; de combinatie bepaalt de
-uitkomst. Regels worden **op volgorde** geëvalueerd, eerste match wint. Absurde
-regels staan bovenaan, de goede regel vangt de rest af. Elke tag komt in
-minstens één regel voor (de testsuite controleert dat), dus er is altijd een
-uitkomst.
+**A tegen B** (BBD-207) — drie klappen, elk een keuze uit drie CRO-tweaks. Elke
+klap doet schade aan B én slaat terug op A; het net-effect (schade minus
+tegenklap) bepaalt of hij de moeite waard was. A moet B knock-outen binnen de
+drie klappen, of B wint op punten. Verliezen laat het ticket gewoon openstaan
+— geen game over, alleen Danny die met een steeds absurdere reden terugkomt om
+het nog een keer te proberen (zie `data/dialogue/tickets.json` → `t07_fail`,
+gestuurd door `Session.get_counter(&"ab_pogingen")`).
 
 **Renderpijplijn** (BBD-208) — zes clips door Prompt → Render → Publish. Elke
 stage heeft capaciteit, elke clip rijpt, een rijpe clip schuif je door met een
@@ -238,10 +244,10 @@ komt via `Gevolgen` op het eindscherm terecht, met je jas al aan.
 De **begintoestand komt uit je dag**. `Gevolgen.finale_start()` telt de gevolgen
 van de negen tickets op en `TicketController` geeft die mee als
 `start_override`. Een zorgvuldige dag begint op twee bugs en zeven vertrouwen;
-een dag waarop je Jonathan afkapte en haar een app beloofde begint op vijf en
-drie. Geen van beide is onhaalbaar — een slechte dag maakt de oplevering
-duurder, niet onmogelijk. `_test_gevolgen` faalt als die twee gelijk uitkomen,
-want dan hebben de keuzes geen gevolgen meer.
+een dag waarop je scope te groot liet worden en de klant ontevreden hield
+begint op vier en vier. Geen van beide is onhaalbaar — een slechte dag maakt de
+oplevering duurder, niet onmogelijk. `_test_gevolgen` faalt als die twee gelijk
+uitkomen, want dan hebben de keuzes geen gevolgen meer.
 
 De minigame weet zelf niets van de wereld: hij leest `cfg("start_override")` en
 valt terug op `start` uit de data. Daardoor is de finale los te draaien met

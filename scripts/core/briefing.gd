@@ -63,7 +63,6 @@ static func _feiten(c: Dictionary) -> Dictionary:
 			f["tijd"] = int(round(float(c.get("tijd", 0.0))))
 			f["ingrepen"] = int(c.get("ingrepen", 0))
 			f["belangrijk"] = _belangrijke_aanwijzing(c)
-			f["praattijd"] = _praattijd(c)
 			f["sprekers"] = (c.get("sprekers", []) as Array).size()
 		"choicescene":
 			f["drempel"] = int(c.get("drempel", 0))
@@ -80,10 +79,10 @@ static func _feiten(c: Dictionary) -> Dictionary:
 			f["doel"] = _getal(float(c.get("doel", 0.0)))
 			f["eenheid"] = String(c.get("eenheid", ""))
 			f["rondes"] = (c.get("rondes", []) as Array).size()
-		"tagpicker":
-			f["kies"] = int(c.get("kies", 0))
-			f["pogingen"] = int(c.get("pogingen", 0))
-			f["tags"] = (c.get("tags", []) as Array).size()
+		"abgevecht":
+			f["hp_a"] = int(c.get("hp_a", 0))
+			f["hp_b"] = int(c.get("hp_b", 0))
+			f["rondes"] = (c.get("rondes", []) as Array).size()
 		"pijplijn":
 			f["doel"] = int(c.get("doel", 0))
 			f["credits"] = int(c.get("credits", 0))
@@ -106,20 +105,6 @@ static func _zware_wensen(c: Dictionary) -> int:
 		if String((raw as Dictionary).get("id", "")) in Gevolgen.ZWARE_WENSEN:
 			n += 1
 	return n
-
-
-## Alles bij elkaar opgeteld wat de sprekers willen zeggen.
-##
-## Dit is het getal waar de hele stand-up om draait: het staat tegenover
-## `tijd`, en het verschil is precies wat je moet wegkappen. Het stond nergens,
-## en daardoor was de opgave "kap mensen af" zonder dat iemand kon zien
-## waaróm — de speler kreeg een klok, een knop, en geen som. Berekend en niet
-## opgeschreven, want een spreker erbij verandert dit getal mee.
-static func _praattijd(c: Dictionary) -> int:
-	var som := 0.0
-	for raw: Variant in (c.get("sprekers", []) as Array):
-		som += float((raw as Dictionary).get("duur", 0.0))
-	return int(round(som))
 
 
 ## Een categorie-aanwijzing over de eerste spreker die echt iets te melden

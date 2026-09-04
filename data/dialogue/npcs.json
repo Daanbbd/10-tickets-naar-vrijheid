@@ -494,18 +494,10 @@
      {
       "when": {
        "flags_all": [
-        "gevolg_danny_gemist"
+        "gevolg_veel_geprobeerd"
        ]
       },
-      "text": "je kapte me af, dus ik heb het gewoon aangezet. checkout valt weg op stap twee. psies"
-     },
-     {
-      "when": {
-       "flags_all": [
-        "gevolg_verkeerde_merksound"
-       ]
-      },
-      "text": "die merksound bij de speaker. psies. niet de goeie. ik zet er een test op"
+      "text": "b hield lang stand. een paar metingen extra. dat is ook data"
      },
      {
       "when": {
@@ -918,14 +910,6 @@
      {
       "when": {
        "flags_all": [
-        "gevolg_jonathan_gemist"
-       ]
-      },
-      "text": "Ik had het vanmorgen al gemeld, maar de tijd was om. Dat assortment hangt aan een store EN een levering. Best wel structureel ^.^"
-     },
-     {
-      "when": {
-       "flags_all": [
         "gevolg_backend_fout_gekozen"
        ]
       },
@@ -1002,8 +986,7 @@
      {
       "when": {
        "flags_none": [
-        "jonathan_bezocht",
-        "gevolg_jonathan_gemist"
+        "jonathan_bezocht"
        ]
       },
       "text": "Logs zien er goed uit.",

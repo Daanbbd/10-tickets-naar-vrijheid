@@ -464,13 +464,20 @@ Dat laatste punt is de pacing-kern: **het spel heeft een escalatiesysteem dat al
 **Wat er echt goed is.** `Gevolgen.finale_start()` telt de hele dag op tot vier getallen:
 
 ```
-bugs        = 3  +1 als je Jonathan afkapte  +1 als je scope te groot was  −1 bij perfect uitlijnen
-vertrouwen  = 5  ±1 webshop meegenomen  +1 paard belofd  −1 credits verbrand
-getest      = 0  +1 CRO gehaald  −1 Danny afgekapt
+bugs        = 3  +1 als je scope te groot was  +1 bij een fout gelegde kabel  −1 bij perfect uitlijnen
+vertrouwen  = 5  ±1 webshop meegenomen  +1 paard belofd  −1 credits verbrand  −1 klant ontevreden
+getest      = 0  +1 CRO gehaald
 scope       = wat je in BBD-201 beloofde
 ```
 
-Een zorgvuldige dag begint met twee bugs en zeven vertrouwen; een dag waarop je Jonathan afkapte en een app beloofde met vijf bugs en drie vertrouwen. Dat is echte accumulatie over negen vlaggen, en het is nergens een scorebord — het is de *begintoestand van een puzzel*. Bovendien heeft elk personage zijn eigen `finale_id` en foutcode. **Dit is het beste ontwerpwerk in het project.**
+Sinds de stand-up (BBD-202) herontworpen is naar een infobalk die zelf de
+uitslag is, kan een geslaagde speelbeurt daar nooit meer iets "missen" —
+`gevolg_jonathan_gemist`/`gevolg_danny_gemist` zijn om die reden uit
+`finale_start()` verdwenen (zie de docstring daar). Wie Jonathan of Danny mist
+verliest de minigame nu meteen; dat is strenger dan de oude finale-tax, dus de
+formule hierboven werd niet gecompenseerd.
+
+Een zorgvuldige dag begint met twee bugs en zeven vertrouwen; een dag waarop je scope te groot liet worden en de klant ontevreden hield begint met vier bugs en vier vertrouwen. Dat is echte accumulatie over de resterende vlaggen, en het is nergens een scorebord — het is de *begintoestand van een puzzel*. Bovendien heeft elk personage zijn eigen `finale_id` en foutcode. **Dit is het beste ontwerpwerk in het project.**
 
 ## Doen eerdere keuzes, relaties en handelingen mee?
 

@@ -10,7 +10,7 @@ deploysleutel.
 BBD-201  Wat moeten we eigenlijk bouwen?  ->  BBD-203  De klant heeft feedback
                                           ->  BBD-208  De klant wil een AI-video
 BBD-202  Waarom sta ik hier eigenlijk?    ->  BBD-209  Paardenbugs
-BBD-204  De frontend is stuk              ->  BBD-207  We hebben muziek nodig
+BBD-204  De frontend is stuk              ->  BBD-207  A tegen B
 BBD-205  De backend is stuk               ->  BBD-206  Niemand koopt iets
 9/10 + deploysleutel                      ->  BBD-210  Naar productie
 ```
@@ -59,7 +59,7 @@ De ruimtes zijn de echte ruimtes van de vloer — zie `docs/LEVEL.md`.
 | BBD-204 | De frontend is stuk | De Werkvloer | victor | `mg_frontend_fix` | vanaf het begin |
 | BBD-205 | De backend is stuk | Het Patchhok | jonathan | `mg_backend_fix` | vanaf het begin |
 | BBD-206 | Niemand koopt iets | Basecamp | danny | `mg_cro` | na BBD-205 |
-| BBD-207 | We hebben muziek nodig | Koffiecorner | danny | `mg_muziek` | na BBD-204 |
+| BBD-207 | A tegen B | Koffiecorner | danny | `mg_abgevecht` | na BBD-204 |
 | BBD-208 | De klant wil een AI-video | Het Vergaderhokje | koen | `mg_video` | na BBD-201 |
 | BBD-209 | Er lopen paardenbugs door het kantoor | De Werkvloer | bastiaan | `mg_paarden` | na BBD-202 |
 | BBD-210 | Naar productie | Birdhouse | iedereen | `mg_deploy` | bij 9/10 |

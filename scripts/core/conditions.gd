@@ -7,7 +7,7 @@ extends RefCounted
 const KEYS: Array[String] = [
 	"character", "trait", "flags_all", "flags_none",
 	"tickets_done", "tickets_not_done", "has_item", "min_tickets_done",
-	"overwerk",
+	"overwerk", "min_counter",
 ]
 
 static func check(c: Dictionary) -> bool:
@@ -59,6 +59,16 @@ static func check(c: Dictionary) -> bool:
 	if c.has("overwerk"):
 		if bool(c["overwerk"]) != Urenstaat.is_overwerk():
 			return false
+
+	# Eén of meer tellers die minstens een drempel gehaald moeten hebben, als
+	# {"<naam>": n} — bijvoorbeeld hoe vaak je een gevecht al hebt verloren.
+	# Zelfde patroon als `overwerk`: met `has()` en niet via `_names()`, want
+	# de waarde is een dictionary van drempels, geen naam of lijst van namen.
+	if c.has("min_counter"):
+		var eis := c["min_counter"] as Dictionary
+		for naam: Variant in eis:
+			if Session.get_counter(StringName(naam)) < int(eis[naam]):
+				return false
 
 	return true
 

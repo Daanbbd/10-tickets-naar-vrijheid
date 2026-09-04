@@ -70,9 +70,9 @@
  },
  "mg_planning": {
   "type": "standup",
-  "briefing": "Samen praten ze {praattijd} seconden en de stand-up duurt maar {tijd}. Je moet dus afkappen, alleen niet bij {belangrijk}.",
-  "intro": "{sprekers} collega's doen hun rondje. Samen praten ze {praattijd} seconden, en de stand-up duurt maar {tijd}. Je mag {ingrepen} keer iemand afkappen.",
-  "waarom": "Het past dus niet: er moet iemand af. Maar twee van hen melden iets wat later stukgaat. Kap je die af, dan hoor je het niet.",
+  "briefing": "Twee van hen melden iets bruikbaars — waaronder {belangrijk}. De rest praat gewoon. Kap ze af waar nodig: je hebt {ingrepen} keer, en {tijd} sec de tijd.",
+  "intro": "{sprekers} collega's doen hun rondje. Twee van hen melden iets bruikbaars, de rest praat gewoon. Je mag {ingrepen} keer iemand afkappen, in {tijd} sec.",
+  "waarom": "Twee van hen melden iets wat later stukgaat. Kap je ze af vóór ze het zeggen, dan hoor je het niet — en dat hoor je juist wel te horen.",
   "tijd": 30.0,
   "ingrepen": 3,
   "kap_regel": "Je kapt hem af. Hij knikt.",
@@ -156,8 +156,8 @@
     ]
    }
   ],
-  "success": "Binnen de tijd. Dennis: done.",
-  "failure": "Drieëntwintig minuten. Victor kijkt je aan zonder iets te zeggen.",
+  "success": "Beide gehoord. Dennis: done.",
+  "failure": "Een van de twee heb je gemist. Dennis vraagt er straks nog naar.",
   "gemist": "Afgekapt. Dat had je moeten horen.",
   "nuttig": "Dit komt nog terug."
  },
@@ -457,134 +457,86 @@
   "success": "Je zit boven de doelstelling. Danny zet er een pijltje bij in het dashboard.",
   "failure": "Je zit onder de basislijn. Dat is ook data, zegt Danny. Nog een keer."
  },
- "mg_muziek": {
-  "type": "tagpicker",
-  "briefing": "{tags} woorden, je kiest er {kies}, en je hebt {pogingen} pogingen. Aanzetten en kijken. Is het niks, dan doen we het anders.",
-  "intro": "Er moet een merksound komen. Niemand weet waarom. Het staat in Jira, dus het gebeurt. Kies drie tags en druk op genereren.",
-  "waarom": "Het staat in Jira, dus het gebeurt. Maar het moet wel aan een klant te laten horen zijn.",
-  "kies": 3,
-  "tags": [
+ "mg_abgevecht": {
+  "type": "abgevecht",
+  "briefing": "A staat op {hp_a}, B op {hp_b}. Drie klappen om B onder nul te krijgen. psies.",
+  "intro": "A tegen B, in de ring. Jij kiest de klap, ik kijk wat-ie doet.",
+  "waarom": "Niet elke klap raakt. Drie pogingen om te zien welke dat wél doet.",
+  "hp_a": 100,
+  "hp_b": 100,
+  "rondes": [
    {
-    "id": "episch",
-    "label": "episch",
-    "cat": "sfeer"
+    "vraag": "Openingsklap. Wat zet je aan?",
+    "varianten": [
+     {
+      "label": "Rechtse directe: vol tarief tonen",
+      "schade": 15,
+      "tegenklap": 20,
+      "regel": "vol tarief. dat voelde hij niet. dat voelde ik wel. biem"
+     },
+     {
+      "label": "Voorraad-jab: 'nog 3 op voorraad'",
+      "schade": 35,
+      "tegenklap": 5,
+      "regel": "mensen raken in paniek als het bijna weg is. hij wankelt"
+     },
+     {
+      "label": "Zwaai: grotere productfoto",
+      "schade": 5,
+      "tegenklap": 15,
+      "regel": "groter plaatje, kleiner effect. hij lachte er zelfs bij"
+     }
+    ]
    },
    {
-    "id": "emotioneel",
-    "label": "emotioneel",
-    "cat": "sfeer"
+    "vraag": "Hij komt overeind. Wat nu?",
+    "varianten": [
+     {
+      "label": "Verplicht account eruit",
+      "schade": 40,
+      "tegenklap": 5,
+      "regel": "niemand wil een account voor een potje supplement. voluit raak"
+     },
+     {
+      "label": "Nog een veld erbij, voor de zekerheid",
+      "schade": 0,
+      "tegenklap": 25,
+      "regel": "voor de zekerheid, zei ik. hij sloeg terug"
+     },
+     {
+      "label": "Verzendkosten pas op stap drie tonen",
+      "schade": 10,
+      "tegenklap": 15,
+      "regel": "ze schrikken nu later. ze schrikken nog steeds"
+     }
+    ]
    },
    {
-    "id": "vrolijk",
-    "label": "vrolijk",
-    "cat": "sfeer"
-   },
-   {
-    "id": "premium",
-    "label": "premium",
-    "cat": "sfeer"
-   },
-   {
-    "id": "paard",
-    "label": "paard",
-    "cat": "onderwerp"
-   },
-   {
-    "id": "corporate",
-    "label": "corporate",
-    "cat": "onderwerp"
-   },
-   {
-    "id": "reclame",
-    "label": "reclame",
-    "cat": "gebruik"
-   },
-   {
-    "id": "hardstyle",
-    "label": "hardstyle",
-    "cat": "genre"
-   },
-   {
-    "id": "middeleeuws",
-    "label": "middeleeuws",
-    "cat": "genre"
-   },
-   {
-    "id": "panfluit",
-    "label": "panfluit",
-    "cat": "instrument"
-   },
-   {
-    "id": "stadion",
-    "label": "stadion",
-    "cat": "gebruik"
-   },
-   {
-    "id": "lift",
-    "label": "lift",
-    "cat": "gebruik"
+    "vraag": "Laatste ronde. Maak het af.",
+    "varianten": [
+     {
+      "label": "iDEAL bovenaan",
+      "schade": 35,
+      "tegenklap": 5,
+      "regel": "het is nederland. dit had er meteen moeten staan"
+     },
+     {
+      "label": "Banner voor een loyaliteitsprogramma dat nog niet bestaat",
+      "schade": 0,
+      "tegenklap": 20,
+      "regel": "het programma bestaat niet. de banner wel. hij ziet het meteen"
+     },
+     {
+      "label": "Niets. Laten staan en morgen kijken",
+      "schade": 15,
+      "tegenklap": 0,
+      "regel": "soms is dat het antwoord. zelden, maar soms"
+     }
+    ]
    }
   ],
-  "resultaten": [
-   {
-    "when_any": [
-     "hardstyle"
-    ],
-    "titel": "Stalgalop (Hardstyle Edit)",
-    "tekst": "150 beats per minuut, met hoefgeluiden op de kick. Danny vindt het geweldig. Dat is geen aanbeveling.",
-    "goed": false
-   },
-   {
-    "when_any": [
-     "panfluit"
-    ],
-    "titel": "Zeven minuten panfluit",
-    "tekst": "Het lijkt op een nummer dat je kent, maar net genoeg anders om geen rechtszaak te zijn. Net genoeg.",
-    "goed": false
-   },
-   {
-    "when_any": [
-     "middeleeuws"
-    ],
-    "titel": "Ballade van de Vrije Teugel",
-    "tekst": "Luit, tamboerijn en een man die 'paardensupplementen' zingt alsof het een veldslag is.",
-    "goed": false
-   },
-   {
-    "when_any": [
-     "stadion"
-    ],
-    "titel": "SUP-PLE-MENT (clap clap)",
-    "tekst": "Veertigduizend mensen scanderen de merknaam. De klant heeft één winkel in Vorden.",
-    "goed": false
-   },
-   {
-    "when_any": [
-     "lift"
-    ],
-    "titel": "Wachtmuziek, onbedoeld",
-    "tekst": "Perfect voor in de lift. Bluebird Day heeft geen lift. Niemand heeft ooit om dit nummer gevraagd.",
-    "goed": false
-   },
-   {
-    "when_any": [
-     "premium",
-     "emotioneel",
-     "paard",
-     "episch",
-     "corporate",
-     "vrolijk",
-     "reclame"
-    ],
-    "titel": "Merksound v1",
-    "tekst": "Twaalf seconden. Rustige piano, één zachte strijker, een hoefslag op de laatste tel. Het klinkt duur zonder dat iemand kan uitleggen waarom.",
-    "goed": true
-   }
-  ],
-  "eis": "Iets van twaalf seconden dat je zonder uitleg aan mevrouw P. Aardenmens kunt laten horen.",
-  "success": "Twaalf seconden merksound. Willem speelt het af in de telefoon en de klant zegt 'oooh'. Dat is de hoogste score die bestaat.",
-  "failure": "Dit gaan we niet aan de klant laten horen. Willem speelt hem toch af in de telefoon, en mevrouw Aardenmens zegt niks.",
-  "pogingen": 4
+  "success": "B ligt eruit. A wint. dat is data. psies",
+  "failure": "B staat nog. A niet meer overtuigend genoeg. dat is ook data"
  },
  "mg_video": {
   "type": "pijplijn",

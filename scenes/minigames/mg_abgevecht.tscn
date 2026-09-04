@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://cmgtagpicker10t"]
+[gd_scene load_steps=2 format=3 uid="uid://cabgevecht01qa"]
 
-[ext_resource type="Script" path="res://scripts/minigames/mg_tagpicker.gd" id="1_mg"]
+[ext_resource type="Script" path="res://scripts/minigames/mg_abgevecht.gd" id="1_mg"]
 
 [node name="Minigame" type="Control"]
 anchors_preset = 15

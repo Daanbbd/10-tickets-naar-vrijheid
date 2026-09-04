@@ -1,33 +1,21 @@
 extends MinigameBase
-## BBD-202 — De stand-up. Zeven collega's praten na elkaar, samen ruim langer
-## dan het tijdsbudget, en je mag drie keer iemand afkappen — één afkapping
-## redt je nooit: zelfs de langste spreker alleen eraf halen is niet genoeg.
+## BBD-202 — De stand-up. Zeven collega's praten na elkaar en je mag drie keer
+## iemand afkappen. Twee van hen — nooit bij naam genoemd, dat moet uit hun
+## regels blijken — melden iets bruikbaars; de rest praat gewoon. De opgave is
+## letterlijk zichtbaar: een balk "Nuttige info" die vult zodra zo'n regel
+## valt. Sta hij vol als de stand-up afloopt, dan is dat een geslaagde
+## speelbeurt; sta hij niet vol (een van de twee is afgekapt vóór zijn regel),
+## dan faal je — net als overal elders in dit spel gewoon een retry, geen
+## game-over.
 ##
-## De klok loopt terwijl je luistert, dus de vraag is niet "wie kap ik af" maar
-## "hoe lang durf ik te wachten voordat ik het weet", en dat meerdere keren op
-## rij. Twee sprekers melden iets wat later nog terugkomt; wie dat zijn staat
-## nergens en moet uit hun regels blijken. De briefing wijst er één aan op rol,
-## nooit op naam — Danny, de tweede, krijgt geen aanwijzing en dat is bewust de
-## enige verborgen informatie in het spel. Afkappen kost je die informatie,
-## maar nooit de opdracht: het verlies belandt in de payload en niet in de
-## uitslag.
+## De briefing wijst er één aan op rol, nooit op naam — Danny, de tweede,
+## krijgt geen aanwijzing en dat is bewust de enige verborgen informatie in het
+## spel. Wie iemand afkapt nadat zijn regel al gevallen is verliest niets: dat
+## segment staat al groen en blijft dat.
 
 # Kort genoeg om als tik te voelen, lang genoeg om te zien dat er iemand
 # wegvalt. Twee keer FADE gaat van de klok af, dus dit is ook een prijs.
 const FADE := 0.14
-
-# QA wacht met afkappen tot het echt niet meer past. Deze marge is de speling
-# die overblijft: te klein en een enkel haperend frame laat de doorloop falen,
-# te groot en de autopilot kapt af terwijl het nog niet nodig is.
-const QA_MARGE := 4.0
-
-# Drie namen vooruit, de rest als "+4" achter de kop. Zeven rijen passen niet:
-# een rij is een regel pixelfont hoog en Jonathan vult met zijn drie lange
-# regels de kaart al bijna. Bij vier rijen kwam er tijdens Jonathan een
-# schuifbalk in de kaart en verdween de laatste naam uit beeld — precies bij de
-# spreker waar de afweging over gaat.
-const RIJ_MAX := 3
-const NAAM_BREED := 46
 
 var _sprekers: Array[Dictionary] = []
 var _idx: int = -1
@@ -39,7 +27,6 @@ var _ingrepen: int = 3
 
 var _afgekapt: Array[String] = []
 var _gemist: Array[String] = []
-var _gemist_gemeld: bool = false
 
 # Of de nuttige regel van de huidige spreker al gemarkeerd is. Per spreker
 # eenmalig: zonder deze vlag zou _werk_regels_bij() 'm elk frame opnieuw
@@ -57,7 +44,16 @@ var _qa: bool = false
 var _uitslag: int = 0
 var _afgerond: bool = false
 
-var _langste: float = 1.0
+# Elke belangrijke spreker krijgt precies één segment op de infobalk, in
+# sprekervolgorde. "open" = nog onbeslist, "gevangen" = zijn regel is gehoord,
+# "gemist" = afgekapt vóórdat die viel — en blijft dat de rest van de ronde.
+var _belangrijke_ids: Array[String] = []
+var _segment_status: Dictionary = {}
+
+# QA-strategie, eenmalig bepaald bij setup (zie _bepaal_qa_afkap()): nooit een
+# belangrijke spreker, wel de langste niet-belangrijke sprekers tot de
+# interventies op zijn.
+var _qa_afkap_ids: Array[String] = []
 
 var _balk_vak: Control = null
 var _balk: ColorRect = null
@@ -67,12 +63,9 @@ var _regels: Array[Label] = []
 var _flits: Label = null
 var _knop: Button = null
 
-var _rest: Label = null
-var _meer: Label = null
-var _kop: HBoxContainer = null
-var _lijst: VBoxContainer = null
-var _rij_naam: Array[Label] = []
-var _rij_vul: Array[ColorRect] = []
+var _info_kop: Label = null
+var _info_teller: Label = null
+var _info_segmenten: Array[ColorRect] = []
 
 var _kaart_tween: Tween = null
 var _flits_tween: Tween = null
@@ -92,8 +85,13 @@ func _on_setup() -> void:
 	if _sprekers.is_empty():
 		fail()
 		return
+
 	for s: Dictionary in _sprekers:
-		_langste = maxf(_langste, float(s.get("duur", 5.0)))
+		if bool(s.get("belangrijk", false)):
+			var id := String(s.get("id", ""))
+			_belangrijke_ids.append(id)
+			_segment_status[id] = "open"
+	_qa_afkap_ids = _bepaal_qa_afkap()
 
 	# De intro zelf verschijnt niet meer hier — dat doet `MinigameIntro`, vóór
 	# dit scherm opent, gevuld met dezelfde `_ingrepen` via `Briefing.vul()`.
@@ -104,7 +102,25 @@ func _on_setup() -> void:
 	_volgende()
 	_werk_balk_bij()
 	_werk_status_bij()
-	_werk_rest_bij()
+	_werk_info_balk_bij()
+
+
+## QA kapt nooit een belangrijke spreker af, en kiest onder de rest de langste
+## eerst — zoveel als er interventies zijn. Eenmalig bepaald, niet meer een
+## levende "past het nog?"-vraag: met de infobalk als uitslag is de opgave
+## "beide belangrijke regels horen", en de kortste weg daarheen is gewoon
+## zoveel mogelijk lawaai wegknippen, niet live bijhouden wat er nog past.
+func _bepaal_qa_afkap() -> Array[String]:
+	var kandidaten: Array[Dictionary] = []
+	for s: Dictionary in _sprekers:
+		if not bool(s.get("belangrijk", false)):
+			kandidaten.append(s)
+	kandidaten.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(a.get("duur", 0.0)) > float(b.get("duur", 0.0)))
+	var ids: Array[String] = []
+	for i: int in mini(_ingrepen, kandidaten.size()):
+		ids.append(String(kandidaten[i].get("id", "")))
+	return ids
 
 
 ## De tijdbalk en de afkapknop horen niet in de scroll: dit zijn de twee dingen
@@ -132,6 +148,8 @@ func _bouw_vast(_body: VBoxContainer) -> void:
 	_balk_vak.add_child(_balk)
 	chrome_header().add_child(_balk_vak)
 
+	_bouw_info_balk()
+
 	_knop = UiKit.knop_primair("Afkappen", UiKit.FS_BODY)
 	# Dit is de enige actie in de hele minigame en hij moet onder je duim liggen,
 	# dus hij mag ruimer zijn dan de 24 px die UiKit als bodem aanhoudt.
@@ -140,6 +158,65 @@ func _bouw_vast(_body: VBoxContainer) -> void:
 	_knop.disabled = _ingrepen <= 0
 	_knop.pressed.connect(_op_afkappen)
 	chrome_footer().add_child(_knop)
+
+
+## Het doel van de minigame, letterlijk zichtbaar: één segment per belangrijke
+## spreker, dat vult zodra zijn regel valt. Vervangt de wachtrij — die toonde
+## spreekduur zonder ooit te zeggen wat daarmee te doen was, en dit vertelt
+## precies waar de speelbeurt om draait zonder ooit te verraden wíe belangrijk
+## is. Staat vast in `chrome_header()`, naast de tijdbalk: dit mag nooit
+## wegscrollen, net zomin als de klok.
+func _bouw_info_balk() -> void:
+	var rij := HBoxContainer.new()
+	rij.add_theme_constant_override("separation", 4)
+	_info_kop = UiKit.label("Nuttige info", UiKit.FS_SMALL, UiKit.WIT)
+	_info_kop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rij.add_child(_info_kop)
+	_info_teller = UiKit.label("", UiKit.FS_SMALL, UiKit.WIT)
+	_info_teller.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_info_teller.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	rij.add_child(_info_teller)
+	chrome_header().add_child(rij)
+
+	var balk := HBoxContainer.new()
+	balk.add_theme_constant_override("separation", 2)
+	balk.custom_minimum_size = Vector2(0, 6)
+	for id: String in _belangrijke_ids:
+		var seg := ColorRect.new()
+		seg.color = UiKit.NEUTRAAL_TINT
+		seg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		seg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		balk.add_child(seg)
+		_info_segmenten.append(seg)
+	chrome_header().add_child(balk)
+
+
+## Kleurt elk segment naar zijn status en telt de teller mee. Geroepen op
+## setup en telkens een segment van status wisselt — niet elke frame, want
+## niets hier verandert tussen twee statuswissels in.
+func _werk_info_balk_bij() -> void:
+	var gevangen := 0
+	for i: int in _belangrijke_ids.size():
+		var status := String(_segment_status.get(_belangrijke_ids[i], "open"))
+		var kleur := UiKit.NEUTRAAL_TINT
+		if status == "gevangen":
+			kleur = UiKit.GROEN
+			gevangen += 1
+		elif status == "gemist":
+			kleur = UiKit.ROOD
+		if i < _info_segmenten.size():
+			_info_segmenten[i].color = kleur
+	_info_teller.text = "%d/%d" % [gevangen, _belangrijke_ids.size()]
+
+
+## Vol is vol: elk segment moet "gevangen" zijn, niet alleen "niet meer open".
+## Een "gemist" segment kan deze ronde niet meer groen worden, dus dat telt
+## als niet-gehaald totdat de speelbeurt opnieuw begint.
+func _balk_vol() -> bool:
+	for id: String in _belangrijke_ids:
+		if String(_segment_status.get(id, "open")) != "gevangen":
+			return false
+	return true
 
 
 func _bouw_kaart(body: VBoxContainer) -> void:
@@ -181,21 +258,14 @@ func _bouw_kaart(body: VBoxContainer) -> void:
 		kol.add_child(l)
 		_regels.append(l)
 
-	_bouw_wachtrij(kol)
+	_bouw_flits(kol)
 
 
-## Wie er nog aankomt, onderaan dezelfde kaart. Zonder deze rij is "moet ik
-## deze afkappen" geen afweging maar een schrikreactie op de klok: je ziet niet
-## dat er na hem nog vier man staat.
-##
-## De rij noemt alleen naam en lengte. Geen enkele markering verraadt wie iets
-## te melden heeft — dat het loont om Jonathan te laten praten moet uit zijn
-## eigen regels blijken, en zijn balkje maakt hem juist het aantrekkelijkste
-## slachtoffer.
-func _bouw_wachtrij(kol: VBoxContainer) -> void:
-	# Rekt de ruimte tussen de laatste regel en de wachtrij op, zodat de rij aan
-	# de onderrand van de kaart blijft plakken in plaats van mee te schuiven met
-	# het aantal regels dat de spreker al gezegd heeft.
+## De meldingsregel onderaan de kaart: afkap-feedback en de "dit komt nog
+## terug"-flash bij een gevangen segment. Stond hier ooit naast de wachtrij en
+## wisselde daarmee van plek; nu heeft hij de onderkant van de kaart voor
+## zichzelf.
+func _bouw_flits(kol: VBoxContainer) -> void:
 	var rek := Control.new()
 	rek.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rek.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -207,66 +277,6 @@ func _bouw_wachtrij(kol: VBoxContainer) -> void:
 	streep.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	kol.add_child(streep)
 
-	_kop = HBoxContainer.new()
-	_kop.add_theme_constant_override("separation", 4)
-	kol.add_child(_kop)
-	# De optelsom die de speler zelf zou moeten maken: dit getal naast de klok
-	# rechtsboven is de hele beslissing.
-	_rest = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
-	_rest.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_kop.add_child(_rest)
-	# Zonder afbreken uit valt "+2" in een HBox naast een uitrekkend label uiteen
-	# in een "+" en een "2" op de regel eronder, en dan is de kop dubbel hoog.
-	_meer = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
-	_meer.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_meer.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_kop.add_child(_meer)
-
-	_lijst = VBoxContainer.new()
-	_lijst.add_theme_constant_override("separation", 1)
-	kol.add_child(_lijst)
-	# Altijd RIJ_MAX rijen in de boom, ook als de rij korter wordt: een rij die
-	# verdwijnt maakt de kaart lager en dan kruipt de knop weg onder je duim.
-	for i: int in RIJ_MAX:
-		var rij := HBoxContainer.new()
-		rij.add_theme_constant_override("separation", 4)
-		_lijst.add_child(rij)
-
-		# Afbreken uit en clippen aan: een naam die op twee regels valt maakt
-		# deze rij hoger dan de andere drie.
-		var nm := UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
-		nm.autowrap_mode = TextServer.AUTOWRAP_OFF
-		nm.clip_text = true
-		nm.custom_minimum_size = Vector2(NAAM_BREED, 0)
-		rij.add_child(nm)
-		_rij_naam.append(nm)
-
-		var vak := Control.new()
-		vak.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vak.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		vak.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		vak.custom_minimum_size = Vector2(0, 5)
-		rij.add_child(vak)
-		var spoor := ColorRect.new()
-		spoor.color = UiKit.NEUTRAAL_TINT
-		spoor.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		UiKit.full_rect(spoor)
-		vak.add_child(spoor)
-		var vul := ColorRect.new()
-		vul.color = UiKit.GRIJS
-		vul.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vul.anchor_left = 0.0
-		vul.anchor_top = 0.0
-		vul.anchor_right = 1.0
-		vul.anchor_bottom = 1.0
-		vak.add_child(vul)
-		_rij_vul.append(vul)
-
-	# De meldingsregel deelt deze plek met de wachtrij in plaats van er eigen
-	# hoogte bij te vragen. Twee redenen: op 416 px is er niets over — Jonathans
-	# drie regels vullen de kaart tot de rand — en de melding gaat juist over de
-	# rij die eronder verspringt. Hij is korter dan de rij, dus hij kan de kaart
-	# nooit over de rand duwen, en de knop staat buiten de scroll en beweegt niet.
 	_flits = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	_flits.visible = false
 	kol.add_child(_flits)
@@ -278,8 +288,13 @@ func _process(delta: float) -> void:
 
 	if _uitslag != 0:
 		_afgerond = true
+		# Vol is geslaagd, leeg (of half) is niet — ongeacht welke van de twee
+		# manieren de stand-up beëindigde. Vroeger betekende `_uitslag > 0`
+		# ("alle sprekers gehad") altijd winst en de klok op nul altijd
+		# verlies; nu telt alleen of de infobalk vol staat op het moment dat
+		# een van beide gebeurt.
 		var c := content()
-		var ok := _uitslag > 0
+		var ok := _balk_vol()
 		await finish_with_banner(ok,
 			String(c.get("success" if ok else "failure", "")),
 			maxi(0, roundi(_tijd)), _payload())
@@ -289,7 +304,6 @@ func _process(delta: float) -> void:
 	_puls_t += delta
 	_werk_balk_bij()
 	_werk_status_bij()
-	_werk_rest_bij()
 	if _tijd <= 0.0:
 		_uitslag = -1
 		return
@@ -317,10 +331,6 @@ func _volgende() -> void:
 	# stand-up met een gehaalde.
 	if _uitslag != 0:
 		return
-	# Wie er net klaar is, vóór de kaart omslaat naar de volgende: alleen op
-	# dit moment weten we of hij belangrijk was én is uitgesproken in plaats
-	# van afgekapt. Bij setup (_idx == -1) is dit leeg, dus geen valse start.
-	var vorige := _huidig()
 	_wissel = false
 	_idx += 1
 	_spreker_t = 0.0
@@ -347,15 +357,11 @@ func _volgende() -> void:
 		_regels[i].add_theme_color_override("font_color", UiKit.INK)
 	_nuttig_regel_getoond = false
 	_werk_regels_bij()
-	_werk_wachtrij_bij()
-
-	# De positieve tegenhanger van de "gemist"-melding in _op_afkappen(): wie
-	# uitgesproken raakt in plaats van afgekapt te worden, bevestigt dat
-	# luisteren loonde. Zonder deze melding is "iets nuttigs horen" een gebeurtenis
-	# zonder feedback, en alleen het missen ervan (bij afkappen) was zichtbaar.
-	if not vorige.is_empty() and bool(vorige.get("belangrijk", false)) \
-			and not (String(vorige.get("id", "")) in _afgekapt):
-		_flits_tonen(String(content().get("nuttig", "")), UiKit.GROEN)
+	# Geen aparte "hij is uitgesproken"-melding meer aan het eind van zijn beurt:
+	# `_werk_regels_bij()` markeert een belangrijke regel al op het moment dat
+	# hij verschijnt, en tegen de tijd dat de volle spreekduur om is, was die
+	# regel dus altijd al getoond. Een tweede melding hier zou hetzelfde moment
+	# een tweede keer vieren.
 
 
 func _op_afkappen() -> void:
@@ -372,14 +378,17 @@ func _op_afkappen() -> void:
 
 	var melding := String(content().get("kap_regel", ""))
 	var kleur := UiKit.GRIJS_OP_LICHT
-	if bool(sp.get("belangrijk", false)):
-		# Geen straf, geen tijdverlies: wat je kwijt bent is wat hij nog ging
-		# zeggen. Dat merk je later, dus hier hoort niet meer dan een hint.
+	# Alleen "gemist" als zijn nuttige regel nog niet gevallen was. Hier stond
+	# vroeger alleen `bool(sp.get("belangrijk", false))`, zonder te kijken of
+	# je 'm al gehoord had — dus iemand afkappen nádat je zijn info al had werd
+	# nog steeds als fout gemeld. Dat segment staat dan al groen; afkappen
+	# verandert daar niets meer aan.
+	if bool(sp.get("belangrijk", false)) and not _nuttig_regel_getoond:
+		_segment_status[id] = "gemist"
 		_gemist.append(id)
-		if not _gemist_gemeld:
-			_gemist_gemeld = true
-			melding = String(content().get("gemist", melding))
-			kleur = UiKit.ORANJE
+		_werk_info_balk_bij()
+		melding = String(content().get("gemist", melding))
+		kleur = UiKit.ORANJE
 	_flits_tonen(melding, kleur)
 	AudioDirector.play_ui(&"klik")
 
@@ -407,11 +416,25 @@ func _werk_regels_bij() -> void:
 	# De regel die er inhoudelijk toe doet licht op zodra hij zichtbaar wordt —
 	# niet vooraf, niet per persoon. Wie hem niet hoort (afgekapt vóór hij
 	# valt) heeft 'm gewoon nooit gezien; geen vooruitblik, geen oneerlijke gok.
+	# Dit is ook het moment waarop zijn segment op de infobalk vult: niet pas
+	# aan het eind van zijn beurt, en niet als hij toch nog wordt afgekapt ná
+	# deze regel — dan staat hij al groen.
 	if not _nuttig_regel_getoond and sp.has("nuttige_regel"):
 		var idx := int(sp["nuttige_regel"])
 		if idx < tot and idx < _regels.size():
 			_nuttig_regel_getoond = true
 			_markeer_nuttige_regel(_regels[idx])
+			var id := String(sp.get("id", ""))
+			if id in _belangrijke_ids:
+				_segment_status[id] = "gevangen"
+				_werk_info_balk_bij()
+				var gevangen := 0
+				for status: Variant in _segment_status.values():
+					if String(status) == "gevangen":
+						gevangen += 1
+				_flits_tonen("%s (%d/%d)" % [
+					String(content().get("nuttig", "")), gevangen, _belangrijke_ids.size()
+				], UiKit.GROEN_OP_LICHT)
 
 
 ## Kleurt de regel groen en geeft 'm een korte pop, op het moment dat hij
@@ -428,43 +451,6 @@ func _markeer_nuttige_regel(l: Label) -> void:
 	tw.tween_property(l, "scale", Vector2.ONE, 0.18) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	AudioDirector.play_ui(&"pak")
-
-
-## Namen en balkjes wisselen alleen als de rij korter wordt, dus dit hoort bij
-## een sprekerwissel en niet in _process.
-func _werk_wachtrij_bij() -> void:
-	var komend := _sprekers.size() - (_idx + 1)
-	var toon := clampi(komend, 0, _rij_naam.size())
-	for i: int in _rij_naam.size():
-		if i >= toon:
-			_rij_naam[i].text = ""
-			_rij_vul[i].visible = false
-			continue
-		var sp := _sprekers[_idx + 1 + i]
-		_rij_naam[i].text = String(sp.get("naam", ""))
-		# Ondergrens van 0.06: Victor duurt drie seconden en zonder minimum is
-		# zijn balkje een streepje dat je niet meer als balkje leest.
-		_rij_vul[i].anchor_right = clampf(float(sp.get("duur", 5.0)) / _langste, 0.06, 1.0)
-		_rij_vul[i].visible = true
-	_meer.text = "+%d" % (komend - toon) if komend > toon else ""
-
-
-## De hele beslissing op één regel: past de rest van de stand-up nog in de klok?
-##
-## Hier stond "nog 29 sec praten", en dat was het halve getal. De andere helft
-## (de klok) staat rechtsboven in de statusregel, en de speler moest die twee
-## zelf van elkaar aftrekken terwijl er iemand aan het praten was. Niemand doet
-## dat. Nu staat het tekort er als één getal, in de kleur die zegt wat je
-## ermee moet: rood is "er moet iemand af", groen is "je haalt het, laat ze
-## uitpraten". Dat is precies de afweging waar de minigame om vraagt.
-func _werk_rest_bij() -> void:
-	var tekort := _rest_spreektijd() - _tijd
-	if tekort > 0.0:
-		_rest.text = "%d sec te veel" % maxi(1, ceili(tekort))
-		_rest.add_theme_color_override("font_color", UiKit.ROOD_OP_LICHT)
-	else:
-		_rest.text = "past, %d sec speling" % maxi(0, floori(-tekort))
-		_rest.add_theme_color_override("font_color", UiKit.GROEN_OP_LICHT)
 
 
 # Onder welk aandeel resterende tijd de balk begint te knipperen — hetzelfde
@@ -502,23 +488,13 @@ func _flits_tonen(tekst: String, kleur: Color) -> void:
 	_flits.text = tekst
 	_flits.add_theme_color_override("font_color", kleur)
 	_flits.modulate.a = 1.0
-	_onderkant(true)
+	_flits.visible = true
 	if _flits_tween != null and _flits_tween.is_running():
 		_flits_tween.kill()
 	_flits_tween = create_tween()
 	_flits_tween.tween_interval(1.0)
 	_flits_tween.tween_property(_flits, "modulate:a", 0.0, 0.5)
-	_flits_tween.tween_callback(_onderkant.bind(false))
-
-
-## Wisselt de onderkant van de kaart tussen de melding en de namen. De kop met
-## "nog zoveel sec praten" blijft staan: dat getal is net veranderd door de
-## ingreep en is precies waar je op dat moment naar kijkt. Melding plus kop is
-## nog altijd lager dan kop plus drie namen, dus dit kan de kaart niet over de
-## rand duwen.
-func _onderkant(melding: bool) -> void:
-	_flits.visible = melding
-	_lijst.visible = not melding
+	_flits_tween.tween_callback(func() -> void: _flits.visible = false)
 
 
 func _huidig() -> Dictionary:
@@ -529,15 +505,6 @@ func _huidig() -> Dictionary:
 
 func _duur() -> float:
 	return maxf(0.3, float(_huidig().get("duur", 5.0)))
-
-
-## Wat er nog gesproken moet worden, inclusief de rest van wie nu aan het woord
-## is. Zodra dit niet meer in de klok past moet er iemand af.
-func _rest_spreektijd() -> float:
-	var som := maxf(0.0, _duur() - _spreker_t)
-	for i: int in range(_idx + 1, _sprekers.size()):
-		som += maxf(0.0, float(_sprekers[i].get("duur", 5.0)))
-	return som
 
 
 func _payload() -> Dictionary:
@@ -555,18 +522,19 @@ func _exit_tree() -> void:
 		_flits_tween.kill()
 
 
-## QA: speelt de stand-up echt uit. Wachten tot het niet meer past en dan de
-## huidige spreker afkappen, mits die niets belangrijks meldt — dezelfde route
-## die een speler moet vinden, dus met een lege `gemist` aan het eind.
+## QA: speelt de stand-up echt uit, volgens de strategie die `_bepaal_qa_afkap()`
+## al bij setup bepaalde — nooit een belangrijke spreker, wel de langste
+## niet-belangrijke sprekers, zoveel als er interventies zijn. Kapt direct bij
+## het begin van zo iemands beurt af: er valt niets meer af te wegen, de keuze
+## lag al vast.
 func _qa_overweeg() -> void:
 	if _wissel or _ingrepen <= 0:
 		return
 	var sp := _huidig()
-	if sp.is_empty() or bool(sp.get("belangrijk", false)):
+	if sp.is_empty():
 		return
-	if _rest_spreektijd() + QA_MARGE <= _tijd:
-		return
-	_op_afkappen()
+	if String(sp.get("id", "")) in _qa_afkap_ids:
+		_op_afkappen()
 
 
 func qa_solve() -> void:

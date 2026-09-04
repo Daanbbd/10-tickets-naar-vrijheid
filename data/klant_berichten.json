@@ -81,7 +81,7 @@
      "text": "Morgen live, wat spannend! Even checken: mensen kunnen dan wel iets kopen he? Dat had ik wel zo begrepen."
     },
     {
-     "when": {"flags_all": ["gevolg_jonathan_gemist"]},
+     "when": {"flags_all": ["gevolg_backend_fout_gekozen"]},
      "text": "Morgen live! Ik heb tegen iedereen gezegd dat het morgen live gaat. Ook tegen de leverancier. Ook tegen de dierenarts."
     },
     {
