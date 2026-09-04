@@ -54,7 +54,7 @@ De ruimtes zijn de echte ruimtes van de vloer — zie `docs/LEVEL.md`.
 | Code | Titel | Zone | Vakgebied | Minigame | Open |
 |---|---|---|---|---|---|
 | BBD-201 | Wat moeten we eigenlijk bouwen? | Summit | daan | `mg_user_story` | vanaf het begin |
-| BBD-202 | Waarom sta ik hier eigenlijk? | De Werkvloer | daan | `mg_planning` | vanaf het begin |
+| BBD-202 | Waarom sta ik hier eigenlijk? | Koffiecorner | daan | `mg_planning` | vanaf het begin |
 | BBD-203 | De klant heeft feedback | Entree | willem | `mg_klantfeedback` | na BBD-201 |
 | BBD-204 | De frontend is stuk | De Werkvloer | victor | `mg_frontend_fix` | vanaf het begin |
 | BBD-205 | De backend is stuk | Het Patchhok | jonathan | `mg_backend_fix` | vanaf het begin |
@@ -116,14 +116,14 @@ Deze regels verschijnen op het ticketbord (▤, sneltoets Tab), via de hint
 | Code | Hint |
 |---|---|
 | BBD-201 | Op de vergadertafel, achter het glas halverwege de gang. |
-| BBD-202 | Meteen bij de voordeur, achter het eerste bureau-eiland. |
+| BBD-202 | In de koffiecorner. De ploeg staat op bij de tribune. |
 | BBD-203 | De klant zit op de bank, voorbij de kapstok. |
 | BBD-204 | De wandmonitor hangt aan het begin van de werkvloer, naast het ticketbord. |
 | BBD-205 | Direct onder de toiletten, achter de badgelezer. |
 | BBD-206 | De dashboardmuur hangt in de tweede glazen ruimte, die met de ronde tafel. |
 | BBD-207 | De speaker staat aan het eind van de tribune, tegen het blok waar je omheen kunt lopen. |
 | BBD-208 | De iPad ligt in het hokje midden in de gang, met de Samen Bingo-poster op de deur. |
-| BBD-209 | Ze zijn overal. Je vindt ze vanzelf. |
+| BBD-209 | Spreek er een aan. Ze lopen door de gang, de toiletten en Weekend. |
 | BBD-210 | De deploymentcomputer staat in de laatste en grootste glazen zaal. De deploysleutel ligt in de plantenkast, onder het speelgoedpaard. |
 
 De drie glazen vergaderruimtes staan in de hints **op een rij genummerd**:
@@ -144,13 +144,20 @@ koelkast.
 tickets vertaalt, en de resolver die "welke bedoel je?" vraagt bestaat nog
 steeds (`TicketController._ticket_for_anchor()`): staan er op één anker twee
 open tickets, dan vraagt het spel het; heb je er één gekozen op het bord, dan
-wint die keuze en blijft de vraag uit. Het scrumbord in de gang
-(`scrumbord_gang`) droeg ooit zo'n paar (BBD-202 en BBD-209), maar BBD-209 was
-altijd al gated op `tickets_done: [t02]` — de vraag viel dus nooit echt. Sinds
-BBD-209 naar het paardenkostuum verhuisde is er in de data geen gedeeld anker
-meer over; de resolver blijft staan als vangnet. Danny en Daan bezitten allebei
-twee tickets, dus dezelfde vraag kan nog wél bij een collega vallen
+wint die keuze en blijft de vraag uit. Het scrumbord (`scrumbord_gang`) droeg
+ooit zo'n paar (BBD-202 en BBD-209), maar BBD-209 was altijd al gated op
+`tickets_done: [t02]` — de vraag viel dus nooit echt. Sinds BBD-209 naar het
+paardenkostuum verhuisde is er in de data geen gedeeld anker meer over; de
+resolver blijft staan als vangnet. Danny en Daan bezitten allebei twee tickets,
+dus dezelfde vraag kan nog wél bij een collega vallen
 (`_ticket_waiting_for()`).
+
+Wat er *wel* op één object stond was erger dan twee tickets: het scrumbord was
+tegelijk het anker van BBD-202 en de enige plek die het bord opent
+(`action: "board"`). Zolang de stand-up openstond won het ticket, en kon je het
+bord in de wereld dus nooit opendoen — precies het ene object waar je dat zou
+proberen. De stand-up staat nu bij de `tribune` in de koffiecorner, waar een
+ploeg ook echt opstaat, en het scrumbord is alleen nog het bord.
 
 ## Vakgebied en ophalen
 

@@ -811,13 +811,20 @@ func _interact_with(it: Interactable) -> void:
 		it.markeer_getikt()
 	match it.kind:
 		Interactable.Kind.TICKET:
-			# Het scrumbord draagt `action: "board"` én een ticket. Zolang t02
-			# openstaat is dit gewoon een ticket-object; is dat opgelost, dan
-			# zou `tickets.handle()` hier de "opgelost, niet aanzitten"-regel
-			# afspelen (`_handle_inner()` bij `Session.is_done()`), en dat is
-			# voor hét bord een doodlopend antwoord. Val dan terug op
-			# `_examine()`, precies zoals elk ander `action: "board"`-object.
-			if it.action == &"board" and it.ticket_here() == null:
+			# Een ticketanker dat ook iets ánders is, moet dat andere blijven
+			# doen zodra er hier geen werk meer ligt. Anders antwoordt
+			# `tickets.handle()` met "opgelost, niet aanzitten"
+			# (`_handle_inner()` bij `Session.is_done()`) en is de tweede
+			# functie van het object voorgoed weg.
+			#
+			# Dit stond op `it.action == &"board"` alleen, voor het scrumbord.
+			# Sinds de stand-up naar de tribune verhuisde is er een tweede
+			# gedaante: een anker met een eigen flavourdialoog. Zonder de
+			# tweede tak zou de tribune na BBD-202 niets meer over de
+			# DIA-awards en de Jura zeggen, en dat is de enige reden dat dat
+			# object er stond.
+			if it.ticket_here() == null \
+					and (it.action == &"board" or it.dialogue_id != &""):
 				_examine(it)
 			else:
 				tickets.handle(it.ticket_id, it)

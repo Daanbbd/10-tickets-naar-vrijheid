@@ -165,9 +165,10 @@
    21,
    4
   ],
-  "kind": "examine",
+  "kind": "ticket",
   "label": "Tribune",
-  "dialogue": "tribune"
+  "dialogue": "tribune",
+  "ticket": "t02"
  },
  {
   "world_id": "sprintbord_vloer",
@@ -175,10 +176,9 @@
    19,
    1
   ],
-  "kind": "use",
+  "kind": "examine",
   "label": "Sprintbord",
-  "dialogue": "ticketbord",
-  "action": "board"
+  "dialogue": "ticketbord"
  },
  {
   "world_id": "vergadertafel",
@@ -316,9 +316,8 @@
    12,
    24
   ],
-  "kind": "ticket",
+  "kind": "use",
   "label": "Scrumbord",
-  "ticket": "t02",
   "action": "board"
  },
  {

@@ -37,15 +37,15 @@
    "hold": 1.4
   }
  ],
- "hint": "Meteen bij de voordeur, achter het eerste bureau-eiland.",
+ "hint": "In de koffiecorner. De ploeg staat op bij de tribune.",
  "id": "t02",
  "code": "BBD-202",
  "order": 2,
  "title": "Waarom sta ik hier eigenlijk?",
  "summary": "Jij staat niet op de planning. Of je staat er drie keer op. Dennis weet het ook niet meer.",
- "anchor": "scrumbord_gang",
+ "anchor": "tribune",
  "owner_character": "daan",
  "minigame_id": "mg_planning",
- "zone": "z9_vloer",
- "zone_name": "De Werkvloer"
+ "zone": "z4_koffiecorner",
+ "zone_name": "Koffiecorner"
 }
