@@ -2,8 +2,8 @@
  "mg_user_story": {
   "type": "scope",
   "briefing": "{capaciteit} punten passen erin, en zij wil er {tevreden_min} blij van worden. Van de {wensen} dingen die ze noemt zijn er {zwaar} geen wens maar een project. Als ze 'een app' zegt: sorry wat.",
-  "intro": "Zij noemt {wensen} dingen. Er passen {capaciteit} punten in de sprint, en ze moet op {tevreden_min} punten blij zijn.",
-  "waarom": "Van die {wensen} zijn er {zwaar} geen wens maar een project. Wat je nu belooft, bouw je vandaag. Of kom je later tegen.",
+  "intro": "De klant noemt {wensen} dingen. Er passen {capaciteit} punten in de sprint, en ze moet op {tevreden_min} punten blij zijn.",
+  "waarom": "{zwaar} van haar wensen zijn geen wens maar een project. Wat je nu belooft, bouw je vandaag. Of kom je later tegen.",
   "capaciteit": 13,
   "tevreden_min": 10,
   "eenheid": "punten",
