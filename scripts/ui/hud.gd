@@ -1154,13 +1154,28 @@ func _on_toast(text: String, icon: StringName) -> void:
 	tw.tween_callback(p.queue_free)
 
 
-## De hint blijft staan tot je hem weglegt, precies zoals de telefoon dat doet.
+## Hoe lang een hint blijft staan: naar leeslengte, met een bodem en een plafond.
 ##
-## De langste hint is die van BBD-210: 184 tekens, die op dit canvas over zes
-## regels vallen. Die stond 2,6 seconden in beeld — zeventig tekens per seconde,
-## ongeveer drie keer zo snel als iemand kan lezen. En hij verscheen op het
-## moment dat je vastzat, dus precies wanneer je hem het rustigst wilt lezen.
+## Dit heeft twee keer de verkeerde kant op gestaan. Eerst 2,6 seconden vast,
+## net als een gewone toast: de langste hint (BBD-210, 184 tekens, zes regels op
+## dit canvas) kreeg daarmee zeventig tekens per seconde, ongeveer drie keer zo
+## snel als iemand kan lezen. Toen: blijven staan tot je hem wegtikt. Dat is de
+## andere fout — het briefje beslaat op 192x416 een derde van het beeld, en wie
+## doorloopt zonder te tikken speelt de rest van de scène achter een grijs vlak.
 ##
+## Nu volgt de tijd de tekst. Zestien tekens per seconde is rustig lezen; de
+## bodem vangt een hint van vier woorden, het plafond zorgt dat het langste
+## briefje ook een keer weggaat als je hem laat staan. Wegtikken kan nog steeds,
+## en dat blijft de snelle route.
+const HINT_PER_TEKEN := 1.0 / 16.0
+const HINT_MIN := 3.5
+const HINT_MAX := 9.0
+
+
+static func hint_duur(text: String) -> float:
+	return clampf(text.length() * HINT_PER_TEKEN, HINT_MIN, HINT_MAX)
+
+
 ## Anders dan de telefoon zet dit briefje de invoer níet op slot: de telefoon
 ## onderbreekt je dag, de hint helpt je erdoorheen. Je moet ermee kunnen
 ## doorlopen. Daarom vangt het paneel zijn eigen tik op in plaats van elke tik
@@ -1194,6 +1209,16 @@ func _toon_hint(text: String) -> void:
 	_toasts.move_child(p, 0)
 	_hint_briefje = p
 
+	# Aan de tree en niet aan het paneel: `_leg_hint_weg()` doet `queue_free()`,
+	# en een tween die aan een vrijgegeven node hangt klaagt op de frame erna.
+	var tw := get_tree().create_tween()
+	tw.tween_interval(hint_duur(text))
+	tw.tween_callback(func() -> void:
+		# Alleen als dit nog steeds hetzelfde briefje is: een tweede Q vervangt
+		# het paneel, en dan hoort deze tijd bij een briefje dat er niet meer is.
+		if _hint_briefje == p:
+			_verberg_hint(p))
+
 
 func _leg_hint_weg() -> void:
 	if _hint_briefje == null:
@@ -1202,6 +1227,17 @@ func _leg_hint_weg() -> void:
 		AudioDirector.play_ui(&"klik")
 		_hint_briefje.queue_free()
 	_hint_briefje = null
+
+
+## Uitgelezen in plaats van weggetikt: wél faden, géén klik. Dat geluid is de
+## bevestiging van een tik, en er is niet getikt.
+func _verberg_hint(p: PanelContainer) -> void:
+	_hint_briefje = null
+	if not is_instance_valid(p):
+		return
+	var tw := get_tree().create_tween()
+	tw.tween_property(p, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(p.queue_free)
 
 
 ## Kill-before-recreate: langs een deuropening lopen hertriggert zone_entered op
