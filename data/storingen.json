@@ -3,23 +3,45 @@
     "id": "storing_dirk",
     "soort": "npc_komt_langs",
     "npc": "dirk",
-    "trigger": { "min_tickets_done": 1 },
-    "when": { "flags_none": ["uren_geboekt"] },
+    "trigger": {
+      "min_tickets_done": 5
+    },
+    "when": {
+      "flags_none": [
+        "uren_geboekt"
+      ]
+    },
     "dialogue": "Dirk Schrijver wil je even spreken"
   },
   {
     "id": "storing_dennis",
     "soort": "npc_komt_langs",
     "npc": "dennis",
-    "trigger": { "min_tickets_done": 2 },
-    "when": { "tickets_not_done": ["t08"] },
-    "dialogue": "Dennis wil een statusje voor het bord"
+    "trigger": {
+      "min_tickets_done": 2
+    },
+    "when": {
+      "flags_none": [
+        "dennis_bijgepraat"
+      ],
+      "tickets_not_done": [
+        "t08"
+      ]
+    },
+    "dialogue": "Dennis wil een statusje voor het bord. Spreek hem aan."
   },
   {
     "id": "storing_backend_crash",
     "soort": "iets_gaat_stuk",
-    "trigger": { "min_tickets_done": 6, "wachttijd_min": 10 },
-    "when": { "tickets_done": ["t05"] },
+    "trigger": {
+      "min_tickets_done": 6,
+      "wachttijd_min": 10
+    },
+    "when": {
+      "tickets_done": [
+        "t05"
+      ]
+    },
     "dialogue": "Het serverrack piept weer. De backend ligt er opnieuw uit.",
     "effects": [
       {
@@ -48,7 +70,9 @@
   {
     "id": "storing_weekend_lawaai",
     "soort": "afleiding",
-    "trigger": { "zone": "z10_weekend" },
+    "trigger": {
+      "zone": "z10_weekend"
+    },
     "when": {},
     "dialogue": "Het lawaai van hiernaast kost je even je concentratie.",
     "effects": [

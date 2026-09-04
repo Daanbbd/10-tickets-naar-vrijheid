@@ -68,6 +68,11 @@
         "op": "set_flag",
         "flag": "dennis_bezocht",
         "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "dennis_bijgepraat",
+        "value": true
        }
       ]
      },
@@ -89,6 +94,11 @@
         "op": "set_flag",
         "flag": "dennis_bezocht",
         "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "dennis_bijgepraat",
+        "value": true
        }
       ]
      },
@@ -99,6 +109,11 @@
        {
         "op": "set_flag",
         "flag": "dennis_bezocht",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "dennis_bijgepraat",
         "value": true
        }
       ]
