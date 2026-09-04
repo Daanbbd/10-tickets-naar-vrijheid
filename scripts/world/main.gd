@@ -106,7 +106,9 @@ func _ready() -> void:
 	var telefoon := Telefoon.new()
 	telefoon.name = "Telefoon"
 	add_child(telefoon)
-	telefoon.setup()
+	# De ticketstroom gaat mee: De Klant mag zich niet melden terwijl een ticket
+	# nog aan het afronden is. Zie `Telefoon._process()`.
+	telefoon.setup(tickets)
 
 	# De besturing hangt naast de HUD in plaats van erin: de knoppenbalk drukt
 	# alleen de gewone acties in, dus hij hoort niet bij het schermbeeld.
