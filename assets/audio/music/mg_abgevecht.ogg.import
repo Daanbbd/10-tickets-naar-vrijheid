@@ -3,12 +3,12 @@
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
 uid="uid://dy2qi24icey23"
-path="res://.godot/imported/mg_abgevecht.ogg-b98c988cbed9e4357a6f967fce3f17ff.oggvorbisstr"
+path="res://.godot/imported/mg_abgevecht.ogg-86c7ddab0a09303bd72738b751af354d.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/mg_abgevecht.ogg"
-dest_files=["res://.godot/imported/mg_abgevecht.ogg-b98c988cbed9e4357a6f967fce3f17ff.oggvorbisstr"]
+dest_files=["res://.godot/imported/mg_abgevecht.ogg-86c7ddab0a09303bd72738b751af354d.oggvorbisstr"]
 
 [params]
 
