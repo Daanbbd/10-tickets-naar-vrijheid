@@ -8,14 +8,6 @@
      {
       "when": {
        "flags_all": [
-        "dennis_bezocht"
-       ]
-      },
-      "text": "Oh, jij nog een keer. Bord staat nog goed."
-     },
-     {
-      "when": {
-       "flags_all": [
         "alarm_af"
        ]
       },
@@ -27,7 +19,15 @@
         "gevolg_scope_te_groot"
        ]
       },
-      "text": "Ik heb het grof geschat. Het past niet. is maar weekje later"
+      "text": "Ik heb het grof geschat. Het past niet. Ik heb het doorgegeven."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "dennis_bezocht"
+       ]
+      },
+      "text": "Oh, jij nog een keer. Bord staat nog goed."
      },
      {
       "text": "Alles staat op het bord. Heb ik vanmorgen alvast bijgewerkt."
@@ -42,16 +42,16 @@
       "when": {
        "min_tickets_done": 8
       },
-      "text": "Nog twee. Is maar weekje later."
+      "text": "Nog twee. Is maar weekje later. Hoe staat het bij jou?"
      },
      {
       "when": {
        "min_tickets_done": 4
       },
-      "text": "De helft. Ik heb de rest alvast nagelopen en grof geschat."
+      "text": "De helft. Ik heb de rest alvast nagelopen en grof geschat. Hoe staat het bij jou?"
      },
      {
-      "text": "Ik heb de issues alvast nagelopen. Verder heb ik niks nodig."
+      "text": "Ik heb de issues alvast nagelopen. Verder heb ik niks nodig. Hoe staat het bij jou?"
      }
     ],
     "choices": [
@@ -93,7 +93,7 @@
       ]
      },
      {
-      "text": "Ik heb even geen tijd.",
+      "text": "Niks te melden.",
       "next": "weg",
       "effects": [
        {
@@ -1356,7 +1356,7 @@
         "gevolg_comicsans_beloofd"
        ]
       },
-      "text": "heb je haar Comic Sans beloofd,, geen Comic Sans is een beetje de standaard tegenwoordig"
+      "text": "je hebt haar Comic Sans beloofd,, geen Comic Sans is een beetje de standaard tegenwoordig,,"
      },
      {
       "when": {
@@ -1427,7 +1427,7 @@
         "detail"
        ]
       },
-      "text": "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat ook hè."
+      "text": "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat vast ook,,"
      },
      {
       "text": "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
