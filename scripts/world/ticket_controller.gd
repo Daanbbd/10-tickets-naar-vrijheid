@@ -124,6 +124,12 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 		await _play_or_line(_dlg(t, &"locked", &""), _locked_hint(t))
 		return
 
+	# Was dit ticket al aangenomen? Dan is dit een tweede aanloop en hoort de
+	# aanname-ceremonie niet nog een keer. Dat gebeurt bij BBD-209: je neemt hem
+	# aan bij het paardenkostuum en maakt hem af bij een paard, en zonder deze
+	# vlag kreeg je bij dat paard opnieuw het briefje én opnieuw Bastiaans
+	# briefing te zien.
+	var al_aangenomen := Session.ticket_state(t.id) == GameEnums.TicketState.ACTIVE
 	QuestEngine.activate(t.id)
 	# Het briefje zien binnenkomen en naar het ticketbord zien gaan, vóór de
 	# dialoog. Dit is het moment waarop een ticket iets wordt in plaats van een
@@ -132,7 +138,7 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 	# Hier stond `toon_nieuw_briefje()`, en dat zette het volledige bord over het
 	# scherm — elf keer per speelbeurt, zonder dat er stond waarom. Zie
 	# `Hud.toon_ticket_melding()`.
-	if _hud != null:
+	if _hud != null and not al_aangenomen:
 		await _hud.toon_ticket_melding(t, t.zone_name)
 
 	# Niet jouw vakgebied? Dan moet de eigenaar meegelopen zijn.
@@ -161,7 +167,8 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 	# het wél jouw vakgebied, dan krijg je in plaats daarvan het voordeel in de
 	# mechaniek (TraitModifier) — twee routes, in beide gevallen komt er iets
 	# van een persoon.
-	await _briefing(t)
+	if not al_aangenomen:
+		await _briefing(t)
 
 		# Eigen vakgebied geeft een makkelijkere opgave, nooit een moeilijkere.
 	var voordeel := TraitModifier.voordeel_tekst(t)
@@ -386,9 +393,22 @@ func _wh_backend(content: Dictionary) -> MinigameResult:
 ##
 ## Bastiaans vakgebiedvoordeel (`TraitModifier._whack()`) zet `geen_zoektocht`:
 ## hij hoeft niet zelf een paard te vinden, want hij weet al waar de bug zit.
+## De opdracht wordt hier ook echt een opdracht, en niet alleen een zin.
+##
+## Hier stond alleen die ene vertellerregel, gevolgd door `aborted()`. Daarna
+## veranderde er niets: het ticket stond niet gepind, en de doelwijzer bleef naar
+## het paardenkostuum wijzen — het object dat je net dezelfde regel gaf. Wie
+## erop terugliep kreeg hem opnieuw. Dat is de lus waarin dit ticket leest als
+## "hij legt wat uit en er triggert niks".
+##
+## `Session.pin()` zet het bovenaan het bord en op de doelregel;
+## `Main._doel_node()` stuurt de wijzer daarna naar een paard in plaats van naar
+## het kostuum.
 func _wh_paarden(t: TicketDef, content: Dictionary, via_npc: bool) -> MinigameResult:
 	if not via_npc and not bool(content.get("geen_zoektocht", false)):
-		await _line("Ze lopen ergens rond — in de gang, het toilet, zelfs in Weekend. Spreek er een aan.")
+		Session.pin(t.id)
+		await _line("Ze lopen ergens rond: in de gang, op het toilet, zelfs in Weekend. Spreek er een aan.")
+		Bus.toast_requested.emit("Spreek een paardenbug aan", &"volgen")
 		return MinigameResult.aborted(t.minigame_id)
 	return MinigameResult.make(t.minigame_id, GameEnums.Outcome.SUCCESS, 1,
 		{"paard": true, "zelf_gevonden": via_npc})

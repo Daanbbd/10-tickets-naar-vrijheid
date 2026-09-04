@@ -262,7 +262,35 @@ func _doel_node() -> Node2D:
 		if waar != null:
 			return waar
 
+	# Zelfde soort omweg, om dezelfde reden. BBD-209 lost niet op bij zijn anker
+	# maar door een rondlopend bugpaard aan te spreken (`_wh_paarden()`); het
+	# paardenkostuum vertelt je dat alleen. Zonder deze hop bleef de wijzer naar
+	# dat kostuum wijzen, liep je erheen, kreeg je dezelfde regel, en zag je
+	# nergens iets veranderen. Pas ná het aannemen: daarvóór is het kostuum wel
+	# de goede bestemming, want daar neem je het ticket aan.
+	if t.minigame_id == &"mg_paarden" \
+			and Session.ticket_state(t.id) == GameEnums.TicketState.ACTIVE:
+		var paard := _dichtstbijzijnde_paard()
+		if paard != null:
+			return paard
+
 	return registry.get_by_id(t.anchor)
+
+
+## Het bugpaard waar je het minste voor hoeft te lopen. Het klantpaard telt niet
+## mee: dat is de grap uit de oude `mg_whack` en lost niets op.
+func _dichtstbijzijnde_paard() -> Npc:
+	var beste: Npc = null
+	var kortst := INF
+	for kind: Node in npc_layer.get_children():
+		var n := kind as Npc
+		if n == null or not String(n.npc_id).begins_with("paard_bug"):
+			continue
+		var d := player.global_position.distance_squared_to(n.global_position)
+		if d < kortst:
+			kortst = d
+			beste = n
+	return beste
 
 
 func _mark_node(n: Node2D) -> void:
