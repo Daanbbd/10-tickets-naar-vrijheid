@@ -1569,11 +1569,6 @@
    },
    "tweede": {
     "speaker": "koen",
-    "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken.",
-    "next": "derde"
-   },
-   "derde": {
-    "speaker": "koen",
     "variants": [
      {
       "when": {
@@ -1649,20 +1644,25 @@
    "verder": {
     "speaker": "koen",
     "text": "Oke lekker ouwe. Ik hou de piepelienies in de gaten.",
-    "next": "einde"
-   },
-   "einde": {
-    "speaker": ""
+    "next": "jonathan"
    },
    "uitleg": {
     "speaker": "koen",
     "text": "piepelienies. ci/cd. build, test, deploy. maar dan lekker. en als ze kapot zijn duurt het veertig minuten, vgm.",
-    "next": "einde"
+    "next": "jonathan"
    },
    "verstop": {
     "speaker": "koen",
     "text": "Ah nee. Zeg maar dat ik in een call zit, lekker ouwe.",
     "next": "einde"
+   },
+   "jonathan": {
+    "speaker": "koen",
+    "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken.",
+    "next": "einde"
+   },
+   "einde": {
+    "speaker": ""
    }
   }
  },
