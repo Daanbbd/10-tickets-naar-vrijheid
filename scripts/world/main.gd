@@ -716,6 +716,9 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 		camera.reset_smoothing()
 		await get_tree().create_timer(0.3).timeout
 		await _qa_dialoog_vrij()
+		if paard.interactable == null:
+			printerr("[SPEELBEURT] %s: de paardenbug heeft geen Interactable" % t.code)
+			return false
 		_interact_with(paard.interactable)
 	else:
 		var wo := registry.get_by_id(t.anchor)
@@ -730,6 +733,13 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 		await _qa_dialoog_vrij()
 
 		var it := wo.get_node_or_null("Interactable") as Interactable
+		# Nullcheck zoals bij het zusteraanroeppunt in `_qa_auto()`:
+		# `_interact_with()` leest meteen `it.world_id`, dus een anker zonder
+		# Interactable liet de speelbeurt hier crashen in plaats van netjes
+		# melden welk object stuk is.
+		if it == null:
+			printerr("[SPEELBEURT] %s: anker '%s' heeft geen Interactable" % [t.code, t.anchor])
+			return false
 		_interact_with(it)
 
 	if not await _qa_wacht_tot(func() -> bool: return Session.is_done(tid), 90.0):
