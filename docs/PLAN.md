@@ -14,10 +14,13 @@
   van 4 september (`audit/opening-besturing-standup`, 16 commits: besturings-
   uitleg, bord met To Do / Doing / Done zonder ▤, Dennis loopt voorop, de
   Dennis-storing die nooit eindigde, BFS-padvinding, wereldlabels op maat,
-  dialoogfixes). Samen 26 commits bovenop `main`. Niets is gepusht of gemerged
-  naar `main`; dat is Daans call. **Let op:** de webbuild op gh-pages komt nog
-  van die playtestbranch en mist het herontwerp — opnieuw deployen vanuit deze
-  worktree (`cp ../../../export_presets.cfg . && tools/deploy_web.sh`).
+  dialoogfixes). **Op 5 september 17:30 is alles naar `main` gegaan** (fast-
+  forward op GitHub, `9a5bdec`; geen enkele branch had werk dat hier niet in
+  zat) en is de webbuild opnieuw gedeployd. De branch bestaat nog als
+  `origin/fase1-fundament`. Let op: de *lokale* `main` in de hoofdcheckout
+  (`/Users/daan/Documents/fun`) loopt achter tot daar `git pull --ff-only` is
+  gedaan — vanuit een worktree kan dat niet. Deployen gaat vanuit een worktree
+  met `cp ../../../export_presets.cfg . && tools/deploy_web.sh`.
 - **Stand:** suite 23.405 controles, 0 fout; alle zeven personages halen 10/10
   in de geautomatiseerde speelbeurt. Elke fase is als eigen commit gecommit met
   een leesbare boodschap — lees `git log` als je wilt weten wát er veranderde

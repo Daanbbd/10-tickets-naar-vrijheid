@@ -3,7 +3,7 @@
 **Date:** 2026-09-05 17:22
 **Repo:** 10-tickets-naar-vrijheid (`/Users/daan/Documents/fun`)
 **Branch:** `fase1-fundament` — **worktree** `/Users/daan/Documents/fun/.claude/worktrees/fase1-fundament`
-**Commit:** `0d0e8a6` — 30 commits bovenop `main`, 0 achter. Niet gepusht, niet gemerged; dat is Daans call.
+**Commit:** `9a5bdec` — **gemerged naar `main` op GitHub (fast-forward) en gedeployd op 5 september 17:30.** De lokale `main` in `/Users/daan/Documents/fun` loopt achter tot daar `git pull --ff-only` is gedaan.
 **Het plan:** `docs/PLAN.md` in deze branch. **Begin bij de sectie "Overdracht — lees dit eerst"** (regel ~8-160): waar het werk staat, de vier commando's, de valkuilen, welk model waarvoor, wat af is, wat open staat. Alles hieronder is samenvatting; het plan is de bron.
 **Next session focus:** eerst Daans playtest-feedback op de samengevoegde build verwerken; dan Fase 5 — de oplevering als Space Team plus een echte slotscène — maar **pas na een ontwerpgesprek met Daan** (het voorstel staat in Overdracht A/B van het plan).
 
@@ -28,7 +28,7 @@ Per fase één commit, elk groen (suite) en met een 10/10-speelbeurt:
 ## Current state
 
 - Werkboom schoon. Suite: **23.378 controles, 0 fout** (`--quit-after 3000` erbij, anders hangt hij bij een parsefout). Speelbeurten 10/10 voor daan, danny, victor, jonathan, willem, bastiaan, koen (vóór de merge) en daan (na de merge), 0 scriptfouten.
-- **De webbuild op gh-pages is verouderd**: die komt van de playtestbranch en mist het herontwerp. Opnieuw deployen vanuit deze worktree: `cp ../../../export_presets.cfg . && tools/deploy_web.sh` (Daans call — dat is een push).
+- **De webbuild op gh-pages is de samengevoegde build** (gedeployd 5 september 17:30 vanuit deze worktree). Opnieuw deployen: `cp ../../../export_presets.cfg . && tools/deploy_web.sh`.
 - Bewijs in `docs/audit-shots/`: `licht_*.png` (dagboog), `resp_*.png` (9:16 / 9:19,5 / 9:21), `f2_*.png`, `f3_heatmap.png`, `f4_uitleg.png`, `f5_merge_wereld.png`, `praat_dirk.png`.
 - Daan heeft de build van vóór de merge kort gespeeld en één bug gemeld (het omlopende "overslaan »", gefixt). Zijn feedback op de samengevoegde build is er nog niet.
 
@@ -38,7 +38,7 @@ Per fase één commit, elk groen (suite) en met een 10/10-speelbeurt:
 2. **Vraag Daan naar zijn playtest** van de samengevoegde build (telefoon!): de heatmap-sleep is alleen met een muis getest, de barks en het overslaan zijn door geen mens gezien, en voelt 17:00 als druk?
 3. **Fase 5 — Space Team-finale + slotscène.** Ontwerpvoorstel in Overdracht A en B. Eerst met Daan bespreken (brandjes op eigen timers gemapt op de zeven bestaande handelingen; de dag zaait de brandjes; console-fase blijft als payoff; `faalt_deploy` blijft). Fable ontwerpt en schrijft de spec, Sonnet bouwt, Fable leest de diff.
 4. Kleiner, Sonnet-waardig (Overdracht C-F): `build_speelveld()`, pijplijn strakker, stand-up meer dan één beslissing, dode minigames weg, ophaalvariatie, het gezicht van de klant, audio-escalatie, scrumbord als sleepbaar bord, dialoogkeuzes op recruit-momenten, de 37 ticketbomen waar de verkeerde mond beweegt, `Hud._on_toast()` cap op drie, de Done-landing-animatie op het bord (uit Daans playtestronde), de flaky wandtijdtest op `mag_onderbreken_minigame()`.
-5. Als Daan tevreden is: mergen naar `main` en de webbuild opnieuw deployen — Daans call.
+5. Gedaan: gemerged naar `main` en gedeployd (5 september 17:30). Volgende deploys na Daans akkoord.
 
 ## Open questions / unknowns
 
