@@ -82,9 +82,11 @@ portret in `gen_portraits.py` meer kleuren dan de 24 van de rest, plus een
 gladstrijking (`GERENDERD`). In een pixel-art game is een te vloeiend portret
 onmiddellijk onbehaaglijk.
 
-> Zijn bronfoto hoort als `assets/personen/dirk.png` in de map; daarna
-> `gen_portraits.py` draaien. Zolang die er niet is praat hij zonder portret —
-> `_portrait_for()` valt netjes terug.
+> Zijn bronfoto staat sinds 5 september 2026 als `assets/personen/dirk.png` in
+> de map: een AI-gegenereerde corporate avatar die Daan aanleverde.
+> `gen_portraits.py` herkent hem als gerenderd en strijkt hem glad. Hij geeft het
+> zelf toe, in één terzijde als je langsloopt: *"Ik ben een stockfoto. Mijn
+> urenstaat is echt."*
 
 ## Uiterlijk
 
