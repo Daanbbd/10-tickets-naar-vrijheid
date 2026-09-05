@@ -70,9 +70,9 @@
  },
  "mg_planning": {
   "type": "standup",
-  "briefing": "Twee van hen melden iets bruikbaars — waaronder {belangrijk}. De rest praat gewoon. Kap ze af waar nodig: je hebt {ingrepen} keer, en {tijd} sec de tijd.",
+  "briefing": "Twee van hen melden iets bruikbaars. Eén daarvan is {belangrijk}. De rest praat gewoon. Kap ze af waar nodig: je hebt {ingrepen} keer, en {tijd} sec de tijd.",
   "intro": "{sprekers} collega's doen hun rondje. Twee van hen melden iets bruikbaars, de rest praat gewoon. Je mag {ingrepen} keer iemand afkappen, in {tijd} sec.",
-  "waarom": "Twee van hen melden iets wat later stukgaat. Kap je ze af vóór ze het zeggen, dan hoor je het niet — en dat hoor je juist wel te horen.",
+  "waarom": "Twee van hen melden iets wat later stukgaat. Kap je ze af vóór ze het zeggen, dan hoor je het niet. En dat moet je juist horen.",
   "tijd": 30.0,
   "ingrepen": 3,
   "kap_regel": "Je kapt hem af. Hij knikt.",
@@ -387,7 +387,7 @@
  "mg_cro": {
   "type": "heatmap",
   "briefing": "Je staat op {basis}{eenheid} en je moet naar {doel}{eenheid}. Kijk waar ze klikken, zet de knop daar. psies.",
-  "intro": "Bezoekers klikken wel, alleen niet op Bestellen. Kijk waar ze wél klikken en sleep de knop daarheen — voordat de ronde om is.",
+  "intro": "Bezoekers klikken wel, alleen niet op Bestellen. Kijk waar ze wél klikken en sleep de knop daarheen. Voor de ronde om is.",
   "waarom": "Een knop verkoopt niets op een plek waar niemand kijkt. Drie rondes, drie keer verhuizen.",
   "basis": 1.8,
   "doel": 2.7,

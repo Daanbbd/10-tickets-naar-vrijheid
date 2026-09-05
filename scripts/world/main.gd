@@ -446,12 +446,26 @@ func _intro_beat() -> void:
 					"Goedemorgen. Je hebt haar berichtje gezien? Morgen live. "
 					+ "Laatste dag van sprint veertien. Ik zie je zo bij het bord.",
 					&"daan")
+			# Dezelfde grap als in Dennis' tak hieronder, uit Daans mond: de PO
+			# weet ook dat de acht uur nooit gehaald worden.
+			await dialogue.say(daan_def.name,
+					"Acht uur op de klok, tot %s. Dat haalt nooit iemand. Dirk boekt het toch." % [
+						Urenstaat.formatteer(Urenstaat.START_MIN + Urenstaat.BUDGET_MIN)],
+					&"daan")
 	else:
 		var dennis_def: NpcDef = GameData.npc(&"dennis")
 		if dennis_def != null:
 			await dialogue.say(dennis_def.name,
 					"Morgen. Laatste dag van sprint veertien. Zij denkt dat we "
 					+ "morgen live gaan, dus dat gaan we. Verder heb ik niks nodig.",
+					&"dennis")
+			# De grap hardop: het 8-uursbudget is per constructie onhaalbaar
+			# (klok.gd) en dat zei tot nu toe niemand vooraf. Dezelfde spreker,
+			# want de grap is dat de scrum master het zelf al weet en het
+			# gewoon zo laat.
+			await dialogue.say(dennis_def.name,
+					"Acht uur op de klok, tot %s. Dat haalt nooit iemand. Dirk boekt het toch." % [
+						Urenstaat.formatteer(Urenstaat.START_MIN + Urenstaat.BUDGET_MIN)],
 					&"dennis")
 
 	# Beat 2 — Dennis neemt je mee. Hij staat al ergens op De Werkvloer te

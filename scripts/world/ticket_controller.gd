@@ -677,7 +677,15 @@ func _fetch_hint(t: TicketDef, helper_id: StringName) -> String:
 	# bible hem noemt ("Frontend / design systemen"), en "de frontend / design
 	# systemen" is geen Nederlands.
 	var role := t.owner_role if t.owner_role != "" else "de specialist hiervoor"
-	return "Dit is niet jouw vakgebied. Je hebt %s nodig — %s." % [who, role]
+	var basis := "Dit is niet jouw vakgebied. Je hebt %s nodig, %s." % [who, role]
+	if d == null:
+		return basis
+	# Zelfde locatiestaart als de doelregel (Hud._aanduiding()), geen tweede
+	# implementatie van "waar zit deze collega".
+	var waar := Hud._aanduiding(d.zone, d.plek)
+	if waar == "":
+		return basis
+	return "%s %s%s." % [basis, waar.substr(0, 1).to_upper(), waar.substr(1)]
 
 
 ## Waarom hier nog niets ligt. Hier stond "Hier is nu niets te doen." — één

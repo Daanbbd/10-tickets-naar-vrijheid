@@ -516,7 +516,7 @@
         "bastiaan"
        ]
       },
-      "text": "Op een geeltje staat: 4px. Jij ziet er zeven en je zegt niets."
+      "text": "op een geeltje staat: 4px,, jij ziet er zeven en je zegt niets,,"
      },
      {
       "when": {
@@ -566,7 +566,7 @@
         "bastiaan"
        ]
       },
-      "text": "Jouw bureau. Vier knoppen die er hetzelfde uitzien. Jij weet welke drie fout zijn."
+      "text": "jouw bureau,, vier knoppen die er hetzelfde uitzien,, jij weet welke drie fout zijn,,"
      },
      {
       "text": "Op het scherm staat een componentbibliotheek. Vier knoppen die er hetzelfde uitzien."
@@ -592,7 +592,7 @@
         "danny"
        ]
       },
-      "text": "Jouw bureau. Je weet nog precies wanneer je hier voor het laatst hebt gezeten."
+      "text": "jouw bureau. je weet nog precies wanneer je hier voor het laatst hebt gezeten."
      },
      {
       "when": {
@@ -608,7 +608,7 @@
         "bastiaan"
        ]
       },
-      "text": "Op een geeltje: meningen zijn geen data. Jij hebt er drie."
+      "text": "op een geeltje: meningen zijn geen data,, jij hebt er drie,,"
      },
      {
       "when": {
@@ -1060,7 +1060,7 @@
         "bastiaan"
        ]
       },
-      "text": "Op het toestel zit een geeltje met een telefoonnummer. Het hangt scheef."
+      "text": "op het toestel zit een geeltje met een telefoonnummer,, het hangt scheef,,"
      },
      {
       "text": "Op het toestel zit een geeltje met één telefoonnummer. Geen naam."

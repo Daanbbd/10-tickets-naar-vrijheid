@@ -1122,9 +1122,33 @@ const SPELERSVARIANTEN_MIN := 12
 ## Kleine letter aan het begin is drift, tenzij het personage zo schrijft of de
 ## regel op zijn eigen tic opent. Begint een regel niet met een letter (Dennis
 ## opent op "-_-"), dan valt hij er vanzelf buiten.
+##
+## Voor Danny en Bastiaan (KLEINE_LETTER_STEMMEN) geldt het omgekeerde: hun
+## eerste letter moet klein zijn. Cijfers, aanhalingstekens en leestekens vóór
+## de eerste letter worden overgeslagen; een eigennaam aan het zinsbegin is
+## geen excuus, want Danny schrijft ook namen klein.
 static func _zinsbegin_klopt(wie: String, tekst: String) -> bool:
-	if wie in KLEINE_LETTER_STEMMEN or tekst == "":
+	if tekst == "":
 		return true
+
+	if wie in KLEINE_LETTER_STEMMEN:
+		var eerste_letter := ""
+		for i: int in tekst.length():
+			var ch := tekst[i]
+			if ch.to_lower() != ch.to_upper():
+				eerste_letter = ch
+				break
+		if eerste_letter == "":
+			return true   # geen letter in de hele regel, niets te controleren
+		if eerste_letter == eerste_letter.to_lower():
+			return true
+		for o: Variant in (KLEINE_OPENERS.get(wie, []) as Array):
+			if tekst.to_lower().begins_with(String(o)):
+				return true
+		return false
+
+	# Bestaande gedrag voor niet-kleine stemmen: alleen het allereerste teken
+	# telt (geen letter ervoor overslaan).
 	var eerste := tekst[0]
 	if eerste.to_lower() == eerste.to_upper():
 		return true   # geen letter
@@ -1183,9 +1207,14 @@ func _test_karakterstemmen() -> void:
 		for r: Variant in (per_personage[naam] as Array):
 			var tekst := String((r as Dictionary)["tekst"])
 			var bron := String((r as Dictionary)["bron"])
-			_ok(_zinsbegin_klopt(naam, tekst),
-				"%s — %s: begint met een kleine letter; dat is Danny's register, niet dat van %s"
-					% [naam, bron, naam])
+			if naam in KLEINE_LETTER_STEMMEN:
+				_ok(_zinsbegin_klopt(naam, tekst),
+					"%s — %s: begint met een hoofdletter; %s schrijft altijd klein"
+						% [naam, bron, naam])
+			else:
+				_ok(_zinsbegin_klopt(naam, tekst),
+					"%s — %s: begint met een kleine letter; dat is Danny's register, niet dat van %s"
+						% [naam, bron, naam])
 			for ander: Variant in EXCLUSIEVE_TICS.keys():
 				if String(ander) == naam:
 					continue
@@ -1548,6 +1577,29 @@ func _test_urenstaat() -> void:
 	_ok(Conditions.check({}), "een lege conditie wordt onwaar in overwerk")
 	_ok(Conditions.check({"overwerk": true}), "overwerk is onwaar terwijl je budget op is")
 	_ok(not Conditions.check({"overwerk": false}), "overwerk:false is waar terwijl je budget op is")
+
+	# --- open_tickets_min: hoeveel tickets (zonder t10) nog niet af zijn -
+	# F8: `t10_offer` waarschuwt vóór de deploy als er nog werk open staat.
+	# Deze sleutel moet precies tellen wat `Session.niet_af()` telt, anders
+	# spreekt de waarschuwing het bord tegen.
+	_ok(Conditions.unknown_keys({"open_tickets_min": 1}).is_empty(),
+		"'open_tickets_min' is geen bekende conditiesleutel")
+	QuestEngine.start_run(&"daan")
+	var open_nu := Session.niet_af().size()
+	_ok(Conditions.check({"open_tickets_min": open_nu}),
+		"open_tickets_min telt niet wat Session.niet_af() telt")
+	_ok(not Conditions.check({"open_tickets_min": open_nu + 1}),
+		"open_tickets_min doet alsof er meer openstaat dan Session.niet_af() telt")
+	for tid: StringName in GameData.ticket_ids():
+		if tid == &"t10":
+			continue
+		QuestEngine.unlock(tid)
+		QuestEngine.mark_helper_present(tid)
+		QuestEngine.complete(tid, MinigameResult.new())
+		break   # precies één ticket dicht, zodat niet_af() met precies één daalt
+	_ok(Conditions.check({"open_tickets_min": open_nu - 1})
+			and not Conditions.check({"open_tickets_min": open_nu}),
+		"open_tickets_min daalt niet mee als Session.niet_af() met één daalt")
 
 
 ## P1-8: `Gevolgen.tint()` moet bij druk() == 0 de zone-kleur exact
@@ -2471,7 +2523,7 @@ func _test_intro() -> void:
 
 	var eigen := "\n".join(IntroUitleg.lessen())
 	for les: String in [
-			"Tien tickets", "naar buiten", "verspreid", "ticketbord", "collega"]:
+			"Tien tickets", "mag je live", "verspreid", "ticketbord", "collega"]:
 		_ok(eigen.contains(les), "IntroUitleg.lessen() noemt niet meer: '%s'" % les)
 
 	# Het getal in regel 3 moet de ticketdata volgen. Hier stond "Negen staan
@@ -2487,6 +2539,16 @@ func _test_intro() -> void:
 	_ok(eigen.contains("Daarna staan er %s open" % IntroUitleg.TELWOORDEN[open_nu]),
 		"de uitleg noemt niet 'Daarna staan er %s open' terwijl er %d openstaan" % [
 			IntroUitleg.TELWOORDEN[open_nu], open_nu])
+
+	# Zelfde bewaking voor het deploygetal: "alle tien" was hard gecodeerd
+	# terwijl de deploycomputer (t10) al bij `min_tickets_done` opendraait.
+	var deploy_nu := IntroUitleg.deploy_bij()
+	_ok(deploy_nu > 0 and deploy_nu < GameData.ticket_ids().size(),
+		"deploy_bij() geeft %d van %d; klopt t10.available_when nog?" % [
+			deploy_nu, GameData.ticket_ids().size()])
+	_ok(eigen.contains("Bij %s van de tien mag je live" % IntroUitleg.TELWOORDEN[deploy_nu]),
+		"de uitleg noemt niet 'Bij %s van de tien mag je live' terwijl t10 bij %d opengaat" % [
+			IntroUitleg.TELWOORDEN[deploy_nu], deploy_nu])
 
 	# De knoppenbalk (Besturing) staat er op elk apparaat; een toetsnaam
 	# beschrijft dan iets dat niet overal bestaat.

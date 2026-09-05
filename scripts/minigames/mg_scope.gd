@@ -112,8 +112,10 @@ class WensRij extends PanelContainer:
 			UiKit.POSTIT_RAND if ja else UiKit.POSTIT_LEEG_RAND))
 
 	func _gui_input(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed \
-				and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		var tik := (event is InputEventMouseButton and (event as InputEventMouseButton).pressed
+				and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT) \
+			or (event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed)
+		if tik:
 			accept_event()
 			getikt.emit(wens_id)
 

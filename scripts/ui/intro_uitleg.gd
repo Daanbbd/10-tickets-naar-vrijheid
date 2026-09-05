@@ -44,6 +44,17 @@ static func open_bij_start() -> int:
 	return n
 
 
+## Bij hoeveel opgeloste tickets de deploycomputer (t10) meedoet:
+## `data/tickets/t10.json`'s `available_when.min_tickets_done`. Zo blijft
+## `lessen()` in sync met de data in plaats van "alle tien" hard te coderen,
+## terwijl de deur in de praktijk al opent zodra dat aantal gehaald is.
+static func deploy_bij() -> int:
+	var t10: TicketDef = GameData.ticket(&"t10")
+	if t10 == null:
+		return 0
+	return int(t10.available_when.get("min_tickets_done", 0))
+
+
 ## Waar de dag over gaat. Twee regels, vóór de spelregels.
 ##
 ## Dit ontbrak volledig. Het uitlegscherm vertelde hoe je tickets vindt en
@@ -94,12 +105,14 @@ static func bericht() -> String:
 static func lessen() -> Array[String]:
 	var open := open_bij_start()
 	var telwoord := TELWOORDEN[open] if open < TELWOORDEN.size() else str(open)
+	var deploy := deploy_bij()
+	var deploy_telwoord := TELWOORDEN[deploy] if deploy < TELWOORDEN.size() else str(deploy)
 	# Twee regels en niet vier: de rest leer je in de wereld zelf (Dennis loopt
 	# met je mee naar het bord, de tickets landen erop, de besturingskaart komt
 	# daarna). Dit is de voetnoot onder het berichtje, niet het scherm.
 	return [
-		"Tien tickets, verspreid door het kantoor. Dennis hangt je eerste twee op het ticketbord. Daarna staan er %s open — kies zelf." % telwoord,
-		"Niet jouw vak? Haal er een collega bij. Alle tien af, dan mag je naar buiten.",
+		"Tien tickets, verspreid door het kantoor. Dennis hangt je eerste twee op het ticketbord. Daarna staan er %s open. Kies zelf." % telwoord,
+		"Niet jouw vak? Haal een collega. Bij %s van de tien mag je live. De rest gaat half mee." % deploy_telwoord,
 	]
 
 
@@ -118,7 +131,7 @@ func _ready() -> void:
 	var v := VBoxContainer.new()
 	UiKit.full_rect(v)
 	v.offset_left = 12; v.offset_right = -12
-	v.offset_top = 16; v.offset_bottom = -12
+	v.offset_top = 12; v.offset_bottom = -12
 	v.add_theme_constant_override("separation", 4)
 	add_child(v)
 

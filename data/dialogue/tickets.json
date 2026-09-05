@@ -1324,11 +1324,11 @@
        ]
       },
       "speaker": "speler",
-      "text": "Dat is geen conversie. Dat is een ongeluk."
+      "text": "dat is geen conversie. dat is een ongeluk."
      },
      {
       "speaker": "danny",
-      "text": "Dat is geen conversie. Dat is een ongeluk."
+      "text": "dat is geen conversie. dat is een ongeluk."
      }
     ],
     "next": "cijfer"
@@ -1342,11 +1342,11 @@
        ]
       },
       "speaker": "",
-      "text": "Vierduizend bezoekers, één bestelling. Vanaf een IP-adres binnen dit pand."
+      "text": "vierduizend bezoekers, één bestelling. vanaf een ip-adres binnen dit pand."
      },
      {
       "speaker": "danny",
-      "text": "Vierduizend bezoekers, één bestelling. Vanaf een IP-adres binnen dit pand."
+      "text": "vierduizend bezoekers, één bestelling. vanaf een ip-adres binnen dit pand."
      }
     ],
     "next": "slot"
@@ -1360,7 +1360,7 @@
         "danny"
        ]
       },
-      "text": "We kijken waar ze afhaken. We vragen niet waarom."
+      "text": "we kijken waar ze afhaken. we vragen niet waarom."
      },
      {
       "when": {
@@ -1465,7 +1465,7 @@
    },
    "reactie": {
     "speaker": "danny",
-    "text": "Welk getal?",
+    "text": "welk getal?",
     "next": "antwoord"
    },
    "antwoord": {
@@ -1543,7 +1543,7 @@
        ]
       },
       "speaker": "speler",
-      "text": "De conversie staat nu op nul komma nul drie. Dat is ook een uitkomst."
+      "text": "de conversie staat nu op nul komma nul drie. dat is ook een uitkomst."
      },
      {
       "speaker": "",
@@ -1561,11 +1561,11 @@
        ]
       },
       "speaker": "",
-      "text": "Je zet het terug. Je vertelt niemand hoe laag het even stond."
+      "text": "je zet het terug. je vertelt niemand hoe laag het even stond."
      },
      {
       "speaker": "danny",
-      "text": "Terugzetten. En dan één ding tegelijk testen."
+      "text": "terugzetten. en dan één ding tegelijk testen."
      }
     ]
    }
@@ -1597,7 +1597,7 @@
         "danny"
        ]
       },
-      "text": "Ik heb dit ticket zelf aangemaakt. In maart. Ik weet niet meer waarom."
+      "text": "ik heb dit ticket zelf aangemaakt. in maart. ik weet niet meer waarom."
      },
      {
       "when": {
@@ -1631,11 +1631,11 @@
        ]
       },
       "speaker": "speler",
-      "text": "A wint. Drie klappen, meer had ik niet nodig. Dat was de hele opdracht."
+      "text": "a wint. drie klappen, meer had ik niet nodig. dat was de hele opdracht."
      },
      {
-      "speaker": "speler",
-      "text": "A wint. Drie klappen, meer had je niet nodig."
+      "speaker": "",
+      "text": "A wint. Drie klappen, meer was er niet nodig."
      }
     ],
     "next": "keuken"
@@ -1728,7 +1728,7 @@
        }
       },
       "speaker": "speler",
-      "text": "ik heb de hypothese aangepast. de hypothese is nu dat b wint. dus als b wint, hebben we niets geleerd. dus meten we opnieuw"
+      "text": "De hypothese is aangepast. De hypothese is nu dat B wint. Dus als B wint, hebben we gelijk. Nog een keer."
      },
      {
       "when": {
@@ -1737,7 +1737,7 @@
        }
       },
       "speaker": "speler",
-      "text": "oké. b wint consistent. dat is precies wat een outlier doet als je hem drie keer meet. we gaan door"
+      "text": "Oké. B wint consistent. Dat is precies wat een outlier doet als je hem drie keer meet. Nog een keer."
      },
      {
       "when": {
@@ -1746,11 +1746,11 @@
        }
       },
       "speaker": "speler",
-      "text": "b wint weer. maar de steekproef is klein. en het was maandag. nog een keer"
+      "text": "B wint weer. Maar de steekproef is klein. En het was maandag. Nog een keer."
      },
      {
       "speaker": "speler",
-      "text": "b wint. dat is data. laten we het nog een keer meten, want één meting is geen meting"
+      "text": "B wint. Dat is data. Nog een keer meten, want één meting is geen meting."
      }
     ]
    }
@@ -2288,7 +2288,7 @@
        ]
       },
       "speaker": "",
-      "text": "Je begint opnieuw. Bij de printer."
+      "text": "je begint opnieuw,, bij de printer,,"
      },
      {
       "speaker": "bastiaan",
@@ -2332,7 +2332,7 @@
         "danny"
        ]
       },
-      "text": "WARNING: checkout conversion critical."
+      "text": "warning: checkout conversion critical."
      },
      {
       "when": {
@@ -2372,7 +2372,7 @@
         "bastiaan"
        ]
       },
-      "text": "FAILED: visual regression detected."
+      "text": "failed: visual regression detected,,"
      },
      {
       "text": "ERROR: deployment failed."
@@ -2397,7 +2397,7 @@
         "danny"
        ]
       },
-      "text": "Eén rode regel, en het is mijn getal."
+      "text": "eén rode regel, en het is mijn getal."
      },
      {
       "when": {
@@ -2441,6 +2441,27 @@
      },
      {
       "text": "Eén ding. Er is altijd één ding."
+     }
+    ],
+    "next": "open_werk"
+   },
+   "open_werk": {
+    "speaker": "dennis",
+    "variants": [
+     {
+      "when": {
+       "open_tickets_min": 2
+      },
+      "text": "Er liggen er nog twee. Die gaan zo mee, ongetest. Jouw keuze."
+     },
+     {
+      "when": {
+       "open_tickets_min": 1
+      },
+      "text": "Er ligt er nog een. Die gaat zo mee, ongetest. Jouw keuze."
+     },
+     {
+      "text": "Alles af. Dat is één keer eerder gebeurd."
      }
     ],
     "next": "slot"
@@ -2515,7 +2536,7 @@
         "danny"
        ]
       },
-      "text": "Nu gaan we pas meten."
+      "text": "nu gaan we pas meten."
      },
      {
       "when": {
@@ -2604,7 +2625,7 @@
         "danny"
        ]
       },
-      "text": "Vierennegentig procent. Bijna. Bijna is nul."
+      "text": "vierennegentig procent. bijna. bijna is nul."
      },
      {
       "when": {

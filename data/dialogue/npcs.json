@@ -1481,13 +1481,13 @@
       "when": {
        "min_tickets_done": 7
       },
-      "text": "Ik heb de hele build nagelopen,, er zit niets fout in,, dat vertrouw ik niet."
+      "text": "ik heb de hele build nagelopen,, er zit niets fout in,, dat vertrouw ik niet."
      },
      {
       "when": {
        "min_tickets_done": 3
       },
-      "text": "Ik heb een component gemaakt die niemand nodig heeft,, nog niet."
+      "text": "ik heb een component gemaakt die niemand nodig heeft,, nog niet."
      },
      {
       "text": "hiya,, ik zit nog in een ticket van vorige week,, ik kom er wel uit."
@@ -1516,7 +1516,7 @@
         "technisch"
        ]
       },
-      "text": "Kijk je straks even mee,, niet nu,, straks."
+      "text": "kijk je straks even mee,, niet nu,, straks."
      },
      {
       "when": {
@@ -1527,7 +1527,7 @@
       "text": "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat vast ook,,"
      },
      {
-      "text": "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
+      "text": "je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
      }
     ],
     "next": "slot"

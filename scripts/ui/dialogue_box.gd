@@ -109,6 +109,11 @@ func _ready() -> void:
 	# Zonder omloop: in deze rij neemt "tik verder" alle ruimte, en een omlopend
 	# label krijgt dan de smalste breedte die het aankan — één letter per regel.
 	_skip_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	# Tikdoel: kaal label op FS_SMALL was ~20-28 px hoog, ver onder de 44 px-
+	# richtlijn. Geen Button (autopilot-focus, zie hierboven): alleen de maat
+	# van het label vergroten.
+	_skip_label.custom_minimum_size = Vector2(0, 22)
+	_skip_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_skip_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	_skip_label.gui_input.connect(func(e: InputEvent) -> void:
 		var tik := (e is InputEventMouseButton and (e as InputEventMouseButton).pressed

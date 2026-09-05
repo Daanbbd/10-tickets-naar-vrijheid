@@ -299,15 +299,14 @@ arrangementen en worden bij het genereren meegeprint.
   alleen bij een nieuwe dag op: `Session.hervat` (gezet in `load_from_disk()`,
   gewist in `start_new()`) en niet `done_count() > 0` — wie hervat vóór zijn
   eerste opgeloste ticket staat ook op nul.
-- **Drie minigames leunen op `emulate_mouse_from_touch`.** `mg_scope`,
-  `mg_uitlijnen` en `mg_pijplijn` lezen in hun `_gui_input()`
-  een `InputEventMouseButton`. Dat werkt op een telefoon omdat Godot standaard
-  muis uit touch emuleert, en die instelling staat **niet** in `project.godot` —
-  hij is dus de default en geen keuze. Zet iemand
-  `input_devices/pointing/emulate_mouse_from_touch` uit, dan accepteren die vier
-  stil geen tikken meer: geen fout, geen melding, alleen een minigame die niet
-  reageert. Alles wat via `UiKit.button()` loopt is hier ongevoelig voor, want
-  een `Button` handelt `InputEventScreenTouch` zelf af.
+- **Vijf minigames handelen touch expliciet af.** `mg_scope` (`WensRij`),
+  `mg_whack` (`Hole`), `mg_uitlijnen`, `mg_pijplijn` en `mg_heatmap` lezen in
+  hun `_gui_input()` naast `InputEventMouseButton` ook `InputEventScreenTouch`
+  met `pressed`. `emulate_mouse_from_touch` staat **niet** in `project.godot`
+  (dus op de Godot-default aan), maar niets in het spel leunt daar nog op: zet
+  iemand die instelling uit, dan blijven deze vijf gewoon reageren. Alles wat
+  via `UiKit.button()` loopt was hier al ongevoelig voor, want een `Button`
+  handelt `InputEventScreenTouch` zelf af.
 - **`custom_minimum_size` is een ondergrens, niet de maat.** Een `Button` meldt
   zelf regelhoogte plus de marges van zijn stijlbox, en die som wint als hij
   groter is: met `UiKit.KNOP_MIN_H` (24) komt er 26 uit (14 regel + 2 × 6
