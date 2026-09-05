@@ -268,6 +268,19 @@ static func complete(id: StringName, result: MinigameResult) -> void:
 static func next_hint_ticket() -> TicketDef:
 	if Session.pinned_ticket != &"" and Session.is_available(Session.pinned_ticket):
 		return GameData.ticket(Session.pinned_ticket)
+	# Na de oplevering is de dag klaar, wat er ook nog open staat: dan wijst
+	# alles naar de voordeur (zie `Session.dag_klaar()`).
+	if Session.dag_klaar():
+		return null
+	# De oplevering komt als laatste, tenzij je hem zelf pint. Zolang er ander
+	# werk open staat wijst de wijzer daarnaar, en blijft de deploycomputer een
+	# keuze op het bord in plaats van de volgende halte — hij staat vanaf 8/10
+	# open, juist zodat je kúnt kiezen om het laatste ticket te laten liggen.
+	var ander_werk := false
+	for id: StringName in GameData.ticket_ids():
+		if id != &"t10" and Session.is_available(id):
+			ander_werk = true
+			break
 
 	# Loopt er een collega achter je aan, dan is zíjn ticket waar je mee bezig
 	# bent. Zonder deze stap viel de gidslaag terug op "het dichtste ticket", en
@@ -321,6 +334,8 @@ static func next_hint_ticket() -> TicketDef:
 
 	for id: StringName in GameData.ticket_ids():
 		if not Session.is_available(id):
+			continue
+		if id == &"t10" and ander_werk:
 			continue
 		var t: TicketDef = GameData.ticket(id)
 		if t == null:

@@ -239,6 +239,7 @@ func _load_ticket(path: String) -> void:
 	t.world_changes = d.get("world_changes", []) as Array
 	t.hint = String(d.get("hint", ""))
 	t.wereldhandeling = bool(d.get("wereldhandeling", false))
+	t.zoek_npc = StringName(String(d.get("zoek_npc", "")))
 	if t.id == &"":
 		load_errors.append("ticket zonder id: %s" % path)
 		return

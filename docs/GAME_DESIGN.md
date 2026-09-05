@@ -16,7 +16,11 @@ verkennen -> ruimte binnenlopen, ticket komt in je inventaris
 Vier van de tien tickets staan vanaf minuut één open (`available_when` in
 `data/tickets/`, zie QUESTS.md). Er is dus geen "volgende ticket", alleen een
 volgende keuze. Wat groeit is je inventaris: wat je gevonden
-hebt. Alleen de deploy wacht op 9/10 — zie QUESTS.md.
+hebt. Alleen de deploy wacht — op 8/10, en dat is bewust één te vroeg: de
+deploycomputer telt de hele dag mee ("DEPLOY 3/8") en staat open terwijl er nog
+een ticket ligt. Wat je dan laat liggen gaat ongetest en half mee live, telt in
+de oplevering als bug en wordt in het slot bij naam genoemd. De wijzer blijft
+naar het open werk wijzen; deployen is een keuze op het bord, geen halte.
 
 ## De eerste minuut
 

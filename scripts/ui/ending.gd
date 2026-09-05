@@ -91,6 +91,9 @@ func _speel() -> void:
 	var gebrekkig := _gebrekkig_regel()
 	if gebrekkig != "":
 		await _toon(gebrekkig)
+	var niet_af := _niet_af_regel()
+	if niet_af != "":
+		await _toon(niet_af)
 
 	await _toon("%s." % Urenstaat.formatteer(Urenstaat.nu() + JAS_MIN))
 	await _toon(_urenclou())
@@ -175,6 +178,19 @@ func _gebrekkig_regel() -> String:
 	if n == 1:
 		return "Eén keer 'goed genoeg' gezegd. Het staat live."
 	return "%d keer 'goed genoeg' gezegd. Het staat live." % n
+
+
+## Wat nooit af is gekomen en toch mee live ging, als één regel. Leeg als alles
+## af was — dan is er niets te bekennen.
+func _niet_af_regel() -> String:
+	var open := Session.niet_af()
+	if open.is_empty():
+		return ""
+	if open.size() == 1:
+		var t: TicketDef = GameData.ticket(open[0])
+		var code := t.code if t != null else String(open[0])
+		return "%s is nooit afgekomen. Het staat live, half." % code
+	return "%d tickets zijn nooit afgekomen. Ze staan live, half." % open.size()
 
 
 ## Wat je werkte tegen wat je mag boeken. Er is altijd een verschil — de dag is

@@ -126,6 +126,12 @@ func _ready() -> void:
 
 	# De wereld is een pure functie van Session: speel alles opnieuw af.
 	mutator.replay_all()
+	# De oplevering hangt de hele dag boven het werk: het label op de
+	# deploycomputer telt mee tot hij open is. Na replay_all(), want een
+	# herladen dag waarin de deploy al is gedaan houdt het label van de
+	# world_change ("productie: live").
+	_deploy_label_bijwerken()
+	Bus.ticket_completed.connect(_deploy_label_bijwerken)
 
 	_spawn_player()
 	# Besturing.setup() draaide hierboven al, vóórdat de speler bestond — de
@@ -253,6 +259,14 @@ func _doel_node() -> Node2D:
 		var helper := npc_layer.find_npc(QuestEngine.required_helper(t.id))
 		if helper != null and not helper.is_following():
 			return helper
+
+	# Zoek je een rondlopende NPC (BBD-209: de paardenbugs), dan wijst de wijzer
+	# naar de dichtstbijzijnde daarvan, niet naar het anker waar je het meldt.
+	# Hier en niet vóór het collega-blok: eerst de collega die je nodig hebt.
+	if t.zoek_npc != &"":
+		var gezocht := npc_layer.dichtstbijzijnde_met_prefix(String(t.zoek_npc), player.global_position)
+		if gezocht != null:
+			return gezocht
 
 	# Mist er nog iets dat ergens in het gebouw ligt? Dan wijst hij daar eerst
 	# naartoe. Zonder deze hop stuurde hij je bij 9/10 naar de deploycomputer in
@@ -580,6 +594,26 @@ func _qa_praat() -> void:
 	tickets.handle_npc_talk(npc.interactable)
 
 
+## De deploycomputer telt mee: "DEPLOY  3/8" tot de oplevering open is, dan
+## "KLAAR VOOR DEPLOY". Zo bestaat de finale vanaf minuut één in de wereld in
+## plaats van pas bij 9/10 op het bord. Na de oplevering blijft het label van
+## de world_change ("productie: live") staan; daarom de vroege return.
+## De signatuur past op `Bus.ticket_completed` (id, result), maar geen van
+## beide is hier nodig.
+func _deploy_label_bijwerken(_id: Variant = null, _result: Variant = null) -> void:
+	if Session.dag_klaar():
+		return
+	var wo := registry.get_by_id(&"deploycomputer")
+	if wo == null:
+		return
+	var t10: TicketDef = GameData.ticket(&"t10")
+	var nodig := int((t10.available_when as Dictionary).get("min_tickets_done", 9)) if t10 != null else 9
+	if Session.is_available(&"t10"):
+		wo.op_set_text("KLAAR VOOR DEPLOY")
+	else:
+		wo.op_set_text("DEPLOY  %d/%d" % [mini(Session.done_count(), nodig), nodig])
+
+
 ## QA: `-- --speler=x --minuten=<n>` boekt meteen n minuten op de klok, zodat
 ## het daglicht en de HUD-klok op een later tijdstip te controleren zijn zonder
 ## er een half uur op te wachten. `Session.book_time()` vuurt `Bus.time_booked`,
@@ -818,7 +852,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _interact_with(it: Interactable) -> void:
-	if it.world_id == &"voordeur" and Session.all_done():
+	if it.world_id == &"voordeur" and Session.dag_klaar():
 		_verlaat_kantoor()
 		return
 

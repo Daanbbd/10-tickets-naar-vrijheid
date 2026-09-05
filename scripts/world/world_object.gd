@@ -13,6 +13,16 @@ extends Node2D
 @export var world_id: StringName = &""
 
 const LABEL_BREEDTE := 96.0
+## Onder deze wereld-y (vijf tegelrijen) hangt een label onder het object in
+## plaats van erboven, omdat de HUD-band de bovenste rijen afdekt. Zie
+## `_maak_label()`.
+const LABEL_ONDER_GRENS := 80.0
+
+
+## Hoort het label van een object op deze wereld-y onder het object te hangen?
+## Statisch zodat de testsuite de grens kaal kan controleren.
+static func label_onder(origin_y: float) -> bool:
+	return origin_y < LABEL_ONDER_GRENS
 const LABEL_HOOGTE := 30.0
 
 const SPRITE_NAAM := "Sprite"
@@ -110,9 +120,20 @@ func _maak_label() -> Label:
 	# Een Control onder een Node2D krijgt geen viewportformaat en geen anchors:
 	# formaat en positie moeten hier met de hand, in wereldcoordinaten.
 	l.size = Vector2(LABEL_BREEDTE, LABEL_HOOGTE)
-	l.position = Vector2(-LABEL_BREEDTE * 0.5, -LABEL_HOOGTE - 6.0)
+	# Boven het object, behalve op de bovenste tegelrijen: daar dekt de HUD-band
+	# alles af wat boven het object hangt (de deploycomputer op rij 1, het
+	# whiteboard op rij 3, de koffiemachine op rij 4), en las je "DEPLOY 3/8" of
+	# "productie: live" nooit. Daar hangt het label onder het object, op de vloer.
+	if label_onder(global_position.y):
+		var halve_hoogte := 8.0
+		if _sprite != null and _sprite.texture != null:
+			halve_hoogte = float(_sprite.texture.get_height()) * 0.5
+		l.position = Vector2(-LABEL_BREEDTE * 0.5, halve_hoogte + 2.0)
+		l.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	else:
+		l.position = Vector2(-LABEL_BREEDTE * 0.5, -LABEL_HOOGTE - 6.0)
+		l.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Contour in plaats van een paneel: leest op elke vloertegel, kost geen node.

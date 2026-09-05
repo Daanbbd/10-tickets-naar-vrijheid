@@ -96,6 +96,7 @@ func _ready() -> void:
 	_test_tijdlekken()
 	_test_mutator_ops()
 	_test_responsief()
+	_test_fase2a()
 	_rapport()
 
 
@@ -376,7 +377,10 @@ func _test_gevolgen() -> void:
 	var slecht := Gevolgen.finale_start()
 	for k: StringName in [&"bugs", &"vertrouwen", &"getest", &"scope"]:
 		_ok(slecht.has(k), "finale_start() levert geen '%s'" % k)
-	_ok(int(slecht[&"bugs"]) >= 1 and int(slecht[&"bugs"]) <= 6,
+	# Clamp is 1..8 sinds Fase 1 (na vijven, "goed genoeg" en open tickets tellen
+	# mee als bugs); een slordige dag zonder één afgerond ticket zit tegen het
+	# plafond aan.
+	_ok(int(slecht[&"bugs"]) >= 1 and int(slecht[&"bugs"]) <= 8,
 		"bugs (%s) valt buiten zijn clamp" % slecht[&"bugs"])
 
 	QuestEngine.start_run(&"daan")
@@ -5234,3 +5238,112 @@ func _test_responsief() -> void:
 		"een bureaubladbrowser moet letterboxen, anders wordt de UI een strook van 600+ px breed")
 	_ok(UiKit.schaal_aspect_voor(Vector2i(1024, 1366)) == Window.CONTENT_SCALE_ASPECT_KEEP,
 		"een staande tablet (3:4) is breder dan 10:16 en letterboxt")
+
+
+## Fase 2a: de oplevering hangt boven de dag (open vanaf 8/10, het laatste
+## ticket is een keuze met een prijs), collega's ontdooien, de storingen lopen
+## op, en BBD-209 wijst naar de paarden in plaats van naar het kostuum.
+func _test_fase2a() -> void:
+	_kop("fase 2a: trek naar de oplevering")
+	QuestEngine.start_run(&"daan")
+	var t10: TicketDef = GameData.ticket(&"t10")
+	_ok(int((t10.available_when as Dictionary).get("min_tickets_done", 0)) == 8,
+		"de oplevering hoort vanaf 8/10 open te staan, zodat het laatste ticket een keuze is")
+	_ok(not Session.dag_klaar(), "de dag is bij de start niet klaar")
+	_ok(Session.niet_af().size() == 9, "bij de start staan negen tickets open (zonder de oplevering)")
+	var acht: Array[StringName] = [&"t01", &"t02", &"t04", &"t05", &"t03", &"t08", &"t09", &"t06"]
+	for id: StringName in acht:
+		_ok(Session.is_available(id), "%s hoort nu beschikbaar te zijn" % id)
+		QuestEngine.complete(id, MinigameResult.make(GameData.ticket(id).minigame_id,
+			GameEnums.Outcome.SUCCESS, 0, {}))
+	_ok(Session.done_count() == 8, "acht tickets dicht, kreeg %d" % Session.done_count())
+	_ok(Session.is_available(&"t10"), "de oplevering staat open bij 8/10")
+	_ok(Session.is_available(&"t07"), "BBD-207 staat nog open")
+	var hint: TicketDef = QuestEngine.next_hint_ticket()
+	_ok(hint != null and hint.id == &"t07",
+		"zolang er ander werk open staat wijst de wijzer daarnaar, niet naar de oplevering (kreeg %s)"
+		% (String(hint.id) if hint != null else "niets"))
+	var met_open := int(Gevolgen.finale_start()[&"bugs"])
+	QuestEngine.complete(&"t07", MinigameResult.make(&"mg_abgevecht", GameEnums.Outcome.SUCCESS, 0, {}))
+	var zonder_open := int(Gevolgen.finale_start()[&"bugs"])
+	_ok(met_open == zonder_open + 1,
+		"een open ticket bij de oplevering is precies één bug extra (%d tegen %d)" % [met_open, zonder_open])
+	hint = QuestEngine.next_hint_ticket()
+	_ok(hint != null and hint.id == &"t10", "is al het andere werk af, dan wijst de wijzer naar de oplevering")
+	QuestEngine.complete(&"t10", MinigameResult.make(&"mg_deploy", GameEnums.Outcome.SUCCESS, 0, {}))
+	_ok(Session.dag_klaar(), "na de oplevering is de dag klaar")
+	_ok(QuestEngine.next_hint_ticket() == null, "na de oplevering wijst niets meer naar werk")
+	_ok(Session.niet_af().is_empty(), "alles was af, dus niets staat als niet-af te boek")
+
+	# En de andere kant: deployen met één ticket open.
+	QuestEngine.start_run(&"daan")
+	for id: StringName in acht:
+		QuestEngine.complete(id, MinigameResult.make(GameData.ticket(id).minigame_id,
+			GameEnums.Outcome.SUCCESS, 0, {}))
+	QuestEngine.complete(&"t10", MinigameResult.make(&"mg_deploy", GameEnums.Outcome.SUCCESS, 0, {}))
+	_ok(Session.dag_klaar() and not Session.all_done(),
+		"deployen op 9/10 maakt de dag klaar zonder dat alles af is")
+	var open := Session.niet_af()
+	_ok(open.size() == 1 and open[0] == &"t07", "BBD-207 staat te boek als niet af")
+	_ok(QuestEngine.next_hint_ticket() == null, "na de oplevering wijst de wijzer naar de deur, ook met werk open")
+
+	_kop("fase 2a: collega's ontdooien")
+	QuestEngine.start_run(&"daan")
+	for naam: String in ["bastiaan", "daan", "danny", "victor", "jonathan", "willem", "koen"]:
+		var boom: DialogueDef = GameData.dialogue(StringName("collega_" + naam))
+		_ok(boom != null, "collega_%s ontbreekt" % naam)
+		if boom == null:
+			continue
+		var slot := boom.node(&"slot")
+		var keuzes: Array = slot.get("choices", [])
+		_ok(Conditions.filter_choices(keuzes).size() == 3, "%s: het eerste bezoek biedt drie keuzes" % naam)
+		var eerste := keuzes[0] as Dictionary
+		var eigen: Array = (eerste.get("when", {}) as Dictionary).get("flags_none", [])
+		_ok(eigen.size() == 1 and String(eigen[0]) != naam + "_bezocht",
+			"%s: de inhoudelijke keuze hangt aan een eigen vlag, niet aan %s_bezocht" % [naam, naam])
+		for raw: Variant in eerste.get("effects", []) as Array:
+			var e := raw as Dictionary
+			if e != null and String(e.get("op", "")) == "set_flag":
+				Session.set_flag(StringName(String(e["flag"])), true)
+		_ok(Conditions.filter_choices(keuzes).size() == 2,
+			"%s: na de eerste tak blijft de tweede tak open, plus 'oke'" % naam)
+		var tweede := boom.node(&"tweede")
+		var vars: Array = tweede.get("variants", [])
+		_ok(vars.size() >= 3, "%s: 'tweede' heeft dagdeelvarianten" % naam)
+		_ok(not (vars[vars.size() - 1] as Dictionary).has("when"),
+			"%s: de laatste variant van 'tweede' is de fallback" % naam)
+
+	_kop("fase 2a: de storingen lopen op")
+	var defs := Storingen.laad()
+	_ok(defs.size() >= 14, "minstens veertien storingen, kreeg %d" % defs.size())
+	var vorige := -1
+	var kost := 0
+	var oplopend := true
+	for d: Dictionary in defs:
+		var trig := d.get("trigger", {}) as Dictionary
+		if trig.has("na_minuten"):
+			var m := int(trig["na_minuten"])
+			if m <= vorige:
+				oplopend = false
+			vorige = m
+		for raw: Variant in d.get("effects", []) as Array:
+			var e := raw as Dictionary
+			if e != null and String(e.get("op", "")) == "kost_tijd":
+				kost += int(e.get("minuten", 0))
+	_ok(oplopend, "de na_minuten-storingen staan in oplopende volgorde")
+	_ok(kost <= 45, "alle storingen samen kosten %d minuten; meer dan 45 maakt de dag te lang" % kost)
+
+	_kop("fase 2a: BBD-209 wijst naar de paarden")
+	_ok(GameData.ticket(&"t09").zoek_npc == &"paard_bug", "t09 zoekt NPC's met prefix paard_bug")
+	var paarden := 0
+	for k: Variant in GameData.npcs.keys():
+		if String(k).begins_with("paard_bug"):
+			paarden += 1
+			_ok(not String(k).contains("decoy"), "de decoy mag niet onder de prefix vallen")
+	_ok(paarden >= 2, "er lopen minstens twee paardenbugs rond")
+
+	_kop("fase 2a: labels op de bovenste rijen hangen onder het object")
+	_ok(WorldObject.label_onder(16.0), "een object op rij 1 (deploycomputer) krijgt zijn label eronder")
+	_ok(WorldObject.label_onder(56.0), "een object op rij 3 (whiteboard) krijgt zijn label eronder")
+	_ok(not WorldObject.label_onder(200.0), "midden op de vloer blijft het label erboven")
+	_ok(not WorldObject.label_onder(400.0), "onderaan de vloer blijft het label erboven (de knoppenbalk dekt niets erbóven af)")

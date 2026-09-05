@@ -179,6 +179,26 @@ func total_tickets() -> int:
 func all_done() -> bool:
 	return done_count() >= total_tickets()
 
+
+## De dag is klaar zodra de oplevering (BBD-210) erdoor is — ook als er nog een
+## ticket open staat. Wat dan open staat gaat ongetest en half live; zie
+## `niet_af()` en `Gevolgen.finale_start()`. `all_done()` blijft de letterlijke
+## teller (10/10) voor het bord en voor de speelbeurt-QA.
+func dag_klaar() -> bool:
+	return ticket_state(&"t10") == GameEnums.TicketState.DONE
+
+
+## De tickets die niet af zijn op het moment dat je kijkt, in bordvolgorde,
+## zonder de oplevering zelf.
+func niet_af() -> Array[StringName]:
+	var out: Array[StringName] = []
+	for id: StringName in GameData.ticket_ids():
+		if id == &"t10":
+			continue
+		if ticket_state(id) != GameEnums.TicketState.DONE:
+			out.append(id)
+	return out
+
 func completed_tickets_in_order() -> Array[StringName]:
 	return done_order.duplicate()
 

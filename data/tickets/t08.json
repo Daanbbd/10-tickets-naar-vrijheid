@@ -38,6 +38,10 @@
   {
    "op": "spawn_npc",
    "npc": "bezorger"
+  },
+  {
+   "op": "camera_focus",
+   "target": "scherm_entree"
   }
  ],
  "hint": "De iPad ligt in het hokje midden in de gang, met de Samen Bingo-poster op de deur.",

@@ -44,6 +44,23 @@ func find_npc(id: StringName) -> Npc:
 	return null
 
 
+## De dichtstbijzijnde NPC wiens id met `prefix` begint, gemeten vanaf `vanaf`
+## (wereldcoördinaten). Voor tickets met `zoek_npc`: de wijzer wijst dan naar
+## het ding dat je moet vinden, niet naar het anker waar je het meldt.
+func dichtstbijzijnde_met_prefix(prefix: String, vanaf: Vector2) -> Npc:
+	var beste: Npc = null
+	var beste_d := INF
+	for c: Node in get_children():
+		var n := c as Npc
+		if n == null or not String(n.npc_id).begins_with(prefix):
+			continue
+		var d := n.global_position.distance_squared_to(vanaf)
+		if d < beste_d:
+			beste = n
+			beste_d = d
+	return beste
+
+
 func followers() -> Array[Npc]:
 	var out: Array[Npc] = []
 	for c: Node in get_children():

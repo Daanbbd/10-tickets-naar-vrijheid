@@ -38,3 +38,8 @@ extends Resource
 ## afgesloten minigame-overlay.
 ## Zie TicketController._resolve_wereldhandeling().
 @export var wereldhandeling: bool = false
+## Wereldhandeling die je oplost door een rondlopende NPC aan te spreken: de
+## wijzer wijst dan naar de dichtstbijzijnde NPC wiens id hiermee begint, niet
+## naar het anker waar je het meldt. BBD-209 zet "paard_bug" — en laat zo de
+## decoy (`paard_klant_decoy`) met rust.
+@export var zoek_npc: StringName = &""

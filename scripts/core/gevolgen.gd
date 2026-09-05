@@ -262,6 +262,10 @@ static func finale_start() -> Dictionary:
 	# onspeelbaar.
 	bugs += mini(3, ongetest_na_vijf())
 	bugs += mini(3, gebrekkig_geshipt())
+	# Wat bij de oplevering nog open staat gaat mee, ongetest en half: elk open
+	# ticket is een bug, tot twee. De oplevering kan al vanaf 8/10, dus dit is
+	# de prijs van "het laatste ticket laten liggen".
+	bugs += mini(2, Session.niet_af().size())
 	# Per drie punten boven de acht die je minimaal belooft komt er één bij.
 	# Integer-deling, met opzet: 8..10 kost niets, 11..13 kost één.
 	bugs += maxi(0, (scope_punten - 8) / 3)

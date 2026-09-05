@@ -309,6 +309,18 @@
     "variants": [
      {
       "when": {
+       "overwerk": true
+      },
+      "text": "Het is na vijven. Puur uit interesse: schrijf je dit nog op de urenstaat, of op de goodwill?"
+     },
+     {
+      "when": {
+       "min_tickets_done": 6
+      },
+      "text": "Zes tickets. De klant denkt dat het er acht zijn. Ik heb niets gezegd."
+     },
+     {
+      "when": {
        "trait": [
         "technisch"
        ]
@@ -336,7 +348,7 @@
      {
       "when": {
        "flags_none": [
-        "daan_bezocht"
+        "daan_goed_nieuws"
        ]
       },
       "text": "Alles loopt goed.",
@@ -357,7 +369,7 @@
      {
       "when": {
        "flags_none": [
-        "daan_bezocht"
+        "daan_op_de_hoogte"
        ]
       },
       "text": "Er is iets wat me dwars zit.",
@@ -522,6 +534,18 @@
     "variants": [
      {
       "when": {
+       "overwerk": true
+      },
+      "text": "na vijven converteert niemand meer. ook wij niet. ga naar huis. of niet, data is data"
+     },
+     {
+      "when": {
+       "min_tickets_done": 6
+      },
+      "text": "zes van tien. dat is zestig procent. klinkt slechter dan het is. of beter. hangt van de grafiek af"
+     },
+     {
+      "when": {
        "trait": [
         "data"
        ]
@@ -549,7 +573,7 @@
      {
       "when": {
        "flags_none": [
-        "danny_bezocht"
+        "danny_test_uitgelegd"
        ]
       },
       "text": "Wat test je?",
@@ -570,7 +594,7 @@
      {
       "when": {
        "flags_none": [
-        "danny_bezocht"
+        "danny_tip_gekregen"
        ]
       },
       "text": "Ik zag iets in het gedrag van de gebruikers.",
@@ -754,6 +778,18 @@
     "variants": [
      {
       "when": {
+       "overwerk": true
+      },
+      "text": "Het is na vijven en er staat nog steeds iets scheef. manmanman."
+     },
+     {
+      "when": {
+       "min_tickets_done": 6
+      },
+      "text": "Zes. Nog vier. Ik heb er al twee van rechtgezet die niemand scheef zag staan. hahaha"
+     },
+     {
+      "when": {
        "trait": [
         "detail"
        ]
@@ -781,7 +817,7 @@
      {
       "when": {
        "flags_none": [
-        "victor_bezocht"
+        "victor_entree_gemeld"
        ]
       },
       "text": "Er zit iets scheef bij de entree.",
@@ -802,7 +838,7 @@
      {
       "when": {
        "flags_none": [
-        "victor_bezocht"
+        "victor_compliment"
        ]
       },
       "text": "De build ziet er goed uit.",
@@ -938,6 +974,18 @@
     "variants": [
      {
       "when": {
+       "overwerk": true
+      },
+      "text": "Na vijven gaan alleen nog dingen stuk die overdag werkten. Ik blijf nog even."
+     },
+     {
+      "when": {
+       "min_tickets_done": 6
+      },
+      "text": "Zes dicht. Drie ervan heb ik in de logs zien langskomen. Dat is een goed teken. Denk ik."
+     },
+     {
+      "when": {
        "trait": [
         "technisch"
        ]
@@ -965,7 +1013,7 @@
      {
       "when": {
        "flags_none": [
-        "jonathan_bezocht"
+        "jonathan_alert"
        ]
       },
       "text": "Er is iets in de logs.",
@@ -986,7 +1034,7 @@
      {
       "when": {
        "flags_none": [
-        "jonathan_bezocht"
+        "jonathan_logs_ok"
        ]
       },
       "text": "Logs zien er goed uit.",
@@ -1183,6 +1231,18 @@
     "variants": [
      {
       "when": {
+       "overwerk": true
+      },
+      "text": "Na vijven belt ze niet meer. Dat is het enige rustige uur van de dag."
+     },
+     {
+      "when": {
+       "min_tickets_done": 6
+      },
+      "text": "Zes tickets, en ze heeft één keer gebeld. Dat is een record. Ik zeg het tegen niemand."
+     },
+     {
+      "when": {
        "trait": [
         "technisch"
        ]
@@ -1210,12 +1270,17 @@
      {
       "when": {
        "flags_none": [
-        "willem_bezocht"
+        "willem_nog_niet_gebeld"
        ]
       },
       "text": "Nog niet.",
       "next": "nog_niet",
       "effects": [
+       {
+        "op": "set_flag",
+        "flag": "willem_nog_niet_gebeld",
+        "value": true
+       },
        {
         "op": "set_flag",
         "flag": "willem_bezocht",
@@ -1226,12 +1291,17 @@
      {
       "when": {
        "flags_none": [
-        "willem_bezocht"
+        "willem_al_gebeld"
        ]
       },
       "text": "Ze belde al.",
       "next": "belde",
       "effects": [
+       {
+        "op": "set_flag",
+        "flag": "willem_al_gebeld",
+        "value": true
+       },
        {
         "op": "set_flag",
         "flag": "willem_bezocht",
@@ -1415,6 +1485,18 @@
     "variants": [
      {
       "when": {
+       "overwerk": true
+      },
+      "text": "je bent er nog,, ik ook,, we zeggen het tegen niemand,,"
+     },
+     {
+      "when": {
+       "min_tickets_done": 6
+      },
+      "text": "zes al,, dat hoor je niet vaak op een woensdag,, ik zit nog in die van vorige week,,"
+     },
+     {
+      "when": {
        "trait": [
         "technisch"
        ]
@@ -1442,7 +1524,7 @@
      {
       "when": {
        "flags_none": [
-        "bastiaan_bezocht"
+        "bastiaan_component_gevraagd"
        ]
       },
       "text": "Wat bouw je?",
@@ -1463,7 +1545,7 @@
      {
       "when": {
        "flags_none": [
-        "bastiaan_bezocht"
+        "bastiaan_komt_meekijken"
        ]
       },
       "text": "Kijk je mee straks?",
@@ -1569,8 +1651,24 @@
    },
    "tweede": {
     "speaker": "koen",
-    "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken.",
-    "next": "derde"
+    "next": "derde",
+    "variants": [
+     {
+      "when": {
+       "overwerk": true
+      },
+      "text": "Na vijven rendert het sneller, vgm. Minder mensen op de wifi."
+     },
+     {
+      "when": {
+       "min_tickets_done": 6
+      },
+      "text": "Zes al? Ik zit nog op de eerste render. Die is wel heel mooi geworden."
+     },
+     {
+      "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken."
+     }
+    ]
    },
    "derde": {
     "speaker": "koen",
@@ -1594,7 +1692,7 @@
      {
       "when": {
        "flags_none": [
-        "koen_bezocht"
+        "koen_piepelienies_uitgelegd"
        ]
       },
       "text": "Wat zijn piepelienies precies?",
@@ -1615,7 +1713,7 @@
      {
       "when": {
        "flags_none": [
-        "koen_bezocht"
+        "koen_verborgen_voor_jonathan"
        ]
       },
       "text": "Jonathan zoekt je.",

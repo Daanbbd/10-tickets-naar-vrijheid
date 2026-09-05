@@ -949,8 +949,9 @@ func _refresh() -> void:
 ## uitnodiging, niet een opdracht. Heb je nog niets gevonden, dan stuurt hij je
 ## het kantoor in.
 func _refresh_objective() -> void:
-	if Session.all_done():
-		_zet_objective("Nu:  alles is opgelost. Ga naar de voordeur.")
+	if Session.dag_klaar():
+		_zet_objective("Nu:  alles is opgelost. Ga naar de voordeur." if Session.all_done()
+			else "Nu:  het staat live. Ga naar de voordeur.")
 		return
 
 	if Session.pinned_ticket != &"" and Session.is_available(Session.pinned_ticket):
@@ -1231,7 +1232,8 @@ func _on_hint() -> void:
 		_nudge.start()
 	var t: TicketDef = QuestEngine.next_hint_ticket()
 	if t == null:
-		Bus.toast_requested.emit("Alles is opgelost. Ga naar de voordeur.", &"hint")
+		Bus.toast_requested.emit("Alles is opgelost. Ga naar de voordeur." if Session.all_done()
+			else "Het staat live. Ga naar de voordeur.", &"hint")
 		return
 	# Wijst de hint naar iets wat je nog niet gevonden hebt, dan is het een
 	# richting en geen ticket: noem de plek, niet de code.

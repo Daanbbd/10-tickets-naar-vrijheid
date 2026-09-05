@@ -1,6 +1,6 @@
 {
  "available_when": {
-  "min_tickets_done": 9
+  "min_tickets_done": 8
  },
  "requirements": {
   "has_item": [

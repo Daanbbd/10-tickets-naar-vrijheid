@@ -63,5 +63,285 @@
         "reden": "afleiding"
       }
     ]
+  },
+  {
+    "id": "storing_printer",
+    "soort": "iets_gaat_stuk",
+    "trigger": {
+      "na_minuten": 40
+    },
+    "when": {},
+    "dialogue": "De printer meldt PAPIERSTORING. Niemand heeft iets geprint.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "De printer meldt PAPIERSTORING. Niemand heeft iets geprint.",
+        "icon": "tijd"
+      }
+    ],
+    "world_changes": [
+      {
+        "op": "set_text",
+        "target": "printer",
+        "value": "PAPIERSTORING"
+      }
+    ]
+  },
+  {
+    "id": "storing_koffie_op",
+    "soort": "iets_gaat_stuk",
+    "trigger": {
+      "na_minuten": 85
+    },
+    "when": {},
+    "dialogue": "De koffie is op. Dit is nu officieel een planningsprobleem.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "De koffie is op. Dit is nu officieel een planningsprobleem.",
+        "icon": "tijd"
+      },
+      {
+        "op": "kost_tijd",
+        "minuten": 4,
+        "reden": "koffie"
+      }
+    ],
+    "world_changes": [
+      {
+        "op": "set_text",
+        "target": "koffiemachine",
+        "value": "LEEG"
+      }
+    ]
+  },
+  {
+    "id": "storing_wifi",
+    "soort": "iets_gaat_stuk",
+    "trigger": {
+      "na_minuten": 130
+    },
+    "when": {},
+    "dialogue": "De wifi valt weg. Iedereen staat tegelijk op en kijkt naar Jonathan.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "De wifi valt weg. Iedereen staat tegelijk op en kijkt naar Jonathan.",
+        "icon": "tijd"
+      },
+      {
+        "op": "kost_tijd",
+        "minuten": 4,
+        "reden": "wifi"
+      }
+    ],
+    "world_changes": [
+      {
+        "op": "set_text",
+        "target": "beamer",
+        "value": "GEEN SIGNAAL"
+      }
+    ]
+  },
+  {
+    "id": "storing_lunch_weg",
+    "soort": "iets_gaat_stuk",
+    "trigger": {
+      "na_minuten": 170
+    },
+    "when": {},
+    "dialogue": "Iemands lunch is uit de koelkast verdwenen. Er hangt nu een briefje.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "Iemands lunch is uit de koelkast verdwenen. Er hangt nu een briefje.",
+        "icon": "tijd"
+      }
+    ],
+    "world_changes": [
+      {
+        "op": "set_text",
+        "target": "koelkast",
+        "value": "WIE?"
+      }
+    ]
+  },
+  {
+    "id": "storing_plotter",
+    "soort": "iets_gaat_stuk",
+    "trigger": {
+      "na_minuten": 205
+    },
+    "when": {},
+    "dialogue": "De plotter print een banner van zes meter. Niemand weet voor wie.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "De plotter print een banner van zes meter. Niemand weet voor wie.",
+        "icon": "tijd"
+      },
+      {
+        "op": "kost_tijd",
+        "minuten": 4,
+        "reden": "plotter"
+      }
+    ],
+    "world_changes": [
+      {
+        "op": "set_text",
+        "target": "plotter",
+        "value": "BEZIG: 6 m"
+      }
+    ]
+  },
+  {
+    "id": "storing_demo",
+    "soort": "afleiding",
+    "trigger": {
+      "na_minuten": 235
+    },
+    "when": {},
+    "dialogue": "Aan de lunchtafel is een sales-demo begonnen. Er wordt geknikt.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "Aan de lunchtafel is een sales-demo begonnen. Er wordt geknikt.",
+        "icon": "tijd"
+      },
+      {
+        "op": "kost_tijd",
+        "minuten": 4,
+        "reden": "demo"
+      }
+    ]
+  },
+  {
+    "id": "storing_badgelezer",
+    "soort": "iets_gaat_stuk",
+    "trigger": {
+      "na_minuten": 260
+    },
+    "when": {},
+    "dialogue": "De badgelezer weigert iedereen. Dennis houdt de deur open met een stoel.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "De badgelezer weigert iedereen. Dennis houdt de deur open met een stoel.",
+        "icon": "tijd"
+      },
+      {
+        "op": "kost_tijd",
+        "minuten": 4,
+        "reden": "badge"
+      }
+    ],
+    "world_changes": [
+      {
+        "op": "set_text",
+        "target": "badgelezer",
+        "value": "ROOD"
+      }
+    ]
+  },
+  {
+    "id": "storing_prijzenkast",
+    "soort": "iets_gaat_stuk",
+    "trigger": {
+      "na_minuten": 285
+    },
+    "when": {},
+    "dialogue": "De prijzenkast is verplaatst voor een foto. De DIA-award ligt op zijn kant.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "De prijzenkast is verplaatst voor een foto. De DIA-award ligt op zijn kant.",
+        "icon": "tijd"
+      }
+    ],
+    "world_changes": [
+      {
+        "op": "set_text",
+        "target": "prijzenkast",
+        "value": "SCHEEF"
+      }
+    ]
+  },
+  {
+    "id": "storing_lift",
+    "soort": "afleiding",
+    "trigger": {
+      "na_minuten": 310
+    },
+    "when": {},
+    "dialogue": "De lift piept. Er zit niemand in. Hij piept toch.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "De lift piept. Er zit niemand in. Hij piept toch.",
+        "icon": "tijd"
+      },
+      {
+        "op": "kost_tijd",
+        "minuten": 4,
+        "reden": "lift"
+      }
+    ]
+  },
+  {
+    "id": "storing_brandoefening",
+    "soort": "afleiding",
+    "trigger": {
+      "na_minuten": 340
+    },
+    "when": {},
+    "dialogue": "Er is een brandoefening aangekondigd. Voor volgende week. Iedereen praat er nu over.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "Er is een brandoefening aangekondigd. Voor volgende week. Iedereen praat er nu over.",
+        "icon": "tijd"
+      },
+      {
+        "op": "kost_tijd",
+        "minuten": 4,
+        "reden": "brandoefening"
+      }
+    ]
+  },
+  {
+    "id": "storing_statusje_acht",
+    "soort": "afleiding",
+    "trigger": {
+      "min_tickets_done": 8
+    },
+    "when": {
+      "tickets_not_done": [
+        "t10"
+      ]
+    },
+    "dialogue": "Dennis: 'Acht. De deploycomputer staat aan. Zeg het als je gaat.'",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "Dennis: 'Acht. De deploycomputer staat aan. Zeg het als je gaat.'",
+        "icon": "hint"
+      }
+    ]
+  },
+  {
+    "id": "storing_avondlicht",
+    "soort": "afleiding",
+    "trigger": {
+      "na_minuten": 470
+    },
+    "when": {},
+    "dialogue": "Het licht in de gang staat nu op bewegingssensor. Sta niet te lang stil.",
+    "effects": [
+      {
+        "op": "toast",
+        "text": "Het licht in de gang staat nu op bewegingssensor. Sta niet te lang stil.",
+        "icon": "tijd"
+      }
+    ]
   }
 ]
