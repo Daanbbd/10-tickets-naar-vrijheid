@@ -401,6 +401,46 @@ func laat_briefje_landen(t: TicketDef) -> void:
 	AudioDirector.play_ui(&"pak")
 
 
+## Waar het briefje van `id` nu hangt, vlak vóór `vul()` het weggooit en
+## opnieuw opbouwt. `laat_klaar_landen()` gebruikt dit om het herbouwde
+## briefje in DONE van hieruit te laten aanvliegen.
+func positie_van(id: StringName) -> Variant:
+	for kol: VBoxContainer in _kolom:
+		for c: Node in kol.get_children():
+			var p := c as Control
+			if p != null and p.has_meta(&"ticket") and StringName(p.get_meta(&"ticket")) == id:
+				return p.global_position
+	return null
+
+
+## Een opgelost ticket schuift naar DONE. `vul()` herbouwt het bord en zet het
+## briefje daar zonder overgang stil neer — Daan: "animatie, geen wandeling"
+## voor een ticket dat naar Done gaat. Dit laat het van zijn oude kolom (`van`,
+## een `positie_van()` van vóór het herbouwen) naar zijn nieuwe plek vliegen.
+## `global_position` en niet `position`: bron- en doelkolom zijn twee
+## verschillende `VBoxContainer`s, dus alleen de globale ruimte is gedeeld.
+func laat_klaar_landen(t: TicketDef, van: Vector2) -> void:
+	var doel := _zoek_briefje(t)
+	if doel == null:
+		return
+	var eind := doel.global_position
+	# Pivot en rotatie eerst: `global_position` leest de rand van de rotatie om
+	# de pivot mee terug (Control past de rotatie toe rond `pivot_offset`, dus
+	# de gerapporteerde oorsprong verschuift zodra rotation niet nul is). Zet ze
+	# na `global_position` en het briefje start een paar pixels naast `van`.
+	doel.pivot_offset = doel.size * 0.5
+	doel.rotation = deg_to_rad(6.0)
+	doel.global_position = van
+	doel.modulate.a = 0.35
+
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(doel, "global_position", eind, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(doel, "modulate:a", 1.0, 0.2)
+	tw.tween_property(doel, "rotation", 0.0, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	AudioDirector.play_ui(&"pak")
+
+
 func _zoek_briefje(t: TicketDef) -> Control:
 	for kol: VBoxContainer in _kolom:
 		for c: Node in kol.get_children():

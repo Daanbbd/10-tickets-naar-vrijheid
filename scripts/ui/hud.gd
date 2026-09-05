@@ -231,7 +231,7 @@ func setup() -> void:
 	_nudge.start()
 
 	Bus.ticket_state_changed.connect(func(_a: StringName, _b: GameEnums.TicketState) -> void: _refresh())
-	Bus.ticket_completed.connect(func(_a: StringName, _b: MinigameResult) -> void: _refresh())
+	Bus.ticket_completed.connect(_op_ticket_completed)
 	Bus.ticket_discovered.connect(func(_a: StringName) -> void: _refresh())
 	Bus.ticket_pinned.connect(func(_a: StringName) -> void: _refresh())
 	Bus.item_added.connect(func(_a: StringName, _b: int) -> void: _refresh())
@@ -862,6 +862,20 @@ func _fill_board() -> void:
 		_bord.vul()
 
 
+## Alleen `_refresh()` aanroepen liet een opgelost ticket stil naar DONE
+## herklasseren: `vul()` gooit het briefje weg en zet een nieuwe neer, zonder
+## dat er iets beweegt. Als het bord op dat moment openstaat, onthoudt dit
+## eerst waar het oude briefje hing, ná `vul()` laat het van daar naar zijn
+## nieuwe plek vliegen.
+func _op_ticket_completed(id: StringName, _result: MinigameResult) -> void:
+	var van: Variant = null
+	if _bord != null and _board.visible:
+		van = _bord.positie_van(id)
+	_refresh()
+	if van != null:
+		_bord.laat_klaar_landen(GameData.ticket(id), van)
+
+
 ## "Jij kunt dit zelf" of de naam van de collega die je moet ophalen — met de
 ## ruimte waar hij staat, want de werkelijke kosten van ophalen zijn zoektijd.
 static func _wie(t: TicketDef) -> String:
@@ -1147,6 +1161,11 @@ func _on_input_lock(locked: bool) -> void:
 ## Hoe lang een gewone toast in beeld blijft.
 const TOAST_ZICHTBAAR := 2.6
 
+## Hoeveel toasts er tegelijk mogen staan. Drie tegelijk (een opgelost ticket,
+## een storing en Dennis) vulde zonder plafond het hele scherm — zie
+## `praat_dirk.png`. De oudste gaat weg zodra een nieuwe erbij komt.
+const TOAST_MAX := 3
+
 
 func _on_toast(text: String, icon: StringName) -> void:
 	# Een hint is geen mededeling maar een instructie, en die leest niet op een
@@ -1155,6 +1174,9 @@ func _on_toast(text: String, icon: StringName) -> void:
 	if icon == &"hint" and not Autopilot.gevraagd():
 		_toon_hint(text)
 		return
+	while _toasts.get_child_count() >= TOAST_MAX:
+		_toasts.get_child(0).queue_free()
+		_toasts.remove_child(_toasts.get_child(0))
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", UiKit.panel(UiKit.PANEL_DARK, UiKit.INK))
 	var l := UiKit.label(text, UiKit.FS_SMALL, UiKit.WIT)
