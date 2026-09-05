@@ -343,7 +343,8 @@ toast.
 
 Dat geldt ook voor de gevolgen. Jonathan afkappen, de webshop uit de scope
 laten, de credits verbranden: geen daarvan blokkeert iets. Ze maken de
-oplevering duurder. De finale heeft geen game over en **elke uitkomst heet
+oplevering duurder. De finale heeft geen game over — de eerste deploy kan
+misgaan (een rollback, een kwartier, nog een keer), de tweede nooit — en **elke geslaagde uitkomst heet
 "OPGELEVERD"** — alleen de tekst eronder verschilt, van "het staat live en het
 werkt" tot "dat is het enige wat je er nu over kunt zeggen". Je levert altijd
 op. De vraag is wat.

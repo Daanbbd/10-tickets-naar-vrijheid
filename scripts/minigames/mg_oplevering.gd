@@ -1,10 +1,15 @@
 extends MinigameBase
-## BBD-210 — de oplevering. De finale, en de enige minigame die niet over goed
-## of fout gaat: elke uitkomst is een oplevering, nooit een faalscherm. De
-## titel begint altijd met OPGELEVERD en beweegt daarna mee met de score; wat
-## echt verschilt is wat je er achteraf over kunt zeggen. Falen mag hier nooit
-## voortgang blokkeren, dus finish_with_banner() gaat altijd met ok = true de
-## deur uit.
+## BBD-210 — de oplevering. De finale. Elke geslaagde uitkomst is een
+## oplevering: de titel begint met OPGELEVERD en beweegt mee met de score, en
+## wat echt verschilt is wat je er achteraf over kunt zeggen.
+##
+## Sinds Fase 3b kan de eerste poging wél mislukken: onder de laagste
+## geslaagde drempel op de eerste deploy volgt een ROLLBACK met de foutcode van
+## je eigen personage, het ticket blijft open en je probeert het opnieuw. De
+## tweede poging slaagt altijd ("OPGELEVERD, EINDELIJK") — een dag die zelfs met
+## perfect spel niet boven de drempel komt bestaat (0,7% van alle
+## dagcombinaties, doorgerekend) en mag niemand vastzetten. Falen kost dus één
+## keer tijd en gezicht, nooit voortgang. Zie `faalt_deploy()`.
 ##
 ## Het werkwoord is beperkte handelingen met echte gevolgen. Acht handelingen,
 ## vier waarden, en een aantal bugs dat je niet kent tot je gaat kijken —
@@ -22,6 +27,8 @@ const METER_NAAM := {
 
 ## Handelingen in fase 3: genoeg om te reageren, te weinig om het op te lossen.
 const HERSTEL_ACTIES := 2
+## Hoeveel keer er al gedeployd is deze dag; alleen de eerste keer kan misgaan.
+const POGINGEN_TELLER := &"deploy_pogingen"
 
 ## De pijplijn die op groen loopt voordat hij op jouw vakgebied omvalt. Drie
 ## regels, niet zeven: een nep-console met zeven controles voor een uitkomst
@@ -562,6 +569,29 @@ func _live() -> void:
 	var titel := String(uit.get("titel", "OPGELEVERD"))
 	var tekst := String(uit.get("tekst", ""))
 
+	# Eén keer mag het misgaan — en dan gaat het ook echt mis. Zie de kop.
+	if faalt_deploy(score, _faal_drempel(), Session.get_counter(POGINGEN_TELLER)):
+		Session.add_counter(POGINGEN_TELLER)
+		await _pauze(0.5)
+		_wis_console()
+		_console.alignment = BoxContainer.ALIGNMENT_CENTER
+		_console_regel("ROLLBACK", UiKit.ROOD, UiKit.FS_HEAD)
+		_console_regel(_foutcode, UiKit.ROOD, UiKit.FS_SMALL)
+		_console_regel("Het staat niet live. Dat hoorde iedereen.", UiKit.WIT, UiKit.FS_SMALL)
+		AudioDirector.play_ui(&"fout")
+		Juice.schok(3.0, 0.4)
+		await _pauze(1.8)
+		move_child(_banner, get_child_count() - 1)
+		await finish_with_banner(false, "ROLLBACK", score, {
+			&"score": score,
+			&"titel": "ROLLBACK",
+			&"tekst": "",
+			&"eind": _toestand.duplicate(),
+			&"gebruikt": _gedaan.duplicate(),
+			&"foutcode": _foutcode,
+		})
+		return
+
 	await _pauze(0.5)
 	_wis_console()
 	_console.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -600,6 +630,22 @@ func _score() -> int:
 
 
 ## Eerste uitkomst waarvan de drempel gehaald is; de data staat aflopend.
+## Onder deze score gaat de eerste deploy mis: de drempel van de op één na
+## laagste uitkomst ("KRAP"), uit de data. Alles daaronder was toch al "het
+## enige wat je er nu over kunt zeggen".
+func _faal_drempel() -> int:
+	var uitkomsten: Array = content().get("uitkomsten", [])
+	if uitkomsten.size() < 2:
+		return 0
+	return int((uitkomsten[uitkomsten.size() - 2] as Dictionary).get("min", 0))
+
+
+## Statisch, zodat de testsuite de regel kaal kan doorrekenen: te laag én de
+## eerste poging.
+static func faalt_deploy(score: int, drempel: int, pogingen: int) -> bool:
+	return score < drempel and pogingen == 0
+
+
 func _uitkomst(score: int) -> Dictionary:
 	for raw: Variant in content().get("uitkomsten", []):
 		var u := raw as Dictionary

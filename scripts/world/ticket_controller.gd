@@ -244,7 +244,12 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 ## speelbeurt blijft herkansen zoals hij altijd deed, en shipt nooit stil iets
 ## gebrekkigs. Een geweigerde of lege vraag komt als -1 terug en valt dezelfde
 ## kant op: herkansen is de veilige keuze, shippen moet je echt kiezen.
-func _wil_gebrekkig_shippen(_t: TicketDef) -> bool:
+func _wil_gebrekkig_shippen(t: TicketDef) -> bool:
+	# De oplevering is de shipknop zelf: een mislukte deploy is een rollback en
+	# geen half werk dat je alsnog live kunt zetten. Daar geldt alleen "nog een
+	# keer" — en de tweede keer slaagt altijd (zie mg_oplevering.gd).
+	if t.id == &"t10":
+		return false
 	var opties: Array[String] = ["Nog een keer.", "Goed genoeg. Shippen."]
 	var keuze := await _dialogue.ask_choice("Nog een keer, of is dit goed genoeg?", opties)
 	return keuze == 1

@@ -238,10 +238,15 @@ Drie fasen, met een `enum` + `match` in plaats van fasenummers.
 3. **Herstellen.** Twee extra handelingen om op die foutcode te reageren.
    Daarna gaat het onvermijdelijk live.
 
-**Elke uitkomst heet "OPGELEVERD".** Er is geen game over; de finale eindigt
-altijd met `ok = true`. Wat verschilt is de tekst eronder, van "het staat live
-en het werkt" tot "dat is het enige wat je er nu over kunt zeggen". Die tekst
-komt via `Gevolgen` op het eindscherm terecht, met je jas al aan.
+**Elke geslaagde uitkomst heet "OPGELEVERD".** Wat verschilt is de tekst
+eronder, van "het staat live en het werkt" tot "dat is het enige wat je er nu
+over kunt zeggen". Die tekst komt via `Gevolgen` op het eindscherm terecht, met
+je jas al aan. Maar de **eerste deploy kan misgaan**: onder de drempel van
+"KRAP" volgt een ROLLBACK met de foutcode van je eigen personage, het ticket
+blijft open, je verliest een kwartier en je probeert het opnieuw. De tweede
+poging slaagt altijd — "OPGELEVERD, EINDELIJK" — want een dag die zelfs met
+perfect spel niet boven de drempel komt bestaat (0,7% van alle dagcombinaties)
+en mag niemand vastzetten. Er is dus wel een faalscherm, maar geen game over.
 
 De **begintoestand komt uit je dag**. `Gevolgen.finale_start()` telt de gevolgen
 van de negen tickets op en `TicketController` geeft die mee als

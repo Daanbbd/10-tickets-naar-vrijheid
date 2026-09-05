@@ -98,6 +98,7 @@ func _ready() -> void:
 	_test_responsief()
 	_test_fase2a()
 	await _test_fase2b()
+	_test_finale_kan_falen()
 	_rapport()
 
 
@@ -5423,3 +5424,23 @@ func _test_fase2b() -> void:
 	var dc := DialogueController.new()
 	_ok(dc.has_method("overslaan") and dc.has_method("speel_of_bark"), "de controller kent overslaan() en speel_of_bark()")
 	dc.free()
+
+
+## Fase 3b: de eerste deploy kan misgaan, de tweede nooit.
+func _test_finale_kan_falen() -> void:
+	_kop("de oplevering kan één keer misgaan")
+	var script := load("res://scripts/minigames/mg_oplevering.gd") as GDScript
+	_ok(script != null, "mg_oplevering.gd laadt niet")
+	if script == null:
+		return
+	var uitkomsten: Array = MinigameContent.get_config(&"mg_deploy").get("uitkomsten", [])
+	var drempel := int((uitkomsten[uitkomsten.size() - 2] as Dictionary).get("min", 0))
+	_ok(drempel > 0, "de op één na laagste uitkomst heeft geen drempel boven nul")
+	_ok(script.faalt_deploy(drempel - 1, drempel, 0), "onder de drempel, eerste poging: hoort te falen")
+	_ok(not script.faalt_deploy(drempel - 1, drempel, 1), "de tweede poging mag nooit falen, hoe laag ook")
+	_ok(not script.faalt_deploy(drempel, drempel, 0), "precies op de drempel is geslaagd")
+	_ok(not script.faalt_deploy(99, drempel, 0), "een hoge score faalt nooit")
+	_ok(String(script.POGINGEN_TELLER) == "deploy_pogingen", "de pogingenteller heet anders dan gedocumenteerd")
+	for raw: Variant in uitkomsten:
+		_ok(String((raw as Dictionary).get("titel", "")).begins_with("OPGELEVERD"),
+			"een geslaagde uitkomst hoort OPGELEVERD te heten; ROLLBACK is geen uitkomst in de data")

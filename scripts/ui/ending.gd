@@ -76,7 +76,8 @@ func _speel() -> void:
 
 	# Wat je hebt opgeleverd, en in welke staat. De oplevering zelf gebeurt in
 	# de finale; dat je hoort wat het geworden is hoort buiten, met je jas al
-	# aan. Elke uitkomst heet "OPGELEVERD" — er is geen game over, alleen een
+	# aan. Elke geslaagde uitkomst heet "OPGELEVERD" — een mislukte eerste deploy
+	# komt hier nooit, die blijft in de wereld als rollback — alleen een
 	# verschil in wat er dan live staat.
 	for regel: String in _opleveringsregels():
 		await _toon(regel)

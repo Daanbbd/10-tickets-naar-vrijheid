@@ -13,6 +13,10 @@ const FRICTION := 1800.0
 @onready var probe: InteractionProbe = $InteractionProbe
 
 var facing: Vector2 = Vector2.DOWN
+## Je staat te werken: een minigame loopt. Dan speelt de bezigheid uit de
+## spritesheet (kolom 8-11 van rij `down`) in plaats van de idle — je "werkt"
+## niet langer door stil te staan terwijl een formulier over je heen valt.
+var _werkt: bool = false
 var _last_tile: Vector2i = Vector2i(-999, -999)
 var _tile_size: int = 16
 var _footstep_t: float = 0.0
@@ -20,6 +24,8 @@ var _footstep_t: float = 0.0
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
+	Bus.minigame_started.connect(func(_id: StringName) -> void: _werkt = true)
+	Bus.minigame_finished.connect(func(_id: StringName, _r: MinigameResult) -> void: _werkt = false)
 
 
 func setup(character: CharacterDef, tile_size: int) -> void:
@@ -28,6 +34,10 @@ func setup(character: CharacterDef, tile_size: int) -> void:
 		sprite.sprite_frames = CharacterSprites.frames_for(
 			character.look, character.color, character.skin, character.hair,
 			character.pants, character.accent)
+		# Op het keuzescherm speelt de bezigheid één keer; hier loopt hij door
+		# zolang het werk duurt. Eigen SpriteFrames, dus dit raakt de rest niet.
+		if sprite.sprite_frames.has_animation(&"bezig_down"):
+			sprite.sprite_frames.set_animation_loop(&"bezig_down", true)
 	_play("idle")
 
 
@@ -52,6 +62,10 @@ func _physics_process(delta: float) -> void:
 
 func _animate(dir: Vector2, delta: float) -> void:
 	var moving := dir != Vector2.ZERO
+	if _werkt and not moving:
+		_play("bezig_down")
+		_footstep_t = 0.0
+		return
 	_play(("walk_" if moving else "idle_") + _dir_name(facing))
 	if moving:
 		_footstep_t -= delta * (velocity.length() / WALK_SPEED)
