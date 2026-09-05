@@ -385,77 +385,110 @@
   "failure": "Je hebt de webshop rechtstreeks aan de Excel van de klant geknoopt. Het werkt. Dat is precies het probleem, en niemand haalt de kabel er nog uit."
  },
  "mg_cro": {
-  "type": "abtest",
-  "briefing": "Je staat op {basis}{eenheid} en je moet naar {doel}{eenheid}. {rondes} keer aanzetten en kijken. psies.",
-  "intro": "De funnel valt weg op stap twee. Je mag drie dingen aanzetten en kijken wat het doet.",
-  "waarom": "Niet elke aanpassing werkt. Drie pogingen om te zien welke dat wél doet.",
+  "type": "heatmap",
+  "briefing": "Je staat op {basis}{eenheid} en je moet naar {doel}{eenheid}. Kijk waar ze klikken, zet de knop daar. psies.",
+  "intro": "Bezoekers klikken wel, alleen niet op Bestellen. Kijk waar ze wél klikken en sleep de knop daarheen — voordat de ronde om is.",
+  "waarom": "Een knop verkoopt niets op een plek waar niemand kijkt. Drie rondes, drie keer verhuizen.",
   "basis": 1.8,
   "doel": 2.7,
   "eenheid": "%",
-  "rondes": [
+  "ronde_sec": 9.0,
+  "elementen": [
    {
-    "vraag": "Productpagina. Wat zet je aan?",
-    "varianten": [
-     {
-      "label": "Voorraad erbij: 'nog 3 op voorraad'",
-      "effect": 0.5,
-      "regel": "Mensen kopen sneller als het bijna weg is. Biem."
-     },
-     {
-      "label": "Grotere foto van het paard",
-      "effect": -0.1,
-      "regel": "Het paard is groter. Er wordt niets meer besteld."
-     },
-     {
-      "label": "Alle elf de supplementen op een rij",
-      "effect": 0.1,
-      "regel": "Meer keuze, minder keuze. Zo werkt dat."
-     }
+    "id": "menu",
+    "label": "Menu",
+    "rect": [
+     0,
+     0,
+     164,
+     16
     ]
    },
    {
-    "vraag": "Checkout. Waar valt hij weg?",
-    "varianten": [
-     {
-      "label": "Verplicht account eruit",
-      "effect": 0.6,
-      "regel": "Niemand wil een account voor een pot supplement. Psies."
-     },
-     {
-      "label": "Verzendkosten pas op stap drie tonen",
-      "effect": -0.4,
-      "regel": "Ze schrikken nu later. Ze schrikken nog steeds."
-     },
-     {
-      "label": "Nog een keer om het e-mailadres vragen",
-      "effect": -0.2,
-      "regel": "Voor de zekerheid, zei iemand. Die iemand was niet ik."
-     }
+    "id": "foto",
+    "label": "Foto van het paard",
+    "rect": [
+     0,
+     20,
+     100,
+     74
     ]
    },
    {
-    "vraag": "Laatste. Eentje mag nog.",
-    "varianten": [
-     {
-      "label": "iDEAL bovenaan",
-      "effect": 0.5,
-      "regel": "Het is Nederland. Dit had er meteen moeten staan."
-     },
-     {
-      "label": "Een banner over het loyaliteitsprogramma",
-      "effect": -0.3,
-      "regel": "Het programma bestaat nog niet. De banner wel."
-     },
-     {
-      "label": "Niets. Laten staan en morgen kijken",
-      "effect": 0.2,
-      "regel": "Soms is dat het antwoord. Zelden, maar soms."
-     }
+    "id": "prijs",
+    "label": "Prijs 24,95",
+    "rect": [
+     104,
+     20,
+     60,
+     26
+    ]
+   },
+   {
+    "id": "voorraad",
+    "label": "Nog 3 op voorraad",
+    "rect": [
+     104,
+     50,
+     60,
+     44
+    ]
+   },
+   {
+    "id": "reviews",
+    "label": "Reviews  4,8",
+    "rect": [
+     0,
+     98,
+     164,
+     26
+    ]
+   },
+   {
+    "id": "usp",
+    "label": "Gratis verzending",
+    "rect": [
+     0,
+     128,
+     164,
+     22
     ]
    }
   ],
+  "knop": {
+   "label": "Bestellen",
+   "maat": [
+    64,
+    20
+   ],
+   "start": [
+    50,
+    162
+   ]
+  },
+  "rondes": [
+   {
+    "heet": "foto",
+    "ruis": 0.25,
+    "effect": 0.4,
+    "regel": "iedereen klikt op het paard. het paard was geen knop. nu wel"
+   },
+   {
+    "heet": "prijs",
+    "ruis": 0.4,
+    "effect": 0.5,
+    "regel": "ze klikken op de prijs. alsof die dan verandert. biem"
+   },
+   {
+    "heet": "voorraad",
+    "ruis": 0.55,
+    "effect": 0.5,
+    "regel": "nog 3 op voorraad. paniek. koopknop ernaast. psies"
+   }
+  ],
+  "mis_regel": "de knop staat waar niemand kijkt. dat is ook data",
   "success": "Je zit boven de doelstelling. Danny zet er een pijltje bij in het dashboard.",
-  "failure": "Je zit onder de basislijn. Dat is ook data, zegt Danny. Nog een keer."
+  "failure": "Je zit onder de doelstelling. Ze klikten wel, maar niet daar. Nog een keer, zegt Danny."
  },
  "mg_abgevecht": {
   "type": "abgevecht",

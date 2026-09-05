@@ -74,7 +74,7 @@ static func _feiten(c: Dictionary) -> Dictionary:
 		"cableboard":
 			f["verbindingen"] = (c.get("verbindingen", []) as Array).size()
 			f["afleiders"] = (c.get("afleiders", []) as Array).size()
-		"abtest":
+		"abtest", "heatmap":
 			f["basis"] = _getal(float(c.get("basis", 0.0)))
 			f["doel"] = _getal(float(c.get("doel", 0.0)))
 			f["eenheid"] = String(c.get("eenheid", ""))

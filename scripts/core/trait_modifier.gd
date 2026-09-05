@@ -35,7 +35,7 @@ const VOORDEEL := {
 	"scope":       "Jouw vakgebied. Twee punten meer ruimte.",
 	"standup":     "Jouw vakgebied. Je mag één keer extra afkappen.",
 	"uitlijnen":   "Jouw vakgebied. Eén pixel meer speling.",
-	"abtest":      "Jouw vakgebied. Je ziet vooraf de bandbreedte, niet het exacte effect.",
+	"heatmap":     "Jouw vakgebied. Je ziet per element hoe vaak erop geklikt is.",
 	"pijplijn":    "Jouw vakgebied. Twintig credits extra.",
 }
 
@@ -97,7 +97,7 @@ static func pas_toe(t: TicketDef) -> Dictionary:
 		"scope":       _scope(config)
 		"standup":     _standup(config)
 		"uitlijnen":   _uitlijnen(config)
-		"abtest":      _abtest(config)
+		"heatmap":     _heatmap(config)
 		"pijplijn":    _pijplijn(config)
 	return config
 
@@ -165,15 +165,12 @@ static func _uitlijnen(c: Dictionary) -> void:
 	c["tolerantie"] = int(c.get("tolerantie", 2)) + EXTRA_SPELING
 
 
-## BBD-206/F4-a: eerst gaf dit `toon_effect: true`, en dat verwijderde Danny's
-## eigen minigame — de CRO'er was de enige speler die niet hoefde te meten,
-## want elke knop toonde meteen zijn exacte effectgetal. Omgedraaid: hij
-## krijgt een bandbreedte in plaats van het precieze getal, genoeg om een
-## duidelijke winnaar te herkennen, niet genoeg om de meting over te slaan bij
-## twee varianten die dicht bij elkaar liggen. Zie `toon_spreiding` en
-## `_spreiding_tekst()` in mg_abtest.gd.
-static func _abtest(c: Dictionary) -> void:
-	c["toon_spreiding"] = true
+## BBD-206: de CRO'er ziet de data. Waar iedereen alleen hittepunten ziet
+## landen, krijgt Danny per element een teller — genoeg om het hete element
+## sneller te herkennen, niet genoeg om niet te hoeven kijken: de teller loopt
+## pas op terwijl de ronde loopt. Zie `toon_tellers` in mg_heatmap.gd.
+static func _heatmap(c: Dictionary) -> void:
+	c["toon_tellers"] = true
 
 
 static func _pijplijn(c: Dictionary) -> void:

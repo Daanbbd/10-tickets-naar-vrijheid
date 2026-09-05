@@ -146,7 +146,7 @@ minigame is een JSON-config, geen eigen codebase.
 | `mg_choicescene` | BBD-203 |
 | `mg_uitlijnen` | BBD-204 |
 | `mg_cableboard` | BBD-205 |
-| `mg_abtest` | BBD-206 |
+| `mg_heatmap` | BBD-206 |
 | `mg_abgevecht` | BBD-207 |
 | `mg_pijplijn` | BBD-208 |
 | `mg_whack` | BBD-209 |

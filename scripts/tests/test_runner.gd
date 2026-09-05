@@ -28,7 +28,7 @@ func _ready() -> void:
 	_test_wereld()
 	_test_karakterstemmen()
 	_test_traits()
-	_test_abtest_spreiding()
+	_test_heatmap()
 	_test_urenstaat()
 	_test_klok()
 	_test_druk_tint()
@@ -971,6 +971,11 @@ func _test_minigame_inhoud() -> void:
 				_ok(float(c.get("basis", 0.0)) + beste >= float(c.get("doel", 0.0)),
 					"%s: het doel is onhaalbaar (basis %.1f + best %.1f < doel %.1f)" % [
 						mid, c.get("basis", 0.0), beste, c.get("doel", 0.0)])
+			"heatmap":
+				_ok((c.get("elementen", []) as Array).size() >= 4, "%s: te weinig elementen" % mid)
+				_ok((c.get("rondes", []) as Array).size() >= 3, "%s: te weinig rondes" % mid)
+				_ok(float(c.get("ronde_sec", 0.0)) >= 5.0, "%s: een ronde korter dan vijf seconden is niet te lezen" % mid)
+				_ok(String(c.get("mis_regel", "")) != "", "%s: geen regel voor een misser" % mid)
 			"abgevecht":
 				var hp_a := float(c.get("hp_a", 0.0))
 				var hp_b := float(c.get("hp_b", 0.0))
@@ -1372,47 +1377,50 @@ func _test_traits() -> void:
 ## fout in een ander jasje is: geen exact getal meer op de knop, én smal genoeg
 ## dat een duidelijke winnaar nog te herkennen is, maar breed genoeg dat twee
 ## dicht bij elkaar liggende varianten nog steeds gemeten moeten worden.
-func _test_abtest_spreiding() -> void:
-	_kop("BBD-206: Danny's CRO-voordeel meet nog steeds")
+func _test_heatmap() -> void:
+	_kop("BBD-206: waar klikken ze?")
 
 	var config: Dictionary = MinigameContent.get_config(&"mg_cro").duplicate(true)
-	TraitModifier._abtest(config)
-	_ok(not config.has("toon_effect"),
-		"TraitModifier._abtest() zet nog 'toon_effect' — het exacte effectgetal is niet weg")
-	_ok(bool(config.get("toon_spreiding", false)),
-		"TraitModifier._abtest() zet 'toon_spreiding' niet aan")
+	_ok(String(config.get("type", "")) == "heatmap", "mg_cro is geen heatmap meer")
+	TraitModifier._heatmap(config)
+	_ok(bool(config.get("toon_tellers", false)), "TraitModifier._heatmap() zet 'toon_tellers' niet aan")
+	_ok(TraitModifier.VOORDEEL.has("heatmap"), "de introkaart kent geen voordeeltekst voor heatmap")
 
-	# Instantieer de node los van de scèneboom: `_variant_label()` en
-	# `_spreiding_bereik()` zijn pure stringmethodes die geen `_ready()` nodig
-	# hebben, dus dit hoeft geen scherm te openen om Danny's label te toetsen.
-	var mg: Node = load("res://scripts/minigames/mg_abtest.gd").new()
-	mg.set("_toon_spreiding", true)
-	mg.set("_eenheid", "%")
-
-	var label: String = mg.call("_variant_label", {"label": "Test", "effect": 0.5})
-	_ok(not label.contains("+0,5"),
-		"Danny's variant-label toont nog steeds het exacte effectgetal: %s" % label)
-	_ok(label.contains("tot"),
-		"Danny's variant-label toont geen bandbreedte: %s" % label)
-
-	# Twee varianten die dicht bij elkaar liggen (net als in de echte data,
-	# waar +0,1 en -0,1 in dezelfde ronde voorkomen) moeten overlappende
-	# bandbreedtes krijgen: dat is het bewijs dat het label ze niet uit elkaar
-	# trekt en de speler dus alsnog moet meten om de betere te vinden.
-	var bereik_a: Vector2 = mg.call("_spreiding_bereik", 0.1)
-	var bereik_b: Vector2 = mg.call("_spreiding_bereik", -0.1)
-	_ok(bereik_a.x <= bereik_b.y and bereik_b.x <= bereik_a.y,
-		"de bandbreedte trekt twee dicht bij elkaar liggende varianten (+0,1 en -0,1) toch al uit elkaar zonder te meten")
-
-	# Een duidelijke winnaar (+0,5 tegenover +0,1) moet wel als winnaar blijven
-	# lezen: anders is de bandbreedte zo breed dat het voordeel niets meer
-	# zegt.
-	var bereik_groot: Vector2 = mg.call("_spreiding_bereik", 0.5)
-	var bereik_klein: Vector2 = mg.call("_spreiding_bereik", 0.1)
-	_ok(bereik_groot.x > bereik_klein.y,
-		"de bandbreedte is zo breed dat een duidelijk betere variant (+0,5) niet meer als beter leest dan +0,1")
-
-	mg.free()
+	# Elk element ligt binnen het veld, elke ronde wijst een bestaand element
+	# aan, en het doel vraagt minstens twee raak rondes (dus falen kan).
+	var ids: Array[String] = []
+	for raw: Variant in config.get("elementen", []) as Array:
+		var el := raw as Dictionary
+		ids.append(String(el.get("id", "")))
+		var r: Array = el.get("rect", [])
+		_ok(r.size() == 4 and float(r[0]) >= 0.0 and float(r[1]) >= 0.0
+			and float(r[0]) + float(r[2]) <= 164.0 and float(r[1]) + float(r[3]) <= 190.0,
+			"element %s valt buiten het veld van 164x190" % el.get("id", "?"))
+	_ok(ids.size() >= 4, "te weinig elementen om tussen te kiezen")
+	var effecten: Array[float] = []
+	for raw: Variant in config.get("rondes", []) as Array:
+		var r := raw as Dictionary
+		_ok(ids.has(String(r.get("heet", ""))), "ronde wijst naar onbekend element '%s'" % r.get("heet", "?"))
+		_ok(String(r.get("regel", "")) != "", "ronde zonder regel van Danny")
+		effecten.append(float(r.get("effect", 0.0)))
+	effecten.sort()
+	var basis := float(config.get("basis", 0.0))
+	var doel := float(config.get("doel", 0.0))
+	_ok(effecten.size() >= 3, "minder dan drie rondes")
+	if effecten.size() >= 3:
+		var alles := basis
+		for e: float in effecten:
+			alles += e
+		_ok(alles >= doel, "zelfs drie keer raak haalt het doel niet")
+		_ok(basis + effecten[effecten.size() - 1] < doel,
+			"één ronde raak haalt het doel al; dan is er geen faalstaat")
+		_ok(basis + effecten[0] + effecten[1] >= doel - 0.001,
+			"twee keer raak hoort genoeg te zijn, anders is één misser al fataal")
+	var knop := config.get("knop", {}) as Dictionary
+	_ok((knop.get("maat", []) as Array).size() == 2 and (knop.get("start", []) as Array).size() == 2,
+		"de knop heeft geen maat of startplek")
+	_ok(not ResourceLoader.exists("res://scripts/minigames/mg_abtest.gd"),
+		"mg_abtest.gd bestaat nog — de dubbele quiz hoort weg te zijn")
 
 
 func _test_urenstaat() -> void:

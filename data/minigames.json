@@ -20,8 +20,8 @@
   "title": "Datastroom herstellen"
  },
  "mg_cro": {
-  "scene": "res://scenes/minigames/mg_abtest.tscn",
-  "title": "Aanzetten en kijken"
+  "scene": "res://scenes/minigames/mg_heatmap.tscn",
+  "title": "Waar klikken ze?"
  },
  "mg_abgevecht": {
   "scene": "res://scenes/minigames/mg_abgevecht.tscn",

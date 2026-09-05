@@ -180,12 +180,14 @@ noodzakelijk in plaats van vriendelijk en `perfect` is onbereikbaar.
 **CableBoard** (BBD-205) — klik twee knooppunten om een kabel te leggen, nog
 eens om hem weg te halen. Extra kabels tellen als fout.
 
-**A/B-test** (BBD-206) — drie rondes, elke ronde één variant aanzetten. Het
-resultaat loopt daarna **zichtbaar** op of af met een tween: de speler moet de
-naald zien bewegen, niet een nieuw getal zien staan. Danny's regel over de
-uitslag komt pas ná de meting. Je keuze in ronde twee zou anders zijn als je
-ronde één niet had gezien — dat is het verschil met een keuzemenu met verborgen
-punten.
+**Waar klikken ze?** (BBD-206) — een wireframe van de productpagina waarop de
+klikken van bezoekers als hittepunten landen, in real time. Eén element trekt
+ze allemaal, en het is geen knop. Sleep de Bestellen-knop daarheen voordat de
+rondeklok om is; drie rondes, drie plekken, elke ronde meer ruis. Geen lijst
+met antwoorden: het antwoord staat op het scherm, maar je moet het zien terwijl
+het gebeurt. Twee van de drie rondes raak haalt het doel; één niet. Dit was de
+A/B-test — hetzelfde spel als BBD-207 met zeven van de negen dezelfde
+antwoorden — en is nu een ander werkwoord: kijken en slepen, onder tijd.
 
 **A tegen B** (BBD-207) — drie klappen, elk een keuze uit drie CRO-tweaks. Elke
 klap doet schade aan B én slaat terug op A; het net-effect (schade minus
@@ -300,7 +302,7 @@ Alles is in 60–120 seconden te doen en op de eerste of tweede poging haalbaar.
 | klantfeedback | 6 van maximaal 9 punten |
 | uitlijnen | vijf blokken binnen 2 px van hun raster |
 | backend | de gevraagde kabels, geen extra |
-| A/B-test | 2,7% vanaf een basis van 1,8%; maximaal haalbaar 3,4% |
+| waar klikken ze | 2,7% vanaf een basis van 1,8%; twee van de drie rondes raak (0,4 / 0,5 / 0,5) |
 | tagpickers | 4 pogingen |
 | renderpijplijn | 5 van 6 clips in 60 s, binnen 100 credits |
 | paardenbugs | 10 bugs in 60 seconden |

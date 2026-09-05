@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://cmgabtest10t"]
+[gd_scene load_steps=2 format=3 uid="uid://cmgheatmap1t"]
 
-[ext_resource type="Script" path="res://scripts/minigames/mg_abtest.gd" id="1_mg"]
+[ext_resource type="Script" path="res://scripts/minigames/mg_heatmap.gd" id="1_mg"]
 
 [node name="Minigame" type="Control"]
 anchors_preset = 15
