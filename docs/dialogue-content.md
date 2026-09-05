@@ -196,11 +196,10 @@ Zijn terzijde (`data/npcs.json`, `barks`) geeft het toe: **"Ik ben een
 stockfoto. Mijn urenstaat is echt."** (`03f52e1`, na de playtestronde van
 4 september) — de enige NPC die zijn eigen kunstmatigheid benoemt.
 
-*Gespot tijdens deze doorloop, niet gefixt:* `data/npcs.json` geeft Dirk
-hetzelfde `role`-veld als Dennis ("Scrum Master"). Dirk is HR/urenstaat, geen
-tweede scrum master — vermoedelijk copy-paste. `NpcDef.role` wordt voor
-niet-speelbare NPC's nergens in de UI getoond (alleen `CharacterDef.role` op
-het personagekeuzescherm), dus dit is data-cosmetisch, geen speelbare bug.
+Dirk deelt zijn `role`-veld ("Scrum Master") met Dennis in `data/npcs.json`,
+en dat is geen bug: Dirk is een AI-scrummaster, Dennis de "echte". De grap is
+dat ze exact hetzelfde werk doen — Dirk vermindert Dennis' werkdruk met
+precies nul. Het gedeelde veld is die grap, niet een copy-paste-foutje.
 
 ---
 

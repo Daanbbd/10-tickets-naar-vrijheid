@@ -201,9 +201,9 @@ worktree (`7d3c472`, `63f03a0`):
 - **Gedaan** — `docs/dialogue-content.md` bijgewerkt: Dirk (volledig
   transcript + de niet-gewandelde `dirk_urenstaat`-boom) en een nieuwe sectie
   over `wereld.json` (tabel van alle 28 objecten, twee volledig uitgeschreven
-  als voorbeeld). Onderweg gespot: `data/npcs.json` geeft Dirk hetzelfde
-  `role`-veld als Dennis ("Scrum Master") — vermoedelijk copy-paste,
-  data-cosmetisch (wordt voor NPC's nergens getoond), niet gefixt.
+  als voorbeeld). Dirk deelt zijn `role`-veld ("Scrum Master") met Dennis in
+  `data/npcs.json` — geen bug: Dirk is een AI-scrummaster, Dennis de "echte",
+  en de grap is dat Dirk Dennis' werkdruk met precies nul vermindert.
 - **Nog open** — het scrumbord als sleepbaar bord (`scripts/ui/scrumbord.gd`);
   dialoogkeuzes op de `recruit`-momenten (`data/dialogue/tickets.json`,
   `variants`/`choices`-grammatica).
