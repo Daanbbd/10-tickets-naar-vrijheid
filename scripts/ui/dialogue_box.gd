@@ -106,6 +106,9 @@ func _ready() -> void:
 	# label en geen knop: een knop zou de hele regel hoger maken en focus
 	# pakken, en de autopilot drukt elke knop met focus in.
 	_skip_label = UiKit.label("overslaan »", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+	# Zonder omloop: in deze rij neemt "tik verder" alle ruimte, en een omlopend
+	# label krijgt dan de smalste breedte die het aankan — één letter per regel.
+	_skip_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_skip_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	_skip_label.gui_input.connect(func(e: InputEvent) -> void:
 		var tik := (e is InputEventMouseButton and (e as InputEventMouseButton).pressed
