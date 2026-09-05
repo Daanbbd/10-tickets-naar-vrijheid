@@ -177,7 +177,21 @@ Alles achter `--` en alleen voor testen:
 | `--hint` | vraagt meteen een hint aan, zodat het hintbriefje in beeld staat |
 | `--briefing=<ticket>` | speelt de briefing van de eigenaar van dat ticket meteen af |
 | `--shot=<pad.png>` | schrijft één frame weg en stopt (niet met `--headless`) |
+| `--feedback-na=<sec>` | drukt na die tijd één keer de feedback-toets § in (zie hieronder) en speelt door |
 | `--shot-na=<sec>` | wanneer die shot valt, standaard 2,5 s |
+
+### Feedback-toets §
+
+Voor playtesten met Claude ernaast (werkwijze in `docs/playtest/README.md`).
+Druk **§** (links van 1 op een Mac-toetsenbord) op het moment dat je iets wilt
+melden. Het spel print `[FEEDBACK] #n {...}` met scene, lopende minigame,
+pauzestand, personage, tegel, gepind ticket, afgeronde tickets en tellers; in
+de webbuild staat dat in de browserconsole. Buiten web komt er ook een PNG van
+het frame en een JSON met dezelfde dict plus `Session.to_dict()` in
+`user://feedback/` (macOS:
+`~/Library/Application Support/Godot/app_userdata/10 Tickets naar Vrijheid/feedback/`).
+Linksboven verschijnt anderhalve seconde "§ n". De code staat in
+`autoload/shell.gd`, onder de QA-shot.
 
 ## Mobiel testen op een laptop
 

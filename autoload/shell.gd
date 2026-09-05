@@ -25,6 +25,7 @@ func _ready() -> void:
 	_pas_schaal_aan()
 	get_tree().root.size_changed.connect(_pas_schaal_aan)
 	_qa_shot()
+	_qa_feedback()
 
 
 ## Meegroeien op telefoons, letterboxen daarbuiten.
@@ -369,3 +370,112 @@ func minigame_active() -> bool:
 ## minigame (laag 50) en zijn dus onzichtbaar zolang die openstaat.
 func active_minigame() -> MinigameBase:
 	return _active
+
+
+# --- Feedback-toets § ------------------------------------------------------
+
+## Playtest-feedback: Daan drukt § (de toets links van 1 op een Mac-toetsenbord)
+## op het moment dat hij iets wil melden. Het spel legt dan vast wat er op dat
+## moment aan de hand is, zodat Claude naast de chat kan meekijken:
+##
+##   * altijd een consoleregel `[FEEDBACK] #n {...}` met scene, minigame,
+##     pauzestand en de kern van `Session`. In de webbuild is dat het enige
+##     kanaal: de browserconsole is vanuit de Browser-pane te lezen.
+##   * niet op web: een PNG van het huidige frame en een JSON met dezelfde dict
+##     plus `Session.to_dict()` in `user://feedback/`. Op macOS is dat
+##     `~/Library/Application Support/Godot/app_userdata/10 Tickets naar Vrijheid/feedback/`.
+##   * een korte "§ n" linksboven, zodat de speler weet dat het geregistreerd is
+##     en het nummer in zijn opmerking kan noemen.
+##
+## Geen action in `project.godot`: niets anders gebruikt §, en de dubbele match
+## op `keycode` en `unicode` dekt native (keycode KEY_SECTION) én web, waar de
+## DOM-`key` "§" als unicode binnenkomt en de fysieke toets afhankelijk van het
+## toetsenbord Backquote of IntlBackslash heet.
+##
+## QA: `-- --feedback-na=<sec>` drukt § één keer na die tijd, zodat de
+## bestanden ook zonder toetsenbord te controleren zijn (headless levert
+## dan een zwart frame, dat is bekend; zie `_qa_shot()`).
+const FEEDBACK_MAP := "user://feedback"
+
+var _feedback_n: int = 0
+var _feedback_label: Label = null
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventKey):
+		return
+	var k := event as InputEventKey
+	if not k.pressed or k.echo:
+		return
+	if k.keycode == KEY_SECTION or k.unicode == 0xA7:
+		feedback_vastleggen()
+
+
+## Legt het huidige moment vast. Publiek, zodat `--feedback-na=` en de tests
+## hem zonder toetsenbord kunnen aanroepen.
+func feedback_vastleggen() -> void:
+	_feedback_n += 1
+	var n := _feedback_n
+	var stempel := Time.get_datetime_string_from_system()
+	var scene := get_tree().current_scene
+	var d := {
+		"n": n,
+		"t": stempel,
+		"scene": scene.scene_file_path if scene != null else "",
+		"minigame": _active.scene_file_path.get_file() if _active != null else "",
+		"pauze": _menu_pauze,
+		"character_id": String(Session.character_id),
+		"player_tile": [Session.player_tile.x, Session.player_tile.y],
+		"pinned_ticket": String(Session.pinned_ticket),
+		"done_order": Session.done_order.map(func(s: StringName) -> String: return String(s)),
+		"counters": Session.to_dict().get("counters", {}),
+	}
+	print("[FEEDBACK] #%d %s" % [n, JSON.stringify(d)])
+
+	if not OS.has_feature("web"):
+		# Geen `await RenderingServer.frame_post_draw` zoals in `_qa_shot()`:
+		# macOS staakt het tekenen zodra het venster niet vooraan staat en dan
+		# komt die await nooit terug (zie de docstring van tools/qa_shot.py).
+		# Voor een toetsdruk is het laatst getekende frame precies wat we
+		# willen, en het label hieronder staat er dan nog niet op.
+		var basis := "%s/%s-%02d" % [FEEDBACK_MAP, stempel.replace(":", ""), n]
+		DirAccess.make_dir_recursive_absolute(FEEDBACK_MAP)
+		var img := get_viewport().get_texture().get_image()
+		if img.save_png(basis + ".png") != OK:
+			printerr("[FEEDBACK] kon %s.png niet schrijven" % basis)
+		d["session"] = Session.to_dict()
+		var f := FileAccess.open(basis + ".json", FileAccess.WRITE)
+		if f != null:
+			f.store_string(JSON.stringify(d, "\t"))
+			f.close()
+			print("[FEEDBACK] #%d -> %s" % [n, ProjectSettings.globalize_path(basis)])
+		else:
+			printerr("[FEEDBACK] kon %s.json niet schrijven" % basis)
+
+	_toon_feedback_label(n)
+
+
+func _toon_feedback_label(n: int) -> void:
+	if _feedback_label == null:
+		_feedback_label = Label.new()
+		_feedback_label.name = "FeedbackLabel"
+		_feedback_label.position = Vector2(4, 4)
+		_feedback_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_feedback_label.add_theme_color_override("font_color", Color(1, 1, 0.6))
+		_feedback_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		_feedback_label.add_theme_constant_override("outline_size", 4)
+		$TransitionLayer.add_child(_feedback_label)
+	_feedback_label.text = "§ %d" % n
+	_feedback_label.visible = true
+	await get_tree().create_timer(1.5, true, false, true).timeout
+	if _feedback_n == n:
+		_feedback_label.visible = false
+
+
+func _qa_feedback() -> void:
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--feedback-na="):
+			var na := float(a.trim_prefix("--feedback-na="))
+			await get_tree().create_timer(na, true, false, true).timeout
+			feedback_vastleggen()
+			return
