@@ -96,8 +96,15 @@ staat in `scripts/core/urenstaat.gd`:
 | Afgebroken minigame (ESC) | 0 | — |
 | Rondlopen, onderzoeken, praten | 0 | — |
 
-Gebeurtenisgestuurd en niet op de wandklok: verkennen levert werk op, dus dat mag
-geen straf worden. En zo is het headless testbaar.
+Twee tellers vullen samen de dag. Het grootboek hierboven boekt per handeling;
+daarnaast tikt `Klok` er elke twintig seconden speeltijd één minuut bij
+(`Klok.TICK_SEC`), zodat rondlopen en lezen ook tijd kosten — weinig, maar
+zichtbaar op de klok. Een schone dag van ~25 minuten eindigt daardoor rond
+19:00-19:30, dus na vijven. Dat is geen straf maar een gevolg: wat na je acht
+uur (`Urenstaat.BUDGET_MIN`) dichtgaat, telt in de oplevering als *ongetest*
+(`Gevolgen.ongetest_na_vijf()`, gevoed door `Session.completed_at`). Het
+grootboek blijft headless testbaar; `_test_dagvenster` bewaakt dat de som van
+beide tellers binnen één avond blijft.
 
 De ticketkosten komen bewust **niet** uit de data. `reward_effects` is per ticket
 identiek voor elk personage en kent geen `when`, terwijl de prijs afhangt van of

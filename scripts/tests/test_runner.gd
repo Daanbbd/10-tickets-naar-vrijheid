@@ -89,6 +89,13 @@ func _ready() -> void:
 	await _test_minigames_passen()
 	_test_ruimteakoestiek()
 	await _test_wereldschermen_passen()
+	_test_dagvenster()
+	_test_daglicht()
+	_test_finale_niet_gratis()
+	_test_completed_at()
+	_test_tijdlekken()
+	_test_mutator_ops()
+	_test_responsief()
 	_rapport()
 
 
@@ -3173,16 +3180,7 @@ func _test_klok() -> void:
 	_ok(Session.is_available(&"t10") or Session.is_done(&"t10"),
 		"de finale (t10) is niet meer bereikbaar na een volle dag klok-tikken")
 
-	# --- de klok maakt overwerk ook echt bereikbaar binnen een sessie van de
-	# bedoelde lengte, niet pas na freewheelen. Bij 1 in-game minuut per
-	# Klok.TICK_SEC seconden duurt het BUDGET_MIN minuten om voorbij de acht
-	# uur te komen; dat hoort ruim binnen de ~25 minuten reëel uit het plan te
-	# vallen (en de eerste tickets boeken zelf ook al mee, dus in de praktijk
-	# eerder). ------------------------------------------------------------
-	var sec_tot_overwerk: float = float(Urenstaat.BUDGET_MIN) * Klok.TICK_SEC
-	_ok(sec_tot_overwerk <= 25.0 * 60.0,
-		("overwerk duurt %.0f reële seconden pure klok-tikken om te bereiken — dat past niet " +
-		"meer binnen een speelsessie van orde-grootte 25 minuten") % sec_tot_overwerk)
+	# --- overwerk binnen één sessie: zie _test_dagvenster(); de aanname hier (ambient alleen vult de dag) wás de dubbele klok. ---
 
 	# --- en de vier dialoogvarianten die op 'overwerk' letten, zijn dan ook
 	# geen dode data (zie _test_geen_dode_data() voor het bredere principe):
@@ -4443,8 +4441,13 @@ func _test_wijzer_wijkt_voor_tikkaartje() -> void:
 
 	# Het doel ligt rechts buiten het zichtbare stuk wereld, dus de pijl klemt
 	# zich tegen de rechterrand — de enige stand waarin hij een kaartje draagt.
+	# Rechts buiten beeld, gemeten aan het echte canvas: sinds
+	# `window/stretch/aspect = "expand"` is de canvasbreedte geen 192 meer per
+	# definitie (headless is hij breder), en een vaste x zou dan gewoon in beeld
+	# liggen — zonder kaartje, en zonder iets te bewijzen.
+	var zicht := get_viewport().get_visible_rect().size
 	var doel := Node2D.new()
-	doel.position = Vector2(400.0, 200.0)
+	doel.position = Vector2(zicht.x + 208.0, 200.0)
 	wereld.add_child(doel)
 	var wijzer := ObjectiveMarker.new()
 	wijzer.plek = "Entree"
@@ -4453,7 +4456,7 @@ func _test_wijzer_wijkt_voor_tikkaartje() -> void:
 
 	# En het tikkaartje op diezelfde hoogte, tegen die rand aan.
 	var anker := Node2D.new()
-	anker.position = Vector2(150.0, 206.0)
+	anker.position = Vector2(zicht.x - 42.0, 206.0)
 	wereld.add_child(anker)
 	var tik := TapMarker.new()
 	anker.add_child(tik)
@@ -4926,3 +4929,308 @@ func _test_wereldschermen_passen() -> void:
 	_meet_horizontale_overloop(tel, "telefoon")
 	tel.queue_free()
 	await get_tree().process_frame
+
+
+## De klok en het grootboek vullen sámen één dag (zie `klok.gd`). Op
+## TICK_SEC 2,5 boekte de klok in zijn eentje al ~600 minuten per sessie van
+## 25 minuten reëel, het grootboek zette zijn 510-540 er gewoon bovenop, en het
+## eindscherm printte 28:12 waar `ending.gd` 17:42 beloofde. Dit legt het
+## venster vast: overwerk blijft voor iedereen bereikbaar (dat is de grap van
+## de urenstaat), en een schone dag van 25 minuten eindigt vóór 20:12.
+func _test_dagvenster() -> void:
+	_kop("het dagvenster: grootboek plus klok is één dag")
+
+	_ok(Klok.TICK_SEC >= 10.0,
+		"Klok.TICK_SEC staat op %.1f s; onder 10 s vult de klok de dag weer in zijn eentje" % Klok.TICK_SEC)
+
+	# Wat de klok zelf bijdraagt in een sessie van de bedoelde lengte.
+	var ambient := int(25.0 * 60.0 / Klok.TICK_SEC)
+	for cid: StringName in GameData.character_ids():
+		QuestEngine.start_run(cid)
+		var c: CharacterDef = GameData.character(cid)
+		# Zelfde som als in _test_urenstaat(): je eigen vakgebied is goedkoop,
+		# buiten je vakgebied betaal je ook de zoektijd.
+		var goedkoopst := 0
+		for tid: StringName in GameData.ticket_ids():
+			if QuestEngine.is_own_expertise(tid):
+				goedkoopst += Urenstaat.kosten_voor_ticket(true)
+			else:
+				goedkoopst += Urenstaat.kosten_voor_ticket(false) + Urenstaat.OPHALEN_MIN
+		var totaal := goedkoopst + ambient
+		var eind := Urenstaat.formatteer(Urenstaat.START_MIN + totaal)
+		_ok(totaal >= Urenstaat.BUDGET_MIN,
+			"%s haalt in een schone dag van 25 minuten geen overwerk (klaar om %s)" % [c.name, eind])
+		_ok(totaal <= 11 * 60,
+			("%s eindigt een schone dag van 25 minuten om %s, ná 20:12 — de dubbele klok " +
+			"die 28:12 printte is terug") % [c.name, eind])
+		print("   %-9s grootboek %s + klok %s = klaar om %s" % [
+			c.name, Urenstaat.formatteer_duur(goedkoopst),
+			Urenstaat.formatteer_duur(ambient), eind])
+
+	QuestEngine.start_run(&"daan")
+
+
+## Het daglicht (`Urenstaat.daglicht()`) is de dagfase als kleur. Dit toetst
+## de vorm van de curve, niet de exacte getallen: koel in de ochtend, warm in
+## de namiddag, het gouden uur precies op het moment dat je acht uur op zijn,
+## daarna donkerder, en nergens een sprong — een tint die elke minuut over de
+## zonemood ligt mag niet flikkeren.
+func _test_daglicht() -> void:
+	_kop("het daglicht")
+
+	var o := Urenstaat.daglicht(Urenstaat.START_MIN)
+	_ok(o.b > o.r, "om 09:12 is het licht niet koel (b %.3f is niet groter dan r %.3f)" % [o.b, o.r])
+	var m := Urenstaat.daglicht(15 * 60 + 30)
+	_ok(m.r > m.b, "om 15:30 is het licht niet warm (r %.3f is niet groter dan b %.3f)" % [m.r, m.b])
+
+	# Het gouden uur valt precies op 17:12, als je acht uur op zijn: geen enkel
+	# halfuur tussen 08:00 en 20:00 mag roder zijn.
+	var g := Urenstaat.daglicht(Urenstaat.START_MIN + Urenstaat.BUDGET_MIN)
+	var roodste_r := -1.0
+	var roodste_min := -1
+	for minuut: int in range(8 * 60, 20 * 60 + 1, 30):
+		var k := Urenstaat.daglicht(minuut)
+		if k.r > roodste_r:
+			roodste_r = k.r
+			roodste_min = minuut
+	_ok(g.r >= roodste_r,
+		"het gouden uur ligt niet op 17:12 maar om %s (r %.3f tegen %.3f)" % [
+			Urenstaat.formatteer(roodste_min), roodste_r, g.r])
+
+	var a := Urenstaat.daglicht(20 * 60)
+	_ok(a.r + a.g + a.b < g.r + g.g + g.b,
+		"de avond (20:00) is niet donkerder dan het gouden uur (17:12)")
+
+	# Continuïteit: van minuut op minuut springt geen enkele component.
+	var sprongen := 0
+	var vorige := Urenstaat.daglicht(8 * 60)
+	for minuut: int in range(8 * 60 + 1, 20 * 60 + 1):
+		var k := Urenstaat.daglicht(minuut)
+		if absf(k.r - vorige.r) >= 0.01 or absf(k.g - vorige.g) >= 0.01 or absf(k.b - vorige.b) >= 0.01:
+			sprongen += 1
+		vorige = k
+	_ok(sprongen == 0,
+		"het daglicht springt op %d minuten meer dan 0.01 in een component; dat flikkert over de zonemood" % sprongen)
+
+	_ok(Urenstaat.daglicht(25 * 60) == Urenstaat.daglicht(20 * 60),
+		"na 20:00 blijft het daglicht niet staan; een nachtdienst hoort niet nog donkerder te worden")
+
+
+## De finale mag niet gratis zijn. Een goede dag telde zo zwaar door dat je in
+## de oplevering met nul acties — niets testen, meteen deployen — al op de
+## topuitslag zat. Dit toetst drie dingen aan `Gevolgen.finale_start()`: de
+## beste dag haalt blind nog geen top, een dag met drie tickets na vijven en
+## twee gebrekkige shipments begint merkbaar zwaarder, en de 28 geldige
+## scope-keuzes uit BBD-201 vallen niet allemaal op dezelfde finalewaarde samen.
+func _test_finale_niet_gratis() -> void:
+	_kop("de finale is niet gratis")
+
+	var pad := "res://data/minigame_content.json"
+	var rauw: Variant = JSON.parse_string(FileAccess.get_file_as_string(pad))
+	_ok(rauw is Dictionary, "minigame_content.json is geen JSON-object")
+	if not (rauw is Dictionary):
+		return
+	var inhoud := rauw as Dictionary
+	var uitkomsten := (inhoud.get("mg_deploy", {}) as Dictionary).get("uitkomsten", []) as Array
+	_ok(not uitkomsten.is_empty(), "mg_deploy heeft geen uitkomsten")
+	if uitkomsten.is_empty():
+		return
+	var top := int((uitkomsten[0] as Dictionary).get("min", 0))
+
+	# --- een goede dag, blind opgeleverd -----------------------------------
+	QuestEngine.start_run(&"daan")
+	Gevolgen.boek(&"mg_user_story", MinigameResult.make(&"mg_user_story",
+		GameEnums.Outcome.SUCCESS, 0,
+		{&"meegenomen": ["vergelijker", "bestellen", "paard"], &"punten": 9, &"blij": 9}))
+	Gevolgen.boek(&"mg_frontend_fix", MinigameResult.make(&"mg_frontend_fix",
+		GameEnums.Outcome.SUCCESS, 0, {&"perfect": true, &"afwijking_totaal": 0}))
+	Gevolgen.boek(&"mg_cro", MinigameResult.make(&"mg_cro",
+		GameEnums.Outcome.SUCCESS, 0, {&"boven_doel": true, &"conversie": 3.4}))
+	Gevolgen.boek(&"mg_planning", MinigameResult.make(&"mg_planning",
+		GameEnums.Outcome.SUCCESS, 0, {&"gemist": [], &"tijd_over": 12.0}))
+	Gevolgen.boek(&"mg_video", MinigameResult.make(&"mg_video",
+		GameEnums.Outcome.SUCCESS, 0, {&"gepubliceerd": 5, &"credits_over": 90}))
+	var goed := Gevolgen.finale_start()
+	var blind := Gevolgen.oplevering_score(goed, int(goed[&"bugs"]), false)
+	_ok(blind < top,
+		"nul acties zonder testen haalt de topuitslag: blind %d, de top begint bij %d" % [blind, top])
+
+	# --- een slechte dag: drie tickets na vijven, twee keer gebrekkig geshipt --
+	Session.completed_at = {
+		&"t04": Urenstaat.BUDGET_MIN + 10,
+		&"t05": Urenstaat.BUDGET_MIN + 40,
+		&"t06": Urenstaat.BUDGET_MIN + 70,
+	}
+	Session.counters[Gevolgen.GEBREKKIG_TELLER] = 2
+	_ok(Gevolgen.ongetest_na_vijf() == 3,
+		"drie tickets na 17:12 tellen als %d ongetest, niet als 3" % Gevolgen.ongetest_na_vijf())
+	var slecht := Gevolgen.finale_start()
+	_ok(int(slecht[&"bugs"]) >= int(goed[&"bugs"]) + 4,
+		"na vijven opleveren en gebrekkig shippen kost nauwelijks bugs: goed %d, slecht %d" % [
+			int(goed[&"bugs"]), int(slecht[&"bugs"])])
+
+	# --- de 28 scope-keuzes ------------------------------------------------
+	# Alle deelverzamelingen van de wensen die in de sprint passen én haar blij
+	# maken; elke geldige keuze moet de finale een eigen `scope` kunnen geven.
+	var story := inhoud.get("mg_user_story", {}) as Dictionary
+	var wensen := story.get("wensen", []) as Array
+	var capaciteit := int(story.get("capaciteit", 0))
+	var tevreden_min := int(story.get("tevreden_min", 0))
+	var geldig := 0
+	var finalewaarden: Dictionary = {}
+	for masker: int in range(1 << wensen.size()):
+		var punten := 0
+		var blij := 0
+		for i: int in wensen.size():
+			if (masker & (1 << i)) != 0:
+				var w := wensen[i] as Dictionary
+				punten += int(w.get("punten", 0))
+				blij += int(w.get("blij", 0))
+		if punten > capaciteit or blij < tevreden_min:
+			continue
+		geldig += 1
+		Session.gevolgen[&"scope_punten"] = punten
+		finalewaarden[int(Gevolgen.finale_start()[&"scope"])] = true
+	_ok(geldig == 28,
+		"BBD-201 heeft %d geldige scope-keuzes; de finale is gemaatvoerd op 28" % geldig)
+	_ok(finalewaarden.size() >= 3,
+		"28 scope-keuzes vallen samen op %d finalewaarden" % finalewaarden.size())
+
+	QuestEngine.start_run(&"daan")
+
+
+## `Session.completed_at` is wat "na vijven opgeleverd" meetbaar maakt:
+## `QuestEngine.complete()` schrijft er de klokstand ná de boeking in, de save
+## neemt hem mee, en `Gevolgen.ongetest_na_vijf()` telt eruit. Een nieuwe
+## speelbeurt begint leeg — anders erft dag twee de late uren van dag één.
+func _test_completed_at() -> void:
+	_kop("completed_at: wanneer een ticket af was")
+
+	QuestEngine.start_run(&"daan")
+	_ok(Session.completed_at.is_empty(), "een nieuwe speelbeurt begint met tijden in completed_at")
+
+	QuestEngine.complete(&"t04", MinigameResult.make(&"mg_frontend_fix",
+		GameEnums.Outcome.SUCCESS, 0, {&"perfect": false, &"afwijking_totaal": 4}))
+	_ok(Session.completed_at.has(&"t04"), "complete() schrijft t04 niet in completed_at")
+	_ok(int(Session.completed_at.get(&"t04", -1)) == Session.worked_minutes,
+		"completed_at[t04] is %d, terwijl de klok na de boeking op %d stond" % [
+			int(Session.completed_at.get(&"t04", -1)), Session.worked_minutes])
+
+	# Overleeft de save: een dag die je morgen hervat weet nog hoe laat het was.
+	var toen := Session.worked_minutes
+	var heen := Session.to_dict()
+	QuestEngine.start_run(&"daan")
+	Session.from_dict(heen)
+	_ok(Session.completed_at.has(&"t04") and int(Session.completed_at.get(&"t04", -1)) == toen,
+		"completed_at overleeft een save/load niet")
+	_ok(Gevolgen.ongetest_na_vijf() == 0,
+		"een ticket dat om %s af was telt als ongetest na vijven" % Urenstaat.formatteer(Urenstaat.START_MIN + toen))
+
+	Session.book_time(Urenstaat.BUDGET_MIN, &"test")
+	QuestEngine.complete(&"t05", MinigameResult.make(&"mg_backend_fix",
+		GameEnums.Outcome.SUCCESS, 1, {&"juist": true}))
+	_ok(Gevolgen.ongetest_na_vijf() == 1,
+		"één ticket na je acht uur telt als %d ongetest, niet als 1" % Gevolgen.ongetest_na_vijf())
+
+	QuestEngine.start_run(&"daan")
+	_ok(Session.completed_at.is_empty(), "start_run() wist completed_at niet")
+
+
+## De nooddeur en de koffiemachine kosten tijd via `kost_tijd`, en dat mag
+## één keer: zonder `when` op die keuzes was elke wereldinteractie een
+## herhaalbaar tijdlek — vijftien minuten per klik, zo vaak je wilde, terwijl
+## het grootboek en de klok samen al één dag vullen. De keuze verdwijnt zodra
+## zijn vlag staat; de laatste variant blijft de verplichte fallback.
+func _test_tijdlekken() -> void:
+	_kop("tijdlekken in de wereld sluiten na één keer")
+
+	QuestEngine.start_run(&"daan")
+	var nood: DialogueDef = GameData.dialogue(&"nooduitgang")
+	_ok(nood != null, "dialoog 'nooduitgang' ontbreekt")
+	if nood != null:
+		var keuze := nood.node(&"keuze")
+		var nood_keuzes: Array = keuze.get("choices", [])
+		var voor_alarm := Conditions.filter_choices(nood_keuzes).size()
+		_ok(voor_alarm == 2, "de nooddeur biedt vóór het alarm %d keuzes, geen 2" % voor_alarm)
+		Session.set_flag(&"alarm_af", true)
+		var na_alarm := Conditions.filter_choices(nood_keuzes).size()
+		_ok(na_alarm == 1,
+			"de nooddeur is een herhaalbaar tijdlek: na het alarm nog %d keuzes" % na_alarm)
+		var varianten: Array = keuze.get("variants", [])
+		_ok(not varianten.is_empty() and not (varianten[varianten.size() - 1] as Dictionary).has("when"),
+			"nooduitgang/keuze eindigt niet op een variant zonder 'when'")
+
+	var koffie: DialogueDef = GameData.dialogue(&"koffiemachine")
+	_ok(koffie != null, "dialoog 'koffiemachine' ontbreekt")
+	if koffie != null:
+		var koffie_keuzes: Array = koffie.node(&"keuze").get("choices", [])
+		var vers := Conditions.filter_choices(koffie_keuzes).size()
+		_ok(vers == 3, "de koffiemachine biedt op een verse dag %d keuzes, geen 3" % vers)
+		Session.set_flag(&"koffie_middelste", true)
+		var na_middelste := Conditions.filter_choices(koffie_keuzes).size()
+		_ok(na_middelste == 2,
+			"na de middelste knop biedt de koffiemachine nog %d keuzes, geen 2" % na_middelste)
+		Session.set_flag(&"koffie_gehaald", true)
+		var na_twee := Conditions.filter_choices(koffie_keuzes).size()
+		_ok(na_twee == 1,
+			"de koffiemachine is een herhaalbaar tijdlek: na twee koffies nog %d keuzes" % na_twee)
+
+	QuestEngine.start_run(&"daan")
+
+
+## `swap_texture` en `set_frame` zijn de twee ops waarmee een opgelost ticket
+## echt pixels verzet. Ze horen in `WorldMutator.OPS` (anders keurt de
+## validator elke ticketdata af die ze gebruikt), en `set_frame` op een object
+## dat nog geen sprite heeft — vandaag zijn dat ze allemaal — mag alleen
+## waarschuwen, niet crashen: `replay_all()` draait hem op elke wereld-load.
+func _test_mutator_ops() -> void:
+	_kop("wereldmutaties: swap_texture en set_frame")
+
+	_ok(WorldMutator.unknown_ops([
+		{"op": "set_frame", "value": 1},
+		{"op": "swap_texture", "value": ""},
+	]).is_empty(), "set_frame of swap_texture staat niet in WorldMutator.OPS")
+
+	var obj := WorldObject.new()
+	obj.world_id = &"qa_obj"
+	add_child(obj)
+	# Zonder sprite: een waarschuwing in de log en verder niets — geen fout, en
+	# ook geen stilletjes aangemaakt kind.
+	obj.op_set_frame(2)
+	_ok(obj.get_node_or_null(WorldObject.SPRITE_NAAM) == null,
+		"set_frame zonder sprite maakte er stilletjes een aan")
+	remove_child(obj)
+	obj.free()
+
+
+## Responsief portret: het canvas van 192x416 is een minimum, geen kader. Zonder
+## `window/stretch/aspect = "expand"` valt Godot terug op `keep` en krijgt elke
+## telefoon die niet exact 6:13 is zwarte balken. Hogere toestellen zien dan
+## méér dan 26 tegels; de camera mag precies de helft van dat verschil boven en
+## onder de vloer kijken, en nooit verder dan de getekende wandrand.
+func _test_responsief() -> void:
+	_kop("responsief portret")
+	_ok(String(ProjectSettings.get_setting("display/window/stretch/aspect")) == "expand",
+		"window/stretch/aspect moet \"expand\" zijn, anders krijgt elke telefoon die niet 6:13 is zwarte balken")
+	_ok(is_equal_approx(GameCamera.rand_voor(416.0, 416.0, 48.0), 0.0),
+		"op een canvas van exact 416 px kijkt de camera niet buiten de vloer")
+	_ok(is_equal_approx(GameCamera.rand_voor(448.0, 416.0, 48.0), 16.0),
+		"op 448 px (9:21) komt er 16 px muur boven en 16 px onder — de vloer blijft gecentreerd")
+	_ok(is_equal_approx(GameCamera.rand_voor(600.0, 416.0, 48.0), 48.0),
+		"de camera kijkt nooit verder dan de getekende wandrand, hoe hoog het toestel ook is")
+	_ok(is_equal_approx(GameCamera.rand_voor(300.0, 416.0, 48.0), 0.0),
+		"een canvas lager dan de vloer levert geen negatieve rand op")
+	_ok(WorldBuilder.RAND_RIJEN >= 2,
+		"minstens twee wandrijen buiten de vloer, anders kijkt een 9:21-toestel in het niets")
+	# Meegroeien op telefoons, letterboxen daarbuiten — anders rekt een
+	# bureaubladbrowser het portretcanvas tot een strook van 600+ px.
+	_ok(UiKit.schaal_aspect_voor(Vector2i(360, 640)) == Window.CONTENT_SCALE_ASPECT_EXPAND,
+		"een 9:16-telefoon moet meegroeien, geen balken")
+	_ok(UiKit.schaal_aspect_voor(Vector2i(360, 840)) == Window.CONTENT_SCALE_ASPECT_EXPAND,
+		"een 9:21-telefoon moet meegroeien, geen balken")
+	_ok(UiKit.schaal_aspect_voor(Vector2i(384, 832)) == Window.CONTENT_SCALE_ASPECT_EXPAND,
+		"het standaardvenster (6:13) moet meegroeien")
+	_ok(UiKit.schaal_aspect_voor(Vector2i(1440, 900)) == Window.CONTENT_SCALE_ASPECT_KEEP,
+		"een bureaubladbrowser moet letterboxen, anders wordt de UI een strook van 600+ px breed")
+	_ok(UiKit.schaal_aspect_voor(Vector2i(1024, 1366)) == Window.CONTENT_SCALE_ASPECT_KEEP,
+		"een staande tablet (3:4) is breder dan 10:16 en letterboxt")

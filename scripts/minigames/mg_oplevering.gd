@@ -549,6 +549,14 @@ func _live() -> void:
 		_check(naam)
 		await _pauze(TIK_CHECK)
 
+	# Wie nooit getest heeft ziet het hier, vóór de titel valt: blind deployen
+	# kost iets, en die rekening moet in beeld staan op het moment dat hij
+	# betaald wordt. Anders leest een lage score als pech in plaats van als de
+	# prijs voor niet-kijken — en dan leert de speler er niets van.
+	if not bool(_bekend.get(&"bugs", false)):
+		_console_regel("ONGETEST — elke bug telt dubbel", UiKit.ROOD, UiKit.FS_SMALL)
+		await _pauze(0.7)
+
 	var score := _score()
 	var uit := _uitkomst(score)
 	var titel := String(uit.get("titel", "OPGELEVERD"))
@@ -576,19 +584,19 @@ func _live() -> void:
 
 
 ## Vertrouwen en scope zijn wat je oplevert, bugs is wat je meelevert, en getest
-## is wat je erover weet. Vandaar de suggestie uit het ontwerp, met één
-## afwijking: `getest` telt tot een plafond mee.
+## is wat je erover weet. De som zelf staat niet meer hier maar in
+## `Gevolgen.oplevering_score()`: zo rekent de testsuite met dezelfde som als
+## de finale, en niet met een kopie die stilletjes uit de pas kan lopen.
 ##
-## Zonder dat plafond is acht keer de suite draaien de hoogste score van het
-## spel, en dan belonen de cijfers precies het gedrag dat de minigame wil
-## afleren. Twee controles per bug waarmee je begon is waar testen ophoudt je
-## iets nieuws te vertellen; wat je daarna wint moet uit fixen komen.
+## Twee afwijkingen van de suggestie uit het ontwerp, allebei daar: `getest`
+## telt tot een plafond mee (twee controles per bug waarmee je begon; daarna
+## moet winst uit fixen komen, anders is acht keer de suite draaien de hoogste
+## score van het spel), en wie nooit getest heeft betaalt per bug extra. Blind
+## deployen was met nul handelingen te winnen — precies het gedrag dat de
+## minigame wil afleren — en `_bekend[&"bugs"]` is de enige eerlijke maat voor
+## blind: niet hoeveel je getest hebt, maar of je ooit gekeken hebt.
 func _score() -> int:
-	var plafond := maxi(2, _start_bugs * 2)
-	return (int(_toestand[&"vertrouwen"])
-		+ mini(int(_toestand[&"getest"]), plafond)
-		- int(_toestand[&"bugs"]) * 2
-		+ int(_toestand[&"scope"]))
+	return Gevolgen.oplevering_score(_toestand, _start_bugs, bool(_bekend.get(&"bugs", false)))
 
 
 ## Eerste uitkomst waarvan de drempel gehaald is; de data staat aflopend.

@@ -91,3 +91,42 @@ static func formatteer_duur(minuten: int) -> String:
 	if m % 60 == 0:
 		return "%du" % (m / 60)
 	return "%du%02d" % [m / 60, m % 60]
+
+
+# --- Het daglicht ---------------------------------------------------------
+# De klok is de ruggengraat van de dag en was tot nu toe onzichtbaar in de
+# pixels: de zonemoods (`main.gd::LICHT`) veranderden alleen met het aantal
+# opgeloste tickets. Dit is de dagfase als kleur, zodat `Main._tint_zone()`
+# hem over de zonemood heen kan leggen. Puur presentatie — leest de klok,
+# beslist niets.
+
+## Ankerpunten: [minuten sinds middernacht, kleur]. Tussenliggende minuten
+## worden lineair gemengd; vóór het eerste en na het laatste punt blijft de
+## kleur staan. Waarden dicht bij wit, net als `LICHT`: dit is een tint, geen
+## filter — de betonvloer moet grijs blijven lezen.
+const DAGLICHT: Array[Array] = [
+	[8 * 60,                 Color(0.94, 0.97, 1.05)],  # koele ochtend, het licht komt van buiten
+	[12 * 60,                Color(1.00, 1.00, 1.00)],  # middag, neutraal
+	[15 * 60 + 30,           Color(1.04, 1.00, 0.95)],  # warme namiddag
+	[START_MIN + BUDGET_MIN, Color(1.08, 0.98, 0.88)],  # 17:12, het gouden uur: je acht uur zijn op
+	[18 * 60 + 30,           Color(0.97, 0.97, 1.02)],  # schemer, de tl-buizen nemen het over
+	[20 * 60,                Color(0.90, 0.93, 1.03)],  # avond: kantoorlicht, koud en een tik donkerder
+]
+
+
+## De kleur van het daglicht op een tijdstip (minuten sinds middernacht).
+static func daglicht(minuten: int) -> Color:
+	if minuten <= int(DAGLICHT[0][0]):
+		return DAGLICHT[0][1] as Color
+	for i: int in range(1, DAGLICHT.size()):
+		var t1 := int(DAGLICHT[i][0])
+		if minuten <= t1:
+			var t0 := int(DAGLICHT[i - 1][0])
+			var f := float(minuten - t0) / float(maxi(1, t1 - t0))
+			return (DAGLICHT[i - 1][1] as Color).lerp(DAGLICHT[i][1] as Color, f)
+	return DAGLICHT[DAGLICHT.size() - 1][1] as Color
+
+
+## Het daglicht van dit moment.
+static func daglicht_nu() -> Color:
+	return daglicht(nu())

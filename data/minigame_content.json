@@ -605,8 +605,8 @@
   "klok_seconden": 75,
   "start": {
    "bugs": 3,
-   "vertrouwen": 5,
-   "getest": 0,
+   "vertrouwen": 4,
+   "getest": 2,
    "scope": 4
   },
   "keuzes": [
@@ -707,12 +707,12 @@
   ],
   "uitkomsten": [
    {
-    "min": 10,
+    "min": 13,
     "titel": "OPGELEVERD: VLEKKELOOS",
     "tekst": "Het staat live en het werkt. Zij stuurt een paardje. Alleen een paardje."
    },
    {
-    "min": 7,
+    "min": 9,
     "titel": "OPGELEVERD: MET EEN SMETJE",
     "tekst": "Het staat live. Er zit een dingetje in dat maandag opvalt, en dat weet je."
    },

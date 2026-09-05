@@ -4,6 +4,11 @@ extends RefCounted
 ## samengesteld uit de gegenereerde atlas, zodat een nieuwe plattegrond
 ## alleen een datawijziging is en geen editorwerk.
 
+## Wandrijen buiten de vloer, boven en onder; zie `populate()`. Drie is genoeg
+## voor elk bestaand portrettoestel: 9:22 geeft 469 px = 3,3 tegels extra,
+## verdeeld over boven en onder.
+const RAND_RIJEN := 3
+
 const ATLAS_PNG := "res://assets/tilesets/office_atlas.png"
 const ATLAS_JSON := "res://assets/tilesets/office_atlas.json"
 const PHYSICS_LAYER := 0
@@ -151,9 +156,32 @@ func populate(ground: TileMapLayer, solid: TileMapLayer) -> void:
 			ground.set_cell(cell, 0, _vloer_variant(x, y))
 			solid.set_cell(cell, 0, _coord_for(ch))
 
+	# Wandrijen buiten de vloer, boven en onder. De vloer is 26 tegels hoog en
+	# het canvas minstens 416 px, maar sinds `window/stretch/aspect = "expand"`
+	# groeit het canvas op een hoger toestel mee: een 9:21-telefoon ziet 448 px,
+	# dus twee tegels méér dan de vloer. Zonder deze rijen kijkt die speler
+	# boven en onder de verdieping in het niets; met deze rijen kijkt hij tegen
+	# de muur, wat een kantoor hoort te doen. `GameCamera` laat hem precies zo
+	# ver kijken als het canvas hoger is (`rand_voor()`), nooit verder dan dit.
+	for y: int in range(-RAND_RIJEN, 0):
+		for x: int in size.x:
+			solid.set_cell(Vector2i(x, y), 0, _coord_for("#"))
+	for y: int in range(size.y, size.y + RAND_RIJEN):
+		for x: int in size.x:
+			solid.set_cell(Vector2i(x, y), 0, _coord_for("#"))
 
+
+## De vloer zelf, zonder de wandrand. Alles wat in meters of tegels rekent
+## (`meters_per_tegel()`, de wijzer, de kompasstrip) gaat hiervan uit.
 func world_rect() -> Rect2:
 	return Rect2(Vector2.ZERO, Vector2(size) * float(tile_size))
+
+
+## De vloer plus de getekende wandrand boven en onder — het uiterste dat de
+## camera mag tonen op een toestel dat hoger is dan de vloer.
+func world_rect_met_rand() -> Rect2:
+	var r := float(RAND_RIJEN * tile_size)
+	return world_rect().grow_individual(0.0, r, 0.0, r)
 
 
 ## Meters per tegel, afgeleid uit `KORTE_AS_M`. Zie daar.

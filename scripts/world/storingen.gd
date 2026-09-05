@@ -255,7 +255,7 @@ func _trigger_klopt(t: Dictionary) -> bool:
 ## Dat was aantoonbaar zo: de heropening verschoof van BBD-207 naar BBD-208 en
 ## bleef in een afrondingsbeat vallen.
 ##
-## De klok-onderstroom (`klok.gd`, één minuut per 2,5 reële seconden, reden
+## De klok-onderstroom (`klok.gd`, één minuut per `Klok.TICK_SEC` reële seconden, reden
 ## `&"verloop"`) heeft die eigenschap niet, en beter nog: `Klok._process()`
 ## staat stil zolang `Session.input_locked` waar is en er geen minigame draait.
 ## Verstreken minuten lopen dus **alleen op terwijl de speler zelf aan zet is**,

@@ -232,6 +232,9 @@ static func complete(id: StringName, result: MinigameResult) -> void:
 	# elk personage en kent geen `when`, terwijl de prijs afhangt van of dit
 	# jouw vakgebied was. Code boekt wat het systeem kost, data wat een scène kost.
 	Session.book_time(Urenstaat.kosten_voor_ticket(is_own_expertise(id)), &"ticket")
+	# Ná de boeking: "af om 17:30" is inclusief het werk zelf. `Gevolgen` leest
+	# hieruit hoeveel tickets pas na je acht uur dichtgingen.
+	Session.completed_at[id] = Session.worked_minutes
 
 	# Vóór het signaal en vóór de save: een luisteraar op ticket_completed —
 	# de HUD, het eindscherm, de telefoon van De Klant — hoort de gevolgen van

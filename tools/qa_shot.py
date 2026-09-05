@@ -21,6 +21,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UIT = os.path.join(ROOT, "docs/audit-shots")
 TMP = os.path.join(ROOT, ".godot", "qa_shot_tmp")
 FPS = 20
+# `--res=BxH` (bijv. --res=360x640) zet de venstermaat van Godot via een
+# tijdelijke override.cfg, en daarmee de schermverhouding van het frame. Zonder
+# deze vlag: de projectinstelling (384x832, exact 6:13). Sinds `window/stretch/aspect = "expand"` groeit het
+# canvas mee met het venster, dus dit is de manier om 9:16, 9:19,5 en 9:21 te
+# vergelijken zonder aan het project te draaien.
+RES: str | None = None
 
 # naam -> (seconden speeltijd, QA-vlaggen)
 SCHERMEN = {
@@ -60,7 +66,23 @@ def schiet(naam: str, seconden: float, vlaggen: list[str]) -> bool:
     frames = max(2, int(seconden * FPS))
     cmd = [GODOT, "--path", ROOT, "--write-movie", os.path.join(TMP, "f.png"),
            "--fixed-fps", str(FPS), "--quit-after", str(frames), "--"] + vlaggen
-    p = subprocess.run(cmd, capture_output=True, text=True)
+    # `--resolution` is hier onbruikbaar: Movie Maker schrijft het frame op de
+    # maat van `window/size/window_*_override` uit project.godot, terwijl de
+    # layout wél de opgegeven maat volgt — je krijgt dan een afgesneden beeld
+    # op de oude maat. `override.cfg` (dat Godot bovenop project.godot leest)
+    # verandert de echte venstermaat, en daarmee zowel layout als frame.
+    override = os.path.join(ROOT, "override.cfg")
+    if RES:
+        b, h = RES.lower().split("x")
+        with open(override, "w") as f:
+            f.write("[display]\n"
+                    f"window/size/window_width_override={int(b)}\n"
+                    f"window/size/window_height_override={int(h)}\n")
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True)
+    finally:
+        if RES and os.path.exists(override):
+            os.remove(override)
     kaal = [r for r in p.stderr.splitlines() + p.stdout.splitlines()
             if "SCRIPT ERROR" in r or "Parse Error" in r]
     got = sorted(glob.glob(os.path.join(TMP, "f*.png")))
@@ -79,7 +101,12 @@ def schiet(naam: str, seconden: float, vlaggen: list[str]) -> bool:
 
 
 def main() -> int:
+    global RES
     args = sys.argv[1:]
+    for a in list(args):
+        if a.startswith("--res="):
+            RES = a[len("--res="):]
+            args.remove(a)
     if args and args[0] == "los":
         return 0 if schiet("los", float(args[1]), args[2:]) else 1
     if args and args[0] == "minigames":

@@ -5,6 +5,10 @@ extends Node2D
 
 ## De Label wordt pas aangemaakt zodra er echt tekst op moet: van de 38 objecten
 ## krijgen er maar tien ooit een set_text, en dat pas nadat hun ticket klaar is.
+##
+## Twee ops veranderen het beeld van een object echt, niet alleen zijn kleur of
+## zichtbaarheid: `swap_texture` wisselt de hele texture, `set_frame` kiest een
+## ander frame in de spritesheet. Zo kan elk opgelost ticket pixels verzetten.
 
 @export var world_id: StringName = &""
 
@@ -17,8 +21,9 @@ const SPRITE_NAAM := "Sprite"
 ## echt een beeld voor dit object is. Vandaag heeft geen enkel object er een — de
 ## meubels staan als losse props op `objects_layer` en dit blijft een onzichtbaar
 ## anker voor de Interactable. `set_sprite()` is de plek waar dat verandert zodra
-## er een spritepad in de data staat, en `op_set_modulate` kleurt de hele node,
-## dus vanaf dat moment doet die operatie ook echt iets.
+## er een spritepad in de data staat; `op_swap_texture` en `op_set_frame` werken
+## daarna op dit kind, en `op_set_modulate` kleurt de hele node, dus vanaf dat
+## moment doet ook die operatie echt iets.
 @onready var _sprite: Sprite2D = get_node_or_null(SPRITE_NAAM) as Sprite2D
 
 var _label: Label = null
@@ -71,6 +76,21 @@ func op_set_visible(v: bool) -> void:
 ## precies het soort verandering dat niemand mist tot de replay hem overslaat.
 func op_swap_texture(path: String) -> void:
 	set_sprite(path)
+
+## Kiest een frame in de spritesheet van dit object. hframes/vframes zetten de
+## sheet-indeling als ze > 0 zijn; anders blijft de huidige staan. Zonder sprite
+## (het object is nog een onzichtbaar anker) alleen een waarschuwing.
+func op_set_frame(frame: int, hframes: int = 0, vframes: int = 0) -> void:
+	if _sprite == null:
+		_sprite = get_node_or_null(SPRITE_NAAM) as Sprite2D
+	if _sprite == null:
+		push_warning("WorldObject %s: set_frame zonder sprite" % world_id)
+		return
+	if hframes > 0:
+		_sprite.hframes = hframes
+	if vframes > 0:
+		_sprite.vframes = vframes
+	_sprite.frame = clampi(frame, 0, maxi(0, _sprite.hframes * _sprite.vframes - 1))
 
 func op_set_modulate(c: Color) -> void:
 	modulate = c

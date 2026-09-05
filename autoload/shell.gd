@@ -21,7 +21,25 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_fade.color.a = 0.0
 	_fade.visible = false
+	_pas_schaal_aan()
+	get_tree().root.size_changed.connect(_pas_schaal_aan)
 	_qa_shot()
+
+
+## Meegroeien op telefoons, letterboxen daarbuiten.
+##
+## `project.godot` zet `window/stretch/aspect` op `expand`, zodat een telefoon
+## die geen 6:13 is geen zwarte balken krijgt. Op een breed venster (tablet
+## liggend, bureaubladbrowser) zou datzelfde `expand` het canvas tot honderden
+## pixels breder rekken dan de 192 waarvoor alles getekend is; daar schakelt dit
+## terug naar `keep`, precies het gedrag van vóór de wijziging. De grens en de
+## rekensom staan in `UiKit.schaal_aspect_voor()`, zodat de testsuite ze kaal
+## kan controleren. Hier alleen het toepassen, bij start en bij elke maatwissel.
+func _pas_schaal_aan() -> void:
+	var venster := get_tree().root
+	var gewenst := UiKit.schaal_aspect_voor(venster.size)
+	if venster.content_scale_aspect != gewenst:
+		venster.content_scale_aspect = gewenst
 
 
 # --- App-lifecycle --------------------------------------------------------

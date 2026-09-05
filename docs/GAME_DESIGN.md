@@ -241,8 +241,9 @@ normaal doen over een absurde situatie — niet uit grappen per regel.
 - **Zonenaam** verschijnt kort bij binnenkomst in een nieuwe ruimte.
 - **Wereldveranderingen**: elk opgelost ticket verandert iets zichtbaars of
   hoorbaars (zie QUESTS.md).
-- **Klok** rechtsboven, naast de ticketteller. Na een opgelost ticket rolt hij
-  zichtbaar vooruit — zie De urenstaat.
+- **Klok** rechtsboven, naast de ticketteller. Hij tikt zachtjes door (één
+  minuut per twintig seconden) en rolt na een opgelost ticket zichtbaar vooruit
+  — zie De urenstaat. Het licht op de verdieping volgt hem.
 
 ## Navigatie
 
@@ -316,9 +317,18 @@ meekijkt.
 
 ## Faalbeleid
 
-Falen kost nooit voortgang — het kost alleen tijd, en tijd is geen voortgang.
-Een mislukte minigame levert een grappige regel op, een kwartier van je dag, en
-je mag direct opnieuw. Dit is een comedy adventure, geen uitdaging.
+Falen kost nooit voortgang — het kost tijd, en het stelt je een vraag. Een
+mislukte minigame levert een grappige regel op, een kwartier van je dag, en dan
+de keuze: *nog een keer*, of *"Goed genoeg. Shippen."* Dat tweede sluit het
+ticket alsnog, maar het telt als gebrekkig geshipt: elke keer is een bug erbij
+in de oplevering, en het slot leest het je voor. Dit is een comedy adventure,
+geen uitdaging — maar wat je afraffelt komt terug, en dat is de grap.
+
+Tijd is op dezelfde manier een gevolg en geen muur. Niets gaat op slot na
+vijven, maar een ticket dat je na je acht uur afsluit is *ongetest*, en de
+oplevering rekent dat door (zie QUESTS.md, De urenstaat). Het daglicht op de
+verdieping loopt met de klok mee — koel om negen uur, goud om vijf, tl-blauw
+als je er dan nog staat — zodat je de tijd ziet zonder op de klok te kijken.
 
 Daarom rolt de klok alleen zichtbaar vooruit bij een *opgelost* ticket. Een volle
 animatie op een mislukte poging leest als straf; die boeking gaat stil, met een

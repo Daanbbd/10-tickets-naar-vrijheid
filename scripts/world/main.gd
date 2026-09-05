@@ -144,7 +144,7 @@ func _ready() -> void:
 	# weggaat. En de tik die dat venster opvangt maakt geen stick, want
 	# `chrome_vlakken()` geeft de verduistering mee aan `meld_chrome()`.
 	npc_layer.spawn_initial()
-	camera.setup(player, builder.world_rect())
+	camera.setup(player, builder.world_rect(), builder.world_rect_met_rand())
 	# De wereld zakt onder de HUD-chips vandaan. De HUD meet zijn eigen balk; dit
 	# getal staat daarom niet twee keer in de codebase. Na camera.setup(), want
 	# die zet de limieten en offset gaat daar juist bewust voorbij.
@@ -155,6 +155,10 @@ func _ready() -> void:
 	storingen.setup(npc_layer, mutator, player)
 
 	Bus.ticket_completed.connect(_on_ticket_completed)
+	# Het daglicht volgt de klok, dus elke boeking — ook de ambient tik van
+	# `Klok` — hertint de zone waar je staat. `_tint_zone()` is kill-before-
+	# recreate, dus twintig aanroepen per minuut zijn geen probleem.
+	Bus.time_booked.connect(func(_m: int, _r: StringName, _t: int) -> void: _tint_zone(_zone_mood))
 	Bus.ticket_state_changed.connect(func(_a: StringName, _b: GameEnums.TicketState) -> void: _refresh_marker())
 	Bus.ticket_completed.connect(func(_a: StringName, _b: MinigameResult) -> void: _refresh_marker())
 	# `_volgers_veranderd()` ook: het bijschrift op de tikmarker draagt de
@@ -200,6 +204,7 @@ func _ready() -> void:
 		_qa_kijk()
 		_qa_auto()
 		_qa_praat()
+		_qa_minuten()
 		_intro_beat()
 
 
@@ -573,6 +578,21 @@ func _qa_praat() -> void:
 	await get_tree().create_timer(0.4).timeout
 	await _qa_dialoog_vrij()
 	tickets.handle_npc_talk(npc.interactable)
+
+
+## QA: `-- --speler=x --minuten=<n>` boekt meteen n minuten op de klok, zodat
+## het daglicht en de HUD-klok op een later tijdstip te controleren zijn zonder
+## er een half uur op te wachten. `Session.book_time()` vuurt `Bus.time_booked`,
+## dus alles wat op de klok hangt (de zonetint, de klokchip, de storingen met
+## `wachttijd_min`) reageert precies zoals bij echt verstreken tijd. Combineer
+## met `--kijk=` voor een vaste plek; de reden `qa` komt nergens in het spel voor.
+func _qa_minuten() -> void:
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--minuten="):
+			var n := int(a.trim_prefix("--minuten="))
+			if n > 0:
+				Session.book_time(n, &"qa")
+			return
 
 
 ## QA: loopt alle tien de tickets af in de echte runtime, inclusief dialogen,
@@ -1136,7 +1156,11 @@ func _weekend_duwt_terug() -> void:
 func _tint_zone(mood: String) -> void:
 	if licht == null:
 		return
-	var doel := Gevolgen.tint(LICHT.get(mood, Color.WHITE))
+	# Drie lagen in één kleur: de zonemood (waar je staat), de escalatiegloed
+	# (hoe ver de dag is, `Gevolgen.tint()`) en het daglicht (hoe laat het is,
+	# `Urenstaat.daglicht()`). Component-gewijs vermenigvuldigd, want het zijn
+	# allemaal tinten rond wit — samen blijven ze binnen ~±12%.
+	var doel := Gevolgen.tint(LICHT.get(mood, Color.WHITE)) * Urenstaat.daglicht_nu()
 	# Kill-before-recreate: langs een deuropening lopen hertriggert dit op elke
 	# tile-overgang, en stapelende tweens vechten om dezelfde kleur.
 	if _licht_tween != null and _licht_tween.is_running():

@@ -47,6 +47,12 @@ var worked_minutes: int = 0
 ## Hoeveel minuten je officieel geboekt hebt. Loopt bewust achter op
 ## worked_minutes: dat verschil is waar Dirk over komt praten.
 var booked_minutes: int = 0
+## Wanneer elk ticket af kwam, in `worked_minutes` op dat moment (ticket-id ->
+## minuten). Dit is wat "na vijven opgeleverd" meetbaar maakt: `Gevolgen`
+## telt hoeveel tickets pas na je acht uur dichtgingen en rekent die als
+## ongetest door in de oplevering. Bij een heropening en tweede oplevering
+## wint de laatste tijd — af is af op het moment dat het echt af was.
+var completed_at: Dictionary = {}
 ## Is deze sessie van schijf gekomen in plaats van net begonnen?
 ##
 ## Staat bewust **niet** in de save: het gaat over hoe deze speelbeurt is
@@ -84,6 +90,7 @@ func start_new(chosen: StringName) -> void:
 	gevolgen.clear()
 	worked_minutes = 0
 	booked_minutes = 0
+	completed_at.clear()
 	reset_input_lock()
 	Bus.character_selected.emit(character_id)
 
@@ -317,6 +324,7 @@ func to_dict() -> Dictionary:
 		"gevolgen": _sn_keys_to_str(gevolgen),
 		"worked_minutes": worked_minutes,
 		"booked_minutes": booked_minutes,
+		"completed_at": _sn_keys_to_str(completed_at),
 		"done_order": done_order.map(func(s: StringName) -> String: return String(s)),
 		"beloond": beloond.map(func(s: StringName) -> String: return String(s)),
 		"discovered": discovered.map(func(s: StringName) -> String: return String(s)),
@@ -333,6 +341,9 @@ func from_dict(d: Dictionary) -> void:
 	gevolgen = _str_keys_to_sn(d.get("gevolgen", {}))
 	worked_minutes = int(d.get("worked_minutes", 0))
 	booked_minutes = int(d.get("booked_minutes", 0))
+	# Een save van vóór dit veld heeft hem niet; dan weet niemand meer hoe laat
+	# het was en telt er niets als "na vijven". Beter te mild dan te streng.
+	completed_at = _str_keys_to_sn(d.get("completed_at", {}))
 	done_order.clear()
 	for s: Variant in d.get("done_order", []):
 		done_order.append(StringName(s))

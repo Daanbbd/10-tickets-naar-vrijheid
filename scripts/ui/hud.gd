@@ -784,7 +784,7 @@ func _refresh_klok() -> void:
 ## De boeking is de trigger van de rol, niet het opgeloste ticket: anders staat
 ## de nieuwe tijd er al voordat de animatie begint.
 ##
-## Sinds `Klok` (F3-d) elke ~2,5s zelf een minuut boekt met reden `&"verloop"`,
+## Sinds `Klok` (F3-d) elke ~20 s zelf een minuut boekt met reden `&"verloop"`,
 ## vuurt dit signaal continu tijdens gewoon rondlopen — niet alleen bij een
 ## opgelost ticket of een opgehaalde collega. Het "klik"-geluid en de "+1 min"
 ## popup zijn bedoeld voor die laatste, echte sprongen; op de ambient tik

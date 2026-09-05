@@ -81,9 +81,26 @@
    },
    "keuze": {
     "speaker": "",
-    "text": "De stang zit op borsthoogte. Er hangt geen slot op.",
+    "variants": [
+     {
+      "when": {
+       "flags_all": [
+        "alarm_af"
+       ]
+      },
+      "text": "De stang zit op borsthoogte. Er hangt nu een briefje op: NIET NOG EEN KEER. Dennis."
+     },
+     {
+      "text": "De stang zit op borsthoogte. Er hangt geen slot op."
+     }
+    ],
     "choices": [
      {
+      "when": {
+       "flags_none": [
+        "alarm_af"
+       ]
+      },
       "text": "De deur opendoen.",
       "next": "alarm",
       "effects": [
@@ -387,6 +404,11 @@
     "text": "Er staan drie knoppen. Eén ervan mag niet.",
     "choices": [
      {
+      "when": {
+       "flags_none": [
+        "koffie_middelste"
+       ]
+      },
       "text": "De middelste knop indrukken.",
       "next": "middelste",
       "effects": [
@@ -407,6 +429,11 @@
       ]
      },
      {
+      "when": {
+       "flags_none": [
+        "koffie_gehaald"
+       ]
+      },
       "text": "Gewoon een koffie halen.",
       "next": "gewoon",
       "effects": [

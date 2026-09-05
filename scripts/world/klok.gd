@@ -1,15 +1,31 @@
 class_name Klok
 extends Node
-## Laat de speeltijd meelopen met de wandklok.
+## Laat de speeltijd meelopen met de wandklok — als onderstroom, niet als
+## hoofdstroom.
 ##
-## Vier seconden en veertien minuten in het spel stonden er allebei 09:12: de
-## enige klokbewegingen kwamen van een opgeleverd ticket (30/45 min) of een
-## opgehaalde collega (15 min), en die blijven bestaan als hun eigen boeking —
-## de urenrol-animatie erop is al goed. Deze node levert de onderstroom
-## eronder: elke `TICK_SEC` seconden speeltijd een minuut op de klok, via
-## `Session.book_time()`, dezelfde en enige plek die `worked_minutes` verhoogt.
-## De HUD-klok en de `overwerk`-conditie lopen daardoor vanzelf mee; niets in
-## deze node kent een van beide.
+## Er is één waarheid over de tijd: `Session.worked_minutes`. Twee dingen
+## schrijven erin, en ze horen sámen één werkdag te vullen:
+##
+## 1. **Het grootboek** (`Urenstaat`): elke oplevering boekt 30 of 45 minuten,
+##    elke opgehaalde collega 15, elke mislukte poging 15. Voor een schone dag
+##    is dat ~510 minuten (Daan, Danny) tot ~540 (de rest) — 09:12 → ~17:42 of
+##    ~18:12, en dat is op zichzelf al voorbij de acht uur. Dat is de grap van
+##    de urenstaat, en `_test_urenstaat()` bewaakt hem.
+## 2. **Deze node**: elke `TICK_SEC` seconden speeltijd één minuut, reden
+##    `&"verloop"`, zodat de klok ook beweegt terwijl je loopt en niet alleen
+##    springt bij een oplevering. Dit is wat `storingen.gd` gebruikt voor
+##    `wachttijd_min` (verstreken minuten waarin de speler zelf aan zet was).
+##
+## **Waarom 20 seconden en niet 2,5.** Op 2,5 s boekte deze node in een sessie
+## van ~25 minuten reëel ~600 minuten — genoeg voor een hele dag in zijn eentje.
+## Maar het grootboek boekte zijn 510-540 er gewoon bovenop, want beide waren
+## los van elkaar op "een hele dag" gemaatvoerd. Het einde printte daardoor
+## ~28:12 waar `ending.gd` 17:42 beloofde, en de HUD-klok stond al vóór de
+## helft van de tickets op overwerk. Op 20 s levert deze node ~75 minuten in
+## 25 minuten reëel: samen met het grootboek ~585-615, dus een schone dag
+## eindigt rond 19:00-19:30 en je acht uur zijn op bij ongeveer driekwart van
+## de beurt. `_test_dagvenster()` legt dat venster vast (17:12 tot 20:12) zodat
+## een dubbele klok niet stil terugkomt.
 ##
 ## Loopt NIET tijdens dialoog, de telefoon of het vertrek — dezelfde
 ## `Session.input_locked` als `telefoon.gd::_process()` gebruikt, anders straf
@@ -21,15 +37,9 @@ extends Node
 ## tikken" was precies de klacht over het oude pauzemodel. Sinds F5-a zet
 ## `Shell.run_minigame()` ook `Session.lock_input()` (zodat de speler niet kan
 ## weglopen), dus `Session.input_locked` staat tijdens een minigame ook aan —
-## zonder de uitzondering hieronder zou deze klok daardoor alsnog stilvallen,
-## precies het probleem dat F5 moest oplossen. Vandaar de expliciete
-## `Shell.minigame_active()`-uitzondering: het slot mag de speler tegenhouden
-## zonder de klok tegen te houden.
-##
-## Getal: 1 in-game minuut per 2,5 reële seconden. Een sessie van ~25 minuten
-## reëel bestrijkt dan ~600 in-game minuten: 09:12 -> iets voorbij 19:00,
-## precies de doelspanne uit het plan.
-const TICK_SEC := 2.5
+## zonder de uitzondering hieronder zou deze klok daardoor alsnog stilvallen.
+## Vandaar de expliciete `Shell.minigame_active()`-uitzondering.
+const TICK_SEC := 20.0
 
 var _t: float = 0.0
 

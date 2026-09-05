@@ -23,6 +23,13 @@ Daaruit volgt één harde scheiding:
 
 De testsuite dwingt af dat de op-namespaces gescheiden blijven.
 
+`world_changes` kent elf ops (`WorldMutator.OPS`): `set_visible`, `set_text`,
+`set_modulate`, `set_locked`, `swap_texture`, `set_frame`, `spawn_npc`,
+`despawn_npc`, `set_ambience`, `cue` en `camera_focus`. De twee beeld-ops
+`swap_texture` en `set_frame` veranderen de sprite van een `WorldObject` — de
+weg waarlangs een opgelost ticket pixels verandert in plaats van alleen een
+label.
+
 ## Autoloads (5)
 
 Regel: een autoload bevat *state of routing*, nooit gameplaylogica.
@@ -31,7 +38,7 @@ Regel: een autoload bevat *state of routing*, nooit gameplaylogica.
 |---|---|
 | `Bus` | Alleen signal-declaraties. Geen state, geen logica. |
 | `GameData` | Laadt alle JSON één keer en parset naar getypte modellen. Daarna read-only. |
-| `Session` | Muteerbare runtime-state: personage, flags, voorwerpen, ticketstanden, gevonden tickets en de gekozen ticket. Schrijft en leest de save. |
+| `Session` | Muteerbare runtime-state: personage, flags, tellers, voorwerpen, ticketstanden, gevonden tickets, de gekozen ticket en per opgelost ticket het klokmoment (`completed_at`, waar `Gevolgen.ongetest_na_vijf()` op leest). Schrijft en leest de save. |
 | `Shell` | Scene-router, fades, host van de minigame-overlay. De enige plek die `get_tree().paused` aanraakt; het pauzemenu vraagt het via `pauzeer_voor_menu()`. |
 | `AudioDirector` | SFX-pool en de muziekstapel. Luistert zelf naar de Bus, dus scenes regelen hun eigen muziek niet. |
 
@@ -108,6 +115,12 @@ Main (Node2D)                  main.gd — expliciete bootvolgorde
 ```
 
 Globaal daarboven uit `shell.tscn`: MinigameLayer (50) en TransitionLayer (100).
+
+Los van de boom staat `Juice` (`scripts/core/juice.gd`, statisch): de
+impactframes van het spel. `Juice.schok()` vindt de camera via de groep
+`game_camera`, `Juice.confetti()` hangt een eenmalige `CPUParticles2D` onder
+een willekeurige ouder, `Juice.squash()` deukt elke `UiKit.button()` in bij
+`button_down`. Niemand geeft er een node voor door.
 
 `Main._ready()` is expliciet en hangt niet af van de `_ready`-volgorde van
 siblings.

@@ -57,6 +57,65 @@ const GETALLEN := {
 ## belooft, levert ze half af.
 const ZWARE_WENSEN: Array[String] = ["app", "loyaliteit", "ai"]
 
+## Hoe vaak de speler bij een mislukte poging "Goed genoeg. Shippen." koos.
+## `TicketController._ship_gebrekkig()` hoogt hem op; een teller en geen vlag,
+## want de tweede keer is een andere dag dan de eerste: de finale rekent elke
+## keer als een bug door (`finale_start()`), het eindscherm noemt het aantal.
+const GEBREKKIG_TELLER := &"gebrekkig_geshipt"
+
+
+## De vlag per ticket dat gebrekkig live ging, zodat een dialoog erop kan
+## filteren. De teller hierboven weet hoe vaak; deze weet wélk.
+static func gebrekkig_vlag(ticket_id: StringName) -> StringName:
+	return StringName("geshipt_gebrekkig_%s" % ticket_id)
+
+
+## Hoe vaak je vandaag "goed genoeg" zei tegen iets dat het niet was.
+static func gebrekkig_geshipt() -> int:
+	return Session.get_counter(GEBREKKIG_TELLER)
+
+
+## Hoeveel tickets pas na je acht uur dichtgingen — de finale zelf (t10) niet
+## meegerekend, die ís het na-vijven-werk dat hier beoordeeld wordt. Leest
+## `Session.completed_at`, gevuld in `QuestEngine.complete()` ná de boeking van
+## de ticketuren, dus "af om 17:30" is inclusief het werk zelf. Na vijven test
+## niemand meer: wat dan dichtgaat, gaat ongetest de oplevering in.
+##
+## Na een JSON-save zijn de minuten floats; vandaar `int()` eromheen.
+static func ongetest_na_vijf() -> int:
+	var n := 0
+	for id: StringName in Session.completed_at:
+		if id == &"t10":
+			continue
+		if int(Session.completed_at[id]) >= Urenstaat.BUDGET_MIN:
+			n += 1
+	return n
+
+
+## De ene som die de minigame (`mg_oplevering._score()`) en de testsuite delen,
+## zodat er geen kopie is die stilletjes uit de pas kan lopen. Vertrouwen en
+## scope zijn wat je oplevert, bugs is wat je meelevert (dubbel, want elke bug
+## is er één die zíj vindt), en getest is wat je erover weet — tot een plafond
+## van twee controles per bug waarmee je begon; daarna moet winst uit fixen
+## komen, anders is acht keer de suite draaien de hoogste score van het spel.
+## Wie nooit heeft gekeken (`bugs_bekend` false) betaalt per bug nog eens
+## extra: blind deployen was met nul handelingen te winnen, en dat is precies
+## het gedrag dat de minigame wil afleren.
+##
+## Ontbrekende sleutels in `toestand` tellen als nul, zodat de suite ook met
+## een halve toestand kan rekenen.
+static func oplevering_score(toestand: Dictionary, start_bugs: int, bugs_bekend: bool) -> int:
+	var plafond := maxi(2, start_bugs * 2)
+	var bugs := int(toestand.get(&"bugs", 0))
+	var s := (int(toestand.get(&"vertrouwen", 0))
+		+ mini(int(toestand.get(&"getest", 0)), plafond)
+		- bugs * 2
+		+ int(toestand.get(&"scope", 0)))
+	if not bugs_bekend:
+		# Blind deployen: elke ongeteste bug telt dubbel.
+		s -= bugs
+	return s
+
 
 ## Neemt één minigame-uitkomst op in de sessie. Aangeroepen door
 ## `QuestEngine.complete()`, vóór `ticket_completed` en vóór de save, zodat een
@@ -148,37 +207,67 @@ static func getal(sleutel: StringName, fallback: Variant = 0) -> Variant:
 
 ## De begintoestand van de oplevering, opgeteld uit de hele dag.
 ##
-## Dit is waar de spanningsboog uitkomt. Een zorgvuldige dag begint met twee
-## bugs en zeven vertrouwen; een dag waarop je scope te groot liet worden en de
-## klant ontevreden hield begint met vier bugs en vier vertrouwen. Dat is een
-## merkbaar andere finale, en geen van beide is onhaalbaar — er is geen game
-## over, dus een slechte dag maakt de oplevering duurder, niet onmogelijk.
-## BBD-202 (Deel 4): de stand-up won ooit een `gevolg_jonathan_gemist`-bonusbug
-## op een geslaagde speelbeurt waarin je hem tóch had afgekapt. Die combinatie
-## bestaat niet meer: sinds de infobalk is het slagen van de minigame zelf al
-## "beide nuttige regels gehoord", dus een geboekte SUCCESS kan `gemist` nooit
-## meer gevuld hebben — precies zoals `gevolg_paard_gemist` hierboven (P1-6)
-## nooit een straf mocht worden omdat alleen een vakgebiedvoordeel 'm ooit zet.
-## Geen compensatie hier, met opzet: de makkelijker-wordende aftocht die deze
-## bug voorkwam bestaat niet meer als aftocht — wie Jonathan mist, verliest de
-## minigame nu meteen (een retry, geen finale-tax), dus de opgave werd op het
-## moment zelf strenger in plaats van dat er verderop iets zachter werd.
-## `gevolg_danny_gemist` (`getest` hieronder) is om dezelfde reden weg.
+## Dit is waar de spanningsboog uitkomt. Vier getallen, elk met zijn bereik en
+## zijn reden:
+##
+## - **bugs (1..8)** — wat je meelevert. Twee heb je altijd; er komt één bij
+##   voor een te grote scope en één voor de verkeerd gelegde kabel, er gaat
+##   één af voor een perfecte uitlijning. Daarbovenop wat de dag zelf deed:
+##   elk ticket dat pas na je acht uur dichtging is ongetest (tot drie), elke
+##   keer "goed genoeg, shippen" is een bug waar je zelf bij stond (tot drie),
+##   en per drie scope-punten boven de acht komt er één bij — hoe meer je
+##   belooft, hoe meer er mis kan gaan.
+## - **vertrouwen (1..9)** — wat zij van je gelooft. Vijf, plus één mét de
+##   webshop of min één zonder, min één voor verbrande credits en min één voor
+##   een ontevreden klant (dat hoort zij vóór jij het kunt gladstrijken). Het
+##   paard levert geen vertrouwen meer op: het zit in elke winnende set van
+##   BBD-201, dus die bonus had nul variantie. De vlag blijft voor de dialoog.
+## - **getest (0..3)** — wat je erover weet. Eén voor de CRO-doelstelling, één
+##   voor een stand-up met adem over (>= 8 s) en één voor een pijplijn met
+##   credits over (>= 60): tijd die je overhield is tijd die je ergens in stak.
+##   Min één als A pas na twee verliezen won.
+## - **scope (1..9)** — wat je beloofd hebt, niet wat je gebouwd hebt:
+##   `scope_punten - 6`, zodat de 8..13 die BBD-201 kan opleveren als 2..7
+##   binnenkomt in plaats van als altijd-negen.
+##
+## Een zorgvuldige dag begint dus met één bug en zes vertrouwen; een dag met te
+## grote scope, een foute kabel, drie tickets na vijven en een ontevreden klant
+## met zeven bugs en drie vertrouwen. Merkbaar anders, en geen van beide
+## onhaalbaar — er is geen game over, een slechte dag maakt de oplevering
+## duurder, niet onmogelijk.
+##
+## Historie, beknopt. P1-6: `gevolg_paard_gemist` kostte hier ooit `getest`,
+## maar alleen Bastiaans vakgebiedvoordeel (`geen_zoektocht`) kan die vlag
+## zetten en een trait geeft nooit een straf (`TraitModifier`); de vlag blijft
+## voor zijn eigen dialoogregel. BBD-202 (Deel 4): `gevolg_jonathan_gemist` en
+## `gevolg_danny_gemist` zijn weg — sinds de infobalk is slagen zelf al "beide
+## regels gehoord", en wie mist verliest de minigame meteen (een retry, geen
+## finale-tax). BBD-207 (Deel 3): Danny's A/B-gevecht speelt zich intern af,
+## dus veel proberen kost `getest` en niet `vertrouwen` — dat verving de
+## client-facing `gevolg_verkeerde_merksound`.
 static func finale_start() -> Dictionary:
-	var bugs := 3
+	var scope_punten := int(getal(&"scope_punten", 4))
+
+	var bugs := 2
 	if Session.get_flag(&"gevolg_scope_te_groot"):
 		bugs += 1
-	if Session.get_flag(&"gevolg_uitlijn_perfect"):
-		bugs -= 1
 	# Een verkeerd gelegde kabel werkt vandaag, en morgen weet niemand nog
 	# waarom hij het deed. Dat is een bug die nog moet gebeuren.
 	if Session.get_flag(&"gevolg_backend_fout_gekozen"):
 		bugs += 1
+	if Session.get_flag(&"gevolg_uitlijn_perfect"):
+		bugs -= 1
+	# Na vijven test niemand meer, en "goed genoeg" is een bug waar je zelf bij
+	# stond. Allebei afgetopt op drie: een rampdag moet duur zijn, niet
+	# onspeelbaar.
+	bugs += mini(3, ongetest_na_vijf())
+	bugs += mini(3, gebrekkig_geshipt())
+	# Per drie punten boven de acht die je minimaal belooft komt er één bij.
+	# Integer-deling, met opzet: 8..10 kost niets, 11..13 kost één.
+	bugs += maxi(0, (scope_punten - 8) / 3)
 
 	var vertrouwen := 5
 	vertrouwen += -1 if Session.get_flag(&"gevolg_geen_webshop") else 1
-	if Session.get_flag(&"gevolg_paard_beloofd"):
-		vertrouwen += 1
 	if Session.get_flag(&"gevolg_credits_verbrand"):
 		vertrouwen -= 1
 	# Een ontevreden klant is iets dat zij hoort of ziet vóór jij het kunt
@@ -189,29 +278,22 @@ static func finale_start() -> Dictionary:
 	var getest := 0
 	if Session.get_flag(&"gevolg_cro_gehaald"):
 		getest += 1
-	# BBD-207 (Deel 3): geen client-gevolg meer — Danny's A/B-gevecht speelt
-	# zich intern af, dus wat langer duurde om A te laten winnen hoort bij
-	# zíjn testwerk (`getest`), niet bij klantvertrouwen (`vertrouwen`). Dat
-	# verving de oude `gevolg_verkeerde_merksound`, die client-facing was:
-	# een verkeerd gekozen merksound klonk letterlijk door het kantoor.
+	# Tijd die je overhield is tijd die je ergens in stak: een stand-up met
+	# adem over en een pijplijn met credits over tellen als testwerk.
+	if float(getal(&"standup_tijd_over", 0.0)) >= 8.0:
+		getest += 1
+	if int(getal(&"video_credits", 0)) >= 60:
+		getest += 1
+	# BBD-207 (Deel 3): Danny's gevecht is intern werk, dus dit kost `getest`.
 	if Session.get_flag(&"gevolg_veel_geprobeerd"):
 		getest -= 1
-	# P1-6: hier stond een `getest -= 1` bij `gevolg_paard_gemist`. Alleen
-	# Bastiaans vakgebiedvoordeel (`geen_zoektocht`) kan die vlag ooit zetten —
-	# zonder de trait blokkeert `_wh_paarden()` de route via het bord juist
-	# (`ticket_controller.gd`), dus "het paard zelf nooit gezien" gebeurde
-	# nooit door onoplettendheid, alleen door de trait te gebruiken. Dat botst
-	# met de harde regel in `TraitModifier`: een trait geeft alleen voordeel,
-	# nooit een straf. De vlag blijft staan (Bastiaan krijgt er een eigen
-	# regel over — "wist ik meteen waar hij zat" in dialogue/npcs.json), maar
-	# kost geen `getest` meer.
 
-	# Scope is wat je beloofd hebt, niet wat je gebouwd hebt: hoe meer wensen
-	# je meenam, hoe meer er in de oplevering mis kan gaan.
-	var scope := int(getal(&"scope_punten", 4))
+	# Scope is wat je beloofd hebt, niet wat je gebouwd hebt. BBD-201 levert
+	# 8..13 punten; min zes maakt daar 2..7 van, en dan verschilt het ook echt.
+	var scope := scope_punten - 6
 
 	return {
-		&"bugs": clampi(bugs, 1, 6),
+		&"bugs": clampi(bugs, 1, 8),
 		&"vertrouwen": clampi(vertrouwen, 1, 9),
 		&"getest": clampi(getest, 0, 3),
 		&"scope": clampi(scope, 1, 9),

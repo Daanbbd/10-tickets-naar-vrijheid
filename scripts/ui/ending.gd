@@ -5,9 +5,10 @@ extends Control
 ## werkelijke eindtijd, en wat je gewerkt hebt tegen wat je mag boeken.
 ##
 ## De eindtijd stond hier lang hardgecodeerd als "17:31.". Nu rekent de
-## urenstaat hem uit, vanaf de 9:12 waarop de intro je binnenlaat: wie geen
-## fout maakt loopt rond 17:42 naar buiten, en iedereen die wél iets overdoet
-## later.
+## urenstaat hem uit, vanaf de 9:12 waarop de intro je binnenlaat. Het
+## grootboek alleen kwam voor een schone dag op ~17:42; sinds `Klok` er elke
+## twintig seconden speeltijd een minuut bij tikt loopt wie geen fout maakt
+## rond 19:00-19:30 naar buiten, en iedereen die wél iets overdoet later.
 const REGELS: Array[String] = [
 	"Je pakt je jas van de kapstok.",
 	"Dezelfde jas als vanochtend. Het voelt langer geleden.",
@@ -80,6 +81,17 @@ func _speel() -> void:
 	for regel: String in _opleveringsregels():
 		await _toon(regel)
 
+	# Wat de dag aan die uitslag heeft bijgedragen, en waar je zelf bij was:
+	# tickets die na vijven dichtgingen en keren dat je "goed genoeg" zei. De
+	# finale rekende ze al door (`Gevolgen.finale_start()`); hier hoor je het
+	# terug, zodat de uitslag hierboven geen pech lijkt maar een optelsom.
+	var na_vijf := _na_vijf_regel()
+	if na_vijf != "":
+		await _toon(na_vijf)
+	var gebrekkig := _gebrekkig_regel()
+	if gebrekkig != "":
+		await _toon(gebrekkig)
+
 	await _toon("%s." % Urenstaat.formatteer(Urenstaat.nu() + JAS_MIN))
 	await _toon(_urenclou())
 
@@ -140,6 +152,29 @@ func _opleveringsregels() -> Array[String]:
 	if tekst != "":
 		uit.append(tekst)
 	return uit
+
+
+## Hoeveel tickets pas na je acht uur dichtgingen, als één regel. Leeg als het
+## er geen waren — "nul tickets na vijven" is geen clou, en dit scherm hoort
+## dan zijn mond te houden.
+func _na_vijf_regel() -> String:
+	var n := Gevolgen.ongetest_na_vijf()
+	if n <= 0:
+		return ""
+	if n == 1:
+		return "Eén ticket na vijven af. Ongetest, en dat weet je."
+	return "%d tickets na vijven af. Ongetest, en dat weet je." % n
+
+
+## Hoe vaak je "goed genoeg" zei tegen iets dat het niet was, als één regel.
+## Leeg als dat vandaag niet gebeurde.
+func _gebrekkig_regel() -> String:
+	var n := Gevolgen.gebrekkig_geshipt()
+	if n <= 0:
+		return ""
+	if n == 1:
+		return "Eén keer 'goed genoeg' gezegd. Het staat live."
+	return "%d keer 'goed genoeg' gezegd. Het staat live." % n
 
 
 ## Wat je werkte tegen wat je mag boeken. Er is altijd een verschil — de dag is

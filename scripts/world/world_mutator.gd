@@ -5,8 +5,12 @@ extends Node
 ## Alle ops MOETEN idempotent zijn: replay_all() draait ze opnieuw bij elke
 ## wereld-load, zodat de wereld altijd een pure functie van Session is.
 
+## `swap_texture` en `set_frame` zijn de twee ops die het beeld van een object
+## echt veranderen. Ook zij zijn idempotent: replay_all() zet dezelfde texture
+## of hetzelfde frame gewoon nog een keer, en het eindplaatje is identiek.
 const OPS: Array[String] = [
 	"set_visible", "set_text", "set_modulate", "set_locked",
+	"swap_texture", "set_frame",
 	"spawn_npc", "despawn_npc", "set_ambience", "cue", "camera_focus",
 ]
 
@@ -53,6 +57,10 @@ func apply(changes: Array, animated: bool) -> void:
 				target.op_set_modulate(Color(String(c.get("value", "#ffffff"))))
 			"set_locked":
 				target.op_set_locked(bool(c.get("value", false)))
+			"swap_texture":
+				target.op_swap_texture(String(c.get("value", "")))
+			"set_frame":
+				target.op_set_frame(int(c.get("value", 0)), int(c.get("hframes", 0)), int(c.get("vframes", 0)))
 			"spawn_npc":
 				_spawn_npc(StringName(c.get("npc", "")))
 			"despawn_npc":

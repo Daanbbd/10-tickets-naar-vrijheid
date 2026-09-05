@@ -196,6 +196,30 @@ static func rich(size: int = FS_BODY, color: Color = INK) -> RichTextLabel:
 ## Een knop die juist in een vaste breedte moet passen — een dialoogkeuze, een
 ## regel in een keuzelijst — hoort daarom `keuzeknop()` te gebruiken. Die twee
 ## behoeften zijn tegengesteld en kunnen niet één standaard zijn.
+## Tot welke breedte-hoogteverhouding het canvas met het venster meegroeit.
+##
+## `window/stretch/aspect = "expand"` haalt de zwarte balken van telefoons weg:
+## 192x416 is een minimum en het canvas groeit in de as waar het toestel ruimte
+## heeft. Maar een bureaubladbrowser van 1440x900 zou het canvas dan tot ~665 px
+## breed uitrekken, en elke knop, dialoogbox en minigame-kolom is op 192 px
+## getekend. Daarom: meegroeien tot een 10:16-scherm (iets breder dan 9:16, de
+## breedste telefoon), en daarbuiten gewoon weer letterboxen zoals vóór deze
+## wijziging. `Shell` past dit toe zodra het venster van maat verandert.
+const SCHAAL_MAX_BREED := 10.0 / 16.0
+
+
+## Welke aspect-modus hoort bij een venster van deze maat: meegroeien
+## (telefoons, ook 9:21) of letterboxen (tablets liggend, bureaublad). Statisch
+## zodat `_test_responsief()` hem zonder venster kan doorrekenen.
+static func schaal_aspect_voor(venster: Vector2i) -> Window.ContentScaleAspect:
+	if venster.x <= 0 or venster.y <= 0:
+		return Window.CONTENT_SCALE_ASPECT_EXPAND
+	var verhouding := float(venster.x) / float(venster.y)
+	if verhouding > SCHAAL_MAX_BREED:
+		return Window.CONTENT_SCALE_ASPECT_KEEP
+	return Window.CONTENT_SCALE_ASPECT_EXPAND
+
+
 static func button(text: String, size: int = FS_BODY) -> Button:
 	var b := Button.new()
 	b.text = text
@@ -216,6 +240,9 @@ static func button(text: String, size: int = FS_BODY) -> Button:
 	b.add_theme_stylebox_override("disabled", panel(NEUTRAAL_TINT, GRIJS))
 	b.add_theme_color_override("font_disabled_color", GRIJS)
 	b.focus_mode = Control.FOCUS_ALL
+	# Elke knop in het spel drukt zichtbaar in. `knop_primair()`, `keuzeknop()`
+	# en `card()` erven dit via button(), dus dit is de enige plek waar het staat.
+	b.button_down.connect(func() -> void: Juice.squash(b))
 	return b
 
 

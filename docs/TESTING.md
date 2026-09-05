@@ -130,14 +130,22 @@ Godot kan frames als PNG wegschrijven:
   --quit-after 200 -- --speler=victor --auto=koffiemachine
 ```
 
+`tools/qa_shot.py` doet dit voor je (het pakt het laatste frame en ruimt de
+reeks op). Met `--res=BxH` zet je de venstermaat, en daarmee de
+schermverhouding: `python3 tools/qa_shot.py wereld --res=360x640` toont wat een
+9:16-telefoon ziet, `--res=360x840` een 9:21. Sinds `window/stretch/aspect =
+"expand"` groeit het canvas met het venster mee — het is dé manier om te
+controleren dat er nergens een zwarte balk of een afgesneden knop staat.
+
 Voor de vloer zelf is `--kijk=<x>,<y>` de vlag: die zet de speler op een tegel
 en doet verder niets. `--auto=` kan dat niet vervangen — die triggert de
 interactie en legt een dialoogvenster over de onderste derde van het beeld,
 precies waar de slagschaduwen en de raamband staan.
 
 > **Wat een shot van de vloer niet laat zien.** De camera klemt verticaal
-> volledig vast: 26 tegels is precies de viewporthoogte, dus elke shot toont de
-> hele hoogte en `--kijk` verschuift alleen in x. De HUD dekt daarbij de
+> volledig vast: 26 tegels is precies de viewporthoogte op een 6:13-toestel, dus
+> elke shot toont de hele hoogte en `--kijk` verschuift alleen in x (op een
+> hoger toestel komt er symmetrisch wandrand bij; zie `GameCamera.rand_voor()`). De HUD dekt daarbij de
 > bovenste vier tegelrijen af en de knoppenbalk de onderste ~2,5. Alles op y0–y3
 > en y24–y25 staat er dus wel, maar zie je nooit. Dat is de reden dat het
 > raamlicht drie rijen beslaat en dat het toiletbordje op y6 hangt en niet naast
@@ -159,6 +167,7 @@ Alles achter `--` en alleen voor testen:
 | `--auto=<world_id>` | zet de speler bij dat object en interacteert |
 | `--praat=<npc_id>` | zet de speler bij die collega en start het gesprek — `--auto=` bereikt geen NPC's, die komen uit `NpcLayer` en niet uit `floor.json`. Let op: `npc_id` is het veld uit `data/npcs.json`, meestal `npc_<naam>` (`npc_danny`, niet `danny`) |
 | `--kijk=<x>,<y>` | zet de speler op die tegel en doet verder niets |
+| `--minuten=<n>` | boekt meteen n minuten op de klok (reden `qa`), zodat het daglicht en de klokchip op een later tijdstip te zien zijn; combineer met `--kijk=` |
 | `--autoplay` | drukt zelf op de interactietoets en lost minigames op |
 | `--playthrough` | speelt alle tien de tickets af |
 | `--geen-pin` | speelbeurt zonder een ticket te kiezen, zodat de keuzevraag op een gedeeld object echt afgaat |

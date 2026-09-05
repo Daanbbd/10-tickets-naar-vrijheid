@@ -243,11 +243,22 @@ komt via `Gevolgen` op het eindscherm terecht, met je jas al aan.
 
 De **begintoestand komt uit je dag**. `Gevolgen.finale_start()` telt de gevolgen
 van de negen tickets op en `TicketController` geeft die mee als
-`start_override`. Een zorgvuldige dag begint op twee bugs en zeven vertrouwen;
-een dag waarop je scope te groot liet worden en de klant ontevreden hield
-begint op vier en vier. Geen van beide is onhaalbaar — een slechte dag maakt de
-oplevering duurder, niet onmogelijk. `_test_gevolgen` faalt als die twee gelijk
-uitkomen, want dan hebben de keuzes geen gevolgen meer.
+`start_override`. Een zorgvuldige dag begint op één bug, zes vertrouwen, drie
+getest en scope drie; een slordige dag — alles fout, drie tickets na vijven,
+twee keer "goed genoeg" gezegd — op acht bugs, twee vertrouwen, nul getest en
+scope zeven. Wat meetelt: elke bug die je in de wereld liet zitten, elk ticket
+dat na je acht uur dichtging (*ongetest*), elke keer "goed genoeg", en hoeveel
+je de klant beloofde (meer scope is meer dat mis kan gaan). Testwerk telt
+andersom mee: de CRO-doelstelling, een stand-up met adem over, een pijplijn met
+credits over.
+
+De uitkomstdrempels liggen op 13 / 9 / 4 / 0, en **wie deployt zonder ooit te
+testen betaalt elke bug dubbel**. Daardoor haalt blind op DEPLOYEN drukken op
+geen enkele dag de topuitslag, terwijl een zorgvuldige dag met het beste spel er
+precies op uitkomt en een slordige dag hem nooit haalt; alle vier uitkomsten
+blijven bereikbaar (`_test_finale_niet_gratis`, en het model in het plan:
+73.728 dagcombinaties doorgerekend). `_test_gevolgen` faalt als een goede en
+een slechte dag gelijk uitkomen, want dan hebben de keuzes geen gevolgen meer.
 
 De minigame weet zelf niets van de wereld: hij leest `cfg("start_override")` en
 valt terug op `start` uit de data. Daardoor is de finale los te draaien met
@@ -293,7 +304,7 @@ Alles is in 60–120 seconden te doen en op de eerste of tweede poging haalbaar.
 | tagpickers | 4 pogingen |
 | renderpijplijn | 5 van 6 clips in 60 s, binnen 100 credits |
 | paardenbugs | 10 bugs in 60 seconden |
-| oplevering | geen drempel — vier uitkomsten op score `vertrouwen + getest − 2·bugs + scope` |
+| oplevering | vier uitkomsten (13 / 9 / 4 / 0) op score `vertrouwen + min(getest, 2·startbugs) − 2·bugs + scope`, min nog eens `bugs` als je nooit getest hebt |
 | urenstaat | geen goed antwoord; alles verdelen volstaat |
 
 ## QA

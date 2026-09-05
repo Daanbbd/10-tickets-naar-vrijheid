@@ -200,6 +200,7 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 			# aan het rollen op dat signaal; hier wachten we hem alleen uit,
 			# zodat je je dag ziet weglopen vóór je personage reageert.
 			QuestEngine.complete(t.id, result)
+			_vier(t)
 			AudioDirector.play_sfx(&"ticket_klaar")
 			if _hud != null:
 				await _hud.toon_urenrol()
@@ -219,8 +220,62 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 				await _dialogue.play(fail)
 			else:
 				await _line("Dat werkte niet. Probeer het nog een keer.")
+			# En dan de keuze die er tot nu toe niet was. Een mislukte poging
+			# was een gratis herkansing: kwartier kwijt, ticket open, nog eens.
+			# Nu mag je het ook zó de deur uit doen — en dat komt terug bij de
+			# oplevering. Ná `play()`/`_line()`, want die zetten hun eigen
+			# `_active` weer op false; anders weigert `ask_choice()` stil.
+			if await _wil_gebrekkig_shippen(t):
+				await _ship_gebrekkig(t, result)
 		_:
 			pass   # afgebroken: ticket blijft ACTIVE, opnieuw proberen mag
+
+
+## Na een mislukte poging: nog eens, of is dit zo goed genoeg?
+##
+## "Nog een keer" staat bewust bovenaan. De autopilot
+## (`scripts/tests/autopilot.gd`) drukt altijd de knop met focus, en
+## `DialogueBox.show_choices()` geeft die aan de eerste — dus de geautomatiseerde
+## speelbeurt blijft herkansen zoals hij altijd deed, en shipt nooit stil iets
+## gebrekkigs. Een geweigerde of lege vraag komt als -1 terug en valt dezelfde
+## kant op: herkansen is de veilige keuze, shippen moet je echt kiezen.
+func _wil_gebrekkig_shippen(_t: TicketDef) -> bool:
+	var opties: Array[String] = ["Nog een keer.", "Goed genoeg. Shippen."]
+	var keuze := await _dialogue.ask_choice("Nog een keer, of is dit goed genoeg?", opties)
+	return keuze == 1
+
+
+## "Goed genoeg. Shippen." Het ticket gaat alsnog dicht, en het spel doet daar
+## niet moeilijk over: `result.outcome` is FAIL, maar `QuestEngine.complete()`
+## kijkt daar niet naar en `Gevolgen.boek()` leest alleen de payload. Wat wél
+## verandert is de boekhouding: de teller en de vlag hieronder zijn wat
+## `Gevolgen.finale_start()` straks als bugs doorrekent.
+##
+## Dit is de grappigste en meest thematische inzet van het spel. De wereld
+## zegt straks "200 OK" boven iets dat stuk is, en pas bij de oplevering blijkt
+## dat niet falen je iets kostte, maar doen alsof je niet faalde. Wel de
+## klokrol: dít is een oplevering, hoe krom ook, en `complete()` boekt er de
+## gewone ticketuren voor — bovenop het kwartier dat het mislukken al kostte.
+func _ship_gebrekkig(t: TicketDef, result: MinigameResult) -> void:
+	Session.add_counter(Gevolgen.GEBREKKIG_TELLER)
+	Session.set_flag(Gevolgen.gebrekkig_vlag(t.id), true)
+	QuestEngine.complete(t.id, result)
+	AudioDirector.play_sfx(&"pak")
+	Bus.toast_requested.emit("%s geshipt. Ongetest." % t.code, &"tijd")
+	if _hud != null:
+		await _hud.toon_urenrol()
+
+
+## Klein impactframe bij een opgelost ticket: een tik op de camera en wat
+## confetti boven het object waar je het oploste. Klein, want dit gebeurt tien
+## keer per beurt — de tiende keer moet het nog steeds een ticket zijn en geen
+## vuurwerkshow. `get_parent()` is Main (Node2D), dus de confetti leeft in de
+## wereld en niet in een UI-laag.
+func _vier(t: TicketDef) -> void:
+	Juice.schok(2.0, 0.22)
+	var wo := _registry.get_by_id(t.anchor)
+	if wo != null:
+		Juice.confetti(get_parent(), wo.global_position + Vector2(0, -8))
 
 
 ## Eén waar feit over dit ticket, in de stem van degene van wie het is.
