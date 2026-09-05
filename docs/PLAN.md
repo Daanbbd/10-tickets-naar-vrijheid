@@ -568,9 +568,10 @@ Dennis die je ophaalt en het lege bord dat volloopt blijven — dat is al goed.
    wat er van te zien is, het bericht van de klant, de urenclou, de Jira-sting.
    Dit is het moment waarop iemand besluit of het leuk was — en of hij het nog
    eens als iemand anders doet.
-3. **Geef de dialoog iets te vragen, en een uitweg.** Keuzes op de momenten die al
-   betekenis hebben (een collega ophalen, de telefoon, "is dit klaar?") en via
-   `Gevolgen` naar de oplevering. Plus skip, tekstsnelheid en ESC.
+3. **Geef de dialoog iets te vragen.** Keuzes op de momenten die al betekenis
+   hebben (een collega ophalen, de telefoon, "is dit klaar?") en via `Gevolgen`
+   naar de oplevering. De uitweg is er al: overslaan via Esc en "overslaan »"
+   (2b, `50e0f94`); alleen een tekstsnelheid ontbreekt nog.
 4. **Maak het scrumbord fysiek.** Het heeft al post-its (`UiKit.postit()`), maar
    ze staan in een lijst. Sleepbare kaarten tussen BIJ JE en OPGELOST geven
    "kiezen" een handeling.
@@ -589,12 +590,9 @@ Dennis die je ophaalt en het lege bord dat volloopt blijven — dat is al goed.
   **startnode** (`dialogue_controller.gd:78`); elke `tXX_offer` start op een
   vertellerregel en elke `_recruit`/`_complete`/`_fail` op `speler`. De collega
   naast je speelt `idle_` door zijn eigen gesprek. Goedkope fix, groot effect.
-- **BBD-209 wijst naar het verkeerde object.** De wijzer wijst naar
-  `paardenkostuum`, daar krijg je een `ABORT`; de oplossing is een rondlopende
-  `paard_bug`-NPC. Voor 6 van 7 personages een zoektocht over 80 tegels met een
-  pijl die de verkeerde kant op wijst.
-- **BBD-208 en BBD-209 hebben geen `camera_focus`** — de "kijk wat je veranderd
-  hebt"-beat mist.
+- ~~**BBD-209 wijst naar het verkeerde object.**~~ Gedaan in 2a (`76624b2`):
+  tickets kennen `zoek_npc`, de wijzer wijst naar het dichtstbijzijnde paard.
+- ~~**BBD-208 en BBD-209 hebben geen `camera_focus`**~~ Gedaan in 2a.
 - **`mg_whack.gd` is de enige arcademechaniek en draait nooit** (t09 is
   `wereldhandeling`); idem `mg_choicescene.gd`, `mg_cableboard.gd`.
 - **Geen `locked`-regel bestaat** voor enig ticket; alles valt door naar één
