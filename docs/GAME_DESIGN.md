@@ -33,34 +33,37 @@ ergens voor wie eerst weet dát er tickets bestaan om zelf te doen.
 `TitleScreen._on_start()` routeert er doorheen
 (`Shell.goto_intro_uitleg()`) vóór `Shell.goto_character_select()`.
 
-**VANDAAG** — de opdracht, in `IntroUitleg.opdracht()`:
+**Haar berichtje** — het waarom en het wat, in `IntroUitleg.bericht()`:
 
-1. Manege De Vrije Teugel wil een webshop voor paardensupplementen.
-2. Jij werkt vandaag mee bij Bluebird Day.
+Om 09:12 gaat de telefoon. Het kaartje van Manege De Vrije Teugel glijdt binnen
+met het hinnikgeluid dat `Telefoon` de hele dag maakt, in dezelfde behuizing:
+*"Hoi! Morgen gaat de webshop voor de supplementen live, toch? Ik heb het al
+aan iedereen doorgestuurd. Ook aan de dierenarts."* Daarmee staan het waarom
+(morgen live), het wat (de webshop voor paardensupplementen) en de toon van de
+dag (ze heeft het al aan de dierenarts verteld) in haar eigen stem, en herkent
+de speler dat geluid later als "zij weer". Daaronder één regel context
+(`opdracht()`): laatste dag van sprint veertien, jij werkt vandaag mee bij
+Bluebird Day.
 
-Dit blok ontbrak volledig, en dat was het gat waar de hele dag onlogisch van
-werd. Het scherm legde uit hoe je tickets vindt en afvinkt, maar nergens stond
-wát er gebouwd wordt — en het eerste ticket dat je vond was "de klant heeft
-feedback", op een product waar je nog nooit van had gehoord. Elke grap in dit
-spel hangt aan die opdracht: de webshop, het paard dat naar links moet, de
-AI-video. Wie de opdracht niet kent ziet losse sketches.
+Dit blok ontbrak lang volledig, en dat was het gat waar de hele dag onlogisch
+van werd: het eerste ticket dat je vond was "de klant heeft feedback", op een
+product waar je nog nooit van had gehoord. Elke grap in dit spel hangt aan die
+opdracht — de webshop, het paard dat naar links moet, de AI-video.
 
-**HOE DIT WERKT** — de spelregels, in `IntroUitleg.lessen()`:
+**HOE DIT WERKT** — twee regels, in `IntroUitleg.lessen()`:
 
-1. **Tien tickets, dan mag je naar buiten.** De wincondititie.
-2. **Ze liggen verspreid; een ruimte binnenlopen levert er een op.** Zonder dit
-   leest "verkennen" niet als de manier om werk te vinden.
-3. **Het ticketbord is je inventaris en waar je kiest.** Dennis hangt je eerste
-   twee tickets er zelf op; daarna staan er vier van de tien vanaf minuut één
-   open — er is geen volgorde, alleen een keuze.
-4. **Niet je vakgebied? Dan haal je er iemand bij.** De centrale spanning
-   hierboven.
+1. **Tien tickets, verspreid door het kantoor. Dennis hangt je eerste twee op
+   het ticketbord; daarna staan er vier open — kies zelf.** De wincondititie,
+   het verkennen en het bord in één adem.
+2. **Niet jouw vak? Haal er een collega bij. Alle tien af, dan mag je naar
+   buiten.** De centrale spanning hierboven.
 
-Beide blokken staan als functie los van de scene-opbouw, zodat `_test_intro()`
-in `scripts/tests/test_runner.gd` ze kan controleren zonder de scene te hoeven
-bouwen — en zodat het getal in regel 3 uit de ticketdata komt in plaats van uit
-de tekst. Eén statisch scherm, geen wizard: twee blokken, één knop ("Begrepen")
-terug naar de personagekeuze.
+Twee regels en geen vier: de rest leer je in de wereld zelf, waar Dennis met je
+meeloopt naar het bord en de tickets erop landen (zie hieronder). De teksten
+staan als functie los van de scene-opbouw, zodat `_test_intro()` in
+`scripts/tests/test_runner.gd` ze kan controleren zonder de scene te bouwen —
+en zodat het getal in regel 1 uit de ticketdata komt in plaats van uit de
+tekst. Eén scherm, één knop ("Aan het werk") naar de personagekeuze.
 
 Wat overblijft in de wereld zelf, in `Main._intro_beat()`
 (`scripts/world/main.gd`), is een reeks beats in plaats van één regel:

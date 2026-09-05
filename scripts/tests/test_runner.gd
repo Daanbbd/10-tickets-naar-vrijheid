@@ -2431,6 +2431,14 @@ func _test_navigatie() -> void:
 func _test_intro() -> void:
 	_kop("introductie")
 
+	# Het waarom en het wat komen uit haar eigen berichtje: morgen live, de
+	# webshop voor de supplementen, en het paard dat naar links moet.
+	var bericht := IntroUitleg.bericht().to_lower()
+	for woord: String in ["morgen", "webshop", "live", "dierenarts"]:
+		_ok(bericht.contains(woord), "het openingsberichtje van De Klant noemt '%s' niet meer" % woord)
+	_ok(IntroUitleg.afzender().begins_with("Manege"), "het openingsberichtje komt van de manege")
+	_ok(IntroUitleg.lessen().size() <= 2, "de spelregels op het openingsscherm zijn geen muur meer (%d regels)" % IntroUitleg.lessen().size())
+
 	var eigen := "\n".join(IntroUitleg.lessen())
 	for les: String in [
 			"Tien tickets", "naar buiten", "verspreid", "ticketbord", "collega"]:

@@ -430,15 +430,15 @@ func _intro_beat() -> void:
 		var daan_def: CharacterDef = GameData.character(&"daan")
 		if daan_def != null:
 			await dialogue.say(daan_def.name,
-					"Goedemorgen. De webshop van de manege moet morgen live. "
+					"Goedemorgen. Je hebt haar berichtje gezien? Morgen live. "
 					+ "Laatste dag van sprint veertien. Ik zie je zo bij het bord.",
 					&"daan")
 	else:
 		var dennis_def: NpcDef = GameData.npc(&"dennis")
 		if dennis_def != null:
 			await dialogue.say(dennis_def.name,
-					"Morgen. Laatste dag van sprint veertien. De webshop van de "
-					+ "manege moet morgen live. Verder heb ik niks nodig.",
+					"Morgen. Laatste dag van sprint veertien. Zij denkt dat we "
+					+ "morgen live gaan, dus dat gaan we. Verder heb ik niks nodig.",
 					&"dennis")
 
 	# Beat 2 — Dennis komt je halen. Hij staat al ergens op De Werkvloer te

@@ -16,6 +16,11 @@ extends Control
 ## bouwen of instantiëren.
 ## Getallen in woorden, zodat regel 3 dezelfde typografie heeft als "Tien
 ## tickets" in regel 1 en er geen cijfer tussen de woorden staat.
+## Ruimte voor het telefoonkaartje in de kolom; het kaartje zelf hangt met
+## ankers in een gewone Control zodat het kan binnenglijden.
+const KAART_RUIMTE := 112.0
+var _kaart: PanelContainer = null
+
 const TELWOORDEN: Array[String] = [
 	"Geen", "Eén", "Twee", "Drie", "Vier", "Vijf",
 	"Zes", "Zeven", "Acht", "Negen", "Tien",
@@ -47,9 +52,23 @@ static func open_bij_start() -> int:
 ## `Main._intro_beat()`, waar hij uit een mond komt in plaats van van een dia.
 static func opdracht() -> Array[String]:
 	return [
-		"Manege De Vrije Teugel wil een webshop voor paardensupplementen.",
-		"Jij werkt vandaag mee bij Bluebird Day.",
+		"Laatste dag van sprint veertien. Jij werkt vandaag mee bij Bluebird Day.",
 	]
+
+
+## Wie de klant is en wat ze wil, uit haar eigen mond: het eerste wat je ziet
+## is haar berichtje, in het toestel dat de rest van de dag haar kanaal is
+## (`Telefoon`). Het waarom (morgen live), het wat (de webshop voor de
+## supplementen) en de toon van de dag (ze heeft het al aan de dierenarts
+## verteld) in vier zinnen — en het paard dat naar links moet, zodat die grap
+## later landt.
+static func afzender() -> String:
+	return "Manege De Vrije Teugel"
+
+
+static func bericht() -> String:
+	return ("Hoi! Morgen gaat de webshop voor de supplementen live, toch? "
+		+ "Ik heb het al aan iedereen doorgestuurd. Ook aan de dierenarts.")
 
 
 ## De vier regels, los van de scene-opbouw zodat `_test_intro()` ze kan
@@ -70,11 +89,12 @@ static func opdracht() -> Array[String]:
 static func lessen() -> Array[String]:
 	var open := open_bij_start()
 	var telwoord := TELWOORDEN[open] if open < TELWOORDEN.size() else str(open)
+	# Twee regels en niet vier: de rest leer je in de wereld zelf (Dennis loopt
+	# met je mee naar het bord, de tickets landen erop, de besturingskaart komt
+	# daarna). Dit is de voetnoot onder het berichtje, niet het scherm.
 	return [
-		"Tien tickets, verspreid door het kantoor. Vind ze door rond te lopen.",
-		"Zijn ze alle tien opgelost, dan mag je naar buiten.",
-		"Dennis hangt je eerste twee tickets op het ticketbord. Daarna staan er %s open — kies zelf wat je oppakt." % telwoord,
-		"Niet jouw vak? Haal er een collega bij.",
+		"Tien tickets, verspreid door het kantoor. Dennis hangt je eerste twee op het ticketbord. Daarna staan er %s open — kies zelf." % telwoord,
+		"Niet jouw vak? Haal er een collega bij. Alle tien af, dan mag je naar buiten.",
 	]
 
 
@@ -97,9 +117,29 @@ func _ready() -> void:
 	v.add_theme_constant_override("separation", 4)
 	add_child(v)
 
-	_blok(v, "VANDAAG", opdracht(), UiKit.WIT)
-	v.add_child(UiKit.spacer(8))
-	_blok(v, "HOE DIT WERKT", lessen(), UiKit.WIT)
+	# Woensdag, 09:12 — en dan gaat haar telefoon. De opdracht komt niet van een
+	# dia maar uit de mond van de klant, in het toestel dat de rest van de dag
+	# haar kanaal is. Het kaartje glijdt binnen met het geluid dat de telefoon
+	# de hele dag maakt, zodat je dat geluid daarna herkent als "zij weer".
+	v.add_child(UiKit.label("Woensdag  ·  09:12", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER))
+	v.add_child(UiKit.spacer(2))
+	var houder := Control.new()
+	houder.custom_minimum_size = Vector2(0, KAART_RUIMTE)
+	houder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(houder)
+	_kaart = _bouw_kaart()
+	_kaart.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	# Naar beneden groeien als de tekst meer ruimte vraagt, nooit over de kop.
+	_kaart.grow_vertical = Control.GROW_DIRECTION_END
+	_kaart.visible = false
+	houder.add_child(_kaart)
+	v.add_child(UiKit.spacer(3))
+	# Eén regel context onder het berichtje; geen eigen kop, het kaartje ís het
+	# "vandaag".
+	for r: String in opdracht():
+		v.add_child(UiKit.label(r, UiKit.FS_SMALL, UiKit.WIT))
+	v.add_child(UiKit.spacer(6))
+	_blok(v, "HOE DIT WERKT", lessen(), UiKit.GRIJS_OP_DONKER)
 
 	# Duwt de knop naar de onderrand, wat er ook boven staat.
 	var rek := Control.new()
@@ -107,11 +147,56 @@ func _ready() -> void:
 	rek.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(rek)
 
-	var verder := UiKit.knop_primair("Begrepen", UiKit.FS_BODY)
+	var verder := UiKit.knop_primair("Aan het werk", UiKit.FS_BODY)
 	verder.pressed.connect(_on_verder)
 	v.add_child(verder)
 
 	verder.grab_focus()
+	_laat_binnenkomen()
+
+
+## Het telefoonkaartje: dezelfde behuizing als `Telefoon` in het spel, met de
+## afzender, een tijd van één minuut vóór de klok, een streep en het bericht.
+func _bouw_kaart() -> PanelContainer:
+	var kaart := PanelContainer.new()
+	kaart.add_theme_stylebox_override("panel", Telefoon._behuizing())
+	var kolom := VBoxContainer.new()
+	kolom.add_theme_constant_override("separation", 3)
+	kaart.add_child(kolom)
+	var balk := HBoxContainer.new()
+	balk.add_theme_constant_override("separation", 3)
+	kolom.add_child(balk)
+	var kop := UiKit.label(afzender(), UiKit.FS_SMALL, UiKit.WIT)
+	kop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	kop.autowrap_mode = TextServer.AUTOWRAP_OFF
+	kop.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	kop.clip_text = true
+	balk.add_child(kop)
+	var tijd := UiKit.label("09:11", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
+	tijd.autowrap_mode = TextServer.AUTOWRAP_OFF
+	tijd.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	balk.add_child(tijd)
+	var streep := ColorRect.new()
+	streep.color = UiKit.LINE
+	streep.custom_minimum_size = Vector2(0, 1)
+	kolom.add_child(streep)
+	var tekst := UiKit.label(bericht(), UiKit.FS_SMALL, UiKit.WIT)
+	tekst.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	kolom.add_child(tekst)
+	return kaart
+
+
+## Even stilte, dan de telefoon: het geluid, de trilling en het kaartje dat
+## van onderen binnenglijdt. `Juice.schuif_in()` werkt hier omdat het kaartje
+## in een gewone Control hangt en niet in een Container.
+func _laat_binnenkomen() -> void:
+	await get_tree().create_timer(0.35).timeout
+	if not is_inside_tree() or _kaart == null:
+		return
+	AudioDirector.play_ui(&"hinnik")
+	Haptiek.tril(Haptiek.Sterkte.STOOT)
+	_kaart.visible = true
+	Juice.schuif_in(_kaart, Vector2(0.0, 28.0), 0.22)
 
 
 ## Eén kop met zijn regels eronder. Linksuitgelijnd en niet gecentreerd: twee
