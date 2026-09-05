@@ -10,8 +10,14 @@
 ### Waar het werk staat
 
 - **Worktree:** `/Users/daan/Documents/fun/.claude/worktrees/fase1-fundament`,
-  branch `fase1-fundament`, 8 commits bovenop `main` (`git log --oneline
-  f9a1fae..HEAD`). Niets is gepusht of gemerged; dat is Daans call.
+  branch `fase1-fundament`. Sinds `d6abdcd` bevat hij óók Daans playtestronde
+  van 4 september (`audit/opening-besturing-standup`, 16 commits: besturings-
+  uitleg, bord met To Do / Doing / Done zonder ▤, Dennis loopt voorop, de
+  Dennis-storing die nooit eindigde, BFS-padvinding, wereldlabels op maat,
+  dialoogfixes). Samen 26 commits bovenop `main`. Niets is gepusht of gemerged
+  naar `main`; dat is Daans call. **Let op:** de webbuild op gh-pages komt nog
+  van die playtestbranch en mist het herontwerp — opnieuw deployen vanuit deze
+  worktree (`cp ../../../export_presets.cfg . && tools/deploy_web.sh`).
 - **Stand:** suite 23.405 controles, 0 fout; alle zeven personages halen 10/10
   in de geautomatiseerde speelbeurt. Elke fase is als eigen commit gecommit met
   een leesbare boodschap — lees `git log` als je wilt weten wát er veranderde
@@ -155,6 +161,13 @@ art wordt door `tools/generators/*.py` gemaakt met Pillow uit
 `docs/dialogue-content.md` bijwerken (mist `wereld.json` en Dirk); de 37
 ticketbomen waar de verkeerde mond beweegt (`Bus.dialogue_started` emit alleen
 de startspreker — `dialogue_controller.gd:78`, `npc.gd:71-84`).
+
+**F. Overgenomen uit de playtestronde (Sonnet).** De Done-landing-animatie
+voor het bord: Daan vroeg "animatie, geen wandeling" voor een ticket dat naar
+Done gaat; nu herklasseert het stil (vgl. `Hud.laat_landen()` /
+`Scrumbord.laat_briefje_landen()` voor nieuwe tickets). En de flaky test op
+`mag_onderbreken_minigame()` (`storingen.gd`): meet nu echte wandtijd; geef de
+injecteerbare `nu` door in de test.
 
 ### Wat Daan zelf moet doen
 
