@@ -38,8 +38,9 @@ is een gebeurtenis, en die kan na het laden niet opnieuw worden afgespeeld —
 een ticket achter een al-opgeleverd ticket bleef daardoor eeuwig LOCKED.
 
 `unlock_ticket` bestaat nog wél als effect-op, en `data/klant_berichten.json`
-gebruikt hem voor BBD-207 en BBD-201: De Klant trekt tijdens de dag werk naar
-voren. Dat is een tweede, bewuste route naast de keten.
+gebruikt hem voor BBD-207: bericht k4 (op 6/10 tickets) trekt hem naar voren
+als je BBD-204 dan nog niet hebt gedaan. Alleen die ene trekt-naar-voren
+bestaat; de keten BBD-204 → BBD-207 blijft de gewone route.
 
 Wat wél groeit is je **inventaris**: een ticket komt erin zodra je de ruimte
 binnenloopt waar het hangt. Verkennen levert werk op; niets zit achter iets

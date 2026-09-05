@@ -152,7 +152,8 @@ dezelfde momenten, met andere teksten.
 Ze komt niet in het kantoor. Ze heeft geen sprite, geen bureau en geen
 standplaats — een klant die je kunt opzoeken is een collega, en een klant die
 je opzoekt kan wachten. Ze bestaat als melding die binnenkomt terwijl je iets
-anders aan het doen was: op 3, 5, 7 en 9 tickets, met een deinend paard, een
+anders aan het doen was: op de zes drempels uit `Gevolgen.DREMPELS` — 1 (k1),
+3 (k2), 5 (k3), 6 (k4), 7 (k5) en 9 (k6) tickets — met een deinend paard, een
 tijdstip dat opvalt (21:47) en een typing-indicator die ook knippert als ze
 niets stuurt.
 

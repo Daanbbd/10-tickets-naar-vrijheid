@@ -302,8 +302,10 @@ loop naar het anker  →  niet jouw vak  →  loop naar de collega  →  loop te
   drie** de keuzes zetten `X_bezocht`. Bij hérpraten zijn regel 2 en 3
   byte-identiek; ~22 regels per beurt zijn permanent onbereikbaar.
 - **Niets escaleert.** 5 van 11 minigames hebben geen timer. De klant stuurt 6
-  berichten en verschuift nooit de opdracht. Er zijn **4 storingen in het hele
-  spel**, en `storingen.gd:133-137` *onderdrukt* ze: hoogstens één per minigame.
+  berichten en verschuift nooit de opdracht. Er zijn **16 storingen in het hele
+  spel** (was 4 op het moment van deze diagnose; Fase 2a, `76624b2`, breidde
+  dit uit naar zestien — dit getal staat hier ná die uitbreiding), en
+  `storingen.gd:133-137` *onderdrukt* ze: hoogstens één per minigame.
 - **En er is geen trek.** Niets kondigt de oplevering aan tot 9/10, en de laatste
   twee tickets zijn een gedwongen enkele rij — de vorm klapt van zandbak naar gang
   precies waar een komedie wil versnellen.

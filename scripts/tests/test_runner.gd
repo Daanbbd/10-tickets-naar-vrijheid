@@ -237,6 +237,13 @@ func _test_gevolgen() -> void:
 					var doel := StringName(ed.get("ticket", ""))
 					_ok(doel in GameData.ticket_ids(),
 						"%s: unlock_ticket noemt '%s', en dat ticket bestaat niet" % [bid, doel])
+					# Een unlock_ticket naar een ticket dat al vanaf het begin open
+					# staat (`available_when: {}`) doet per definitie niets — dat is
+					# de bug die k4 ooit had met t01.
+					if doel in GameData.ticket_ids():
+						_ok(not (GameData.ticket(doel).available_when as Dictionary).is_empty(),
+							"%s: unlock_ticket wijst naar '%s', dat staat al vanaf het begin open — dood effect"
+								% [bid, doel])
 
 	# --- geen enkele gevolgvlag is een typefout ----------------------------
 	# Een verkeerd gespelde vlag in een `flags_all` is de vervelendste fout die
@@ -4075,10 +4082,14 @@ func _object_tiles() -> Dictionary:
 ##
 ## Twee dingen worden hier gemeten die geen van beide uit een losse constructie
 ## van het scherm blijken. Ten eerste: er gebeurt niets in de wereld zolang je
-## niet geopend hebt. Het effect van k1 is `unlock_ticket t07`, en t07 staat op
+## niet geopend hebt. Het effect van k4 is `unlock_ticket t07`, en t07 staat op
 ## `available_when: {tickets_done: [t04]}` — dus op slot bij een verse run. Dat
 ## is de meetlat: een bericht dat de speler nog niet gelezen heeft mag de wereld
 ## niet al veranderd hebben.
+##
+## (Niet k1: sinds de BBD-204 → BBD-207-fix in `docs/AUDIT-2026-09-05.md`,
+## bevinding 5, draagt k1 geen effect meer — alleen k4 trekt BBD-207 naar
+## voren, op 6/10.)
 ##
 ## Ten tweede: er is precies één uitweg. Haar berichten dragen effects, dus een
 ## tweede knop of een ESC die de melding wegtikt zou een ticket kunnen
@@ -4097,16 +4108,16 @@ func _test_klant_melding_voor_bericht() -> void:
 	await get_tree().process_frame
 
 	# --- stap 1: de melding, en verder niets ------------------------------
-	tel.call(&"_toon", &"k1")
+	tel.call(&"_toon", &"k4")
 	await get_tree().process_frame
-	_ok(tel.is_open(), "_toon(k1): de telefoon staat niet open")
+	_ok(tel.is_open(), "_toon(k4): de telefoon staat niet open")
 	_ok(not bool(tel.get(&"_bericht_zichtbaar")),
-		"_toon(k1): het bericht staat er meteen, de melding is overgeslagen")
+		"_toon(k4): het bericht staat er meteen, de melding is overgeslagen")
 
 	var melding := tel.get(&"_meldingvak") as CanvasItem
 	var bericht := tel.get(&"_berichtvak") as CanvasItem
-	_ok(melding != null and melding.visible, "_toon(k1): het meldingsvak staat niet aan")
-	_ok(bericht != null and not bericht.visible, "_toon(k1): het berichtvak staat al aan")
+	_ok(melding != null and melding.visible, "_toon(k4): het meldingsvak staat niet aan")
+	_ok(bericht != null and not bericht.visible, "_toon(k4): het berichtvak staat al aan")
 
 	# Haar naam, uit de data. Niet "De Klant" en niet de naam van de manege:
 	# dit is het moment waarop de speler wil weten wie er belt.
@@ -4124,7 +4135,7 @@ func _test_klant_melding_voor_bericht() -> void:
 				% verboden)
 
 	_ok(not Session.is_available(&"t07"),
-		"k1: t07 ging al open terwijl het bericht nog niet gelezen was")
+		"k4: t07 ging al open terwijl het bericht nog niet gelezen was")
 
 	# ESC hoort de melding niet weg te tikken. Dit is de guard in `_input()`:
 	# die kijkt naar `_bericht_zichtbaar` en niet naar `_open`.
@@ -4148,7 +4159,7 @@ func _test_klant_melding_voor_bericht() -> void:
 	_ok(bericht != null and bericht.visible, "Openen: het berichtvak kwam niet aan")
 	var tekst := tel.get(&"_tekst") as RichTextLabel
 	_ok(tekst != null and tekst.text != "", "Openen: er staat geen berichttekst op het scherm")
-	_ok(Session.is_available(&"t07"), "Openen: het effect van k1 draaide niet")
+	_ok(Session.is_available(&"t07"), "Openen: het effect van k4 draaide niet")
 
 	# --- wegleggen mag nu wél ---------------------------------------------
 	tel.call(&"_weg")
