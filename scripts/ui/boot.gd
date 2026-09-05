@@ -87,14 +87,36 @@ func _quick_minigame(id: StringName, character_id: StringName, gedaan: int = 0) 
 	await get_tree().create_timer(0.2).timeout
 	# Met --autoplay lost de minigame zichzelf op langs zijn echte winroute, zodat
 	# ook de afronding en de payload headless te controleren zijn.
+	#
+	# M4: één enkele aanroep na 0,6 s loste alleen de dan lopende ronde op.
+	# `mg_heatmap.qa_solve()` wacht zelf 1 s en moet daarna per nieuwe ronde
+	# opnieuw aangeroepen worden — precies wat de echte `Autopilot` in
+	# `main.gd` al doet (elke 0,45 s) en deze losse QA-aanroep niet deed.
+	# Elk `--minigame=mg_cro --autoplay`-frame liet daardoor een verliezer
+	# zien terwijl een echte speelbeurt hem gewoon oplost. `_klaar` is een
+	# array en geen bool: een lambda in GDScript vangt lokale variabelen bij
+	# aanmaak, niet erna, dus alleen een referentietype (hier: de array zelf)
+	# laat de lus hieronder zien dat `Shell.run_minigame()` klaar is.
+	var _klaar := [false]
 	if Autopilot.gevraagd():
-		get_tree().create_timer(0.6).timeout.connect(func() -> void:
-			for n: Node in get_tree().get_nodes_in_group("minigame"):
-				(n as MinigameBase).qa_solve())
+		_qa_solve_lus(_klaar)
 	var res: MinigameResult = await Shell.run_minigame(id, _qa_inhoud(id))
+	_klaar[0] = true
 	print("[QA] minigame %s -> outcome=%d score=%d payload=%s" % [
 		id, res.outcome, res.score, res.payload])
 	_status.text = "%s klaar: %s" % [id, "gelukt" if res.is_success() else "niet gelukt"]
+
+
+## Herhaalt `qa_solve()` op elke node in groep "minigame" elke 0,5 s, tot
+## `klaar[0]` waar is. Fire-and-forget: draait naast de `await` op
+## `Shell.run_minigame()` hierboven, niet erna.
+func _qa_solve_lus(klaar: Array) -> void:
+	while not klaar[0]:
+		await get_tree().create_timer(0.5, true).timeout
+		if klaar[0]:
+			return
+		for n: Node in get_tree().get_nodes_in_group("minigame"):
+			(n as MinigameBase).qa_solve()
 
 
 ## De opgave zoals dit personage hem krijgt, inclusief het voordeel van zijn

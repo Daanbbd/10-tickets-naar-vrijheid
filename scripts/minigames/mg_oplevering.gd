@@ -581,7 +581,6 @@ func _live() -> void:
 		AudioDirector.play_ui(&"fout")
 		Juice.schok(3.0, 0.4)
 		await _pauze(1.8)
-		move_child(_banner, get_child_count() - 1)
 		await finish_with_banner(false, "ROLLBACK", score, {
 			&"score": score,
 			&"titel": "ROLLBACK",
@@ -600,9 +599,10 @@ func _live() -> void:
 	AudioDirector.play_ui(&"deploy_ok")
 	await _pauze(1.8)
 
-	# De banner van MinigameBase is vóór de console aangehangen en zou er dus
-	# achter verdwijnen; hij hoort het laatste woord te hebben.
-	move_child(_banner, get_child_count() - 1)
+	# P2: de banner van MinigameBase zit sinds `finish_with_banner()` in de
+	# footer-strook, niet meer los over het veld — hij kan de consoletekst
+	# hierboven dus niet meer bedekken, en hoeft niet meer naar voren
+	# verplaatst te worden.
 	await finish_with_banner(true, titel, score, {
 		&"score": score,
 		&"titel": titel,

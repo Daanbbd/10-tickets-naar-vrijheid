@@ -95,8 +95,10 @@ func _on_setup() -> void:
 			_segment_status[id] = "open"
 	_qa_afkap_ids = _bepaal_qa_afkap()
 
-	# De intro zelf verschijnt niet meer hier — dat doet `MinigameIntro`, vóór
-	# dit scherm opent, gevuld met dezelfde `_ingrepen` via `Briefing.vul()`.
+	# P1: de intro verschijnt niet hier expliciet — `build_chrome()` bouwt hem
+	# zelf als overlay ín het veld, uit `content().get("intro")`, gevuld met
+	# dezelfde `_ingrepen` via `Briefing.vul()`. Deze lege string blijft staan
+	# zodat de aanroep ongewijzigd is (zie `build_chrome()`'s eigen contract).
 	var body := build_chrome(default_title(), "")
 	_bouw_vast(body)
 	_bouw_kaart(body)

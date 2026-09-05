@@ -25,13 +25,25 @@ extends Control
 signal besloten(doorgegaan: bool)
 
 
+## P1: dit scherm blijft alleen bestaan voor de finale. De andere tien
+## minigames kregen hun WAT-regel terug als overlay ín het veld
+## (`MinigameBase.build_chrome()`), niet meer als apart scherm ervoor — dat
+## halveerde de tekstlaag vóór het spel (`docs/AUDIT-2026-09-05.md` deel 2,
+## M1/P1). `mg_deploy` heeft geen eigenaar en geen briefer die hem aankondigt
+## (de dialoogbox blijft dus leeg), en is het enige moment waar de speler
+## bewust "Starten" drukt vóór de climax van het spel — die drempel verdient
+## hij, de andere tien niet.
+const INTRO_KAART_VOOR: StringName = &"mg_deploy"
+
+
 static func gezien_vlag(id: StringName) -> StringName:
 	return StringName("mg_intro_gezien_%s" % id)
 
 
 ## Of `Shell.run_minigame()` dit scherm voor `id` moet tonen.
 static func moet_getoond(id: StringName) -> bool:
-	return not Autopilot.gevraagd() and not Session.get_flag(gezien_vlag(id))
+	return id == INTRO_KAART_VOOR \
+		and not Autopilot.gevraagd() and not Session.get_flag(gezien_vlag(id))
 
 
 ## Aangeroepen na add_child, zelfde volgorde-contract als

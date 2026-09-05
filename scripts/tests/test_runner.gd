@@ -56,8 +56,10 @@ func _ready() -> void:
 	_test_hudband()
 	_test_leesbaarheid()
 	_test_minigame_chrome()
+	_test_banner_niet_over_veld()
 	_test_navigatie()
 	_test_briefings()
+	_test_minigame_tekstbudget()
 	_test_intro()
 	_test_save_ronde()
 	_test_save_verwijderen()
@@ -2449,6 +2451,60 @@ func _test_minigame_chrome() -> void:
 		"minigame_base.gd zet nog GRIJS_OP_LICHT op een donkere ondergrond")
 
 
+## P2.4: de banner staat niet meer los over het speelveld — hij hoort als
+## laatste kind in `chrome_footer()`, in dezelfde `_kolom`-VBoxContainer als
+## `_scroll` (het speelveld). Een `VBoxContainer` stapelt zijn kinderen in
+## losse, niet-overlappende banden; zolang de footer ná de scroll komt kan de
+## banner het speelveld dus per definitie niet meer bedekken — dezelfde
+## `get_combined_minimum_size()`-benadering als `_test_balkmaat()`, in plaats
+## van te wachten op een echte layout-frame.
+func _test_banner_niet_over_veld() -> void:
+	_kop("de banner staat niet meer over het speelveld")
+
+	var packed: PackedScene = load("res://scenes/minigames/mg_uitlijnen.tscn")
+	var mg: MinigameBase = packed.instantiate() as MinigameBase
+	mg.minigame_id = &"mg_frontend_fix"
+	add_child(mg)
+	mg.setup({})
+
+	var scroll: Variant = mg.get("_scroll")
+	var kolom: Variant = mg.get("_kolom")
+	_ok(scroll is ScrollContainer and kolom is VBoxContainer,
+		"mg_frontend_fix: build_chrome() heeft geen _scroll/_kolom opgeleverd")
+	if not (scroll is ScrollContainer and kolom is VBoxContainer):
+		mg.queue_free()
+		return
+
+	# `mg.call(...)` en niet `mg.finish_with_banner(...)`: die laatste is een
+	# coroutine (bevat `await`) en de parser eist dan `await` op de aanroep
+	# zelf — precies de reden waarom `_test_minigame_intro_scherm()` hierboven
+	# ook via `Shell.call(&"run_minigame", ...)` gaat.
+	var lopend: Variant = mg.call(&"finish_with_banner", true, "x")
+
+	var banner: Variant = mg.get("_banner")
+	_ok(banner is PanelContainer, "finish_with_banner(): geen _banner aangemaakt")
+	if banner is PanelContainer:
+		var voet: VBoxContainer = mg.chrome_footer()
+		_ok((banner as Node).get_parent() == voet,
+			"de banner zit niet meer in chrome_footer() — hij kan weer los over het veld staan")
+		var kinderen := (kolom as VBoxContainer).get_children()
+		_ok(kinderen.find(voet) > kinderen.find(scroll),
+			"chrome_footer() staat niet ná de scrollcontainer met het speelveld — de banner kan hem dus alsnog bedekken")
+		# 36 is de bodem, niet het plafond: sommige uitkomsten
+		# (`data/minigame_content.json`'s "success"/"failure") zijn tot 168 tekens
+		# lang en moeten op meerdere regels kunnen wrappen — een harde 36 px zou
+		# die tekst afsnijden. Voor een korte tekst als hier ("x") moet de bodem
+		# wél precies gehaald worden.
+		var hoogte: float = (banner as Control).get_combined_minimum_size().y
+		_ok(hoogte >= 36.0,
+			"de banner is %.0f px hoog, lager dan de afgesproken bodem van 36" % hoogte)
+		_ok((banner as Control).size_flags_horizontal & Control.SIZE_EXPAND_FILL != 0,
+			"de banner vult niet de volle breedte van de footer")
+
+	await lopend
+	mg.queue_free()
+
+
 ## Relatieve luminantie volgens WCAG 2.x. Godot's `Color` bewaart sRGB-waarden,
 ## dus de gammastap hoort er hier bij; `srgb_to_linear()` zou hem overslaan.
 static func _luminantie(c: Color) -> float:
@@ -2937,6 +2993,40 @@ func _test_briefings() -> void:
 				"de pijplijn-briefing noemt '%s' als knelpunt, maar die heeft niet de kleinste capaciteit" % label)
 
 
+## P1.4: het WAT/WAAROM-kaartje (`MinigameIntro`) verdwijnt vóór elke minigame
+## behalve `mg_deploy`; wat overblijft is de briefing van de eigenaar (één
+## regel, vóór het spel) en de WAT-overlay ín het veld (2,5 s, tijdens het
+## spel). Beide moeten kort genoeg zijn om als zo'n regel te lezen, niet als
+## de opgeknipte teksttutorial die de Party-blueprint verbiedt
+## (`docs/AUDIT-2026-09-05.md` deel 2, M1). Getest ná `Briefing.vul()`, dus met
+## de echte cijfers erin — niet de kale template met accolades.
+func _test_minigame_tekstbudget() -> void:
+	_kop("woordbudget van briefing en intro")
+
+	const MAX_BRIEFING_WOORDEN := 25
+	const MAX_INTRO_WOORDEN := 18
+
+	for id: Variant in GameData.minigames.keys():
+		var mid := StringName(id)
+		if mid == &"mg_deploy":
+			continue    # de finale houdt zijn eigen kaartje (MinigameIntro) — geen budget hier
+		var c := MinigameContent.get_config(mid)
+
+		var briefing := Briefing.vul(String(c.get("briefing", "")), c)
+		if briefing != "":
+			var n := briefing.split(" ", false).size()
+			_ok(n <= MAX_BRIEFING_WOORDEN,
+				"%s: briefing van %d woorden is langer dan het budget van %d — \"%s\"" % [
+					mid, n, MAX_BRIEFING_WOORDEN, briefing])
+
+		var intro := Briefing.vul(String(c.get("intro", "")), c)
+		if intro != "":
+			var m := intro.split(" ", false).size()
+			_ok(m <= MAX_INTRO_WOORDEN,
+				"%s: intro van %d woorden is langer dan het budget van %d — \"%s\"" % [
+					mid, m, MAX_INTRO_WOORDEN, intro])
+
+
 ## F3-c: Dirk is gegeneraliseerd naar data/storingen.json. Deze test bewaakt
 ## de data-integriteit op dezelfde manier als _test_verwijzingen() dat voor
 ## tickets doet, en daarna de harde regel uit het faalbeleid: een storing kost
@@ -3190,21 +3280,24 @@ func _test_minigame_pauze() -> void:
 	_ok(not Shell.minigame_active(), "opruimen van de tweede testminigame is niet gelukt")
 
 
-## Het wat/waarom-scherm: de eerste keer verschijnt en blokkeert het tot er
-## op "Starten" gedrukt wordt, een tweede keer voor hetzelfde id slaat het
-## over, en "Terug" breekt af zonder de vlag te zetten (dus verschijnt het bij
-## een volgende poging weer). `Autopilot.gevraagd()` leest de commandoregel
-## rechtstreeks en is hier niet om te zetten — dat pad hoort bij de
-## `--autoplay`-doorloop, niet bij deze suite.
+## Het wat/waarom-scherm: sinds P1 alleen nog voor `mg_deploy`
+## (`MinigameIntro.INTRO_KAART_VOOR`) — de andere tien minigames kregen hun
+## WAT-regel terug als overlay ín het veld (`_test_minigame_tekstbudget()`
+## bewaakt die tekst). De eerste keer verschijnt het scherm en blokkeert het
+## tot er op "Starten" gedrukt wordt, een tweede keer voor hetzelfde id slaat
+## het over, en "Terug" breekt af zonder de vlag te zetten (dus verschijnt het
+## bij een volgende poging weer). `Autopilot.gevraagd()` leest de
+## commandoregel rechtstreeks en is hier niet om te zetten — dat pad hoort bij
+## de `--autoplay`-doorloop, niet bij deze suite.
 func _test_minigame_intro_scherm() -> void:
 	_kop("het wat/waarom-scherm vóór een minigame")
 
-	QuestEngine.start_run(&"daan")   # wist Session.flags: mg_paarden telt als ongezien
-	var vlag := MinigameIntro.gezien_vlag(&"mg_paarden")
-	_ok(not Session.get_flag(vlag), "vervuilde staat: mg_paarden gold al als gezien")
+	QuestEngine.start_run(&"daan")   # wist Session.flags: mg_deploy telt als ongezien
+	var vlag := MinigameIntro.gezien_vlag(&"mg_deploy")
+	_ok(not Session.get_flag(vlag), "vervuilde staat: mg_deploy gold al als gezien")
 
 	# --- eerste keer: het scherm verschijnt en blokkeert -----------------
-	var lopend: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
+	var lopend: Variant = Shell.call(&"run_minigame", &"mg_deploy", {})
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_ok(not Shell.minigame_active(),
@@ -3225,7 +3318,7 @@ func _test_minigame_intro_scherm() -> void:
 		await lopend
 
 	# --- tweede keer: hetzelfde id slaat het scherm over ------------------
-	var lopend2: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
+	var lopend2: Variant = Shell.call(&"run_minigame", &"mg_deploy", {})
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_ok(Shell.minigame_active(),
@@ -3239,7 +3332,7 @@ func _test_minigame_intro_scherm() -> void:
 
 	# --- "Terug": afbreken zonder de vlag te zetten ------------------------
 	QuestEngine.start_run(&"daan")   # opnieuw ongezien
-	Shell.call(&"run_minigame", &"mg_paarden", {})
+	Shell.call(&"run_minigame", &"mg_deploy", {})
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var poort2: MinigameIntro = get_tree().get_first_node_in_group(&"minigame_intro")

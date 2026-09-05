@@ -1,8 +1,8 @@
 {
  "mg_user_story": {
   "type": "scope",
-  "briefing": "{capaciteit} punten passen erin, en zij wil er {tevreden_min} blij van worden. Van de {wensen} dingen die ze noemt zijn er {zwaar} geen wens maar een project. Als ze 'een app' zegt: sorry wat.",
-  "intro": "De klant noemt {wensen} dingen. Er passen {capaciteit} punten in de sprint, en ze moet op {tevreden_min} punten blij zijn.",
+  "briefing": "{capaciteit} punten passen erin, zij wil {tevreden_min} blij. Van de {wensen} dingen zijn er {zwaar} geen wens maar een project. Zeg nooit 'een app'.",
+  "intro": "De klant noemt {wensen} dingen. Er passen {capaciteit} punten in de sprint, met minstens {tevreden_min} blij.",
   "waarom": "{zwaar} van haar wensen zijn geen wens maar een project. Wat je nu belooft, bouw je vandaag. Of kom je later tegen.",
   "capaciteit": 13,
   "tevreden_min": 10,
@@ -70,8 +70,8 @@
  },
  "mg_planning": {
   "type": "standup",
-  "briefing": "Twee van hen melden iets bruikbaars. Eén daarvan is {belangrijk}. De rest praat gewoon. Kap ze af waar nodig: je hebt {ingrepen} keer, en {tijd} sec de tijd.",
-  "intro": "{sprekers} collega's doen hun rondje. Twee van hen melden iets bruikbaars, de rest praat gewoon. Je mag {ingrepen} keer iemand afkappen, in {tijd} sec.",
+  "briefing": "Eén van hen is {belangrijk}. Kap de rest af: {ingrepen} keer, {tijd} sec de tijd.",
+  "intro": "{sprekers} collega's praten. Twee melden iets bruikbaars. Kap wie nodig is af: {ingrepen} keer, in {tijd} sec.",
   "waarom": "Twee van hen melden iets wat later stukgaat. Kap je ze af vóór ze het zeggen, dan hoor je het niet. En dat moet je juist horen.",
   "tijd": 30.0,
   "ingrepen": 3,
@@ -387,7 +387,7 @@
  "mg_cro": {
   "type": "heatmap",
   "briefing": "Je staat op {basis}{eenheid} en je moet naar {doel}{eenheid}. Kijk waar ze klikken, zet de knop daar. psies.",
-  "intro": "Bezoekers klikken wel, alleen niet op Bestellen. Kijk waar ze wél klikken en sleep de knop daarheen. Voor de ronde om is.",
+  "intro": "bezoekers klikken wel, alleen niet op bestellen. sleep de knop naar de hitte. voor de ronde om is.",
   "waarom": "Een knop verkoopt niets op een plek waar niemand kijkt. Drie rondes, drie keer verhuizen.",
   "basis": 1.8,
   "doel": 2.7,
@@ -573,7 +573,7 @@
  },
  "mg_video": {
   "type": "pijplijn",
-  "briefing": "{doel} clips en {credits} credits. Het knelpunt zit bij {knelpunt}: daar staat de rij stil. Ik zou daar beginnen. En er daarna piepelienies om zetten, dan hoeft dit nooit meer met de hand.",
+  "briefing": "{doel} clips en {credits} credits. Het knelpunt zit bij {knelpunt}. Zet er straks piepelienies op, dan is dit automatisch.",
   "intro": "Zes clips door de pijplijn. Elke stap heeft plek voor twee. Wat in Render blijft staan kost credits.",
   "waarom": "Eén trage stap houdt de hele pijplijn op. Vind 'm, of de credits raken op voor je klaar bent.",
   "tijd": 60.0,
@@ -617,8 +617,8 @@
  },
  "mg_paarden": {
   "type": "whack",
-  "briefing": "hiya,, {doel} bugs binnen {duur} seconden. En niet op de klantpaarden slaan. Die lijken erop. Dat is de grap.",
-  "intro": "Door alle wijzigingen zijn er letterlijk paarden in de build gekomen. Ze staan nu op de verdieping. Sla de bugpaarden weg. Let op: er loopt ook een klantpaard rond.",
+  "briefing": "hiya,, er loopt een bug rond,, in een paardenkostuum,, spreek hem aan,, niet het klantpaard,, die lijkt erop,, dat is de grap,,",
+  "intro": "Er lopen paarden door het kantoor. Eén ervan is een bug. Spreek hem aan.",
   "waarom": "Niet alles wat er hetzelfde uitziet, hoort opgeruimd te worden.",
   "doel": 10,
   "duur": 60,
@@ -809,7 +809,7 @@
  "mg_urenstaat": {
   "type": "slotboard",
   "titel": "Urenstaat",
-  "intro": "Dirk wil weten waar de acht uur heen gingen. Kies wat er het dichtst bij in de buurt komt.",
+  "intro": "Dirk wil weten waar de acht uur heen gingen. Kies wat het dichtst bij in de buurt komt.",
   "waarom": "Dirk vraagt het je toch. Een eerlijk antwoord is minder werk dan een verzonnen antwoord.",
   "success": "Ingediend. Dirk heeft het gezien.",
   "opties": [

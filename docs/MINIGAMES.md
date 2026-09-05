@@ -292,6 +292,13 @@ antwoord. Dat is geen modus meer maar de hele mechaniek: de gecontroleerde
 variant (met `accepts` en `max_fouten`) is verwijderd toen elk ticket zijn eigen
 mechaniek kreeg.
 
+Sinds P1 krijgt hij, als enige naast `mg_deploy`, ook geen WAT-uitleg: geen
+`MinigameIntro`-kaartje vooraf (die drempel is er toch al niet, want hij heeft
+geen eigenaar of briefer) én geen WAT-overlay ín het veld
+(`MinigameBase.build_chrome()` slaat hem expliciet over). Een formulier dat
+Dirk je voorlegt hoort geen minigame-belofte te dragen — zie M7 in
+`docs/AUDIT-2026-09-05.md` deel 2.
+
 - elke regel neemt elk uurblok
 - een regel neemt er meer dan één (`capaciteit`)
 - je slaagt zodra alles verdeeld is; er zijn geen fouten
@@ -317,7 +324,7 @@ Alles is in 60–120 seconden te doen en op de eerste of tweede poging haalbaar.
 | Minigame | Drempel |
 |---|---|
 | scope | ≤ 13 punten én ≥ 10 blij, uit negen wensen |
-| stand-up | zeven sprekers binnen 42 s, met drie ingrepen |
+| stand-up | zeven sprekers binnen 30 s, met drie ingrepen |
 | klantfeedback | 6 van maximaal 9 punten |
 | uitlijnen | vijf blokken binnen 2 px van hun raster |
 | backend | de gevraagde kabels, geen extra |

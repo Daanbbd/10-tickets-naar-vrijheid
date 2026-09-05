@@ -77,13 +77,19 @@ var _banner_label: Label = null
 var _storing_paneel: PanelContainer = null
 var _storing_label: Label = null
 
+## P1.2: de WAT-overlay ín het veld en zijn tween. Bijgehouden zodat een echte
+## aanraking hem kan wegvegen (`_unhandled_input()`) en `_exit_tree()` de tween
+## nooit los in de lucht laat hangen.
+var _intro_overlay: Control = null
+var _intro_tween: Tween = null
+
 
 ## Bouwt het venster en geeft de VBox terug waar de minigame zijn eigen UI in zet.
 ##
-## `intro` wordt hier niet meer getoond: die tekst staat sinds `MinigameIntro`
-## op een eigen scherm vóór dit venster opent, met ruimte om te ademen in
-## plaats van vaste hoogte af te snoepen van de speelbare kaart eronder. De
-## parameter blijft bestaan zodat alle elf aanroepen ongewijzigd blijven —
+## `_intro` zelf blijft ongebruikt: `_bouw_intro_overlay()` hieronder leest
+## `content().get("intro")` rechtstreeks, gevuld via `Briefing.vul()`, zodat
+## een trait die de opgave aanpast (`content_override`) ook de overlay meekrijgt.
+## De parameter blijft bestaan zodat alle elf aanroepen ongewijzigd blijven —
 ## zie `scripts/ui/minigame_intro.gd`.
 func build_chrome(title: String, _intro: String) -> VBoxContainer:
 	UiKit.full_rect(self)
@@ -152,21 +158,72 @@ func build_chrome(title: String, _intro: String) -> VBoxContainer:
 	stop.pressed.connect(abort)
 	col.add_child(stop)
 
-	_banner = PanelContainer.new()
-	_banner.add_theme_stylebox_override("panel", UiKit.panel(UiKit.GROEN, UiKit.INK, 2))
-	_banner.set_anchors_preset(Control.PRESET_CENTER)
-	_banner.anchor_left = 0.5; _banner.anchor_right = 0.5
-	_banner.anchor_top = 0.5; _banner.anchor_bottom = 0.5
-	_banner.offset_left = -92; _banner.offset_right = 92
-	_banner.offset_top = -18; _banner.offset_bottom = 18
-	_banner.visible = false
-	add_child(_banner)
-	_banner_label = UiKit.label("", UiKit.FS_BODY, UiKit.INK)
-	_banner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_banner_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_banner.add_child(_banner_label)
+	# P2: de banner zelf wordt pas gebouwd in `finish_with_banner()`, als
+	# laatste kind van `chrome_footer()` — niet hier meer midden over het veld.
+	_bouw_intro_overlay()
 
 	return _body
+
+
+## P1.2: de WAT-regel als overlay ín het veld, 2,5 s zichtbaar en dan
+## wegvagend — vervangt het aparte `MinigameIntro`-scherm voor alle minigames
+## behalve `mg_deploy` (die drempel houdt hij, zie
+## `MinigameIntro.INTRO_KAART_VOOR`). De speler ziet het spel meteen; de
+## uitleg staat erover, niet ervoor.
+##
+## `mouse_filter = IGNORE` op overlay én paneel: de eerste tik moet het spel
+## bereiken, niet dit venster — en de `Autopilot` (M4) mag hier nooit door
+## geblokkeerd worden, wat met IGNORE per definitie niet kan. Geen overlay als
+## `intro` leeg is. Twee uitzonderingen: `MinigameIntro.INTRO_KAART_VOOR`
+## (`mg_deploy`) toont zijn WAT al op zijn eigen kaartje vóór dit venster
+## opent — deze overlay zou daar alleen een tweede keer hetzelfde herhalen —
+## en `mg_urenstaat` (Dirk) is een formulier (M7), geen spel dat om affordance
+## vraagt.
+func _bouw_intro_overlay() -> void:
+	if minigame_id == &"mg_urenstaat" or minigame_id == MinigameIntro.INTRO_KAART_VOOR:
+		return
+	var tekst := Briefing.vul(String(content().get("intro", "")), content())
+	if tekst == "":
+		return
+
+	var overlay := CenterContainer.new()
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiKit.full_rect(overlay)
+	add_child(overlay)
+
+	var paneel := PanelContainer.new()
+	paneel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	paneel.add_theme_stylebox_override("panel", UiKit.panel(Color(UiKit.INK, 0.72), UiKit.LINE))
+	overlay.add_child(paneel)
+
+	var label := UiKit.label(tekst, UiKit.FS_BODY, UiKit.WIT)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.custom_minimum_size = Vector2(168, 0)
+	paneel.add_child(label)
+
+	_intro_overlay = overlay
+	_intro_tween = create_tween()
+	_intro_tween.tween_interval(2.5)
+	_intro_tween.tween_property(overlay, "modulate:a", 0.0, 0.4)
+	_intro_tween.tween_callback(_weg_intro_overlay)
+
+
+## Ruimt de overlay op, of hij nu wegvaagt via zijn eigen tween of via een
+## echte aanraking (`_unhandled_input()`). Idempotent: een tweede aanroep (de
+## tween ná een handmatige tik, of omgekeerd) doet niets.
+func _weg_intro_overlay() -> void:
+	if _intro_overlay == null:
+		return
+	if _intro_tween != null and is_instance_valid(_intro_tween):
+		_intro_tween.kill()
+	_intro_overlay.queue_free()
+	_intro_overlay = null
+
+
+func _exit_tree() -> void:
+	if _intro_tween != null and is_instance_valid(_intro_tween):
+		_intro_tween.kill()
 
 
 ## Twee stroken die **niet** meescrollen: boven en onder de inhoud.
@@ -242,14 +299,50 @@ func storing(tekst: String, _kosten: Dictionary) -> void:
 
 
 ## Toont de uitslag en sluit daarna af.
+##
+## P2: de banner staat niet meer los over het veld — hij komt als laatste kind
+## in `chrome_footer()`, volle breedte, en alle knoppen in de minigame gaan uit
+## zodra hij verschijnt: de uitkomst staat vast, verder klikken kan er niets
+## meer aan veranderen. Bij winst dimt het veld (`UiKit.dimmer(0.35)`,
+## toegevoegd vlak vóórdat de banner verschijnt) en barst er confetti los; bij
+## verlies schokt de camera. Beide bestonden al in `Juice`, maar werden hier
+## nooit aangeroepen — het "yes"-moment was een tekstvak
+## (`docs/AUDIT-2026-09-05.md` deel 2, M2).
+##
+## 36 px is een bodem (`custom_minimum_size`), geen plafond: een deel van
+## `data/minigame_content.json`'s "success"/"failure"-teksten loopt op tot
+## 168 tekens en moet op meerdere regels kunnen wrappen in de footer, die als
+## `VBoxContainer`-strook meegroeit. Een harde 36 px zou die tekst afsnijden —
+## de footer zit hoe dan ook nooit óver `_scroll` (het speelveld), wat de
+## eigenlijke eis is.
 func finish_with_banner(ok: bool, text: String, score: int = 0, payload: Dictionary = {}) -> void:
 	if _done:
 		return
-	if _banner != null:
-		_banner.add_theme_stylebox_override("panel",
-			UiKit.panel(UiKit.GROEN if ok else UiKit.ROOD, UiKit.INK, 2))
-		_banner_label.text = text
-		_banner.visible = true
+
+	var strook := chrome_footer()
+	_banner = PanelContainer.new()
+	_banner.custom_minimum_size = Vector2(0, 36)
+	_banner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_banner.add_theme_stylebox_override("panel",
+		UiKit.panel(UiKit.GROEN if ok else UiKit.ROOD, UiKit.INK, 2))
+	_banner_label = UiKit.label(text, UiKit.FS_BODY, UiKit.INK)
+	_banner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_banner.add_child(_banner_label)
+
+	if ok:
+		add_child(UiKit.dimmer(0.35))
+	strook.add_child(_banner)
+
+	# De uitslag staat vast: geen enkele knop in deze minigame doet nog iets.
+	for knop: Button in find_children("*", "Button", true, false):
+		knop.disabled = true
+
+	if ok:
+		Juice.confetti(self, _banner.global_position + _banner.size * 0.5)
+	else:
+		Juice.schok()
+
 	AudioDirector.play_ui(&"ticket_klaar" if ok else &"fout")
 	# De banner is groen of rood, maar op een telefoon in de trein is het geluid
 	# uit en zit het scherm halverwege achter een duim. De trilling draagt hier
@@ -272,6 +365,12 @@ func finish_with_banner(ok: bool, text: String, score: int = 0, payload: Diction
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# P1.2: de eerste echte aanraking veegt de WAT-overlay weg, ongeacht of
+	# de 2,5 s al om zijn. `mouse_filter = IGNORE` op de overlay zorgt dat
+	# dezelfde tik ook het spel zelf bereikt.
+	if _intro_overlay != null and (event is InputEventScreenTouch
+			or event is InputEventMouseButton or event is InputEventKey):
+		_weg_intro_overlay()
 	if event.is_action_pressed("cancel"):
 		get_viewport().set_input_as_handled()
 		abort()
