@@ -96,6 +96,7 @@ func play(dialogue_id: StringName, fallback_label: String = "") -> StringName:
 		var speaker := _display_name(speaker_id)
 
 		if text != "":
+			Bus.dialogue_speaker_changed.emit(StringName(speaker_id))
 			await _show_and_wait(speaker, text, _portrait_for(speaker_id))
 
 		QuestEngine.run_effects(node.get("effects", []) as Array)
@@ -162,7 +163,9 @@ func _play_single(speaker: String, text: String, speaker_id: StringName = &"",
 	_active = true
 	_skip = false
 	Session.lock_input()
-	Bus.dialogue_started.emit(&"", speaker_id if speaker_id != &"" else StringName(speaker))
+	var actual_speaker_id := speaker_id if speaker_id != &"" else StringName(speaker)
+	Bus.dialogue_started.emit(&"", actual_speaker_id)
+	Bus.dialogue_speaker_changed.emit(actual_speaker_id)
 	await _show_and_wait(speaker, text,
 		portret if portret != null else _portrait_for(String(speaker_id)))
 	_box.close()
@@ -207,6 +210,7 @@ func ask_choice(vraag: String, labels: Array[String]) -> int:
 	_skip = false
 	Session.lock_input()
 	Bus.dialogue_started.emit(&"", &"")
+	Bus.dialogue_speaker_changed.emit(&"")
 	_box.show_line("", vraag)
 	_box.finish_typing()
 	var keuze := await _wait_for_choice(labels)

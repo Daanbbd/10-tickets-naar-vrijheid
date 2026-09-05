@@ -21,10 +21,19 @@
   (`/Users/daan/Documents/fun`) loopt achter tot daar `git pull --ff-only` is
   gedaan — vanuit een worktree kan dat niet. Deployen gaat vanuit een worktree
   met `cp ../../../export_presets.cfg . && tools/deploy_web.sh`.
-- **Stand:** suite 23.405 controles, 0 fout; alle zeven personages halen 10/10
-  in de geautomatiseerde speelbeurt. Elke fase is als eigen commit gecommit met
-  een leesbare boodschap — lees `git log` als je wilt weten wát er veranderde
-  en waarom.
+- **Stand op `main`:** suite 23.378 controles, 0 fout; alle zeven personages
+  halen 10/10 in de geautomatiseerde speelbeurt. Elke fase is als eigen commit
+  gecommit met een leesbare boodschap — lees `git log` als je wilt weten wát er
+  veranderde en waarom.
+- **Nieuwe worktree sinds 5 september, later op de avond:**
+  `/Users/daan/Documents/fun/.claude/worktrees/fase3-rest-e-f`, branch
+  `fase3-rest-e-f`, gebaseerd op de kop van `main` (`7df1330`). Drie commits,
+  zie Overdracht C, E en F hierboven voor wat erin zit. Suite: 23.329
+  controles, 0 fout (minder dan op `main` ondanks nieuwe tests: twee dode
+  minigame-scenes eruit trekt ook hun losse canvas-fit-controles mee).
+  `--playthrough --autoplay --quit-when-done` voor Daan: 10/10, exit 0 — de
+  overige zes personages zijn dit keer niet stuk voor stuk herhaald, alleen
+  Daan. Nog niet naar `main` gemerged of gepusht.
 - **Werkwijze die geldt:** één fase per commit, alleen als de suite groen is en
   een speelbeurt 10/10 haalt. Nooit pushen of naar `main` mergen. Eerst in de
   worktree `--import` draaien als je class-cache-fouten ziet ("Could not find
@@ -152,11 +161,27 @@ collega's, de tien tickets teruggelezen met wat jij besloot (uit
 `Session.completed_at`, `gebrekkig_*`, `niet_af`, de `gevolg_*`-vlaggen), het
 bericht van de klant, de urenclou, de Jira-sting.
 
-**C. Fase 3 rest (Sonnet met spec).** `build_speelveld()` als tweede chrome in
-`minigame_base.gd` (vast, niet-scrollend veld — `mg_heatmap`/`mg_uitlijnen`
-laten zien hoe het eruit moet zien); `mg_pijplijn` strakker (3× ruimte over);
-`mg_standup` is één binaire beslissing; `mg_whack`/`mg_choicescene`/
-`mg_cableboard` zijn dode code — verwijderen of herleven.
+**C. Fase 3 rest (Sonnet met spec).** Gedaan in de `fase3-rest-e-f`-worktree
+(`e3a3471`): geverifieerd dat t03/t05/t09 écht `wereldhandeling: true` dragen
+en dus nooit via `Shell.run_minigame()` lopen, en op basis daarvan
+`mg_choicescene.gd`/`.tscn` en `mg_cableboard.gd`/`.tscn` verwijderd (met
+regressiewacht, naast de bestaande `mg_abtest`-wacht), `data/minigames.json`
+en `_test_verwijzingen()` bijgewerkt, en `MINIGAMES.md`/`ARCHITECTURE.md`
+gecorrigeerd (die noemden BBD-206 trouwens nog als `mg_abtest.gd`, al dood).
+**`mg_whack.gd`/`.tscn` blijft bewust staan**: die wordt — anders dan de
+andere twee — wél rechtstreeks aangeroepen, maar alleen door de testsuite zelf
+(`Shell.call(&"run_minigame", &"mg_paarden", {})` op zes plekken in
+`_test_storingen()`/`_test_minigame_pauze()`, als generieke "er loopt een
+echte minigame"-fixture voor de onderbrekings- en pauzetests). Die zes
+call sites verdienen eigen rewiring naar een ander fixture-minigame vóór
+`mg_whack` ook weg kan — apart op te pakken.
+
+Nog open: `build_speelveld()` als tweede chrome in `minigame_base.gd` (vast,
+niet-scrollend veld — `mg_heatmap`/`mg_uitlijnen` laten zien hoe het eruit
+moet zien); `mg_pijplijn` strakker (3× ruimte over); `mg_standup` is één
+binaire beslissing. Deze raken `minigame_base.gd`'s publieke contract voor
+alle overige minigames tegelijk — eerst een concreet ontwerp (Fable), dan
+bouwen (Sonnet), net als bij Fase 5.
 
 **D. Fase 2 rest.** Ophaalvariatie (`fetch`/`recruit` is 8-9× dezelfde beat;
 `Npc.start_following`, `HelperStand` bestaan al) — Fable voor het ontwerp, Sonnet
@@ -165,23 +190,39 @@ art wordt door `tools/generators/*.py` gemaakt met Pillow uit
 `/Users/daan/Documents/fun/tools/.venv`). Audio-escalatie via
 `AudioDirector.LAGEN`.
 
-**E. Klein en Sonnet-waardig.** Het scrumbord als sleepbaar bord
-(`scripts/ui/scrumbord.gd`); dialoogkeuzes op de `recruit`-momenten
-(`data/dialogue/tickets.json`, `variants`/`choices`-grammatica);
-`docs/dialogue-content.md` bijwerken (mist `wereld.json` en Dirk); de 37
-ticketbomen waar de verkeerde mond beweegt (`Bus.dialogue_started` emit alleen
-de startspreker — `dialogue_controller.gd:78`, `npc.gd:71-84`).
-Nog één kleintje: `Hud._on_toast()` stapelt toasts zonder plafond; bij drie of
-meer tegelijk (een opgelost ticket, een storing en Dennis) vult de stapel het
-scherm (zie `praat_dirk.png`, gemaakt met `--ticket=t06`, dat alles tegelijk
-laat vuren). Cap op drie, oudste weg.
+**E. Klein en Sonnet-waardig.** Grotendeels gedaan in de `fase3-rest-e-f`-
+worktree (`7d3c472`, `63f03a0`):
+- **Gedaan** — de 37 ticketbomen waar de verkeerde mond bewoog: nieuw signaal
+  `Bus.dialogue_speaker_changed` vuurt per regel (niet meer eenmalig bij de
+  start van een boom); `npc.gd` volgt nu de daadwerkelijke spreker. Nieuwe test
+  bewijst eerst dat er bomen met meerdere sprekers bestaan, dan de fix zelf.
+- **Gedaan** — `Hud._on_toast()` had geen plafond; `TOAST_MAX = 3`, oudste
+  gaat weg.
+- **Gedaan** — `docs/dialogue-content.md` bijgewerkt: Dirk (volledig
+  transcript + de niet-gewandelde `dirk_urenstaat`-boom) en een nieuwe sectie
+  over `wereld.json` (tabel van alle 28 objecten, twee volledig uitgeschreven
+  als voorbeeld). Dirk deelt zijn `role`-veld ("Scrum Master") met Dennis in
+  `data/npcs.json` — geen bug: Dirk is een AI-scrummaster, Dennis de "echte",
+  en de grap is dat Dirk Dennis' werkdruk met precies nul vermindert.
+- **Nog open** — het scrumbord als sleepbaar bord (`scripts/ui/scrumbord.gd`);
+  dialoogkeuzes op de `recruit`-momenten (`data/dialogue/tickets.json`,
+  `variants`/`choices`-grammatica).
 
-**F. Overgenomen uit de playtestronde (Sonnet).** De Done-landing-animatie
-voor het bord: Daan vroeg "animatie, geen wandeling" voor een ticket dat naar
-Done gaat; nu herklasseert het stil (vgl. `Hud.laat_landen()` /
-`Scrumbord.laat_briefje_landen()` voor nieuwe tickets). En de flaky test op
-`mag_onderbreken_minigame()` (`storingen.gd`): meet nu echte wandtijd; geef de
-injecteerbare `nu` door in de test.
+**F. Overgenomen uit de playtestronde (Sonnet).**
+- **Gedaan** (`7d3c472`) — de Done-landing-animatie: Daan vroeg "animatie,
+  geen wandeling" voor een ticket dat naar Done gaat; `Scrumbord.
+  positie_van()`/`laat_klaar_landen()` onthouden de oude plek vóór `vul()` het
+  briefje weggooit en laten het van daar naar zijn nieuwe kolom vliegen.
+  Onderweg een echte bug gevonden en gefikst: `pivot_offset`/`rotation` moeten
+  vóór `global_position` gezet worden, anders start de vlucht een paar pixels
+  naast de onthouden positie.
+- **Al opgelost, niet meer flaky** — de vermeende flaky test op
+  `mag_onderbreken_minigame()` (`storingen.gd`): geverifieerd tegen de
+  huidige code (niet blind op deze regel vertrouwd, zie
+  [[peer-claims-verifieren]]), en de test injecteert de `nu`-parameter al
+  overal waar het uitmaakt (`b9373d76`, 2 september) — inclusief de
+  `_mg_gestart_op = -1000.0`-truc voor het ene pad dat de echte klok gebruikt.
+  Geen actie nodig; deze regel stond hier op een oudere stand van de code.
 
 ### Wat Daan zelf moet doen
 

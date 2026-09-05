@@ -143,15 +143,21 @@ minigame is een JSON-config, geen eigen codebase.
 |---|---|
 | `mg_scope` | BBD-201 |
 | `mg_planning` (scene `mg_standup.tscn`) | BBD-202 |
-| `mg_choicescene` | BBD-203 |
+| `mg_klantfeedback` (wereldhandeling, geen scene) | BBD-203 |
 | `mg_uitlijnen` | BBD-204 |
-| `mg_cableboard` | BBD-205 |
+| `mg_backend_fix` (wereldhandeling, geen scene) | BBD-205 |
 | `mg_heatmap` | BBD-206 |
 | `mg_abgevecht` | BBD-207 |
 | `mg_pijplijn` | BBD-208 |
-| `mg_whack` | BBD-209 |
+| `mg_paarden` (wereldhandeling, geen scene) | BBD-209 |
 | `mg_oplevering` | BBD-210 |
 | `mg_slotboard` | de urenstaat van Dirk (geen ticket) |
+
+Een wereldhandeling-ticket draagt `wereldhandeling: true` en loopt via
+`TicketController._resolve_wereldhandeling()`, nooit via
+`Shell.run_minigame()`: zijn `minigame_id` is alleen nog een sleutel in
+`data/minigame_content.json`, niet in `data/minigames.json`. Zie
+`docs/MINIGAMES.md` voor de details.
 
 Contract: `MinigameBase.setup(config)` → signal `finished(MinigameResult)`.
 `Shell.run_minigame()` pauzeert de wereld, hangt de minigame op MinigameLayer en
@@ -293,8 +299,8 @@ arrangementen en worden bij het genereren meegeprint.
   alleen bij een nieuwe dag op: `Session.hervat` (gezet in `load_from_disk()`,
   gewist in `start_new()`) en niet `done_count() > 0` — wie hervat vóór zijn
   eerste opgeloste ticket staat ook op nul.
-- **Vier minigames leunen op `emulate_mouse_from_touch`.** `mg_scope`,
-  `mg_cableboard`, `mg_uitlijnen` en `mg_pijplijn` lezen in hun `_gui_input()`
+- **Drie minigames leunen op `emulate_mouse_from_touch`.** `mg_scope`,
+  `mg_uitlijnen` en `mg_pijplijn` lezen in hun `_gui_input()`
   een `InputEventMouseButton`. Dat werkt op een telefoon omdat Godot standaard
   muis uit touch emuleert, en die instelling staat **niet** in `project.godot` —
   hij is dus de default en geen keuze. Zet iemand

@@ -102,6 +102,8 @@ func _ready() -> void:
 	_test_fase2a()
 	await _test_fase2b()
 	_test_finale_kan_falen()
+	_test_dialoog_mond_volgt_spreker()
+	await _test_klaar_landt_niet_stil()
 	_rapport()
 
 
@@ -450,8 +452,14 @@ func _test_verwijzingen() -> void:
 	for id: StringName in GameData.ticket_ids():
 		var t: TicketDef = GameData.ticket(id)
 		_ok(t.anchor in object_ids, "%s: anchor '%s' bestaat niet als object" % [t.code, t.anchor])
-		_ok(GameData.minigame_scene_path(t.minigame_id) != "",
-			"%s: minigame '%s' staat niet in minigames.json" % [t.code, t.minigame_id])
+		# Een wereldhandeling loopt nooit via Shell.run_minigame() (zie
+		# TicketController._resolve_wereldhandeling()) en heeft dus geen scene
+		# nodig — mg_klantfeedback/mg_backend_fix stonden hier lang met een
+		# scene die er zelf nooit kwam (mg_choicescene.tscn/mg_cableboard.tscn,
+		# dode code, verwijderd).
+		if not t.wereldhandeling:
+			_ok(GameData.minigame_scene_path(t.minigame_id) != "",
+				"%s: minigame '%s' staat niet in minigames.json" % [t.code, t.minigame_id])
 		_ok(not MinigameContent.get_config(t.minigame_id).is_empty(),
 			"%s: minigame '%s' heeft geen inhoud" % [t.code, t.minigame_id])
 		_ok(t.zone_name != "", "%s: geen zone_name" % t.code)
@@ -1425,6 +1433,13 @@ func _test_heatmap() -> void:
 		"de knop heeft geen maat of startplek")
 	_ok(not ResourceLoader.exists("res://scripts/minigames/mg_abtest.gd"),
 		"mg_abtest.gd bestaat nog — de dubbele quiz hoort weg te zijn")
+	# BBD-203 en BBD-205 draaien allebei via een wereldhandeling
+	# (_wh_klantfeedback()/_wh_backend()); mg_choicescene.gd en mg_cableboard.gd
+	# waren de scenes die daarachter nooit meer geladen werden (Overdracht C).
+	_ok(not ResourceLoader.exists("res://scripts/minigames/mg_choicescene.gd"),
+		"mg_choicescene.gd bestaat nog — die draait nooit, BBD-203 is een wereldhandeling")
+	_ok(not ResourceLoader.exists("res://scripts/minigames/mg_cableboard.gd"),
+		"mg_cableboard.gd bestaat nog — die draait nooit, BBD-205 is een wereldhandeling")
 
 
 func _test_urenstaat() -> void:
@@ -5583,3 +5598,102 @@ func _test_finale_kan_falen() -> void:
 	for raw: Variant in uitkomsten:
 		_ok(String((raw as Dictionary).get("titel", "")).begins_with("OPGELEVERD"),
 			"een geslaagde uitkomst hoort OPGELEVERD te heten; ROLLBACK is geen uitkomst in de data")
+
+
+## Los geverifieerd defect: "in 37 van 59 ticketbomen beweegt de verkeerde
+## mond, of geen" (`docs/PLAN.md`). `Bus.dialogue_started` noemde alleen de
+## spreker van de eerste node van een boom (`dialogue_controller.gd:78` in de
+## oude versie); een boom die van spreker wisselt (verteller → collega A →
+## collega B) liet de eerste spreker de rest van het gesprek doorpraten, of
+## niemand als de boom op een vertellerregel begon. `dialogue_speaker_changed`
+## vuurt nu per regel; deze test bewijst eerst dat het defectscenario echt
+## bestaat en test dan dat een NPC zijn `_praat` per regel bijwerkt.
+func _test_dialoog_mond_volgt_spreker() -> void:
+	_kop("de juiste mond beweegt, per regel")
+
+	var meerdere_sprekers := 0
+	for key: Variant in GameData.dialogues.keys():
+		var def: DialogueDef = GameData.dialogue(StringName(key))
+		var sprekers: Dictionary = {}
+		for nid: Variant in def.nodes.keys():
+			var n := def.node(StringName(nid))
+			var basis := String(n.get("speaker", ""))
+			if basis != "":
+				sprekers[basis] = true
+			for raw: Variant in n.get("variants", []):
+				var vs := String((raw as Dictionary).get("speaker", basis))
+				if vs != "":
+					sprekers[vs] = true
+		if sprekers.size() > 1:
+			meerdere_sprekers += 1
+	_ok(meerdere_sprekers > 0,
+		"geen enkele dialoogboom wisselt van spreker; deze test dekt dan niets")
+
+	# `Npc.new()` zonder `setup()`: `_op_spreker_gewisseld()` leest alleen
+	# `npc_id`, geen `WorldBuilder` of sprite nodig.
+	var npc := Npc.new()
+	npc.npc_id = &"npc_victor"
+	npc._op_spreker_gewisseld(&"victor")
+	_ok(npc._praat, "victor praat niet als hijzelf de spreker is")
+	npc._op_spreker_gewisseld(&"jonathan")
+	_ok(not npc._praat, "victor praat nog als jonathan het woord heeft")
+	npc._op_spreker_gewisseld(&"")
+	_ok(not npc._praat, "victor praat op een vertellerregel (lege spreker)")
+	npc._op_spreker_gewisseld(&"victor")
+	_ok(npc._praat, "victor praat niet meer als het weer zijn beurt is")
+	npc.free()
+
+	# Regressiewacht: het signaal moet uit elke plek komen die een regel toont
+	# (de node-lus in `play()`, `_play_single()`, `ask_choice()`), anders zakt
+	# de fix terug naar "eenmalig bij de start".
+	var src := FileAccess.get_file_as_string("res://scripts/ui/dialogue_controller.gd")
+	_ok(src.count("Bus.dialogue_speaker_changed.emit(") >= 3,
+		"dialogue_controller.gd emit het sprekersignaal op minder plekken dan verwacht")
+
+
+## Los geverifieerd defect: "de Done-landing-animatie voor het bord" — Daan
+## vroeg "animatie, geen wandeling" voor een ticket dat naar Done gaat, en
+## `vul()` herbouwde het briefje daar tot nu toe stil (`docs/PLAN.md`).
+## `positie_van()`/`laat_klaar_landen()` laten het van zijn oude plek naar zijn
+## nieuwe kolom vliegen; dit test dat het briefje daadwerkelijk in DONE
+## belandt en dat de vlucht bij de onthouden startpositie begint.
+func _test_klaar_landt_niet_stil() -> void:
+	_kop("een opgelost ticket vliegt naar Done, in plaats van stil te herklasseren")
+	QuestEngine.start_run(&"daan")
+
+	var bord := Scrumbord.new()
+	UiKit.full_rect(bord)
+	bord.bouw()
+	add_child(bord)
+
+	var id: StringName = GameData.ticket_ids()[0]
+	var t: TicketDef = GameData.ticket(id)
+	Session.discover(id)
+	bord.vul()
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var van: Variant = bord.positie_van(id)
+	_ok(van != null, "positie_van() vindt het briefje niet terwijl het op het bord staat")
+
+	QuestEngine.complete(id, MinigameResult.new())
+	bord.vul()
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	_ok(Session.ticket_state(id) == GameEnums.TicketState.DONE,
+		"QuestEngine.complete() zet de staat niet op DONE; deze test dekt dan niets")
+	var nieuw := bord._zoek_briefje(t)
+	_ok(nieuw != null and nieuw.get_parent() == bord._kolom[2],
+		"het opgeloste briefje staat niet in de DONE-kolom na vul()")
+
+	if nieuw != null and van != null:
+		bord.laat_klaar_landen(t, van)
+		# Niet `==`: `global_position` rondt via een matrixinversie, dus een
+		# epsilon in plaats van exacte gelijkheid.
+		_ok(nieuw.global_position.distance_to(van) < 0.5,
+			"laat_klaar_landen() start de vlucht niet op de onthouden oude positie (%s i.p.v. %s)"
+				% [nieuw.global_position, van])
+
+	bord.queue_free()
+	await get_tree().process_frame

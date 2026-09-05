@@ -33,6 +33,13 @@ signal klant_bericht(bericht_id: StringName)
 signal dialogue_started(dialogue_id: StringName, speaker_id: StringName)
 signal dialogue_finished(dialogue_id: StringName, outcome: StringName)
 
+## Wie er ván nu af aan het woord is, per regel. `dialogue_started` noemt alleen
+## de spreker van de eerste node van een boom; een gesprek dat van collega
+## wisselt (verteller → collega A → collega B) liet zonder dit signaal de
+## verkeerde mond bewegen, of geen. `npc.gd` luistert hierop om `_praat` per
+## regel bij te werken in plaats van eenmalig bij de start van het gesprek.
+signal dialogue_speaker_changed(speaker_id: StringName)
+
 # --- Minigames ---
 signal minigame_started(minigame_id: StringName)
 signal minigame_finished(minigame_id: StringName, result: MinigameResult)

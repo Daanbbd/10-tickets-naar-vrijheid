@@ -77,22 +77,22 @@ func setup(d: NpcDef, builder: WorldBuilder) -> void:
 
 	_bezig_bij = BEZIG_NA + randf() * BEZIG_SPREIDING
 	sprite.animation_finished.connect(_op_animatie_klaar)
-	Bus.dialogue_started.connect(_op_dialoog_start)
+	Bus.dialogue_speaker_changed.connect(_op_spreker_gewisseld)
 	Bus.dialogue_finished.connect(_op_dialoog_eind)
 
 
 ## Wie er praat, zodat de juiste collega zijn mond beweegt en de andere zes
 ## niet. De dialoog noemt sprekers zonder `npc_`-voorvoegsel ("victor"), de
-## NPC's heten `npc_victor`; het dialoog-id is de tweede ingang, want bij een
-## wervingsgesprek staat de spreker per node en niet op de boom.
-func _op_dialoog_start(dialogue_id: StringName, speaker: StringName) -> void:
-	# `def.dialogue_id != &""` erbij, want een lege id is geen match maar een
-	# NPC zonder eigen gesprek. De drie paardenbugs uit BBD-209 hebben er geen,
-	# en `DialogueController` zendt bij een vertellerregel `dialogue_started`
-	# met een lege id: zonder deze wacht gingen alle drie in praatstand bij elke
-	# regel die er de rest van de dag viel.
-	_praat = (def.dialogue_id != &"" and dialogue_id == def.dialogue_id) \
-		or (speaker != &"" and speaker == StringName(String(npc_id).trim_prefix("npc_")))
+## NPC's heten `npc_victor`.
+##
+## Dit was ooit `dialogue_started` (eenmalig, bij de eerste node van de boom):
+## in 37 van 59 ticketbomen wisselt de spreker binnen de boom (verteller →
+## collega A → collega B), en dan bleef de eerste spreker de rest van het
+## gesprek met zijn mond bewegen, of niemand deed het als de boom op een
+## vertellerregel begint. `dialogue_speaker_changed` vuurt per regel, dus dit
+## volgt de daadwerkelijke spreker in plaats van alleen de openingszet.
+func _op_spreker_gewisseld(speaker: StringName) -> void:
+	_praat = speaker != &"" and speaker == StringName(String(npc_id).trim_prefix("npc_"))
 	if _praat:
 		_bezig = false
 

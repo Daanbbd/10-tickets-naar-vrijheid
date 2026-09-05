@@ -21,15 +21,27 @@ plaats van uit de techniek.
 |---|---|---|---|---|
 | BBD-201 | Scope-schuif | `mg_scope.gd` | verdelen onder twee botsende grenzen | Daan bewaakt de scope en verliest de scope |
 | BBD-202 | Stand-up | `mg_standup.gd` | ingrijpen op het juiste moment | een stand-up waar je in staat en niets aan hebt |
-| BBD-203 | ChoiceScene | `mg_choicescene.gd` | onderhandelen | Willem haalt akkoord bij de klant |
+| BBD-203 | wereldhandeling (`_wh_klantfeedback()`) | — | onderhandelen | Willem haalt akkoord bij de klant |
 | BBD-204 | Uitlijnen | `mg_uitlijnen.gd` | ruimtelijke precisie | Victor *ís* uitlijning |
-| BBD-205 | CableBoard | `mg_cableboard.gd` | structuur herstellen | Jonathan vindt de oorzaak, niet het symptoom |
-| BBD-206 | A/B-test | `mg_abtest.gd` | meten, lezen, opnieuw | Danny: "aanzetten en kijken" |
+| BBD-205 | wereldhandeling (`_wh_backend()`) | — | structuur herstellen | Jonathan vindt de oorzaak, niet het symptoom |
+| BBD-206 | Heatmap | `mg_heatmap.gd` | kijken waar ze klikken | Danny: "aanzetten en kijken" |
 | BBD-207 | A tegen B | `mg_abgevecht.gd` | de juiste klap kiezen | Danny: "aanzetten en kijken", met vuisten |
 | BBD-208 | Renderpijplijn | `mg_pijplijn.gd` | doorstroom onder druk | Koen giet alles in piepelienies |
-| BBD-209 | WhackAHorse | `mg_whack.gd` | arcadereflex | Bastiaan ziet wat er beweegt |
+| BBD-209 | wereldhandeling (`_wh_paarden()`) | — | een paard aanspreken | Bastiaan ziet wat er beweegt |
 | BBD-210 | Oplevering | `mg_oplevering.gd` | beperkte acties met gevolgen | de finale, per personage anders |
 | de urenstaat | SlotBoard | `mg_slotboard.gd` | een formulier invullen | Dirk vraagt om je uren |
+
+Drie tickets (BBD-203, BBD-205, BBD-209) dragen `wereldhandeling: true` en
+draaien nooit als een echte minigame-scene — `TicketController.
+_resolve_wereldhandeling()` routeert ze rechtstreeks naar een eigen functie,
+vóór `Shell.run_minigame()` er ooit aan te pas komt. Hun `minigame_id`
+(`mg_klantfeedback`/`mg_backend_fix`/`mg_paarden`) is alleen nog een sleutel in
+`data/minigame_content.json`, niet in `data/minigames.json`. `mg_choicescene.gd`
+en `mg_cableboard.gd` — de scenes die BBD-203 en BBD-205 ooit hadden — zijn
+verwijderd; `mg_whack.gd` (BBD-209's oude scene) bestaat nog alleen omdat de
+testsuite hem gebruikt als generieke "er loopt een echte minigame"-fixture voor
+de onderbrekings- en pauzetests (F5-a/F5-b), niet omdat een speler hem ooit te
+zien krijgt.
 
 `SlotBoard` bestaat nog, en draagt nu precies één taak: de urenstaat van Dirk.
 Dat is de winst van de omslag. Een vakkenraster is een formulier, en de enige
@@ -140,8 +152,8 @@ zit (`PAPIER`, `WIT`, een post-it). Een label rechtstreeks op de chrome hoort
 
 Eén blauwe `UiKit.knop_primair()` per scherm, en die hoort in
 `chrome_footer()`. Alles wat secundair is — Stoppen, richtingsknoppen,
-keuzerijen — houdt de gewone knopstijl. `mg_whack` en `mg_choicescene` hebben
-er bewust nul: daar *is* de keuze de handeling.
+keuzerijen — houdt de gewone knopstijl. `mg_whack` heeft er bewust nul: daar
+*is* de keuze de handeling.
 
 ESC breekt af. Afbreken laat het ticket op ACTIVE staan; opnieuw praten is
 opnieuw proberen. Falen kost nooit voortgang.
