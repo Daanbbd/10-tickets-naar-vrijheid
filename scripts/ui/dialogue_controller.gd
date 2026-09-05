@@ -42,6 +42,7 @@ func setup() -> void:
 	_box = DialogueBox.new()
 	_layer.add_child(_box)
 	_box.choice_picked.connect(_on_choice_picked)
+	_box.overslaan_gevraagd.connect(overslaan)
 	# Een gesprek grijpt de invoer af: je loopt niet meer, je leest. Op mobiel is
 	# dat de enige aankondiging die er is, want het venster schuift stil in beeld.
 	# Op het signaal en niet bij de drie emits, zodat een losse regel, een
@@ -74,6 +75,7 @@ func play(dialogue_id: StringName, fallback_label: String = "") -> StringName:
 		return &""
 
 	_active = true
+	_skip = false
 	Session.lock_input()
 	Bus.dialogue_started.emit(dialogue_id, StringName(_speaker_of(def, def.start_node)))
 
@@ -158,6 +160,7 @@ func say(speaker: String, text: String, speaker_id: StringName = &"",
 func _play_single(speaker: String, text: String, speaker_id: StringName = &"",
 		portret: Texture2D = null) -> void:
 	_active = true
+	_skip = false
 	Session.lock_input()
 	Bus.dialogue_started.emit(&"", speaker_id if speaker_id != &"" else StringName(speaker))
 	await _show_and_wait(speaker, text,
@@ -171,6 +174,13 @@ func _play_single(speaker: String, text: String, speaker_id: StringName = &"",
 
 func _show_and_wait(speaker: String, text: String, portrait: Texture2D = null) -> void:
 	_box.show_line(speaker, vul_in(text), portrait)
+	# Overslaan: de regel staat één frame volledig in beeld en gaat door. De
+	# effects van de node draaien gewoon (die staan in de lus in `play()`), een
+	# keuze wacht altijd (`_wait_for_choice()` zet de vlag weer uit).
+	if _skip:
+		_box.finish_typing()
+		await get_tree().process_frame
+		return
 	while true:
 		await _next_press()
 		if _box.typing():
@@ -194,6 +204,7 @@ func ask_choice(vraag: String, labels: Array[String]) -> int:
 	if labels.is_empty():
 		return -1
 	_active = true
+	_skip = false
 	Session.lock_input()
 	Bus.dialogue_started.emit(&"", &"")
 	_box.show_line("", vraag)
@@ -215,6 +226,7 @@ func _ask(choices: Array) -> int:
 
 
 func _wait_for_choice(labels: Array[String]) -> int:
+	_skip = false
 	_choice_index = -1
 	_box.show_choices(labels)
 	while _choice_index < 0:
@@ -229,10 +241,72 @@ func _on_choice_picked(index: int) -> void:
 ## Op een aanraakscherm is de hele dialoog de knop. Een speler die op een
 ## telefoon een tekstblok ziet tikt erop; die tik moet doorzetten in plaats
 ## van naar de actieknop rechtsonder te verwijzen.
+## Overslaan: de rest van het lopende gesprek in één beweging, tot de eerste
+## keuze. Een gesprek van vijf regels kostte tien tikken (één om het typen af te
+## maken, één om door te gaan), en wie het al kent wil eruit. Esc en het
+## "overslaan »" in de box komen hier allebei uit.
+var _skip: bool = false
+
+
+func overslaan() -> void:
+	if _active:
+		_skip = true
+
+
+## Een regel boven iets in de wereld, zonder de wereld stil te zetten: geen
+## invoerslot, geen tik, geen signaal. Zie `Bark`.
+func bark(tekst: String, bij: Node2D) -> void:
+	Bark.toon(bij, vul_in(tekst))
+
+
+## Kan deze boom als terzijde? Eén node, geen keuze, geen vervolg, geen effect —
+## ook niet in een variant. Alles wat meer is hoort in de box: effecten moeten
+## zichtbaar landen en een keuze moet wachten.
+static func is_bark_geschikt(def: DialogueDef) -> bool:
+	if def == null or def.nodes.size() != 1:
+		return false
+	var node: Dictionary = def.node(def.start_node)
+	if node.is_empty() or node.has("choices"):
+		return false
+	if not (node.get("effects", []) as Array).is_empty():
+		return false
+	if String(node.get("next", "")) != "":
+		return false
+	for raw: Variant in node.get("variants", []) as Array:
+		var v := raw as Dictionary
+		if v != null and not (v.get("effects", []) as Array).is_empty():
+			return false
+	return true
+
+
+## Speelt `dialogue_id` als terzijde boven `bij` als de boom daar geschikt voor
+## is, en zegt met false dat de aanroeper hem gewoon modaal moet spelen als dat
+## niet zo is (of als er al een gesprek loopt).
+func speel_of_bark(dialogue_id: StringName, bij: Node2D) -> bool:
+	if _active or bij == null or dialogue_id == &"":
+		return false
+	var def: DialogueDef = GameData.dialogue(dialogue_id)
+	if not is_bark_geschikt(def):
+		return false
+	var node: Dictionary = def.node(def.start_node)
+	var variant := Conditions.pick_variant(node.get("variants", []) as Array)
+	var tekst := String(variant.get("text", node.get("text", "")))
+	if tekst == "":
+		return false
+	bark(tekst, bij)
+	return true
+
 var _getikt: bool = false
 
 
 func _input(event: InputEvent) -> void:
+	# Esc tijdens een gesprek zonder open keuze: de rest van het gesprek
+	# overslaan. Afgevangen vóór `Main._unhandled_input()`, anders opent
+	# dezelfde druk het pauzemenu.
+	if _active and event.is_action_pressed("cancel") and not _box.has_choices():
+		_skip = true
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed:
 		_getikt = true
 	elif Invoer.muis_als_vinger() and event is InputEventMouseButton \

@@ -150,6 +150,7 @@ func _ready() -> void:
 	# weggaat. En de tik die dat venster opvangt maakt geen stick, want
 	# `chrome_vlakken()` geeft de verduistering mee aan `meld_chrome()`.
 	npc_layer.spawn_initial()
+	npc_layer.zet_speler(player)
 	camera.setup(player, builder.world_rect(), builder.world_rect_met_rand())
 	# De wereld zakt onder de HUD-chips vandaan. De HUD meet zijn eigen balk; dit
 	# getal staat daarom niet twee keer in de codebase. Na camera.setup(), want

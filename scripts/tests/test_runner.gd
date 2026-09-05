@@ -97,6 +97,7 @@ func _ready() -> void:
 	_test_mutator_ops()
 	_test_responsief()
 	_test_fase2a()
+	await _test_fase2b()
 	_rapport()
 
 
@@ -5347,3 +5348,53 @@ func _test_fase2a() -> void:
 	_ok(WorldObject.label_onder(56.0), "een object op rij 3 (whiteboard) krijgt zijn label eronder")
 	_ok(not WorldObject.label_onder(200.0), "midden op de vloer blijft het label erboven")
 	_ok(not WorldObject.label_onder(400.0), "onderaan de vloer blijft het label erboven (de knoppenbalk dekt niets erbóven af)")
+
+
+## Fase 2b: terzijdes (een regel boven iets in de wereld, zonder de wereld stil
+## te zetten) en overslaan (de rest van een gesprek in één beweging).
+func _test_fase2b() -> void:
+	_kop("fase 2b: terzijdes")
+	var ouder := Node2D.new()
+	add_child(ouder)
+	var b := Bark.toon(ouder, "test", 0.05)
+	_ok(b != null and b.get_parent() == ouder, "Bark.toon hangt een label onder de ouder")
+	_ok(ouder.get_node_or_null("Bark") == b, "de bark heet Bark en is via de ouder te vinden")
+	var b2 := Bark.toon(ouder, "twee", 0.05)
+	await get_tree().process_frame
+	_ok(is_instance_valid(b2) and (not is_instance_valid(b) or b.is_queued_for_deletion()),
+		"een nieuwe bark vervangt de vorige")
+	_ok(Bark.toon(ouder, "   ", 0.05) == null, "een lege regel geeft geen bark")
+	await get_tree().create_timer(0.05 + Bark.VAAG_DUUR + 0.4).timeout
+	_ok(ouder.get_node_or_null("Bark") == null, "de bark ruimt zichzelf op na zijn duur")
+	remove_child(ouder)
+	ouder.free()
+
+	for i: int in range(1, 11):
+		var id := StringName("t%02d_done" % i)
+		var def: DialogueDef = GameData.dialogue(id)
+		_ok(def != null and DialogueController.is_bark_geschikt(def),
+			"%s hoort als terzijde te kunnen (één node, geen keuze, geen effect)" % id)
+	_ok(not DialogueController.is_bark_geschikt(GameData.dialogue(&"collega_victor")),
+		"een gesprek met keuzes is geen terzijde")
+	_ok(not DialogueController.is_bark_geschikt(null), "geen boom is geen terzijde")
+
+	var praters: Array[StringName] = [&"npc_daan", &"npc_danny", &"npc_victor", &"npc_jonathan",
+		&"npc_willem", &"npc_bastiaan", &"npc_koen", &"dennis", &"dirk", &"klant"]
+	for id: StringName in praters:
+		var n: NpcDef = GameData.npc(id)
+		_ok(n != null and n.barks.size() >= 2, "%s heeft minstens twee terzijdes" % id)
+		if n != null:
+			for r: String in n.barks:
+				_ok(r.length() <= 80, "terzijde van %s is te lang voor één bark: '%s'" % [id, r])
+	var zwijgers: Array[StringName] = [&"paard_bug_1", &"paard_bug_2", &"paard_klant_decoy", &"bezorger"]
+	for id: StringName in zwijgers:
+		var n2: NpcDef = GameData.npc(id)
+		_ok(n2 == null or n2.barks.is_empty(), "%s hoort te zwijgen in het voorbijgaan" % id)
+
+	_kop("fase 2b: overslaan")
+	var box := DialogueBox.new()
+	_ok(box.has_signal("overslaan_gevraagd"), "de dialoogbox kan om overslaan vragen")
+	box.free()
+	var dc := DialogueController.new()
+	_ok(dc.has_method("overslaan") and dc.has_method("speel_of_bark"), "de controller kent overslaan() en speel_of_bark()")
+	dc.free()

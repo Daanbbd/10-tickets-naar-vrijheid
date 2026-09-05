@@ -122,6 +122,15 @@ impactframes van het spel. `Juice.schok()` vindt de camera via de groep
 een willekeurige ouder, `Juice.squash()` deukt elke `UiKit.button()` in bij
 `button_down`. Niemand geeft er een node voor door.
 
+Naast de modale dialoogbox is er `Bark` (`scripts/world/bark.gd`): één regel
+boven iets in de wereld, zonder invoerslot, zonder tik, zonder signaal — voor
+een collega die iets zegt als je langsloopt (`NpcDef.barks`, gestuurd door
+`NpcLayer._probeer_bark()`) en voor de `done`-regel van een opgelost ticket
+(`DialogueController.speel_of_bark()`, alleen voor bomen van één node zonder
+keuze of effect). En de box zelf kent sinds Fase 2b overslaan: Esc of het
+"overslaan »" onderin laat de rest van een gesprek in één beweging doorlopen,
+tot de eerste keuze; de effects van elke node draaien gewoon.
+
 `Main._ready()` is expliciet en hangt niet af van de `_ready`-volgorde van
 siblings.
 

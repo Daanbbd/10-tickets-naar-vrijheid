@@ -116,8 +116,13 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 	# nooit. Twee regels lager, bij `fetch` en `blocked`, stond het goede
 	# patroon al: id als id, tekst als fallback.
 	if Session.is_done(t.id):
-		await _play_or_line(_dlg(t, &"done", &""),
-			"Dit is opgelost. Even niet aan zitten.")
+		# Als terzijde boven het object als de regel dat toelaat (één node,
+		# geen keuze of effect — alle tien de done-regels zijn zo): de wereld
+		# loopt door en je hoeft niet te tikken. Anders gewoon in de box.
+		var anker := _registry.get_by_id(t.anchor)
+		if anker == null or not _dialogue.speel_of_bark(_dlg(t, &"done", &""), anker):
+			await _play_or_line(_dlg(t, &"done", &""),
+				"Dit is opgelost. Even niet aan zitten.")
 		return
 
 	if Session.ticket_state(t.id) == GameEnums.TicketState.LOCKED:

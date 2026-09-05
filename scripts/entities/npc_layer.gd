@@ -6,9 +6,73 @@ const NPC_SCENE := "res://scenes/entities/npc.tscn"
 
 var _builder: WorldBuilder = null
 
+## Voor de terzijdes: wie er langsloopt, en wanneer wie voor het laatst iets
+## zei. Per collega een eigen wachttijd (dezelfde regel twee keer achter elkaar
+## is geen grap meer) en één gedeelde (twee collega's die door elkaar heen
+## praten lezen als ruis).
+const BARK_AFSTAND := 44.0
+const BARK_WACHT_PER_NPC := 45.0
+const BARK_WACHT_GEDEELD := 8.0
+const BARK_CHECK := 0.6
+var _speler: Node2D = null
+## Eigen klok in speeltijd (opgeteld uit `delta`), niet `Time.get_ticks_msec()`:
+## die loopt door tijdens een pauze en loopt onder Movie Maker (`--write-movie`)
+## ver voor op de gerenderde seconden, zodat een terzijde al weg was voordat het
+## frame op schijf stond.
+var _tijd: float = 0.0
+var _bark_check: float = 0.0
+var _bark_vrij_vanaf: float = 3.0
+var _bark_vrij_per_npc: Dictionary = {}
+
 
 func setup(builder: WorldBuilder) -> void:
 	_builder = builder
+
+
+## Wie er langs de collega's loopt. Zonder speler geen terzijdes — de testsuite
+## en de QA-schermen zetten hem niet, en dan blijft het stil.
+func zet_speler(speler: Node2D) -> void:
+	_speler = speler
+
+
+func _process(delta: float) -> void:
+	if _speler == null:
+		return
+	_tijd += delta
+	_bark_check -= delta
+	if _bark_check > 0.0:
+		return
+	_bark_check = BARK_CHECK
+	_probeer_bark()
+
+
+## Eén collega binnen armlengte die niet volgt en niet praat, zegt één regel —
+## niet tijdens een gesprek of een minigame, en niet vaker dan de wachttijden
+## toelaten. Wie het dichtst bij staat wint.
+func _probeer_bark() -> void:
+	if Session.input_locked or Shell.minigame_active():
+		return
+	var nu := _tijd
+	if nu < _bark_vrij_vanaf:
+		return
+	var beste: Npc = null
+	var beste_d := BARK_AFSTAND * BARK_AFSTAND
+	for c: Node in get_children():
+		var n := c as Npc
+		if n == null or n.def == null or n.def.barks.is_empty() or n.is_following():
+			continue
+		if nu < float(_bark_vrij_per_npc.get(n.npc_id, 0.0)):
+			continue
+		var d := n.global_position.distance_squared_to(_speler.global_position)
+		if d < beste_d:
+			beste = n
+			beste_d = d
+	if beste == null:
+		return
+	var regels := beste.def.barks
+	Bark.toon(beste, regels[randi() % regels.size()])
+	_bark_vrij_per_npc[beste.npc_id] = nu + BARK_WACHT_PER_NPC
+	_bark_vrij_vanaf = nu + BARK_WACHT_GEDEELD
 
 
 ## Spawnt iedereen die nu zichtbaar hoort te zijn.

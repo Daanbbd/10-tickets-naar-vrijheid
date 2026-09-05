@@ -34,3 +34,7 @@ extends Resource
 ## (bijv. de paardenbugs) in plaats van het body/hair/outfit-silhouet — voor
 ## een "collega" die geen mens is en dus geen personagelagen heeft.
 @export var static_sprite: String = ""
+## Korte regels die deze collega zegt als je langsloopt, zonder gesprek en
+## zonder de wereld stil te zetten (`Bark`). Leeg = zwijgt in het voorbijgaan
+## (de paardenbugs, de bezorger).
+@export var barks: Array[String] = []

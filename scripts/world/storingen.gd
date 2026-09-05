@@ -324,6 +324,11 @@ func _vuur_eenmalig(d: Dictionary) -> void:
 	QuestEngine.run_effects(d.get("effects", []) as Array)
 	if _mutator != null:
 		_mutator.apply(d.get("world_changes", []) as Array, true)
+	# Gaat er iets stuk in de wereld, dan voel je dat: een tik door de camera,
+	# klein genoeg om geen aardbeving te zijn. Alleen bij een wereldverandering;
+	# een afleiding is een toast en niet meer.
+	if not (d.get("world_changes", []) as Array).is_empty():
+		Juice.schok(1.5, 0.2)
 
 	# F5-b: dezelfde mutatie hierboven, maar het bericht erover moet landen
 	# waar de speler kijkt. `run_effects()` kan al een toast sturen (de

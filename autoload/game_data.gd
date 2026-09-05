@@ -156,6 +156,10 @@ func _load_npcs(path: String) -> void:
 		n.portrait = String(d.get("portrait", ""))
 		n.spawn_when = d.get("spawn_when", {}) as Dictionary
 		n.static_sprite = String(d.get("static_sprite", ""))
+		var barks: Array[String] = []
+		for raw_b: Variant in d.get("barks", []) as Array:
+			barks.append(String(raw_b))
+		n.barks = barks
 		var route: Array[Vector2i] = []
 		for p: Variant in d.get("route", []):
 			route.append(_tile(p))

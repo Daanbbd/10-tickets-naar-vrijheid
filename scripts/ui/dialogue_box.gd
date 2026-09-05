@@ -5,6 +5,8 @@ extends Control
 
 signal advance_requested()
 signal choice_picked(index: int)
+## De speler wil de rest van dit gesprek overslaan (het "overslaan »" onderin).
+signal overslaan_gevraagd()
 
 const CHARS_PER_SEC := 55.0
 
@@ -28,6 +30,7 @@ var _name: Label
 var _text: RichTextLabel
 var _choices: VBoxContainer
 var _hint: Label
+var _skip_label: Label
 var _portrait: TextureRect
 
 var _full_text: String = ""
@@ -96,7 +99,24 @@ func _ready() -> void:
 	# E doet hetzelfde en staat op de besturingskaart.
 	_hint = UiKit.label("tik  verder", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	v.add_child(_hint)
+	_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Links in dezelfde regel: de uitweg. Een gesprek van vijf regels kostte
+	# tien tikken; wie het al kent, tikt hier en de rest loopt door tot de
+	# eerste keuze. Esc doet hetzelfde (`DialogueController._input()`). Een
+	# label en geen knop: een knop zou de hele regel hoger maken en focus
+	# pakken, en de autopilot drukt elke knop met focus in.
+	_skip_label = UiKit.label("overslaan »", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+	_skip_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_skip_label.gui_input.connect(func(e: InputEvent) -> void:
+		var tik := (e is InputEventMouseButton and (e as InputEventMouseButton).pressed
+			and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT) \
+			or (e is InputEventScreenTouch and (e as InputEventScreenTouch).pressed)
+		if tik:
+			overslaan_gevraagd.emit())
+	var onder := HBoxContainer.new()
+	onder.add_child(_skip_label)
+	onder.add_child(_hint)
+	v.add_child(onder)
 
 
 func _process(delta: float) -> void:
@@ -109,6 +129,7 @@ func _process(delta: float) -> void:
 		_typing = false
 		_text.visible_characters = -1
 		_hint.visible = true
+		_skip_label.visible = true
 
 
 func show_line(speaker: String, text: String, portrait: Texture2D = null) -> void:
@@ -123,6 +144,7 @@ func show_line(speaker: String, text: String, portrait: Texture2D = null) -> voi
 	_revealed = 0.0
 	_typing = true
 	_hint.visible = false
+	_skip_label.visible = false
 	_clear_choices()
 	_pas_hoogte_aan()
 
@@ -130,6 +152,7 @@ func show_line(speaker: String, text: String, portrait: Texture2D = null) -> voi
 func show_choices(options: Array[String]) -> void:
 	_clear_choices()
 	_hint.visible = false
+	_skip_label.visible = false
 	for i: int in options.size():
 		var b := UiKit.keuzeknop(options[i], UiKit.FS_SMALL)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT

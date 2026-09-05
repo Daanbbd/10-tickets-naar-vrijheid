@@ -49,7 +49,11 @@
    "outfit": "overhemd",
    "accessory": ""
   },
-  "pants": "#34384e"
+  "pants": "#34384e",
+  "barks": [
+   "Statusje?",
+   "Staat het op het bord?"
+  ]
  },
  {
   "id": "dirk",
@@ -96,7 +100,11 @@
    "accessory": "speldje"
   },
   "pants": "#3a3d44",
-  "accent": "#2f6fb5"
+  "accent": "#2f6fb5",
+  "barks": [
+   "Uren.",
+   "Heb je al geboekt?"
+  ]
  },
  {
   "id": "npc_bastiaan",
@@ -142,7 +150,11 @@
    "bezigheid": "zoekglas"
   },
   "pants": "#34384e",
-  "is_playable_colleague": true
+  "is_playable_colleague": true,
+  "barks": [
+   "hiya,,",
+   "even niet storen,, ik zit erin,,"
+  ]
  },
  {
   "id": "npc_koen",
@@ -195,7 +207,11 @@
    "bezigheid": "peuk"
   },
   "pants": "#34384e",
-  "is_playable_colleague": true
+  "is_playable_colleague": true,
+  "barks": [
+   "Nog veertig minuten, vgm.",
+   "Sst. Hij rendert."
+  ]
  },
  {
   "id": "klant",
@@ -233,7 +249,11 @@
    "outfit": "blouse",
    "accessory": "tas"
   },
-  "pants": "#4a3c52"
+  "pants": "#4a3c52",
+  "barks": [
+   "Wat leuk dat jullie zo druk zijn!",
+   "Kan het paard iets naar links?"
+  ]
  },
  {
   "id": "bezorger",
@@ -313,7 +333,11 @@
    "accessory": "lanyard",
    "bezigheid": "huilen"
   },
-  "pants": "#34384e"
+  "pants": "#34384e",
+  "barks": [
+   "Puur uit interesse: waar ga je heen?",
+   "Staat dat in een ticket?"
+  ]
  },
  {
   "id": "npc_danny",
@@ -354,7 +378,11 @@
    "accessory": "",
    "bezigheid": "bier"
   },
-  "pants": "#34384e"
+  "pants": "#34384e",
+  "barks": [
+   "je loopt linksom. iedereen loopt linksom",
+   "biem. niks. loop door"
+  ]
  },
  {
   "id": "npc_victor",
@@ -400,7 +428,11 @@
    "accessory": "",
    "bezigheid": "hobbyhorse"
   },
-  "pants": "#34384e"
+  "pants": "#34384e",
+  "barks": [
+   "Die tegel ligt scheef. manmanman.",
+   "Niet aankomen. Het staat net recht."
+  ]
  },
  {
   "id": "npc_jonathan",
@@ -437,7 +469,11 @@
    "accessory": "bril",
    "bezigheid": "gamen"
   },
-  "pants": "#34384e"
+  "pants": "#34384e",
+  "barks": [
+   "Het werkt lokaal.",
+   "Als je iets hoort piepen: dat ben ik niet."
+  ]
  },
  {
   "id": "npc_willem",
@@ -482,7 +518,11 @@
    "accessory": "",
    "bezigheid": "padel"
   },
-  "pants": "#2f3242"
+  "pants": "#2f3242",
+  "barks": [
+   "Heeee. Ze heeft nog niet gebeld.",
+   "Als ze belt: ik ben in het hokje."
+  ]
  },
  {
   "id": "paard_bug_1",
