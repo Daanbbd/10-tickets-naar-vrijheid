@@ -340,108 +340,6 @@
    }
   }
  },
- "t02_fetch": {
-  "start": "start",
-  "nodes": {
-   "start": {
-    "speaker": "",
-    "text": "Het bord hangt scheef. Jouw naam staat er drie keer op.",
-    "next": "wie"
-   },
-   "wie": {
-    "speaker": "speler",
-    "variants": [
-     {
-      "when": {
-       "trait": [
-        "technisch"
-       ]
-      },
-      "text": "Ik ga geen kaartjes verplaatsen. Dat is van Daan."
-     },
-     {
-      "text": "De planning is van Daan. Zonder hem verschuif ik hier niets."
-     }
-    ]
-   }
-  }
- },
- "t02_recruit": {
-  "start": "vraag",
-  "nodes": {
-   "vraag": {
-    "speaker": "speler",
-    "variants": [
-     {
-      "when": {
-       "character": [
-        "danny"
-       ]
-      },
-      "text": "daan, BBD-202. ik sta drie keer op de planning. dat is geen planning, dat is ruis."
-     },
-     {
-      "when": {
-       "character": [
-        "victor"
-       ]
-      },
-      "text": "Daan, BBD-202. Ik sta er drie keer op. Manmanman."
-     },
-     {
-      "when": {
-       "character": [
-        "jonathan"
-       ]
-      },
-      "text": "Daan, BBD-202. Ik sta drie keer op dezelfde planning. Niet deze sprint een probleem, maar wel structureel."
-     },
-     {
-      "when": {
-       "character": [
-        "willem"
-       ]
-      },
-      "text": "Heeee Daan, BBD-202. Ik weet niet aan wie ik vandaag toebehoor. Dat is lastig plannen."
-     },
-     {
-      "when": {
-       "character": [
-        "bastiaan"
-       ]
-      },
-      "text": "daan,, BBD-202,, ik sta er drie keer op,, of nul keer,, het ligt eraan waar je kijkt,,"
-     },
-     {
-      "when": {
-       "character": [
-        "koen"
-       ]
-      },
-      "text": "Daan, BBD-202. Ik check de planning even met je, want ik sta er drie keer op."
-     },
-     {
-      "text": "Daan, ik loop vast op BBD-202. Ik sta drie keer op de planning, of helemaal niet. Dennis weet het ook niet meer."
-     }
-    ],
-    "next": "reactie"
-   },
-   "reactie": {
-    "speaker": "daan",
-    "text": "Wat is er met de planning?",
-    "next": "antwoord"
-   },
-   "antwoord": {
-    "speaker": "speler",
-    "text": "Ik sta er drie keer op.",
-    "next": "oordeel"
-   },
-   "oordeel": {
-    "speaker": "daan",
-    "text": "Dat is twee keer te veel of drie keer te weinig. Ait, ik loop mee."
-   }
-  }
- },
  "t02_complete": {
   "start": "start",
   "nodes": {
@@ -457,7 +355,7 @@
       "text": "Eén naam, één project, één sprint. Dit is mijn werk in drie woorden."
      },
      {
-      "speaker": "daan",
+      "speaker": "speler",
       "text": "Eén naam, één project, één sprint. Meer is het niet."
      }
     ],
@@ -1716,123 +1614,8 @@
     "next": "slot"
    },
    "slot": {
-    "variants": [
-     {
-      "when": {
-       "character": [
-        "danny"
-       ]
-      },
-      "speaker": "",
-      "text": "Je zet het scherm aan. A tegen B. Drie klappen, meer niet."
-     },
-     {
-      "speaker": "danny",
-      "text": "A tegen B. Drie klappen. A moet winnen. psies"
-     }
-    ]
-   }
-  }
- },
- "t07_fetch": {
-  "start": "start",
-  "nodes": {
-   "start": {
     "speaker": "",
-    "text": "Het scherm in de koffiecorner staat op pauze. Het ticket staat open.",
-    "next": "wie"
-   },
-   "wie": {
-    "speaker": "speler",
-    "variants": [
-     {
-      "when": {
-       "trait": [
-        "technisch"
-       ]
-      },
-      "text": "Ik kan wel klikken. Ik weet niet wie er moet winnen. Danny wel."
-     },
-     {
-      "text": "Dit is van Danny. Ik ga hem halen."
-     }
-    ]
-   }
-  }
- },
- "t07_recruit": {
-  "start": "vraag",
-  "nodes": {
-   "vraag": {
-    "speaker": "speler",
-    "variants": [
-     {
-      "when": {
-       "character": [
-        "daan"
-       ]
-      },
-      "text": "Danny, BBD-207. A tegen B. Sorry wat."
-     },
-     {
-      "when": {
-       "character": [
-        "victor"
-       ]
-      },
-      "text": "Danny, BBD-207. A tegen B. Ik ga daar niks van vinden."
-     },
-     {
-      "when": {
-       "character": [
-        "jonathan"
-       ]
-      },
-      "text": "Danny, BBD-207. A tegen B. Nogmaals, niet mijn laag, maar het staat wel in Jira."
-     },
-     {
-      "when": {
-       "character": [
-        "willem"
-       ]
-      },
-      "text": "Heeee Danny. BBD-207. A tegen B, en ik heb ja gezegd. Dat is wel top, toch?"
-     },
-     {
-      "when": {
-       "character": [
-        "bastiaan"
-       ]
-      },
-      "text": "danny,, BBD-207,, a tegen b,, vraag me niet waarom,,"
-     },
-     {
-      "when": {
-       "character": [
-        "koen"
-       ]
-      },
-      "text": "Danny, BBD-207. A tegen B. Het staat in Jira, dus het gebeurt. Alleen het waarom check ik niet."
-     },
-     {
-      "text": "Danny, ik loop vast op BBD-207. A tegen B, niemand weet waarom, en het staat in Jira, dus het gebeurt."
-     }
-    ],
-    "next": "reactie"
-   },
-   "reactie": {
-    "speaker": "danny",
-    "text": "A tegen B.",
-    "next": "antwoord"
-   },
-   "antwoord": {
-    "speaker": "speler",
-    "text": "Ja.",
-    "next": "oordeel"
-   },
-   "oordeel": {
-    "speaker": "danny",
-    "text": "ein-de-lijk. ik weet nog steeds niet waarom. biem"
+    "text": "Je zet het scherm aan. A tegen B. Drie klappen, meer niet."
    }
   }
  },
@@ -1851,7 +1634,7 @@
       "text": "A wint. Drie klappen, meer had ik niet nodig. Dat was de hele opdracht."
      },
      {
-      "speaker": "danny",
+      "speaker": "speler",
       "text": "A wint. Drie klappen, meer had je niet nodig."
      }
     ],
@@ -1944,7 +1727,7 @@
         "ab_pogingen": 4
        }
       },
-      "speaker": "danny",
+      "speaker": "speler",
       "text": "ik heb de hypothese aangepast. de hypothese is nu dat b wint. dus als b wint, hebben we niets geleerd. dus meten we opnieuw"
      },
      {
@@ -1953,7 +1736,7 @@
         "ab_pogingen": 3
        }
       },
-      "speaker": "danny",
+      "speaker": "speler",
       "text": "oké. b wint consistent. dat is precies wat een outlier doet als je hem drie keer meet. we gaan door"
      },
      {
@@ -1962,11 +1745,11 @@
         "ab_pogingen": 2
        }
       },
-      "speaker": "danny",
-      "text": "b wint weer. maar de steekproef is klein. en het was maandag. psies, nog een keer"
+      "speaker": "speler",
+      "text": "b wint weer. maar de steekproef is klein. en het was maandag. nog een keer"
      },
      {
-      "speaker": "danny",
+      "speaker": "speler",
       "text": "b wint. dat is data. laten we het nog een keer meten, want één meting is geen meting"
      }
     ]

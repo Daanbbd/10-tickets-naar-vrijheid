@@ -50,7 +50,7 @@ de grap harder dan toen dezelfde vorm ook vier echte tickets moest dragen.
 
 ## Wat de eigenaar je vertelt
 
-Negen van de tien tickets zijn van iemand anders, en die iemand loopt met je
+Zeven van de tien tickets zijn van iemand anders, en die iemand loopt met je
 mee. Tot voor kort veranderde dat vooral *dat* het ticket openging: er kwam een
 regel dialoog en daarna een opgave die voor iedereen identiek was. Wie er
 meeliep was een sleutel, geen mens.
@@ -63,12 +63,12 @@ dan krijg je de kennis van degene van wie het wél is.
 | Ticket | Wie | Wat je ervan wijzer wordt |
 |---|---|---|
 | BBD-201 | Daan | de capaciteit, haar tevredenheidsgrens, en hoeveel van haar wensen eigenlijk projecten zijn |
-| BBD-202 | Daan | wie er echt iets te melden heeft — dus wie je niet moet afkappen |
+| BBD-202 | Daan (briefer, niet op te halen) | wie er echt iets te melden heeft — dus wie je niet moet afkappen |
 | BBD-203 | Willem | hoeveel rondes, en welke score je moet halen |
 | BBD-204 | Victor | raster, speling en hoeveel er scheef staat |
 | BBD-205 | Jonathan | hoeveel verbindingen fout zijn en hoeveel draden afleiding zijn |
 | BBD-206 | Danny | je basislijn en je doel |
-| BBD-207 | Danny | hoeveel HP A en B hebben |
+| BBD-207 | Danny (briefer, niet op te halen) | hoeveel HP A en B hebben |
 | BBD-208 | Koen | welke stap het knelpunt is |
 | BBD-209 | Bastiaan | het doel, de tijd, en dat de klantpaarden op bugs lijken |
 
@@ -95,21 +95,23 @@ je opmerkt, want een voordeel dat je niet ziet bestaat niet.
 | Mechaniek | Wat er verandert |
 |---|---|
 | Scope-schuif | twee punten meer sprintruimte; haar tevredenheidsgrens blijft |
-| Stand-up | één keer extra afkappen; het tijdbudget blijft |
 | ChoiceScene | de drempel gaat één goede keuze omlaag |
 | Uitlijnen | één pixel meer speling |
 | CableBoard | twee losse draden minder |
-| A/B-test | de effecten staan vooraf op de knoppen |
 | TagPicker | een poging extra |
 | Renderpijplijn | twintig credits extra |
 | WhackAHorse | 25% meer tijd |
 | Urenstaat | twee afleiderkaarten weg, één fout meer toegestaan |
 | Oplevering | **niets** — met opzet |
+| Stand-up (BBD-202) | **niets** — ticket van iedereen sinds 5 sep 2026 |
+| A/B-gevecht (BBD-207) | **niets** — ticket van iedereen sinds 5 sep 2026 |
 
 De oplevering is de uitzondering: die begint met de dag die je gehad hebt
 (`Gevolgen.finale_start()`), en een korting daarbovenop zou het gevolgensysteem
-uithollen. Elk personage heeft daar al zijn eigen foutcode. Die reden staat in
-`TraitModifier.GEEN_VOORDEEL`, zodat "besloten" te onderscheiden is van
+uithollen. Elk personage heeft daar al zijn eigen foutcode. Stand-up en
+A/B-gevecht zijn sinds Daans wens van 5 sep 2026 tickets van iedereen: geen
+eigenaar, dus geen vakgebied om een voordeel aan te hangen. Die redenen staan
+in `TraitModifier.GEEN_VOORDEEL`, zodat "besloten" te onderscheiden is van
 "vergeten".
 
 Het is de moeite waard te weten dat dit **nooit heeft gewerkt** tot deze ronde.

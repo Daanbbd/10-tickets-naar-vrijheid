@@ -1467,6 +1467,8 @@ func _test_urenstaat() -> void:
 	# --- het grootboek ---------------------------------------------------
 	_ok(Urenstaat.kosten_voor_ticket(true) < Urenstaat.kosten_voor_ticket(false),
 		"je eigen vakgebied moet goedkoper zijn dan een ticket met een collega erbij")
+	_ok(GameData.ticket(&"t10").kosten_min == 60,
+		"de finale (BBD-210) moet 60 minuten kosten: dat is het uur waarin het hele team meekijkt")
 
 	# --- de invariant: er is altijd meer werk dan uren -------------------
 	# Dit is de grap zelf. Als een personage zijn dag binnen de acht uur kan
@@ -1478,12 +1480,13 @@ func _test_urenstaat() -> void:
 		var eigen := 0
 		var goedkoopst := 0
 		for tid: StringName in GameData.ticket_ids():
+			var t: TicketDef = GameData.ticket(tid)
 			if QuestEngine.is_own_expertise(tid):
 				eigen += 1
-				goedkoopst += Urenstaat.kosten_voor_ticket(true)
+				goedkoopst += Urenstaat.kosten_voor_ticket(true, t.kosten_min)
 			else:
 				# buiten je vakgebied betaal je ook de zoektijd
-				goedkoopst += Urenstaat.kosten_voor_ticket(false) + Urenstaat.OPHALEN_MIN
+				goedkoopst += Urenstaat.kosten_voor_ticket(false, t.kosten_min) + Urenstaat.OPHALEN_MIN
 		var marge := goedkoopst - Urenstaat.BUDGET_MIN
 		_ok(marge > 0,
 			("%s kan zijn dag in %s afmaken, binnen het budget van %s. " +
@@ -2764,15 +2767,22 @@ func _test_briefings() -> void:
 	var gezien := 0
 	for tid: StringName in GameData.ticket_ids():
 		var t: TicketDef = GameData.ticket(tid)
-		if t == null or t.owner_character == &"":
-			continue    # de finale heeft geen eigenaar
+		if t == null:
+			continue
+		# Een ticket van iemand brieft via de eigenaar; een ticket van iedereen
+		# (owner_character leeg) kan in plaats daarvan een briefer hebben
+		# (BBD-202, BBD-207). Heeft het geen van beide (de finale, t10), dan is
+		# er niemand die iets te vertellen heeft.
+		var wie := t.owner_character if t.owner_character != &"" else t.briefer
+		if wie == &"":
+			continue    # de finale heeft geen eigenaar en geen briefer
 		gezien += 1
 
 		var tekst := Briefing.regel(t)
 		if "--print-briefings" in OS.get_cmdline_user_args():
-			print("   %s %s: %s" % [t.code, t.owner_character, tekst])
-		_ok(tekst != "", "%s: geen briefing voor een ticket met een eigenaar (%s)" % [
-			t.code, t.owner_character])
+			print("   %s %s: %s" % [t.code, wie, tekst])
+		_ok(tekst != "", "%s: geen briefing voor een ticket met een eigenaar of briefer (%s)" % [
+			t.code, wie])
 		_ok(not tekst.contains("{") and not tekst.contains("}"),
 			"%s: onopgeloste plaatshouder in de briefing: %s" % [t.code, tekst])
 		# Een briefing is een regel dialoog, geen handleiding.
@@ -2780,10 +2790,13 @@ func _test_briefings() -> void:
 			"%s: briefing van %d tekens is te lang voor het dialoogvenster" % [
 				t.code, tekst.length()])
 
-		# De eigenaar moet ook echt bestaan als NPC, anders zwijgt hij.
-		var d: NpcDef = GameData.npc(StringName("npc_%s" % t.owner_character))
-		_ok(d != null, "%s: eigenaar '%s' staat niet in npcs.json" % [
-			t.code, t.owner_character])
+		# Degene die het vertelt moet ook echt bestaan als NPC, anders zwijgt hij.
+		var d: NpcDef = GameData.npc(StringName("npc_%s" % wie))
+		_ok(d != null, "%s: eigenaar/briefer '%s' staat niet in npcs.json" % [
+			t.code, wie])
+
+		if t.owner_character == &"":
+			continue    # een ticket van iedereen heeft geen owner_role om te checken
 
 		# En zijn rol komt uit het personage, niet uit het ticket.
 		var c: CharacterDef = GameData.character(t.owner_character)
@@ -2795,7 +2808,7 @@ func _test_briefings() -> void:
 				"%s: owner_role '%s' wijkt af van de rol van %s ('%s')" % [
 					t.code, t.owner_role, c.id, c.role])
 
-	_ok(gezien == 9, "verwacht 9 tickets met een eigenaar, gevonden %d" % gezien)
+	_ok(gezien == 9, "verwacht 9 tickets met een eigenaar of briefer, gevonden %d" % gezien)
 
 	# Eén functietitel per collega. `characters.json` is de bron voor de briefing
 	# en het selectiescherm, `npcs.json` voor het bordje boven zijn hoofd op de

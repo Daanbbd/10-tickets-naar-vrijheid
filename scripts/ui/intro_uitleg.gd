@@ -5,7 +5,7 @@ extends Control
 ## werk vraagt om een collega.
 ##
 ## Dit verving de zes dialoognodes die vroeger bij het spawnen speelden. Die
-## kwamen te laat: op de personagekeuze staat de ticketbalk en "twee tickets
+## kwamen te laat: op de personagekeuze staat de ticketbalk en "één ticket
 ## zelf" al vóór iemand ook maar wist dát er tickets bestonden om zelf te
 ## kunnen doen. Nu staat de uitleg vóór die keuze, niet erna.
 ##
@@ -24,9 +24,11 @@ const KAART_RUIMTE := 118.0
 const KAART_TEKSTBREEDTE := 154.0
 var _kaart: PanelContainer = null
 
+## Kleine letter: het telwoord staat altijd midden in een zin (zie `lessen()`),
+## nooit aan het begin.
 const TELWOORDEN: Array[String] = [
-	"Geen", "Eén", "Twee", "Drie", "Vier", "Vijf",
-	"Zes", "Zeven", "Acht", "Negen", "Tien",
+	"geen", "één", "twee", "drie", "vier", "vijf",
+	"zes", "zeven", "acht", "negen", "tien",
 ]
 
 

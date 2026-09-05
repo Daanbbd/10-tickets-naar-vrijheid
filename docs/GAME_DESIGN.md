@@ -28,7 +28,7 @@ Een nieuwe speler moet binnen een minuut weten **wat er gebouwd wordt** en
 **hoe dit spel werkt**. Dat gebeurt op een eigen scherm tussen titel en
 personagekeuze (`IntroUitleg`, `scripts/ui/intro_uitleg.gd` +
 `scenes/boot/intro_uitleg.tscn`), niet pas bij het spawnen: op de
-personagekeuze staat de ticketbalk en "twee tickets zelf" al, en dat leest pas
+personagekeuze staat de ticketbalk en "één ticket zelf" al, en dat leest pas
 ergens voor wie eerst weet dát er tickets bestaan om zelf te doen.
 `TitleScreen._on_start()` routeert er doorheen
 (`Shell.goto_intro_uitleg()`) vóór `Shell.goto_character_select()`.
@@ -305,7 +305,10 @@ aftiteling telt op wat je werkte tegen wat je mocht boeken.
 
 Dat de goedkoopst mogelijke dag van elk personage boven de acht uur uitkomt is
 een ontwerpinvariant, niet een balansdetail: `_test_urenstaat()` faalt als een
-herbalancering van ticket-eigendom hem stilletjes zou slopen.
+herbalancering van ticket-eigendom hem stilletjes zou slopen. De finale
+(BBD-210) telt daar los van mee: die is niet zomaar eigen werk maar het uur
+waarin het hele team meekijkt, en kost daarom altijd 60 minuten (`kosten_min`
+op het ticket), ongeacht wiens vakgebied het is.
 
 ## Bewust niet gebouwd
 

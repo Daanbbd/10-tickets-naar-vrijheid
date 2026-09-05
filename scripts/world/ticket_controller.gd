@@ -324,18 +324,38 @@ func briefing(t: TicketDef) -> void:
 
 
 func _briefing(t: TicketDef) -> void:
-	if QuestEngine.is_own_expertise(t.id):
+	# Een ticket van iemand (owner_character gezet) brieft via de eigenaar: die
+	# heb je net opgehaald, en dít is waarvoor. Speel je hem zelf, dan is het
+	# jouw vakgebied en ken je je eigen ticket al.
+	if t.owner_character != &"":
+		if QuestEngine.is_own_expertise(t.id):
+			return
+		var tekst := Briefing.regel(t)
+		if tekst == "":
+			return
+		var d: NpcDef = GameData.npc(QuestEngine.required_helper(t.id))
+		if d == null:
+			return
+		# `owner_character` is hier het derde argument en niet zomaar een extraatje:
+		# `say()` leidt daar zowel de pratende mond als het portret uit af. Dit is het
+		# gezicht dat vlak voor de minigame in beeld komt.
+		await _dialogue.say(d.name, tekst, t.owner_character)
 		return
-	var tekst := Briefing.regel(t)
-	if tekst == "":
+
+	# Een ticket van iedereen (BBD-202, BBD-207) heeft geen eigenaar om op te
+	# halen, maar kan wel een `briefer` hebben: iemand die vóór de minigame één
+	# feit vertelt zonder dat je hem ophaalt. Speel je de briefer zelf, dan
+	# zwijgt hij — je kent je eigen feit al, net als een eigenaar bij zijn eigen
+	# ticket.
+	if t.briefer == &"" or t.briefer == Session.character_id:
 		return
-	var d: NpcDef = GameData.npc(QuestEngine.required_helper(t.id))
-	if d == null:
+	var tekst2 := Briefing.regel(t)
+	if tekst2 == "":
 		return
-	# `owner_character` is hier het derde argument en niet zomaar een extraatje:
-	# `say()` leidt daar zowel de pratende mond als het portret uit af. Dit is het
-	# gezicht dat vlak voor de minigame in beeld komt.
-	await _dialogue.say(d.name, tekst, t.owner_character)
+	var d2: NpcDef = GameData.npc(StringName("npc_%s" % t.briefer))
+	if d2 == null:
+		return
+	await _dialogue.say(d2.name, tekst2, t.briefer)
 
 
 # --- Wereldhandelingen (F4-b) ----------------------------------------------

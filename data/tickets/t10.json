@@ -51,6 +51,7 @@
  "summary": "Alles staat klaar. Er is nog precies een ding mis, en dat ding is jouw vakgebied.",
  "anchor": "deploycomputer",
  "owner_character": "",
+ "kosten_min": 60,
  "minigame_id": "mg_deploy",
  "zone": "z7_birdhouse",
  "zone_name": "Birdhouse"

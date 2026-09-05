@@ -232,7 +232,9 @@ static func _tegel(teken: String) -> AtlasTexture:
 
 # --- ticketbalk -----------------------------------------------------------
 
-## Tien blokjes, één per ticket. Jouw eigen tickets lichten op in je accentkleur.
+## Tien blokjes, één per ticket. Jouw eigen tickets lichten op in je
+## accentkleur, een gedeeld ticket (owner_character "", van iedereen) in een
+## team-tint — voor élk personage, niet alleen voor de gekozene.
 ## Bewust niet aantikbaar: 15x10 px is op een telefoon niet te raken.
 func _bouw_ticketbalk() -> Control:
 	var rij := HBoxContainer.new()
@@ -317,12 +319,18 @@ func _kies(index: int, met_animatie: bool) -> void:
 	_tagline.add_theme_color_override("font_color", c.accent)
 	_stijl.text = c.stijl
 
-	var eigen := {}
-	for t: StringName in c.owned_tickets:
-		eigen[t] = true
+	# owner_character is hier de bron, niet c.owned_tickets (dat is alleen de
+	# starttickets voor het intro-scherm): een gedeeld ticket licht voor elk
+	# personage op, ook als hij niet gekozen is.
 	var ids: Array[StringName] = GameData.ticket_ids()
 	for i: int in _blokjes.size():
-		_blokjes[i].color = c.accent if eigen.has(ids[i]) else UiKit.VAK_LEEG
+		var t: TicketDef = GameData.ticket(ids[i])
+		if t != null and t.owner_character == c.id:
+			_blokjes[i].color = c.accent
+		elif t != null and t.owner_character == &"":
+			_blokjes[i].color = c.accent.lerp(UiKit.VAK_LEEG, 0.5)
+		else:
+			_blokjes[i].color = UiKit.VAK_LEEG
 
 	# Zeven rijen passen niet allemaal tegelijk; de gekozene hoort altijd in
 	# beeld te staan, ook als je met het toetsenbord door de lijst loopt.

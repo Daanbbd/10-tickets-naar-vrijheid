@@ -124,6 +124,9 @@ Daans opt-in; die kosten het meest.
    het toe in een terzijde ("Ik ben een stockfoto. Mijn urenstaat is echt.",
    `03f52e1`).
 
+8. **Eén eigen ticket per personage** (BBD-202 en BBD-207 zijn van iedereen,
+   briefer-veld); de oplevering kost 60 min (`kosten_min`).
+
 Bewijs in `docs/audit-shots/`: `licht_*.png`, `resp_*.png`, `f2_*.png`,
 `f3_heatmap.png`, `f4_uitleg.png`, `f5_merge_wereld.png`, `praat_dirk.png`.
 

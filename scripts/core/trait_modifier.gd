@@ -29,11 +29,9 @@ extends RefCounted
 ## regel noemt wat er concreet anders is en niet dat er iets anders is.
 const VOORDEEL := {
 	"cableboard":  "Jouw vakgebied. Minder losse draden.",
-	"abgevecht":   "Jouw vakgebied. Je ziet de tegenklap van elke klap vooraf.",
 	"whack":       "Jouw vakgebied. Je hoeft ze niet op te zoeken.",
 	"choicescene": "Jouw vakgebied. Je hoeft minder te raden.",
 	"scope":       "Jouw vakgebied. Twee punten meer ruimte.",
-	"standup":     "Jouw vakgebied. Je mag één keer extra afkappen.",
 	"uitlijnen":   "Jouw vakgebied. Eén pixel meer speling.",
 	"heatmap":     "Jouw vakgebied. Je ziet per element hoe vaak erop geklikt is.",
 	"pijplijn":    "Jouw vakgebied. Twintig credits extra.",
@@ -48,6 +46,8 @@ const GEEN_VOORDEEL := {
 	"slotboard": "de urenstaat kent geen goed antwoord, dus er valt niets makkelijker te "
 		+ "maken; hij hangt bovendien aan Dirk en niet aan een ticket, dus pas_toe() "
 		+ "krijgt hem nooit te zien",
+	"standup": "ticket van iedereen sinds 5 sep 2026; geen vakgebied om voordeel aan te hangen",
+	"abgevecht": "ticket van iedereen sinds 5 sep 2026; geen vakgebied om voordeel aan te hangen",
 }
 
 ## Hoeveel afleiders er maximaal verdwijnen bij eigen vakgebied.
@@ -56,7 +56,6 @@ const EXTRA_TIJD := 1.25
 ## Sprintruimte erbij in de scope-minigame. Twee punten is de kleinste wens uit
 ## BBD-201, dus het is precies "er past nog net iets bij" en geen vrijbrief.
 const EXTRA_PUNTEN := 2
-const EXTRA_INGREEP := 1
 const EXTRA_SPELING := 1
 const EXTRA_CREDITS := 20
 
@@ -76,7 +75,10 @@ const EXTRA_CREDITS := 20
 ## waarom hetzelfde niets gebeurde, en er stond wél een toast op het scherm die
 ## de speler een voordeel beloofde.
 static func pas_toe(t: TicketDef) -> Dictionary:
-	if t == null or not QuestEngine.is_own_expertise(t.id):
+	# Een ticket van iedereen (owner_character leeg) heeft geen vakgebied om
+	# een voordeel aan te hangen, ook al is het voor elk personage "eigen werk"
+	# (QuestEngine.is_own_expertise() zegt hier bewust ja op).
+	if t == null or t.owner_character == &"" or not QuestEngine.is_own_expertise(t.id):
 		return {}
 
 	# Eerst de inhoud uit het bestand, dan de ticket-specifieke afwijkingen
@@ -91,11 +93,9 @@ static func pas_toe(t: TicketDef) -> Dictionary:
 
 	match soort:
 		"cableboard":  _cableboard(config)
-		"abgevecht":   _abgevecht(config)
 		"whack":       _whack(config)
 		"choicescene": _choicescene(config)
 		"scope":       _scope(config)
-		"standup":     _standup(config)
 		"uitlijnen":   _uitlijnen(config)
 		"heatmap":     _heatmap(config)
 		"pijplijn":    _pijplijn(config)
@@ -105,7 +105,7 @@ static func pas_toe(t: TicketDef) -> Dictionary:
 ## Korte regel voor de speler, uit dezelfde bron als `pas_toe()`: een regel op het scherm die belooft wat
 ## de config niet levert is erger dan geen regel.
 static func voordeel_tekst(t: TicketDef) -> String:
-	if t == null or not QuestEngine.is_own_expertise(t.id):
+	if t == null or t.owner_character == &"" or not QuestEngine.is_own_expertise(t.id):
 		return ""
 	return String(VOORDEEL.get(soort_van(t), ""))
 
@@ -123,15 +123,6 @@ static func soort_van(t: TicketDef) -> String:
 static func _cableboard(c: Dictionary) -> void:
 	var afleiders: Array = c.get("afleiders", []) as Array
 	c["afleiders"] = afleiders.slice(0, maxi(0, afleiders.size() - MINDER_AFLEIDERS))
-
-
-## Danny's voordeel: hij ziet de tegenklap van elke klap vooraf, niet de
-## schade. Dat vertelt hem wat een klap kost zonder te verklappen wat hij
-## oplevert — genoeg om een dure klap te mijden, niet genoeg om de opgave over
-## te slaan. `mg_abgevecht.gd` leest `toon_tegenklap` bij het bouwen van de
-## knoppen.
-static func _abgevecht(c: Dictionary) -> void:
-	c["toon_tegenklap"] = true
 
 
 ## F4-b: BBD-209 is een wereldhandeling geworden, geen getimede minigame meer —
@@ -153,12 +144,6 @@ static func _choicescene(c: Dictionary) -> void:
 ## de opgave is nog steeds "wat neem je mee", alleen past er iets meer in.
 static func _scope(c: Dictionary) -> void:
 	c["capaciteit"] = int(c.get("capaciteit", 13)) + EXTRA_PUNTEN
-
-
-## Eén keer extra afkappen. Het budget blijft, dus de afweging blijft ook:
-## wie je afkapt kost je nog steeds wat hij ging melden.
-static func _standup(c: Dictionary) -> void:
-	c["ingrepen"] = int(c.get("ingrepen", 3)) + EXTRA_INGREEP
 
 
 static func _uitlijnen(c: Dictionary) -> void:

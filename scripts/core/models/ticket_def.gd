@@ -24,6 +24,13 @@ extends Resource
 @export var anchor: StringName = &""       ## world_id van het object waar je het oplost
 @export var owner_character: StringName = &""
 @export var owner_role: String = ""
+## Vaste kostprijs in minuten, of 0 voor het normale eigen/collega-tarief. De
+## enige gebruiker is BBD-210: de oplevering is geen half uurtje eigen werk
+## maar het uur waarin het hele team meekijkt.
+@export var kosten_min: int = 0
+## Alleen gezet bij `owner_character == &""` (een ticket van iedereen): degene
+## die vóór de minigame één feit vertelt, zonder dat je hem hoeft op te halen.
+@export var briefer: StringName = &""
 @export var available_when: Dictionary = {}
 @export var requirements: Dictionary = {}
 @export var dialogue_ids: Dictionary = {}  ## offer / blocked / fetch / fail / complete

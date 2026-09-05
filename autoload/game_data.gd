@@ -236,6 +236,8 @@ func _load_ticket(path: String) -> void:
 	t.zone_name = String(d.get("zone_name", ""))
 	t.anchor = StringName(d.get("anchor", ""))
 	t.owner_character = StringName(d.get("owner_character", ""))
+	t.briefer = StringName(d.get("briefer", ""))
+	t.kosten_min = int(d.get("kosten_min", 0))
 	# De rol komt uit het personage en niet uit het ticket. Hij stond op beide
 	# plekken en de twee kopieen weken af; sindsdien is `data/characters.json` de
 	# enige bron, en erft een ticket de rol van zijn eigenaar bij het laden.

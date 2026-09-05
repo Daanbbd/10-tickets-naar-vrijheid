@@ -556,7 +556,7 @@ Daan [anderen]: "Nog een keer. Korter."
 ---
 
 ## T02 — BBD-202: Waarom sta ik hier eigenlijk?
-**Owner:** Daan | **Locatie:** Z9 De Vloer | **Minigame:** mg_planning
+**Owner:** iedereen (sinds 5 sep 2026; briefer: Daan, niet op te halen) | **Locatie:** Z9 De Vloer | **Minigame:** mg_planning
 
 ### t02_offer
 
@@ -573,36 +573,11 @@ Dennis: "Dat is bewust. Dat heet flexibel plannen."
 Speler: "Ik wil op één project staan. Dit project."
 ```
 
-### t02_fetch
-
-```
-[Omschrijving] Het bord hangt scheef. Jouw naam staat er drie keer op.
-
-Speler [trait: technisch]: "Ik ga geen kaartjes verplaatsen. Dat is van Daan."
-Speler [default]: "De planning is van Daan. Zonder hem verschuif ik hier niets."
-```
-
-### t02_recruit
-
-```
-Speler [Danny]: "daan, BBD-202. ik sta drie keer op de planning. dat is geen planning, dat is ruis."
-Speler [Victor]: "Daan, BBD-202. Ik sta er drie keer op. Manmanman."
-Speler [Jonathan]: "Daan, BBD-202. Ik sta drie keer op dezelfde planning. Niet deze sprint een probleem, maar wel structureel."
-Speler [Willem]: "Heeee Daan, BBD-202. Ik weet niet aan wie ik vandaag toebehoor. Dat is lastig plannen."
-Speler [Bastiaan]: "daan,, BBD-202,, ik sta er drie keer op,, of nul keer,, het ligt eraan waar je kijkt,,"
-Speler [Koen]: "Daan, BBD-202. Ik check de planning even met je, want ik sta er drie keer op."
-Speler [default]: "Daan, ik loop vast op BBD-202. Ik sta drie keer op de planning, of helemaal niet. Dennis weet het ook niet meer."
-
-Daan: "Wat is er met de planning?"
-Speler: "Ik sta er drie keer op."
-Daan: "Dat is twee keer te veel of drie keer te weinig. Ait, ik loop mee."
-```
-
 ### t02_complete
 
 ```
 Speler [daan]: "Eén naam, één project, één sprint. Dit is mijn werk in drie woorden."
-Daan [anderen]: "Eén naam, één project, één sprint. Meer is het niet."
+Speler [default]: "Eén naam, één project, één sprint. Meer is het niet."
 
 Dennis: "Mooi. Ik zet hem ook in de tool. Daar staat hij dan anders."
 
@@ -935,7 +910,7 @@ Danny [anderen]: "Terugzetten. En dan één ding tegelijk testen."
 ---
 
 ## T07 — BBD-207: A tegen B
-**Owner:** Danny | **Locatie:** Z4 Koffiecorner | **Minigame:** mg_abgevecht
+**Owner:** iedereen (sinds 5 sep 2026; briefer: Danny, niet op te halen) | **Locatie:** Z4 Koffiecorner | **Minigame:** mg_abgevecht
 
 ### t07_offer
 
@@ -946,40 +921,14 @@ Speler [danny]: "Ik heb dit ticket zelf aangemaakt. In maart. Ik weet niet meer 
 Speler [trait: technisch]: "Er staat geen aanvrager bij. Er staat helemaal niets bij."
 Speler [default]: "Niemand weet waar dit vandaan komt. Het staat in Jira, dus het gebeurt."
 
-[Omschrijving, danny]: "Je zet het scherm aan. A tegen B. Drie klappen, meer niet."
-Danny [anderen]: "A tegen B. Drie klappen. A moet winnen. psies"
-```
-
-### t07_fetch
-
-```
-[Omschrijving] Het scherm in de koffiecorner staat op pauze. Het ticket staat open.
-
-Speler [trait: technisch]: "Ik kan wel klikken. Ik weet niet wie er moet winnen. Danny wel."
-Speler [default]: "Dit is van Danny. Ik ga hem halen."
-```
-
-### t07_recruit
-
-```
-Speler [Daan]: "Danny, BBD-207. A tegen B. Sorry wat."
-Speler [Victor]: "Danny, BBD-207. A tegen B. Ik ga daar niks van vinden."
-Speler [Jonathan]: "Danny, BBD-207. A tegen B. Nogmaals, niet mijn laag, maar het staat wel in Jira."
-Speler [Willem]: "Heeee Danny. BBD-207. A tegen B, en ik heb ja gezegd. Dat is wel top, toch?"
-Speler [Bastiaan]: "danny,, BBD-207,, a tegen b,, vraag me niet waarom,,"
-Speler [Koen]: "Danny, BBD-207. A tegen B. Het staat in Jira, dus het gebeurt. Alleen het waarom check ik niet."
-Speler [default]: "Danny, ik loop vast op BBD-207. A tegen B, niemand weet waarom, en het staat in Jira, dus het gebeurt."
-
-Danny: "A tegen B."
-Speler: "Ja."
-Danny: "ein-de-lijk. ik weet nog steeds niet waarom. biem"
+[Omschrijving] Je zet het scherm aan. A tegen B. Drie klappen, meer niet.
 ```
 
 ### t07_complete
 
 ```
 Speler [danny]: "A wint. Drie klappen, meer had ik niet nodig. Dat was de hele opdracht."
-Danny [anderen]: "A wint. Drie klappen, meer had je niet nodig."
+Speler [default]: "A wint. Drie klappen, meer had je niet nodig."
 
 [Omschrijving] Het scherm toont de uitslag. Twee mensen kijken op en gaan verder met hun brood.
 
@@ -993,7 +942,9 @@ Speler [default]: "A staat erop."
 Vier oplopende varianten, gestuurd door `Session.get_counter(&"ab_pogingen")`
 (opgehoogd door `mg_abgevecht.gd` bij elk verlies, vóór deze dialoog speelt).
 Data die naar B wijst is voor Danny per definitie niet datagedreven genoeg —
-elke poging krijgt een absurdere reden om het nog een keer te proberen.
+elke poging krijgt een absurdere reden om het nog een keer te proberen. Speel
+je niet als Danny, dan zeg je zijn redenering zelf (`speler`, geen kale
+Danny-spreker meer: het ticket is sinds 5 sep 2026 van iedereen).
 
 ```
 Speler [danny, ≥4 verliezen]: "ik heb mijn hypothese aangepast. de hypothese is nu dat b wint. dus als b wint, heb ik niets geleerd. dus meet ik opnieuw."
@@ -1001,10 +952,10 @@ Speler [danny, ≥3]: "oké. b wint drie keer op rij. dat is precies wat een out
 Speler [danny, ≥2]: "b wint weer. maar de steekproef is klein. en het was maandag. nog een keer."
 Speler [danny, default]: "b wint. dat is data. één meting is geen meting."
 
-Danny [anderen, ≥4]: "ik heb de hypothese aangepast. de hypothese is nu dat b wint. dus als b wint, hebben we niets geleerd. dus meten we opnieuw"
-Danny [anderen, ≥3]: "oké. b wint consistent. dat is precies wat een outlier doet als je hem drie keer meet. we gaan door"
-Danny [anderen, ≥2]: "b wint weer. maar de steekproef is klein. en het was maandag. psies, nog een keer"
-Danny [anderen, default]: "b wint. dat is data. laten we het nog een keer meten, want één meting is geen meting"
+Speler [anderen, ≥4]: "ik heb de hypothese aangepast. de hypothese is nu dat b wint. dus als b wint, hebben we niets geleerd. dus meten we opnieuw"
+Speler [anderen, ≥3]: "oké. b wint consistent. dat is precies wat een outlier doet als je hem drie keer meet. we gaan door"
+Speler [anderen, ≥2]: "b wint weer. maar de steekproef is klein. en het was maandag. nog een keer"
+Speler [anderen, default]: "b wint. dat is data. laten we het nog een keer meten, want één meting is geen meting"
 ```
 
 ### t07_done
@@ -1267,7 +1218,7 @@ Speler [default]: "Terug naar nul. Nog een keer."
 **Catchphrases — ingebouwd:**
 - Jonathan "ik ga er naartoe kijken" → t05_recruit, collega_jonathan
 - Koen "lekker ouwe" → koen algemeen
-- Danny "psies" / "biem" → t06_recruit, t07_recruit, collega_danny
+- Danny "psies" / "biem" → t06_recruit, collega_danny (t07_recruit bestaat niet meer: BBD-207 is sinds 5 sep 2026 van iedereen)
 - Danny "lekker insmeren met olijfolie" → t06_complete
 - Bastiaan `,,` → bastiaan algemeen
 - Willem "Absoluta... ehh, Looff" → t03_recruit, collega_willem
