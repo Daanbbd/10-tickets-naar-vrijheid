@@ -65,6 +65,8 @@ func _ready() -> void:
 	_test_save_verwijderen()
 	_test_uitlijnen_perfect()
 	_test_wereldhandelingen()
+	_test_kabel_kost_tijd()
+	await _test_klant_wacht_niet()
 	_test_ab_escalatie()
 	_test_urenstaat_scherm()
 	_test_werving_begint_met_de_vraag()
@@ -351,11 +353,12 @@ func _test_gevolgen() -> void:
 		GameEnums.Outcome.SUCCESS, 1, {&"paard": true, &"zelf_gevonden": true}))
 	_ok(not Session.get_flag(&"gevolg_paard_gemist"),
 		"het paard zelf vinden zet gevolg_paard_gemist toch")
-	# P1-6: dit is de enige route waarlangs gevolg_paard_gemist ooit true wordt
-	# (Bastiaans vakgebiedvoordeel, via _wh_paarden()'s geen_zoektocht — zonder
-	# de trait blokkeert die functie de route via het bord juist). Een trait
-	# geeft alleen voordeel, nooit een straf (TraitModifier), dus getest mag
-	# door deze vlag niet zakken. `clampi(getest, 0, 3)` in finale_start() zou
+	# P1-6: gevolg_paard_gemist hangt aan het payload-veld `zelf_gevonden`, dat
+	# sinds P4 (5 sep 2026) geen enkele speelroute meer op false zet: Bastiaans
+	# voordeel is `paard_komt` en hij spreekt het paard zelf aan. Het contract
+	# wordt hier nog wel bewaakt, want het is de bodem onder een toekomstige
+	# route. Een trait geeft alleen voordeel, nooit een straf (TraitModifier),
+	# dus getest mag door deze vlag niet zakken. `clampi(getest, 0, 3)` in finale_start() zou
 	# een straf op een toch al lege getest-teller onzichtbaar maken, dus eerst
 	# gevolg_cro_gehaald erbij zodat de meting niet op de bodemklem struikelt.
 	Gevolgen.boek(&"mg_cro", MinigameResult.make(&"mg_cro",
@@ -1412,6 +1415,10 @@ func _test_traits() -> void:
 				"%s/%s: er mogen geen credits af" % [cid, t.code])
 			_ok(float(na.get("tijd", 0.0)) >= float(basis.get("tijd", 0.0)),
 				"%s/%s: het tijdsbudget mag niet korter worden" % [cid, t.code])
+			# P4: de keuzeklok van BBD-203 en de rondeklok van BBD-206 lopen
+			# allebei op dit veld. Een voordeel mag er tijd bij doen, nooit af.
+			_ok(float(na.get("ronde_sec", 0.0)) >= float(basis.get("ronde_sec", 0.0)),
+				"%s/%s: de bedenktijd per ronde mag niet korter worden" % [cid, t.code])
 
 			if TraitModifier.VOORDEEL.has(soort):
 				_ok(TraitModifier.voordeel_tekst(t) != "",
@@ -3540,6 +3547,17 @@ func _test_wereldhandelingen() -> void:
 				"%s: '%s' heeft een wereldhandeling-resolver, maar wereldhandeling staat niet aan" % [
 					t.code, t.minigame_id])
 
+	# P4: wat er op het spel staat, staat in de content en niet in de code. Drie
+	# sleutels dragen dat, en alle drie zijn ze stil weg te laten: dan verloopt
+	# een ronde zonder dat de klant iets zegt, of vonkt een kabel zonder regel.
+	var klant := MinigameContent.get_config(&"mg_klantfeedback")
+	_ok(float(klant.get("ronde_sec", 0.0)) >= 5.0,
+		"mg_klantfeedback: een gespreksronde korter dan vijf seconden is niet te lezen")
+	_ok(String(klant.get("timeout_reactie", "")) != "",
+		"mg_klantfeedback: geen timeout_reactie, dus een verlopen ronde gebeurt in stilte")
+	_ok(String(MinigameContent.get_config(&"mg_backend_fix").get("fout_reactie", "")) != "",
+		"mg_backend_fix: geen fout_reactie, dus een verkeerde kabel vonkt zonder een woord")
+
 	# De drie bekende eigenaren: een wereldhandeling is geen degradatie, het is
 	# nog steeds een werkwoord uit de mond van de eigenaar.
 	var verwacht_eigenaar := {
@@ -3564,6 +3582,103 @@ func _test_wereldhandelingen() -> void:
 			despawnd.append(String(c.get("npc", "")))
 	for nid: StringName in paarden:
 		_ok(String(nid) in despawnd, "t09 despawnt '%s' niet in zijn world_changes" % nid)
+
+
+## P4/BBD-205: een verkeerde kabel kost een kwartier, en de juiste blijft
+## liggen tot je hem legt.
+##
+## Via de pure delen van `TicketController` (`kabelopties()`,
+## `kabels_na_fout()`), want de handeling zelf draait op een dialoogbox en een
+## wereld. Wat hier bewaakt wordt is de belofte eronder: hoe vaak je ook
+## misgrijpt, het ticket kan niet vastlopen, en elke misser kost precies
+## `Urenstaat.FOUT_MIN` — de prijs is tijd, nooit voortgang.
+func _test_kabel_kost_tijd() -> void:
+	_kop("BBD-205: een verkeerde kabel kost een kwartier")
+
+	var content := MinigameContent.get_config(&"mg_backend_fix")
+	var opties := TicketController.kabelopties(content)
+	_ok(opties.size() >= 2,
+		"zonder trait horen er meerdere kabels te liggen, gevonden %d" % opties.size())
+
+	var over: Array = range(opties.size())
+	var voor := Session.worked_minutes
+	var fouten := 0
+	while over.size() > 1:
+		# Altijd een foute pakken: index 0 in `over` is de juiste kabel.
+		var mis := 1 if int(over[0]) == 0 else 0
+		over = TicketController.kabels_na_fout(over, mis)
+		fouten += 1
+		Session.book_time(Urenstaat.FOUT_MIN, &"fout")
+		_ok(over.has(0), "na %d foute kabels ligt de juiste er niet meer" % fouten)
+	_ok(fouten == opties.size() - 1,
+		"na %d foute kabels bleef er meer dan één over" % fouten)
+	_ok(int(over[0]) == 0, "de laatste overgebleven kabel is niet de juiste")
+	_ok(Session.worked_minutes - voor == fouten * Urenstaat.FOUT_MIN,
+		"%d foute kabels boekten %d minuten in plaats van %d" % [
+			fouten, Session.worked_minutes - voor, fouten * Urenstaat.FOUT_MIN])
+
+	# En de juiste kiezen haalt niets weg: `kabels_na_fout()` is de enige plek
+	# die opties wegneemt, en die weigert de juiste. Zonder dat kan de lus in
+	# `_wh_backend()` leeglopen zonder dat er ooit een kabel gelegd is.
+	var vol: Array = range(opties.size())
+	_ok(TicketController.kabels_na_fout(vol, vol.find(0)).size() == vol.size(),
+		"de juiste kabel verdwijnt uit de lijst als je hem kiest")
+
+
+## P4/BBD-203: de klant wacht niet, behalve op de autopilot.
+##
+## Twee dingen, want ze kunnen los stuk: dat een keuze met een klok ook echt
+## dichtvalt (en dan `KEUZE_VERLOPEN` teruggeeft in plaats van stil de eerste
+## optie te worden), en dat diezelfde klok níét geldt zodra de autopilot
+## meekijkt. Dat tweede is geen detail: een geautomatiseerde speelbeurt drukt
+## elke 0,45 s één knop, dus een keuze die vanzelf dichtvalt zou een 10/10 van
+## timing laten afhangen in plaats van van inhoud.
+func _test_klant_wacht_niet() -> void:
+	_kop("BBD-203: zij wacht niet")
+
+	_ok(DialogueController.keuzeklok(8.0, true) == 0.0,
+		"met de autopilot erbij blijft er een keuzeklok staan")
+	_ok(DialogueController.keuzeklok(8.0, false) == 8.0,
+		"zonder autopilot verdwijnt de keuzeklok")
+	_ok(DialogueController.keuzeklok(-3.0, false) == 0.0,
+		"een negatieve klok komt er niet als nul uit")
+
+	var dc := DialogueController.new()
+	add_child(dc)
+	dc.setup()
+	var labels: Array[String] = ["De knop.", "De foto.", "De prijs."]
+
+	# Niemand drukt: na 0,2 s hoort de box dicht te zijn en de uitkomst
+	# onderscheidbaar van "eerste optie".
+	var verlopen: Variant = await dc.ask_choice("Zegt u het maar.", labels, 0.2)
+	_ok(int(verlopen) == DialogueController.KEUZE_VERLOPEN,
+		"een keuze met een klok van 0,2 s gaf %d terug in plaats van KEUZE_VERLOPEN" % int(verlopen))
+	_ok(not dc.is_active(), "de dialoogbox bleef openstaan nadat de klok afliep")
+
+	# Zelfde 0,2 s, maar via `keuzeklok()` met de autopilot erbij: die keuze
+	# hoort er vier keer zo lang later nog steeds te staan. De druk komt uit een
+	# timer en niet uit een tweede coroutine, want `ask_choice()` moet hier juist
+	# geawait worden -- anders meet deze test niets.
+	var gedrukt := {"knop": false}
+	get_tree().create_timer(0.8).timeout.connect(func() -> void:
+		var k := get_viewport().gui_get_focus_owner() as Button
+		if k == null:
+			return
+		gedrukt["knop"] = true
+		k.pressed.emit())
+
+	var begon := Time.get_ticks_msec()
+	var gekozen: Variant = await dc.ask_choice("Nog eens.", labels,
+		DialogueController.keuzeklok(0.2, true))
+	var duurde := float(Time.get_ticks_msec() - begon) / 1000.0
+	_ok(bool(gedrukt["knop"]),
+		"er stond geen keuzeknop met focus, dus de autopilot zou hier hangen")
+	_ok(int(gekozen) == 0,
+		"de gedrukte knop leverde %d op in plaats van 0" % int(gekozen))
+	_ok(duurde >= 0.7,
+		"de keuze viel na %.2f s vanzelf dicht; met de autopilot hoort er geen klok te lopen" % duurde)
+
+	dc.queue_free()
 
 
 ## F4-a: `mg_slotboard.gd` (de urenstaat, `mg_urenstaat`) werd een dialoogkeuze

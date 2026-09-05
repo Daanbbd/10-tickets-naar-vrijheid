@@ -19,10 +19,20 @@ extends Node
 ## `Session.input_locked`); dat blijft zo. Lezen mag geen straf zijn — het
 ## enige dat vastzit is de speler zelf, niet het kantoor eromheen.
 
+## Wat `ask_choice()` teruggeeft als de keuzeklok afliep zonder dat er iemand
+## drukte. Niet -1: dat is al bezet door "er liep een gesprek" en door een lege
+## optielijst, en die twee zijn aanroepfouten terwijl dit een speelbare
+## uitkomst is. De aanroeper hoort ze uit elkaar te kunnen houden.
+const KEUZE_VERLOPEN := -2
+
 var _layer: CanvasLayer
 var _box: DialogueBox
 var _active: bool = false
 var _choice_index: int = -1
+## Is de keuzeklok van de lopende keuze afgelopen? Losse vlag en geen sentinel
+## op `_choice_index`, zodat `_wait_for_choice()` blijft wachten op een echte
+## index zolang deze uit staat.
+var _verlopen: bool = false
 
 ## Hoeveel geschreven regels en keuzevragen dit gesprek heeft gewéigerd omdat er
 ## al een gesprek liep. Elke weigering is een regel die de speler nooit ziet, of
@@ -42,6 +52,7 @@ func setup() -> void:
 	_box = DialogueBox.new()
 	_layer.add_child(_box)
 	_box.choice_picked.connect(_on_choice_picked)
+	_box.keuze_verlopen.connect(_on_keuze_verlopen)
 	_box.overslaan_gevraagd.connect(overslaan)
 	# Een gesprek grijpt de invoer af: je loopt niet meer, je leest. Op mobiel is
 	# dat de enige aankondiging die er is, want het venster schuift stil in beeld.
@@ -196,7 +207,12 @@ func _show_and_wait(speaker: String, text: String, portrait: Texture2D = null) -
 ## tegelijk openstaan: één object kan er twee dragen (het scrumbord in de gang
 ## is er zowel voor de planning als voor de paardenbugs), en dan moet de speler
 ## zeggen welke hij bedoelt. Hergebruikt de keuzeknoppen van de dialoogbox.
-func ask_choice(vraag: String, labels: Array[String]) -> int:
+##
+## `timeout_sec` boven nul geeft de keuze een klok: een dunne balk boven de
+## knoppen die leegloopt van groen naar rood, en op nul sluit de box en komt
+## `KEUZE_VERLOPEN` terug. Dat is BBD-203: de klant typt door terwijl jij
+## nadenkt. Zonder klok (de standaard) gedraagt alles zich zoals altijd.
+func ask_choice(vraag: String, labels: Array[String], timeout_sec: float = 0.0) -> int:
 	if _active:
 		# Alleen deze helft telt als weigering: een lege labellijst is een
 		# aanroepfout van de opgave zelf, geen regel die door een lopend
@@ -213,7 +229,7 @@ func ask_choice(vraag: String, labels: Array[String]) -> int:
 	Bus.dialogue_speaker_changed.emit(&"")
 	_box.show_line("", vraag)
 	_box.finish_typing()
-	var keuze := await _wait_for_choice(labels)
+	var keuze := await _wait_for_choice(labels, keuzeklok(timeout_sec, Autopilot.gevraagd()))
 	_box.close()
 	_active = false
 	await get_tree().process_frame
@@ -229,17 +245,34 @@ func _ask(choices: Array) -> int:
 	return await _wait_for_choice(labels)
 
 
-func _wait_for_choice(labels: Array[String]) -> int:
+## Hoeveel seconden een keuze werkelijk krijgt.
+##
+## Nul zodra de autopilot meekijkt: die drukt de knop met focus elke 0,45 s,
+## maar hij doet dat pas nadat hij een lopende minigame heeft afgehandeld en
+## hij deelt dat ritme met elke andere wachtende regel. Een keuze die vanzelf
+## dichtvalt zou een geautomatiseerde speelbeurt dus laten variëren op timing
+## in plaats van op inhoud, en een 10/10 die van een klok afhangt bewijst
+## niets. Static en zonder scherm, zodat de suite hem kan narekenen.
+static func keuzeklok(timeout_sec: float, autopilot: bool) -> float:
+	return 0.0 if autopilot else maxf(0.0, timeout_sec)
+
+
+func _wait_for_choice(labels: Array[String], timeout_sec: float = 0.0) -> int:
 	_skip = false
 	_choice_index = -1
-	_box.show_choices(labels)
-	while _choice_index < 0:
+	_verlopen = false
+	_box.show_choices(labels, timeout_sec)
+	while _choice_index < 0 and not _verlopen:
 		await get_tree().process_frame
-	return _choice_index
+	return KEUZE_VERLOPEN if _verlopen else _choice_index
 
 
 func _on_choice_picked(index: int) -> void:
 	_choice_index = index
+
+
+func _on_keuze_verlopen() -> void:
+	_verlopen = true
 
 
 ## Op een aanraakscherm is de hele dialoog de knop. Een speler die op een

@@ -5,10 +5,18 @@ extends Control
 
 signal advance_requested()
 signal choice_picked(index: int)
+## De keuzeklok is op nul gelopen zonder dat er iemand gekozen heeft. Alleen
+## bij `show_choices()` met een `timeout_sec` boven nul; zie
+## `DialogueController.ask_choice()`.
+signal keuze_verlopen()
 ## De speler wil de rest van dit gesprek overslaan (het "overslaan »" onderin).
 signal overslaan_gevraagd()
 
 const CHARS_PER_SEC := 55.0
+
+## Hoogte van de keuzeklok in pixels. Dun genoeg om geen paneel te zijn, dik
+## genoeg om op een canvas van 192 px breed nog een kleur te dragen.
+const KLOK_HOOGTE := 4.0
 
 ## Het paneel groeit omhoog mee met de tekst. Met een vaste hoogte van 70px viel
 ## langere dialoog onderuit beeld: RichTextLabel scrollt niet en klipt gewoon.
@@ -28,6 +36,8 @@ const HOOGTE_MAX := 210.0
 var _panel: PanelContainer
 var _name: Label
 var _text: RichTextLabel
+var _klok_vak: Control
+var _klok_balk: ColorRect
 var _choices: VBoxContainer
 var _hint: Label
 var _skip_label: Label
@@ -36,6 +46,11 @@ var _portrait: TextureRect
 var _full_text: String = ""
 var _revealed: float = 0.0
 var _typing: bool = false
+
+## Hoeveel seconden deze keuze nog heeft, en hoeveel hij er kreeg. Nul betekent
+## "geen klok": dat is de gewone keuze, en dat blijft de meeste.
+var _klok_over: float = 0.0
+var _klok_max: float = 0.0
 
 
 func _ready() -> void:
@@ -90,6 +105,33 @@ func _ready() -> void:
 	_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(_text)
 
+	# De keuzeklok, tussen de vraag en de knoppen. Vier pixels hoog en over de
+	# volle breedte: hij hoort in je ooghoek te staan terwijl je de opties leest,
+	# niet in het midden van je blik. Standaard onzichtbaar — een gesprek zonder
+	# klok mag er niet anders uitzien dan het altijd deed.
+	_klok_vak = Control.new()
+	_klok_vak.custom_minimum_size = Vector2(0, KLOK_HOOGTE)
+	_klok_vak.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_klok_vak.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_klok_vak.visible = false
+	var klok_achter := ColorRect.new()
+	klok_achter.color = UiKit.NEUTRAAL_TINT
+	klok_achter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiKit.full_rect(klok_achter)
+	_klok_vak.add_child(klok_achter)
+	# De vulling krimpt via zijn rechteranker en niet via `size`: een Control
+	# krijgt zijn formaat van de ouder, dus een size die je zelf zet is het
+	# volgende frame weer weg. Zelfde constructie als de stand-upbalk.
+	_klok_balk = ColorRect.new()
+	_klok_balk.color = UiKit.tijdkleur(1.0)
+	_klok_balk.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_klok_balk.anchor_left = 0.0
+	_klok_balk.anchor_top = 0.0
+	_klok_balk.anchor_right = 1.0
+	_klok_balk.anchor_bottom = 1.0
+	_klok_vak.add_child(_klok_balk)
+	v.add_child(_klok_vak)
+
 	_choices = VBoxContainer.new()
 	_choices.add_theme_constant_override("separation", 2)
 	v.add_child(_choices)
@@ -128,6 +170,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_klok_tik(delta)
 	if not _typing:
 		return
 	_revealed += delta * CHARS_PER_SEC
@@ -142,6 +185,7 @@ func _process(delta: float) -> void:
 
 func show_line(speaker: String, text: String, portrait: Texture2D = null) -> void:
 	visible = true
+	_klok_stop()
 	_name.text = speaker
 	_name.visible = speaker != ""
 	_portrait.texture = portrait
@@ -157,10 +201,17 @@ func show_line(speaker: String, text: String, portrait: Texture2D = null) -> voi
 	_pas_hoogte_aan()
 
 
-func show_choices(options: Array[String]) -> void:
+## De keuzes tonen, eventueel met een klok erboven.
+##
+## `timeout_sec` boven nul zet de balk aan; loopt die leeg voordat er iemand
+## drukt, dan komt `keuze_verlopen` eruit en is het aan de aanroeper om de box
+## te sluiten. Nul is de gewone keuze: geen balk, geen signaal, wachten tot er
+## gekozen wordt.
+func show_choices(options: Array[String], timeout_sec: float = 0.0) -> void:
 	_clear_choices()
 	_hint.visible = false
 	_skip_label.visible = false
+	_klok_start(timeout_sec)
 	for i: int in options.size():
 		var b := UiKit.keuzeknop(options[i], UiKit.FS_SMALL)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -216,6 +267,7 @@ func has_choices() -> bool:
 
 func close() -> void:
 	visible = false
+	_klok_stop()
 	_clear_choices()
 
 
@@ -226,5 +278,39 @@ func _clear_choices() -> void:
 
 
 func _on_choice(index: int) -> void:
+	_klok_stop()
 	AudioDirector.play_ui(&"klik")
 	choice_picked.emit(index)
+
+
+## De klok voor deze keuze zetten. Nul of minder laat alles zoals het was.
+func _klok_start(sec: float) -> void:
+	_klok_max = maxf(0.0, sec)
+	_klok_over = _klok_max
+	_klok_vak.visible = _klok_max > 0.0
+	_klok_balk.anchor_right = 1.0
+	_klok_balk.color = UiKit.tijdkleur(1.0)
+
+
+func _klok_stop() -> void:
+	_klok_over = 0.0
+	_klok_max = 0.0
+	if _klok_vak != null:
+		_klok_vak.visible = false
+
+
+## Een frame van de keuzeklok. De kleur loopt mee met wat er over is
+## (`UiKit.tijdkleur()`), zodat "bijna op" te zien is zonder een getal te lezen.
+func _klok_tik(delta: float) -> void:
+	if _klok_over <= 0.0:
+		return
+	_klok_over = maxf(0.0, _klok_over - delta)
+	var deel := clampf(_klok_over / maxf(0.001, _klok_max), 0.0, 1.0)
+	_klok_balk.anchor_right = deel
+	_klok_balk.color = UiKit.tijdkleur(deel)
+	if _klok_over > 0.0:
+		return
+	# Eerst stoppen, dan melden: de luisteraar sluit de box, en een klok die dan
+	# nog loopt vuurt het volgende frame nog een keer.
+	_klok_stop()
+	keuze_verlopen.emit()

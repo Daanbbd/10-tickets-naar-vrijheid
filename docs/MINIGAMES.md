@@ -43,6 +43,27 @@ testsuite hem gebruikt als generieke "er loopt een echte minigame"-fixture voor
 de onderbrekings- en pauzetests (F5-a/F5-b), niet omdat een speler hem ooit te
 zien krijgt.
 
+### Wat er in een wereldhandeling op het spel staat (P4, 5 sep 2026)
+
+Ze waren alle drie een gesprek met een knop: je kon niet verliezen, niet te
+laat zijn en niets kwijtraken. Dat was de bevinding van de audit van 5 sep
+2026 (deel 2, P4). Het principe blijft — je blijft in de wereld, er komt geen
+overlay — maar er staat nu iets tegenover elke keuze.
+
+| Ticket | Wat het kost |
+|---|---|
+| BBD-203 | een klok van `ronde_sec` (8 s) per gespreksronde. Loopt die leeg, dan levert die ronde nul punten op en zegt `timeout_reactie` waarom. Drie rondes, dus je kunt hier zwijgend onder de drempel zakken |
+| BBD-205 | een verkeerde kabel: schok, rode flits, `Urenstaat.FOUT_MIN` (15 min) op de urenstaat, `fout_reactie`, en dan opnieuw kiezen uit wat er nog ligt. De juiste kabel blijft altijd liggen, dus het ticket loopt hoe dan ook af — de prijs is tijd, plus de bug van morgen (`gevolg_backend_fout_gekozen` hangt aan "in één keer goed") |
+| BBD-209 | niets extra's; het zoeken zelf is de handeling, en dat gold al. Wat verdween is Bastiaans vrijstelling: hij zoekt nu ook |
+
+De klok van BBD-203 is een dunne balk boven de keuzeknoppen die van groen via
+oranje naar rood leegloopt (`DialogueBox.show_choices()` met een
+`timeout_sec`, kleur uit `UiKit.tijdkleur()` — dezelfde curve als de
+stand-upbalk). Hij staat er alleen als de aanroeper er om vraagt: elke andere
+keuze in het spel blijft wachten tot je kiest. Tijdens een geautomatiseerde
+speelbeurt (`Autopilot.gevraagd()`) geldt hij nooit — zie
+`DialogueController.keuzeklok()`.
+
 `SlotBoard` bestaat nog, en draagt nu precies één taak: de urenstaat van Dirk.
 Dat is de winst van de omslag. Een vakkenraster is een formulier, en de enige
 plek in het spel waar je écht een formulier invult is de urenstaat — dus landt
@@ -95,12 +116,12 @@ je opmerkt, want een voordeel dat je niet ziet bestaat niet.
 | Mechaniek | Wat er verandert |
 |---|---|
 | Scope-schuif | twee punten meer sprintruimte; haar tevredenheidsgrens blijft |
-| ChoiceScene | de drempel gaat één goede keuze omlaag |
+| ChoiceScene | de drempel gaat één goede keuze omlaag, en zij wacht vier seconden langer per ronde |
 | Uitlijnen | één pixel meer speling |
 | CableBoard | twee losse draden minder |
 | TagPicker | een poging extra |
 | Renderpijplijn | twintig credits extra |
-| WhackAHorse | 25% meer tijd |
+| WhackAHorse | het dichtstbijzijnde bugpaard loopt naar je toe (aanspreken doe je zelf) |
 | Urenstaat | twee afleiderkaarten weg, één fout meer toegestaan |
 | Oplevering | **niets** — met opzet |
 | Stand-up (BBD-202) | **niets** — ticket van iedereen sinds 5 sep 2026 |
@@ -180,9 +201,10 @@ zeven sprekers de klok niet: Danny's regel valt pas als laatste, ruim buiten
 het budget. Wie iemand afkapt nádat zijn nuttige regel al gevallen is verliest
 niets — dat segment staat al groen.
 
-**ChoiceScene** (BBD-203) — dialoogkeuzes met punten tegen een drempel. Opties
-kunnen een `when` dragen, zodat sommige antwoorden alleen voor bepaalde
-personages bestaan.
+**ChoiceScene** (BBD-203) — dialoogkeuzes met punten tegen een drempel, in de
+gewone dialoogbox. Opties kunnen een `when` dragen, zodat sommige antwoorden
+alleen voor bepaalde personages bestaan. Elke ronde loopt onder een klok: zij
+wacht `ronde_sec` seconden en typt daarna door.
 
 **Uitlijnen** (BBD-204) — een nagebouwde productpagina op zichtbaar ruitpapier,
 vijf blokken van hun raster af. Tik een blok, verschuif het met vier
@@ -191,8 +213,8 @@ een duim is een blok van 16 px geen doel). Binnen `tolerantie` klikt een blok
 vast. De afwijkingen zijn geen veelvouden van `raster`, dus tolerantie is
 noodzakelijk in plaats van vriendelijk en `perfect` is onbereikbaar.
 
-**CableBoard** (BBD-205) — klik twee knooppunten om een kabel te leggen, nog
-eens om hem weg te halen. Extra kabels tellen als fout.
+**CableBoard** (BBD-205) — kies welke kabel je legt. Fout gelegd kost een
+kwartier en een vonk, en daarna kies je opnieuw uit de kabels die nog liggen.
 
 **Waar klikken ze?** (BBD-206) — een wireframe van de productpagina waarop de
 klikken van bezoekers als hittepunten landen, in real time. Eén element trekt
@@ -224,10 +246,11 @@ geschrapt — Render blijft de enige stap die pijn doet.
 > en haalt de druk er juist uit: het punt is dat je Review leegtrekt vóórdat
 > Render klaar is, precies wat de intro zegt.
 
-**WhackAHorse** (BBD-209) — de arcadepiek. Bugpaarden raken telt; een
-klantpaard raken kost drie seconden en levert "JE HEBT EEN KLANTPAARD
-GESLAGEN" op. Nooit meer dan twee paarden tegelijk; de spawninterval loopt op
-na elke treffer. Geen game over, alleen tijd.
+**WhackAHorse** (BBD-209) — zoeken en aanspreken. De bugpaarden dwalen als
+gewone NPC's door het kantoor; het klantpaard lijkt erop en lost niets op, en
+dat is de grap die uit de oude arcade-versie overbleef. Bastiaans voordeel
+laat het dichtstbijzijnde bugpaard naar hem toe lopen; aanspreken blijft aan
+hem.
 
 **Oplevering** (BBD-210) — zie hieronder.
 
@@ -325,13 +348,13 @@ Alles is in 60–120 seconden te doen en op de eerste of tweede poging haalbaar.
 |---|---|
 | scope | ≤ 13 punten én ≥ 10 blij, uit negen wensen |
 | stand-up | zeven sprekers binnen 30 s, met drie ingrepen |
-| klantfeedback | 6 van maximaal 9 punten |
+| klantfeedback | 6 van maximaal 9 punten, met 8 s bedenktijd per ronde (12 s voor Willem) |
 | uitlijnen | vijf blokken binnen 2 px van hun raster |
-| backend | de gevraagde kabels, geen extra |
+| backend | de juiste kabel; elke foute kost 15 minuten en je kiest opnieuw |
 | waar klikken ze | 2,7% vanaf een basis van 1,8%; twee van de drie rondes raak (0,4 / 0,5 / 0,5) |
 | tagpickers | 4 pogingen |
 | renderpijplijn | 5 van 6 clips in 60 s, binnen 100 credits |
-| paardenbugs | 10 bugs in 60 seconden |
+| paardenbugs | één bugpaard aanspreken |
 | oplevering | vier uitkomsten (13 / 9 / 4 / 0) op score `vertrouwen + min(getest, 2·startbugs) − 2·bugs + scope`, min nog eens `bugs` als je nooit getest hebt |
 | urenstaat | geen goed antwoord; alles verdelen volstaat |
 

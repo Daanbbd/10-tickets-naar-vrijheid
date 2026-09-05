@@ -29,8 +29,8 @@ extends RefCounted
 ## regel noemt wat er concreet anders is en niet dat er iets anders is.
 const VOORDEEL := {
 	"cableboard":  "Jouw vakgebied. Minder losse draden.",
-	"whack":       "Jouw vakgebied. Je hoeft ze niet op te zoeken.",
-	"choicescene": "Jouw vakgebied. Je hoeft minder te raden.",
+	"whack":       "Jouw vakgebied. De bug komt naar jou toe.",
+	"choicescene": "Jouw vakgebied. Je hoeft minder te raden en zij wacht langer.",
 	"scope":       "Jouw vakgebied. Twee punten meer ruimte.",
 	"uitlijnen":   "Jouw vakgebied. Eén pixel meer speling.",
 	"heatmap":     "Jouw vakgebied. Je ziet per element hoe vaak erop geklikt is.",
@@ -58,6 +58,10 @@ const EXTRA_TIJD := 1.25
 const EXTRA_PUNTEN := 2
 const EXTRA_SPELING := 1
 const EXTRA_CREDITS := 20
+## Seconden bedenktijd erbij per gespreksronde (BBD-203). Vier op acht is de
+## helft erbij: genoeg om de vierde optie ook echt te lezen, niet genoeg om de
+## klok te laten verdwijnen.
+const EXTRA_BEDENKTIJD := 4.0
 
 
 ## De aangepaste opgave, of een lege dictionary als er niets verandert.
@@ -127,17 +131,26 @@ static func _cableboard(c: Dictionary) -> void:
 
 ## F4-b: BBD-209 is een wereldhandeling geworden, geen getimede minigame meer —
 ## `duur` boosten blijft staan (schaadt niets, en houdt de opgave identiek als
-## `mg_whack` ooit teruggezet wordt), maar het echte voordeel voor Bastiaan is
-## nu dat hij geen paard hoeft te zoeken: hij weet al waar de bug zit. Zie
+## `mg_whack` ooit teruggezet wordt).
+##
+## P4: het voordeel was `geen_zoektocht` — Bastiaan hoefde helemaal niet meer
+## te zoeken, en daarmee nam zijn vakgebied de hele mechaniek van zijn eigen
+## ticket weg. Nu zoekt iedereen, en loopt het dichtstbijzijnde bugpaard naar
+## hem toe. Aanspreken moet hij nog steeds zelf. Zie
 ## `TicketController._wh_paarden()`.
 static func _whack(c: Dictionary) -> void:
 	c["duur"] = float(c.get("duur", 30.0)) * EXTRA_TIJD
-	c["geen_zoektocht"] = true
+	c["paard_komt"] = true
 
 
+## Twee kanten van hetzelfde voordeel: hij hoeft minder te raden (de drempel
+## zakt) en zij wacht langer (de keuzeklok van BBD-203 loopt trager leeg). Dat
+## tweede kwam er bij P4 bij: zonder klok was "minder raden" een getal dat de
+## speler alleen achteraf in de uitslag kon terugzien.
 static func _choicescene(c: Dictionary) -> void:
 	# de drempel is het aantal goede keuzes dat je moet halen
 	c["drempel"] = maxi(1, int(c.get("drempel", 3)) - 1)
+	c["ronde_sec"] = float(c.get("ronde_sec", 8.0)) + EXTRA_BEDENKTIJD
 
 
 ## Meer sprintruimte, niet minder eisen. Haar tevredenheidsgrens blijft staan:
