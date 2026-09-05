@@ -18,7 +18,10 @@ extends Control
 ## tickets" in regel 1 en er geen cijfer tussen de woorden staat.
 ## Ruimte voor het telefoonkaartje in de kolom; het kaartje zelf hangt met
 ## ankers in een gewone Control zodat het kan binnenglijden.
-const KAART_RUIMTE := 112.0
+const KAART_RUIMTE := 118.0
+## Breedte waarop het bericht zijn regels breekt: de kolom (192 − 2×12) min de
+## behuizingsmarge van het kaartje.
+const KAART_TEKSTBREEDTE := 154.0
 var _kaart: PanelContainer = null
 
 const TELWOORDEN: Array[String] = [
@@ -182,6 +185,11 @@ func _bouw_kaart() -> PanelContainer:
 	kolom.add_child(streep)
 	var tekst := UiKit.label(bericht(), UiKit.FS_SMALL, UiKit.WIT)
 	tekst.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# Een autowrap-label zonder breedte rekent zijn minimumhoogte uit voor een
+	# kolom van nul pixels breed — één woord per regel, 1800 px hoog — en een
+	# kaartje dat niet in een Container hangt krimpt daarna nooit meer terug.
+	# Met een minimumbreedte klopt de som vanaf de eerste frame.
+	tekst.custom_minimum_size = Vector2(KAART_TEKSTBREEDTE, 0.0)
 	kolom.add_child(tekst)
 	return kaart
 
@@ -195,6 +203,7 @@ func _laat_binnenkomen() -> void:
 		return
 	AudioDirector.play_ui(&"hinnik")
 	Haptiek.tril(Haptiek.Sterkte.STOOT)
+	_kaart.reset_size()
 	_kaart.visible = true
 	Juice.schuif_in(_kaart, Vector2(0.0, 28.0), 0.22)
 

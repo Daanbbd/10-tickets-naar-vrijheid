@@ -4281,6 +4281,15 @@ func _test_schermen_passen() -> void:
 		await get_tree().process_frame
 		await get_tree().process_frame
 		_meet_schermvulling(scherm, pad.get_file())
+		# Het telefoonkaartje op het uitlegscherm hangt met ankers in een gewone
+		# Control; het moet zo hoog zijn als zijn inhoud, niet als de kolom.
+		if scherm is IntroUitleg:
+			var kaart := scherm.get("_kaart") as Control
+			_ok(kaart != null, "het uitlegscherm heeft een telefoonkaartje")
+			if kaart != null:
+				print("    kaartje: pos %s maat %s (ruimte %d)" % [kaart.position, kaart.size, IntroUitleg.KAART_RUIMTE])
+				_ok(kaart.size.y <= IntroUitleg.KAART_RUIMTE + 12.0,
+					"het telefoonkaartje is %d px hoog, hoger dan zijn ruimte (%d)" % [kaart.size.y, IntroUitleg.KAART_RUIMTE])
 
 		# De bevestigingsoverlay bestaat alleen na een aanroep, en juist daar zat
 		# de afgekapte knop. Hij hangt onder hetzelfde scherm, dus dezelfde meting.
