@@ -105,8 +105,15 @@ Daans opt-in; die kosten het meest.
 6. **Fase 3b** — eerste deploy kan falen (`faalt_deploy`, ROLLBACK), speler
    speelt `bezig_down` tijdens een minigame.
 
+7. **Na de ochtend van 5 september** — de samenvoeging met Daans playtestronde
+   (`d6abdcd`, zie hierboven), het "overslaan »"-label dat per letter omliep
+   (`295a761`), en Dirk heeft een gezicht: zijn AI-gegenereerde avatar staat als
+   `assets/personen/dirk.png`, `gen_portraits.py` strijkt hem glad, en hij geeft
+   het toe in een terzijde ("Ik ben een stockfoto. Mijn urenstaat is echt.",
+   `03f52e1`).
+
 Bewijs in `docs/audit-shots/`: `licht_*.png`, `resp_*.png`, `f2_*.png`,
-`f3_heatmap.png`, `f4_uitleg.png`.
+`f3_heatmap.png`, `f4_uitleg.png`, `f5_merge_wereld.png`, `praat_dirk.png`.
 
 ### Wat open staat, in volgorde van waarde
 
@@ -161,6 +168,10 @@ art wordt door `tools/generators/*.py` gemaakt met Pillow uit
 `docs/dialogue-content.md` bijwerken (mist `wereld.json` en Dirk); de 37
 ticketbomen waar de verkeerde mond beweegt (`Bus.dialogue_started` emit alleen
 de startspreker — `dialogue_controller.gd:78`, `npc.gd:71-84`).
+Nog één kleintje: `Hud._on_toast()` stapelt toasts zonder plafond; bij drie of
+meer tegelijk (een opgelost ticket, een storing en Dennis) vult de stapel het
+scherm (zie `praat_dirk.png`, gemaakt met `--ticket=t06`, dat alles tegelijk
+laat vuren). Cap op drie, oudste weg.
 
 **F. Overgenomen uit de playtestronde (Sonnet).** De Done-landing-animatie
 voor het bord: Daan vroeg "animatie, geen wandeling" voor een ticket dat naar
@@ -365,6 +376,8 @@ Vijf fases. Elke fase is los speelbaar en los te beoordelen.
 
 ## Fase 1 — Fundament: inzet, licht en juice-primitieven
 
+> **Stand:** gedaan (`53a302e`), inclusief het responsieve portret.
+
 Alles wat latere fases nodig hebben en nu ontbreekt. Goedkoopste fase, grootste
 sprong.
 
@@ -421,6 +434,11 @@ sprong.
 
 ## Fase 2 — De dag: chaotisch, grappig, zichtbaar, nooit repetitief
 
+> **Stand:** deels. 2a (`76624b2`: deploy open vanaf 8/10, collega's ontdooid,
+> zestien storingen, `zoek_npc`) en 2b (`50e0f94`: terzijdes, overslaan) zijn
+> gedaan. Open: ophaalvariatie, het gezicht van de klant, de klant die de
+> opdracht verschuift, audio-escalatie — zie Overdracht D.
+
 1. **Breek de identieke lus.** Geef het ophaalritueel variatie in de *vorm*: een
    collega die niet mee wil, een die al ergens anders staat, een die de verkeerde
    collega meeneemt, een die je onderweg kwijtraakt. `Npc.start_following()` en
@@ -470,6 +488,11 @@ sprong.
 
 ## Fase 3 — Handen in plaats van formulieren, en elk spel een eigen beeld
 
+> **Stand:** deels. 3a (`c2bbe66`: BBD-206 is `mg_heatmap`, `mg_abtest` weg) en
+> 3b (`a07a2e5`: de eerste deploy kan falen, de speler werkt zichtbaar) zijn
+> gedaan. Open: `build_speelveld()`, de overige minigames, de juice-toepassing —
+> zie Overdracht C. Waar hieronder nog `mg_abtest` staat is `mg_heatmap` bedoeld.
+
 1. **`build_speelveld()` naast `build_chrome()`.** Een vast, niet-scrollend
    speelvlak met de bestaande header/footer-stroken. `mg_uitlijnen` is het model:
    een begrensd canvas met objecten erop.
@@ -503,6 +526,8 @@ sprong.
 
 ## Fase 4 — De opening: waarom, wat, waar, hoe — óver de verdieping
 
+> **Stand:** gedaan (`6319427`, `0228d93`).
+
 Nu: negen zinnen plus "Begrepen", en een titelscherm van labels op een
 `ColorRect`. Het moet *gespeeld* worden, in ~30 seconden, op de vloer:
 
@@ -521,6 +546,9 @@ Dennis die je ophaalt en het lege bord dat volloopt blijven — dat is al goed.
 `scripts/world/main.gd`, `autoload/shell.gd`.
 
 ## Fase 5 — De climax: de oplevering als Space Team, en het slot
+
+> **Stand:** open, op de faalstaat van 5.1 na (`a07a2e5`). Het ontwerp om van te
+> vertrekken staat in Overdracht A en B; eerst met Daan bespreken, dan bouwen.
 
 1. **De oplevering wordt de chaosscène.** Nu het rustigste moment van het spel:
    een lijst tekstknoppen met "DEPLOYEN" eronder. Het moet het luidste worden:
