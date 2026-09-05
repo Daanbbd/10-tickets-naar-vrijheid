@@ -452,8 +452,14 @@ func _test_verwijzingen() -> void:
 	for id: StringName in GameData.ticket_ids():
 		var t: TicketDef = GameData.ticket(id)
 		_ok(t.anchor in object_ids, "%s: anchor '%s' bestaat niet als object" % [t.code, t.anchor])
-		_ok(GameData.minigame_scene_path(t.minigame_id) != "",
-			"%s: minigame '%s' staat niet in minigames.json" % [t.code, t.minigame_id])
+		# Een wereldhandeling loopt nooit via Shell.run_minigame() (zie
+		# TicketController._resolve_wereldhandeling()) en heeft dus geen scene
+		# nodig — mg_klantfeedback/mg_backend_fix stonden hier lang met een
+		# scene die er zelf nooit kwam (mg_choicescene.tscn/mg_cableboard.tscn,
+		# dode code, verwijderd).
+		if not t.wereldhandeling:
+			_ok(GameData.minigame_scene_path(t.minigame_id) != "",
+				"%s: minigame '%s' staat niet in minigames.json" % [t.code, t.minigame_id])
 		_ok(not MinigameContent.get_config(t.minigame_id).is_empty(),
 			"%s: minigame '%s' heeft geen inhoud" % [t.code, t.minigame_id])
 		_ok(t.zone_name != "", "%s: geen zone_name" % t.code)
@@ -1427,6 +1433,13 @@ func _test_heatmap() -> void:
 		"de knop heeft geen maat of startplek")
 	_ok(not ResourceLoader.exists("res://scripts/minigames/mg_abtest.gd"),
 		"mg_abtest.gd bestaat nog — de dubbele quiz hoort weg te zijn")
+	# BBD-203 en BBD-205 draaien allebei via een wereldhandeling
+	# (_wh_klantfeedback()/_wh_backend()); mg_choicescene.gd en mg_cableboard.gd
+	# waren de scenes die daarachter nooit meer geladen werden (Overdracht C).
+	_ok(not ResourceLoader.exists("res://scripts/minigames/mg_choicescene.gd"),
+		"mg_choicescene.gd bestaat nog — die draait nooit, BBD-203 is een wereldhandeling")
+	_ok(not ResourceLoader.exists("res://scripts/minigames/mg_cableboard.gd"),
+		"mg_cableboard.gd bestaat nog — die draait nooit, BBD-205 is een wereldhandeling")
 
 
 func _test_urenstaat() -> void:

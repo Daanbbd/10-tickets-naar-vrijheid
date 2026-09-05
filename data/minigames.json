@@ -7,17 +7,9 @@
   "scene": "res://scenes/minigames/mg_standup.tscn",
   "title": "De stand-up"
  },
- "mg_klantfeedback": {
-  "scene": "res://scenes/minigames/mg_choicescene.tscn",
-  "title": "Klantfeedback vertalen"
- },
  "mg_frontend_fix": {
   "scene": "res://scenes/minigames/mg_uitlijnen.tscn",
   "title": "Uitlijnen"
- },
- "mg_backend_fix": {
-  "scene": "res://scenes/minigames/mg_cableboard.tscn",
-  "title": "Datastroom herstellen"
  },
  "mg_cro": {
   "scene": "res://scenes/minigames/mg_heatmap.tscn",
