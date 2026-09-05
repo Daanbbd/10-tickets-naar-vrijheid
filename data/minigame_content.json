@@ -164,7 +164,7 @@
  "mg_klantfeedback": {
   "type": "choicescene",
   "briefing": "Zij zegt straks {rondes} keer twee dingen die niet samen kunnen. Je moet op {drempel} punten uitkomen. Ik zit erbij en ik zeg niks. Dat werkt bij haar beter. Dat is wel top.",
-  "intro": "Mevrouw P. Aardenmens zit in de entree met een uitgeprinte screenshot en elf punten. Drie ervan spreken elkaar tegen. Vertaal wat ze zegt naar iets wat je kunt bouwen.",
+  "intro": "Mevrouw P. Aardenmens zit in de entree met een uitgeprinte screenshot en elf punten. Drie ervan spreken elkaar tegen. Vertaal wat ze zegt naar iets wat je kunt bouwen. Ze wacht niet lang.",
   "waarom": "Zij zegt twee dingen tegelijk die niet allebei kunnen. Wat jij opschrijft, wordt gebouwd.",
   "rondes": [
    {
@@ -244,6 +244,8 @@
    }
   ],
   "drempel": 6,
+  "ronde_sec": 8,
+  "timeout_reactie": "Ze typt al door. Je hebt niks gezegd.",
   "success": "Elf punten zijn drie concrete requirements geworden. Mevrouw P. Aardenmens voelt zich gehoord en jij hebt iets om te bouwen. Beide waar, tegelijk.",
   "failure": "Het gesprek is heel gezellig geweest. Er is niets besloten. Willem schrijft er zelf drie requirements bij elkaar. Geen daarvan is wat ze bedoelde, en jij bouwt ze toch."
  },
@@ -381,8 +383,9 @@
     "database"
    ]
   ],
+  "fout_reactie": "Vonk. Het rack herstart. Dat was hem niet.",
   "success": "De webshop praat weer met de database. Er staan echte prijzen op de pagina. Jonathan zegt dat het lokaal al werkte, en dat is ook waar.",
-  "failure": "Je hebt de webshop rechtstreeks aan de Excel van de klant geknoopt. Het werkt. Dat is precies het probleem, en niemand haalt de kabel er nog uit."
+  "failure": "De webshop praat weer met de database. Er hangt nu ook een kabel naar de Excel van de klant, en die haalt niemand er nog uit."
  },
  "mg_cro": {
   "type": "heatmap",

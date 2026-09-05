@@ -2,11 +2,11 @@ class_name Juice
 extends RefCounted
 ## Impactframes voor het hele spel.
 ##
-## Vier primitieven die iets tastbaar maken: de camera die even schokt, een
-## wolkje post-it-snippers, een knop die indeukt onder je duim en een paneel
-## dat vanaf de rand het beeld in glijdt. Ze staan bij elkaar zodat "een tik"
-## overal even hard aankomt — dezelfde reden waarom de duurwaarden van
-## `Haptiek` op één plek staan.
+## Vijf primitieven die iets tastbaar maken: de camera die even schokt, een
+## flits over het hele scherm, een wolkje post-it-snippers, een knop die
+## indeukt onder je duim en een paneel dat vanaf de rand het beeld in glijdt.
+## Ze staan bij elkaar zodat "een tik" overal even hard aankomt — dezelfde
+## reden waarom de duurwaarden van `Haptiek` op één plek staan.
 ##
 ## Alles is `static`: er is geen node om te plaatsen en geen toestand om bij te
 ## houden. Wie een schok wil, roept `Juice.schok()` aan; de camera meldt zich
@@ -29,6 +29,35 @@ static func schok(px: float = 2.0, duur: float = 0.25) -> void:
 	var cam := boom.get_first_node_in_group(&"game_camera")
 	if cam != null and cam.has_method(&"schok"):
 		cam.call(&"schok", px, duur)
+
+
+## Een korte gekleurde flits over het hele scherm.
+##
+## De tegenhanger van `schok()` voor iets dat misgaat waar je niet op kunt
+## reageren: een verkeerde kabel in het serverrack (BBD-205). Bewust kort en
+## halfdoorzichtig — het kantoor blijft eronder staan, want dit is een tik en
+## geen schermovergang.
+##
+## Eigen `CanvasLayer` boven alles (de dialoogbox zit op 20), en die ruimt
+## zichzelf op zodra de tween klaar is. Zonder scenetree gebeurt er stil niets,
+## net als bij `schok()`.
+static func flits(kleur: Color = UiKit.ROOD, alpha: float = 0.35,
+		duur: float = 0.15) -> void:
+	var boom := Engine.get_main_loop() as SceneTree
+	if boom == null or boom.root == null:
+		return
+	var laag := CanvasLayer.new()
+	laag.layer = 90
+	var vlak := UiKit.dimmer(alpha)
+	vlak.color = Color(kleur.r, kleur.g, kleur.b, alpha)
+	# Niet STOP: een flits mag geen tik opeten die de speler op de dialoogbox
+	# eronder bedoelde.
+	vlak.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	laag.add_child(vlak)
+	boom.root.add_child(laag)
+	var tw := laag.create_tween()
+	tw.tween_property(vlak, "modulate:a", 0.0, duur)
+	tw.finished.connect(laag.queue_free)
 
 
 ## Een wolkje post-it-snippers vanaf `positie` (canvascoördinaten), als kind

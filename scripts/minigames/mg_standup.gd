@@ -474,21 +474,13 @@ const _PULS_SNELHEID := 9.0
 func _werk_balk_bij() -> void:
 	var deel := clampf(_tijd / maxf(0.001, _tijd_max), 0.0, 1.0)
 	_balk.anchor_right = deel
-	_balk.color = _tijdkleur(deel)
+	_balk.color = UiKit.tijdkleur(deel)
 	# Een knipperende balk in de laatste seconden: "steeds roder" moet je
 	# voelen aankomen, niet pas zien als de kleur al omgeslagen is.
 	if deel <= _PULS_DREMPEL:
 		_balk.modulate.a = lerpf(0.55, 1.0, (sin(_puls_t * _PULS_SNELHEID) + 1.0) * 0.5)
 	else:
 		_balk.modulate.a = 1.0
-
-
-## Vloeiend van groen via oranje naar rood, in plaats van drie harde banden:
-## de urgentie loopt continu op in plaats van in twee sprongen te springen.
-static func _tijdkleur(deel: float) -> Color:
-	if deel >= 0.5:
-		return UiKit.GROEN.lerp(UiKit.ORANJE, (1.0 - deel) / 0.5)
-	return UiKit.ORANJE.lerp(UiKit.ROOD, (0.5 - deel) / 0.5)
 
 
 func _werk_status_bij() -> void:
