@@ -2,7 +2,7 @@
 
 Gesprekscontent voor alle characters, georganiseerd per scène. Formaat volgt de JSON node-graph structuur van het spel: elke sectie toont de scène als leesbaar script plus notities over character-specifieke varianten.
 
-Dit document is gegenereerd vanuit de daadwerkelijke spelbestanden (`data/dialogue/npcs.json` en `data/dialogue/tickets.json`) en beschrijft wat er nu daadwerkelijk in het spel staat.
+Dit document is gegenereerd vanuit de daadwerkelijke spelbestanden (`data/dialogue/npcs.json`, `data/dialogue/tickets.json` en `data/dialogue/wereld.json`) en beschrijft wat er nu daadwerkelijk in het spel staat.
 
 ---
 
@@ -18,6 +18,7 @@ Dit document is gegenereerd vanuit de daadwerkelijke spelbestanden (`data/dialog
 | **Koen** | Relaxed, gerust, enigszins mysterieus | "lekker ouwe", "piepelienies", "vgm" |
 | **Bastiaan** | Enthousiast, vergeet leestekens | ",," (dubbele komma als pauze/afsluiter) |
 | **Dennis** | Minimalistisch, scrum-neutraal | "-_-", "oke.", "alvast" |
+| **Dirk** | Beleefd, HR-toon, herhaalt getallen terug | "Alvast bedankt!", "Ik noteer het alleen." |
 
 ---
 
@@ -153,6 +154,53 @@ Bezorger: "Bestelling voor Bluebird Day. Van Manege De Vrije Teugel."
 Bezorger [t09 done]: "Mevrouw vroeg of de paarden goed zijn aangekomen. Ik heb gezegd van wel."
 Bezorger [default]: "Ze zei: geef maar aan degene die de website doet. Dus veel succes met uitzoeken."
 ```
+
+---
+
+### Dirk *(HR, verschijnt na 5 opgeloste tickets)*
+
+**Context:** Dirk Schrijver loopt zijn eigen route door de gang en vraagt naar
+je urenstaat. Zijn gesprek (`dirk`) is de gewone route via `dialogue_id`; een
+tweede boom (`dirk_urenstaat`) wordt nooit gewandeld — die staat er alleen
+zodat zijn stem in de data zit voor `_test_karakterstemmen()` en om zijn
+slotregel na de urenstaat-minigame te leveren. `ticket_controller.gd::
+_dirk_oordeel()` kiest die regel op de payload van de minigame (`op_rest`,
+`lege_tickets`), niet op een `Conditions`-vlag — een node kiezen op een getal
+in plaats van op een flag.
+
+```
+Dirk start [uren_geboekt]:  "Hoi {naam}, ik zie dat je vandaag {geboekt} hebt geboekt. Dank je!"
+Dirk start [overwerk]:      "Hoi {naam}, het is {klok}. Ik zie dat je nog aan het werk bent. Dat mag natuurlijk."
+Dirk start [default]:       "Hoi {naam}, even een klein seintje. Heb je even?"
+
+Dirk: [uren_geboekt + overwerk] "Er staat nu {geboekt} geboekt en je hebt {gewerkt} gewerkt. Dat verschil kan ik niet boeken. Ik laat het even zo."
+Dirk: [uren_geboekt]             "Mocht er later nog iets bij komen, dan vul je het gewoon aan."
+Dirk: [overwerk]                 "Er staat vandaag {geboekt} geboekt, terwijl de verwachting rond de {gewerkt} ligt. Je bent nu over je dag heen. Ik noteer het alleen."
+Dirk: [default]                  "Er staat vandaag tot nu toe {geboekt} geboekt, terwijl de verwachting rond de {gewerkt} ligt. Zou je je uren aanvullen als er nog wat mist?"
+
+Dirk: [uren_geboekt] "Fijn dat het compleet is. Alvast bedankt!"
+Dirk: [default]      "Ik probeer jullie zo goed mogelijk te helpen met de voortgang op projecten, en daarvoor helpt een complete urenregistratie enorm. Alvast bedankt!"
+
+→ [Keuze] "Goed, ik boek ze nu."
+     Dirk: "Top. Ik zet je urenstaat er even bij." [outcome: boeken]
+→ [Keuze] "Ik loop ergens tegenaan."
+     Dirk: "Dat snap ik. [...] Je kunt terecht bij mijn collega Dennis, die denkt graag met je mee."
+     Dirk: "Ik loop zelf ook nog even mee, voor het geval het je toch te binnen schiet." [outcome: doorgestuurd]
+→ [Keuze] "Ik heb even geen tijd."
+     Dirk: "Geen probleem hoor. Ik kom er later op terug."
+     Dirk: [overwerk] "Je bent trouwens {gewerkt} aan het werk. Zou je daar {budget} van willen boeken?"
+     Dirk: [default]  "Zou je het voor het einde van de dag doen? Dan hoef ik er niet nog een keer over te beginnen." [outcome: afgehouden]
+```
+
+Zijn terzijde (`data/npcs.json`, `barks`) geeft het toe: **"Ik ben een
+stockfoto. Mijn urenstaat is echt."** (`03f52e1`, na de playtestronde van
+4 september) — de enige NPC die zijn eigen kunstmatigheid benoemt.
+
+*Gespot tijdens deze doorloop, niet gefixt:* `data/npcs.json` geeft Dirk
+hetzelfde `role`-veld als Dennis ("Scrum Master"). Dirk is HR/urenstaat, geen
+tweede scrum master — vermoedelijk copy-paste. `NpcDef.role` wordt voor
+niet-speelbare NPC's nergens in de UI getoond (alleen `CharacterDef.role` op
+het personagekeuzescherm), dus dit is data-cosmetisch, geen speelbare bug.
 
 ---
 
@@ -324,6 +372,98 @@ Willem: "Heeft ze al gebeld?"
 
 → [Keuze] "Oke, ga door."
      [flag: willem_bezocht]
+```
+
+---
+
+## Wereld-dialogen (`data/dialogue/wereld.json`)
+
+19% van alle dialoog (68 nodes over 28 objecten) en tot nu toe het enige
+dialoogbestand dat in dit document ontbrak. Spreker is bijna overal `""`
+(de omgeving zelf, geen personage) — dit zijn de dingen die je aantikt in de
+wereld, los van een ticket of collega. Twee objecten laten de speler zelf aan
+het woord (`nooduitgang`, trait `proces`) of het personage van dat moment
+(geen ander object doet dat). Twintig van de 28 hebben maar één node: een
+observatie zonder keuze, die via `variants`/`when` meebeweegt met voortgang,
+tickets, trait of tijd. Vijf hebben een echte keuze (`nooduitgang`, `prikbord`,
+`koffiemachine`, `whiteboard`) — de rest observeert alleen.
+
+| Object | Nodes | Keuze? | Opent met |
+|---|---|---|---|
+| `voordeur` | 3 | nee | "De deur staat open. Buiten is het nog licht." |
+| `nooduitgang` | 4 | **ja** | "Nooduitgang. Op het bordje staat: alleen bij brand." |
+| `ticketbord` | 3 | nee | "Het ticketbord. Tien tickets, allemaal met BBD ervoor." |
+| `printer` | 2 | nee | "De printer meldt een storing. Welke storing staat er niet bij." |
+| `prijzenkast` | 2 | nee | "Een kast met vier prijzen. Twee ervan zijn van een bureau dat is overgenomen." |
+| `kapstok` | 2 | nee | "Vier jassen. Drie ervan hangen hier het hele jaar." |
+| `prikbord` | 4 | **ja** | "Een prikbord vol losse briefjes. Niemand weet meer welke nog geldig zijn." |
+| `scherm_entree` | 2 | nee | "Op het scherm rent een paard door een weiland. De lus duurt twaalf seconden." |
+| `koffiemachine` | 5 | **ja** | "De koffiemachine. Er zit een sticker op: niet de middelste knop." |
+| `koelkast` | 2 | nee | "In de koelkast staat melk met een naam erop. De naam is doorgestreept." |
+| `bureau_victor` | 2 | nee | "Twee schermen, precies even hoog afgesteld. Met een waterpas." |
+| `bureau_bastiaan` | 2 | nee | "Zes koffiebekers, netjes op een rij. Van links naar rechts steeds ouder." |
+| `bureau_danny` | 2 | nee | "Drie dashboards en één plant. De plant heeft geen dashboard." |
+| `loungehoek` | 2 | nee | "Twee banken en een lage tafel. Op tafel ligt een boek over merkstrategie." |
+| `beamer` | 2 | nee | "De beamer staat aan sinds de vorige vergadering." |
+| `whiteboard` | 4 | **ja** | "Op het whiteboard staan een pijl, een wolk en het woord 'later'." |
+| `serverrack_b` | 2 | nee | "Het tweede rack. Er hangt een label op: oud, niet uitzetten." |
+| `badgelezer` | 2 | nee | "De badgelezer bij het Patchhok. Groen lampje, dus vandaag doet hij het." |
+| `wc_poster` | 2 | nee | "Een poster naast de spiegel: elk idee begint met een goede vraag." |
+| `wastafel` | 2 | nee | "De kraan loopt drie seconden na. Elke keer precies drie." |
+| `plotter` | 2 | nee | "De grootformaatplotter. Aangeschaft voor één klant, in 2019." |
+| `gang_plant` | 2 | nee | "Een plant in de gang. Kunststof, en toch krijgt hij water." |
+| `plantenkast` | 3 | nee | "De plantenkast. Het speelgoedpaard staat er nog." |
+| `urinoirs` | 2 | nee | "Twee urinoirs en één pot, in een ruimte zo groot als een vergaderzaal." |
+| `tribune` | 2 | nee | "De tribune. Teal, met kussens die niemand rechtlegt." |
+| `blauwe_tijger` | 2 | nee | "Een blauwe tijger, levensgroot, midden in de gang." |
+| `samen_bingo_poster` | 2 | nee | "Op de houten zijde van het hokje hangt een poster: SAMEN BINGO." |
+| `hokje_telefoon` | 2 | nee | "Een vaste telefoon in het vergaderhokje. Er zit nog een snoer aan." |
+
+Twee volledig uitgeschreven, als voorbeeld van hoe de rest is opgebouwd:
+
+```
+### nooduitgang — tijdlek, gedicht in Fase 1 (kost_tijd: 15, ongated → één keer)
+
+start: "Nooduitgang. Op het bordje staat: alleen bij brand."
+→ [Keuze] "De deur opendoen." [flags_none: alarm_af]
+     "Het alarm gaat. Iedereen loopt naar buiten, ook de mensen van het bureau
+     hiernaast. Dennis telt ze. Er is geen brand, en dat moet ook geteld
+     worden." [kost_tijd: 15, toast: "Iedereen staat buiten. Vijftien minuten.",
+     flag: alarm_af]
+→ [Keuze] "Er niet aan komen."
+     [trait: proces] Speler: "Dit is geen brand. Dit is een sprint."
+     [default]        Speler: "Er staat niet bij wat je moet doen als het geen
+                       brand is."
+
+Herbezoek [alarm_af]: "De stang zit op borsthoogte. Er hangt nu een briefje op:
+NIET NOG EEN KEER. Dennis."
+Herbezoek [default]:  "De stang zit op borsthoogte. Er hangt geen slot op."
+```
+
+```
+### koffiemachine
+
+start: "De koffiemachine. Er zit een sticker op: niet de middelste knop."
+→ [Keuze] "De middelste knop indrukken." [flags_none: koffie_middelste]
+     "Er gebeurt drie seconden niets. Dan komt er koffie uit, gewoon koffie,
+     en een geluid dat een machine niet hoort te maken. De sticker hangt er
+     nog." [kost_tijd: 5, flag: koffie_middelste]
+→ [Keuze] "Gewoon een koffie halen." [flags_none: koffie_gehaald]
+     [kost_tijd: 5, flag: koffie_gehaald]
+→ [Keuze] "Niets nemen."
+
+Herbezoek [koffie_middelste]: "De middelste knop doet het gewoon. Je zegt er
+niets over."
+Herbezoek [koffie_gehaald]:   "Je hebt vandaag al koffie gehad. Dat weerhoudt
+niemand hier."
+Herbezoek [t07 done]:         "Uit de speaker komt de nieuwe merksound. Iemand
+heeft het volume alweer lager gezet."
+Herbezoek [≥3 tickets]:       "Er staat een schaal koeken naast. Briefje van
+Dennis: omdat ik gisteren weer een jaartje ouder ben geworden."
+Herbezoek [trait: detail]:    "Nergens staat waarom niet. Dat is erger dan de
+knop zelf."
+Herbezoek [default]:          "Je drukt de tweede knop. Er komt soep uit. Dat
+is bekend."
 ```
 
 ---
