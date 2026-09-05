@@ -126,6 +126,24 @@ Daans opt-in; die kosten het meest.
 
 8. **Eén eigen ticket per personage** (BBD-202 en BBD-207 zijn van iedereen,
    briefer-veld); de oplevering kost 60 min (`kosten_min`).
+9. **Audit 5 september** (`docs/AUDIT-2026-09-05.md`, deel 1 en 2, met
+   deelrapporten in `docs/audit-2026-09-05/`) en de fixes uit deel 1: de
+   stemtest eist nu echt kleine letters van Danny en Bastiaan, de intro zegt
+   bij hoeveel tickets je live mag, Daan of Dennis zegt hardop dat acht uur
+   nooit gehaald wordt, Dennis waarschuwt vóór de deploy over open tickets
+   (`open_tickets_min`), "overslaan »" is raakbaar, `mg_scope`/`mg_whack`
+   nemen touch, de collega-hint noemt de locatie.
+10. **Minigames P1/P2**: het WAT/WAAROM-kaartje alleen nog voor de finale, de
+    uitleg als vervagende overlay ín het veld, briefings ≤ 25 en intro's
+    ≤ 18 woorden (test), de eindbanner in de footer met confetti of schok,
+    `boot.gd` herhaalt `qa_solve()` zodat `--minigame=mg_cro --autoplay`
+    eerlijk slaagt. Branch `claude/godot-master-game-audit-bfb1b5`, worktree
+    `10-tickets-vrijheid-handover-079cbc`, niet gemerged of gepusht.
+
+**Open uit de audit, keuze van Daan vóór iemand bouwt:** P3 (klok in scope,
+uitlijnen en A tegen B), P4 (de drie tickets zonder spel: 203, 205, 209), P5
+(finale-brandjes, is Fase 5 hieronder), en bevinding 5 en 7 (klantbericht k1
+maakt de keten 204→207 dood; k4 ontgrendelt een ticket dat al open is).
 
 Bewijs in `docs/audit-shots/`: `licht_*.png`, `resp_*.png`, `f2_*.png`,
 `f3_heatmap.png`, `f4_uitleg.png`, `f5_merge_wereld.png`, `praat_dirk.png`.
