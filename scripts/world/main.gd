@@ -106,7 +106,9 @@ func _ready() -> void:
 	var telefoon := Telefoon.new()
 	telefoon.name = "Telefoon"
 	add_child(telefoon)
-	telefoon.setup()
+	# De ticketstroom gaat mee: De Klant mag zich niet melden terwijl een ticket
+	# nog aan het afronden is. Zie `Telefoon._process()`.
+	telefoon.setup(tickets)
 
 	# De besturing hangt naast de HUD in plaats van erin: de knoppenbalk drukt
 	# alleen de gewone acties in, dus hij hoort niet bij het schermbeeld.
@@ -280,6 +282,7 @@ func _doel_node() -> Node2D:
 		if waar != null:
 			return waar
 
+
 	return registry.get_by_id(t.anchor)
 
 
@@ -380,10 +383,20 @@ func _kompas_bijwerken() -> void:
 ## dat de begroeting uit is.
 const DENNIS_WACHTPLEK := Vector2i(4, 17)
 
-## Hoe lang de speler onderweg naar het bord mag zijn voor beat 3 opgeeft. Ruim
-## boven wat lopen ooit kost — dit is geen tijdsdruk, alleen een noodrem tegen
-## een NPC die eeuwig blijft volgen als er ooit iets misgaat met de aankomst.
-const DENNIS_WACHT_TIMEOUT := 120.0
+## Noodrem op de wandeling naar het bord. Hij hangt niet meer aan de speler —
+## Dennis loopt zijn eigen uitgerekende route — maar een cutscene die op een
+## `aangekomen` blijft wachten die nooit valt, is een spel dat niet meer start.
+const DENNIS_WANDEL_TIMEOUT := 25.0
+
+## Waar Dennis de wandeling beëindigt: naast het scrumbord, niet erin.
+const BORD_TEGEL := Vector2i(12, 23)
+
+## Hoe lang een briefje op het bord blijft hangen voor het volgende komt, en
+## hoe lang het bord daarna nog openstaat. Stond op 0,9 en 0,5: dat is de
+## snelheid van een overgang, niet van iets dat je moet kunnen lezen. Dit is de
+## enige keer dat het spel je laat zien wát een ticket is.
+const BEAT_BRIEFJE := 1.6
+const BEAT_BORD_NA := 1.4
 
 
 ## Elke ochtend, voor elk van de zeven personages. Twee dingen maken dat waar:
@@ -441,10 +454,18 @@ func _intro_beat() -> void:
 					+ "morgen live gaan, dus dat gaan we. Verder heb ik niks nodig.",
 					&"dennis")
 
-	# Beat 2 — Dennis komt je halen. Hij staat al ergens op De Werkvloer te
-	# patrouilleren (`data/npcs.json`); voor de duur van de intro zet deze
-	# beat hem bij de voordeur en laat hem meelopen, net als elke andere
-	# collega die je onderweg ophaalt (`Npc.start_following()`).
+	# Beat 2 — Dennis neemt je mee. Hij staat al ergens op De Werkvloer te
+	# patrouilleren (`data/npcs.json`); voor de duur van de intro zet deze beat
+	# hem bij de voordeur.
+	#
+	# **Hij loopt voorop, jij komt erachteraan.** Hiervoor zei hij "Kom, ik loop
+	# met je mee naar het bord" en riep de beat daarna `start_following(player)`
+	# aan: Dennis sjokte achter je aan terwijl jij zelf mocht uitzoeken waar dat
+	# bord dan wel stond. Dat is precies het omgekeerde van wat die zin belooft,
+	# en het is de eerste minuut van het spel. Nu is dit een cutscene: de invoer
+	# gaat op slot, Dennis loopt zijn eigen route (`Npc.loop_naar()`, over
+	# `WorldBuilder.pad()`, want tussen de entree en het bord staat een muur op
+	# x9) en `player.volg()` brengt je achter hem aan.
 	var dennis := npc_layer.find_npc(&"dennis")
 	if dennis != null:
 		dennis.global_position = builder.tile_to_world(builder.nearest_walkable(DENNIS_WACHTPLEK))
@@ -452,21 +473,16 @@ func _intro_beat() -> void:
 		if begroeting_def != null:
 			await dialogue.say(begroeting_def.name,
 					"Kom, ik loop met je mee naar het bord.", &"dennis")
-		dennis.start_following(player)
 
-		# Beat 3 — de tocht naar het bord. De besturing blijft vrij: t02
-		# (BBD-202) staat al open en is Daans eigen ticket, dus de wijzer wijst
-		# al naar het scrumbord voordat deze beat begint (`_doel_node()`) —
-		# Dennis is gezelschap, geen gids. Aankomst hangt aan de speler, niet
-		# aan een timer.
-		var bij_het_bord := func() -> bool:
-			var doel := GameData.object_tile(&"scrumbord_gang")
-			if doel.x < 0 or Session.player_tile.x < 0:
-				return false
-			return absi(doel.x - Session.player_tile.x) \
-					+ absi(doel.y - Session.player_tile.y) <= 3
-		await _qa_wacht_tot(bij_het_bord, DENNIS_WACHT_TIMEOUT)
-		dennis.stop_following(true)
+		# Beat 3 — de tocht naar het bord.
+		Session.lock_input()
+		player.volg(dennis)
+		dennis.loop_naar(builder.tile_to_world(builder.nearest_walkable(BORD_TEGEL)),
+				Npc.LEID_SPEED)
+		await _qa_wacht_tot(func() -> bool: return not dennis.onderweg(),
+				DENNIS_WANDEL_TIMEOUT)
+		player.stop_volgen()
+		Session.unlock_input()
 
 	# Discovery is niet langer uitgesteld. Wat de tocht naar het bord aan
 	# zone-vondsten opleverde (bijvoorbeeld BBD-204, gewoon door over De
@@ -485,12 +501,29 @@ func _intro_beat() -> void:
 	# `Scrumbord.laat_briefje_landen()` alsnog `toon_detail()` aan, dus er komt
 	# geen dialoogbox over het bord heen te staan.
 	Session.lock_input()
+
+	# Eerst wát het is. Dit ontbrak: het bord ging open, er landden twee
+	# briefjes op, en nergens stond dat dit de plek is waar je kiest wat je
+	# oppakt. Wie het niet herkent ziet een scherm dat vanzelf dingen doet.
+	var bord_def: NpcDef = GameData.npc(&"dennis")
+	if bord_def != null:
+		await dialogue.say(bord_def.name,
+				"Dit is het bord. Alles wat vandaag moet, hangt hier.", &"dennis")
+		# Waar je terugkomt, en dat is sinds de ▤-knop weg is de enige plek in de
+		# wereld die dit scherm opent. Wie dat niet te horen krijgt, weet niet
+		# dat hij ergens naartoe kan om te kiezen.
+		await dialogue.say(bord_def.name,
+				"Kom hier terug als je niet weet wat je moet doen. "
+				+ "Wat je oppakt schuif je naar Doing, wat af is naar Done.",
+				&"dennis")
+
 	hud.zet_bord(true)
+	await get_tree().create_timer(BEAT_BORD_NA, true, false, true).timeout
 	for id: StringName in [&"t01", &"t02"]:
 		if Session.discover(id):
 			hud.laat_landen(GameData.ticket(id))
-			await get_tree().create_timer(0.9, true, false, true).timeout
-	await get_tree().create_timer(0.5, true, false, true).timeout
+			await get_tree().create_timer(BEAT_BRIEFJE, true, false, true).timeout
+	await get_tree().create_timer(BEAT_BORD_NA, true, false, true).timeout
 	hud.zet_bord(false)
 	Session.unlock_input()
 
@@ -507,12 +540,10 @@ func _intro_beat() -> void:
 					"Kies er een op het bord. Wat je vastzet, blijft bovenaan staan.",
 					&"dennis")
 
-	# Alleen bij een nieuwe dag. Wie "Doorgaan" heeft gekozen weet al hoe hij
-	# loopt, en een modaal venster dat je bij elke hervatting opnieuw moet
-	# wegklikken is een tolpoort. `Session.hervat` en niet `done_count()`: wie
-	# opnieuw laadt vóór zijn eerste opgeloste ticket staat ook op nul.
-	if not Session.hervat:
-		hud.show_controls_card()
+	# Hier stond `hud.show_controls_card()`. De besturingsuitleg is nu een eigen
+	# scherm tussen de personagekeuze en het spel (`BesturingUitleg`): uitleg
+	# over hoe je loopt hoort niet te komen nadat je al zes dialoogregels lang
+	# hebt lopen lopen. De kaart bestaat nog als naslag achter F1 en `--kaart`.
 
 
 ## QA: `-- --speler=x --kijk=<x>,<y>` zet de speler op die tegel en kijkt verder
@@ -769,6 +800,9 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 		camera.reset_smoothing()
 		await get_tree().create_timer(0.3).timeout
 		await _qa_dialoog_vrij()
+		if paard.interactable == null:
+			printerr("[SPEELBEURT] %s: de paardenbug heeft geen Interactable" % t.code)
+			return false
 		_interact_with(paard.interactable)
 	else:
 		var wo := registry.get_by_id(t.anchor)
@@ -783,6 +817,13 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 		await _qa_dialoog_vrij()
 
 		var it := wo.get_node_or_null("Interactable") as Interactable
+		# Nullcheck zoals bij het zusteraanroeppunt in `_qa_auto()`:
+		# `_interact_with()` leest meteen `it.world_id`, dus een anker zonder
+		# Interactable liet de speelbeurt hier crashen in plaats van netjes
+		# melden welk object stuk is.
+		if it == null:
+			printerr("[SPEELBEURT] %s: anker '%s' heeft geen Interactable" % [t.code, t.anchor])
+			return false
 		_interact_with(it)
 
 	if not await _qa_wacht_tot(func() -> bool: return Session.is_done(tid), 90.0):
@@ -866,13 +907,20 @@ func _interact_with(it: Interactable) -> void:
 		it.markeer_getikt()
 	match it.kind:
 		Interactable.Kind.TICKET:
-			# Het scrumbord draagt `action: "board"` én een ticket. Zolang t02
-			# openstaat is dit gewoon een ticket-object; is dat opgelost, dan
-			# zou `tickets.handle()` hier de "opgelost, niet aanzitten"-regel
-			# afspelen (`_handle_inner()` bij `Session.is_done()`), en dat is
-			# voor hét bord een doodlopend antwoord. Val dan terug op
-			# `_examine()`, precies zoals elk ander `action: "board"`-object.
-			if it.action == &"board" and it.ticket_here() == null:
+			# Een ticketanker dat ook iets ánders is, moet dat andere blijven
+			# doen zodra er hier geen werk meer ligt. Anders antwoordt
+			# `tickets.handle()` met "opgelost, niet aanzitten"
+			# (`_handle_inner()` bij `Session.is_done()`) en is de tweede
+			# functie van het object voorgoed weg.
+			#
+			# Dit stond op `it.action == &"board"` alleen, voor het scrumbord.
+			# Sinds de stand-up naar de tribune verhuisde is er een tweede
+			# gedaante: een anker met een eigen flavourdialoog. Zonder de
+			# tweede tak zou de tribune na BBD-202 niets meer over de
+			# DIA-awards en de Jura zeggen, en dat is de enige reden dat dat
+			# object er stond.
+			if it.ticket_here() == null \
+					and (it.action == &"board" or it.dialogue_id != &""):
 				_examine(it)
 			else:
 				tickets.handle(it.ticket_id, it)

@@ -33,6 +33,7 @@ SCHERMEN = {
     "titel":   (2.0, []),
     "uitleg":  (1.5, ["--scherm=uitleg"]),
     "select":  (2.0, ["--scherm=select"]),
+    "besturing": (1.5, ["--scherm=besturing"]),
     "wereld":  (7.0, ["--speler=daan"]),
     # `--kijk=` laat `_intro_beat()` vroeg terugkeren. Zonder dat vechten twee
     # openers om hetzelfde bord: `_qa_bord()` opent het op 0,5 s en de

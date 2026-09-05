@@ -104,9 +104,13 @@ var _paard_tween: Tween = null
 var _punt_tween: Tween = null
 var _schuif_tween: Tween = null
 
+## De ticketstroom, om te weten of de vloer echt stil is. Zie `_process()`.
+var _tickets: TicketController = null
 
-func setup() -> void:
+
+func setup(tickets: TicketController = null) -> void:
 	layer = LAAG
+	_tickets = tickets
 	_laad()
 	_bouw()
 	Bus.ticket_completed.connect(_op_ticket)
@@ -302,7 +306,17 @@ func _op_ticket(_id: StringName, _result: MinigameResult) -> void:
 ## De melding komt niet meteen. Een ticket afronden loopt door een urenrol en
 ## een afsluitende dialoog, en daar bovenop vallen is precies het moment waarop
 ## een speler op de verkeerde knop drukt. Dus wachten we tot de vloer weer stil
-## is: geen gesprek, geen minigame, geen invoerslot.
+## is: geen gesprek, geen minigame, geen invoerslot, geen lopende ticketstroom.
+##
+## Die laatste voorwaarde ontbrak, en daarmee dekten de andere drie de bedoeling
+## hierboven niet. `TicketController._handle_inner()` doet ná de minigame nog
+## `QuestEngine.complete()`, `await Hud.toon_urenrol()` en pas dán de
+## `complete`-dialoog — en `toon_urenrol()` zet geen invoerslot. In dat gat is
+## `input_locked` false en `minigame_active()` false, dus precies daar sprong de
+## melding ertussen: over de afsluitende regel van je collega heen, bij het
+## eerste opgeloste ticket van de dag (`Gevolgen.DREMPELS[0] == 1`). Je hoorde
+## dan niet meer wat er gezegd werd. `TicketController.bezig()` dekt de hele
+## stroom van interactie tot afsluitende dialoog en bestond al.
 ##
 ## `Shell.minigame_active()` staat er sinds F5-a expliciet bij in plaats van
 ## impliciet mee te liften op `Session.input_locked`: `Shell.run_minigame()`
@@ -314,6 +328,8 @@ func _process(_delta: float) -> void:
 	if _wachtrij.is_empty() or _open:
 		return
 	if Session.input_locked or get_tree().paused or Shell.minigame_active():
+		return
+	if _tickets != null and _tickets.bezig():
 		return
 	_toon(_wachtrij.pop_front())
 

@@ -142,7 +142,7 @@ minigame is een JSON-config, geen eigen codebase.
 | Mechaniek | Gebruikt door |
 |---|---|
 | `mg_scope` | BBD-201 |
-| `mg_standup` | BBD-202 |
+| `mg_planning` (scene `mg_standup.tscn`) | BBD-202 |
 | `mg_choicescene` | BBD-203 |
 | `mg_uitlijnen` | BBD-204 |
 | `mg_cableboard` | BBD-205 |

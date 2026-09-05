@@ -483,20 +483,6 @@
    }
   }
  },
- "lunchtafel": {
-  "start": "start",
-  "nodes": {
-   "start": {
-    "speaker": "",
-    "text": "De lunchtafel. Om twaalf uur zit hier iedereen, om vijf over twaalf niemand.",
-    "next": "tweede"
-   },
-   "tweede": {
-    "speaker": "",
-    "text": "Op tafel staat een pot pindakaas zonder deksel. Het deksel is nooit teruggevonden."
-   }
-  }
- },
  "bureau_victor": {
   "start": "start",
   "nodes": {
@@ -924,32 +910,6 @@
    "tweede": {
     "speaker": "",
     "text": "In de pot ligt een lepel. Daar is geen verklaring voor."
-   }
-  }
- },
- "muurschildering": {
-  "start": "start",
-  "nodes": {
-   "start": {
-    "speaker": "",
-    "text": "Een muurschildering: een blauwe vogel boven een stad. Gemaakt door iemand van het eerste uur.",
-    "next": "tweede"
-   },
-   "tweede": {
-    "speaker": "",
-    "variants": [
-     {
-      "when": {
-       "flags_all": [
-        "alle_tickets_klaar"
-       ]
-      },
-      "text": "De vogel vliegt richting de voordeur. Dat was je nooit eerder opgevallen."
-     },
-     {
-      "text": "De vogel vliegt richting de vergaderruimte. Daar is destijds over vergaderd."
-     }
-    ]
    }
   }
  },

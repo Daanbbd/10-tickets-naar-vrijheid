@@ -29,7 +29,7 @@
   {
    "op": "set_text",
    "target": "whiteboard_vergader",
-   "value": "Als paardenbezitter wil ik supplementen vergelijken zodat ik het juiste product kies."
+   "value": "Als paardenbezitter wil ik supplementen vergelijken."
   },
   {
    "op": "camera_focus",

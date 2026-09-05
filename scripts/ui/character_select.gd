@@ -417,7 +417,8 @@ func _start() -> void:
 	Haptiek.tril(Haptiek.Sterkte.STOOT)
 	AudioDirector.play_ui(&"klik")
 	QuestEngine.start_run(_ids[_index])
-	Shell.goto_game()
+	# Eerst hoe je het bestuurt, dan pas het spel. Zie `BesturingUitleg`.
+	Shell.goto_besturing()
 
 
 func _process(delta: float) -> void:

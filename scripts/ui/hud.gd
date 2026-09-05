@@ -160,6 +160,13 @@ var _root: Control = null
 var _besturing: Besturing = null
 var _bovenbalk: HBoxContainer = null
 var _teller_chip: PanelContainer = null
+## Het aantal tickets dat je nog niet op het bord hebt bekeken, als rondje op de
+## tellerchip. Hing hiervoor op de ▤-knop in de knoppenbalk; die knop is weg,
+## omdat het bord in de wereld hetzelfde scherm opent en de vloer klein genoeg
+## is om ernaartoe te lopen. De teller draagt het ▤-teken toch al, dus dit is de
+## plek waar "er ligt nieuw werk" hoort te staan.
+var _badge: Label = null
+var _badge_tween: Tween = null
 var _klok_chip: PanelContainer = null
 var _objective: PanelContainer
 var _objective_label: Label
@@ -320,6 +327,7 @@ func _bouw_bovenstapel(veilig: Control) -> void:
 	UiKit.full_rect(teller_knop)
 	teller_knop.pressed.connect(toggle_objective)
 	_teller_chip.add_child(teller_knop)
+	_bouw_badge(_counter)
 
 	# --- kompasstrip, tussen de chips in, zonder paneel ---
 	# De strip is niets dan lijntjes, dus hij heeft geen ondergrond nodig om op
@@ -523,22 +531,12 @@ func _build_card(root: Control) -> void:
 ## wél is: `DisplayServer.is_touchscreen_available()` weet dat. De regel blijft
 ## overeind waar hij hoort — in `IntroUitleg` en in alle dialoog, die op beide
 ## apparaten dezelfde tekst tonen.
+## Sinds de uitleg een eigen scherm vóór de start is (`BesturingUitleg`) staat
+## de tekst daar en niet meer hier. Deze kaart is wat ervan overblijft in het
+## spel zelf: naslag achter F1 en `--kaart`. Twee kopieën van dezelfde vijf
+## regels zouden uit elkaar lopen zodra er één toets bij komt.
 static func kaartregels() -> Array[String]:
-	if DisplayServer.is_touchscreen_available():
-		return [
-			"Duim rechts     lopen",
-			"Ver uitduwen    rennen",
-			"Tik op object   interactie",
-			"▤ ticketbord    ? hint",
-			"☰ pauze, volume, stoppen",
-		]
-	return [
-		"WASD of pijltjes  lopen",
-		"Shift             rennen",
-		"E                 interactie",
-		"Tab ticketbord    Q hint",
-		"Esc of ☰  pauze, volume, stoppen",
-	]
+	return BesturingUitleg.regels()
 
 
 ## Zet de uitleg in beeld. Blijft staan tot de speler hem wegklikt.
@@ -717,8 +715,7 @@ func toon_ticket_melding(t: TicketDef, van: String, extra: int = 0) -> void:
 	tw.tween_callback(func() -> void:
 		kaart.queue_free()
 		AudioDirector.play_ui(&"klik")
-		if _besturing != null:
-			_besturing.pols_bord_knop())
+		_pols_teller())
 	await tw.finished
 
 
@@ -745,29 +742,34 @@ func _meldingsplek(maat: Vector2) -> Vector2:
 	return Vector2(floorf((vp.x - maat.x) * 0.5), floorf(y))
 
 
-## Het midden van de ▤-knop, omgerekend naar de linkerbovenhoek van het briefje.
+## Het midden van de tellerchip, omgerekend naar de linkerbovenhoek van het
+## briefje.
 ##
-## De knop leeft in `Besturing` (laag 9) en dit briefje in de HUD (laag 10),
-## maar beide lagen rekenen in hetzelfde canvas van 192x416 — een globale rect
-## uit de ene laag is dus direct bruikbaar in de andere. Zonder besturing (de
-## testsuite bouwt de HUD los) valt hij terug op de linkeronderhoek, waar die
-## knop staat.
+## Dit was het midden van de ▤-knop in de knoppenbalk (laag 9). Die knop bestaat
+## niet meer, en de landingsplek is mee verhuisd naar de teller linksboven — het
+## enige andere ding in beeld dat ▤ draagt en dat je aan kunt tikken. Zonder
+## chip (de testsuite bouwt de HUD los) valt hij terug op de linkerbovenhoek,
+## waar die chip staat.
 func _bordknop_midden(maat: Vector2) -> Vector2:
-	var vp := get_viewport().get_visible_rect().size
-	var midden := Vector2(MARGE + 17.0, vp.y - MARGE - 17.0)
-	if _besturing != null:
-		var r := _besturing.bord_knop_rect()
+	var midden := Vector2(MARGE + 17.0, MARGE + 9.0)
+	if _teller_chip != null:
+		var r := _teller_chip.get_global_rect()
 		if r.size.x > 0.0:
 			midden = r.get_center()
 	return midden - maat * 0.5
 
 
-## De badge op ▤ bijwerken. Eén plek, want vier dingen veranderen het aantal:
+## De badge bijwerken. Eén plek, want vier dingen veranderen het aantal:
 ## een vondst, een werving, het bord openen, en een storing die een ticket
 ## teruggeeft.
 func _bijwerk_badge() -> void:
-	if _besturing != null:
-		_besturing.zet_ongelezen(QuestEngine.ongelezen_count())
+	if _badge == null:
+		return
+	var aantal := QuestEngine.ongelezen_count()
+	_badge.visible = aantal > 0
+	# Boven de negen wordt het cijfer breder dan het rondje, en tien ongelezen
+	# tickets zeggen niets anders dan negen: ga kijken.
+	_badge.text = str(aantal) if aantal <= 9 else "9+"
 
 
 # --- De urenstaat ---------------------------------------------------------
@@ -1165,13 +1167,28 @@ func _on_toast(text: String, icon: StringName) -> void:
 	tw.tween_callback(p.queue_free)
 
 
-## De hint blijft staan tot je hem weglegt, precies zoals de telefoon dat doet.
+## Hoe lang een hint blijft staan: naar leeslengte, met een bodem en een plafond.
 ##
-## De langste hint is die van BBD-210: 184 tekens, die op dit canvas over zes
-## regels vallen. Die stond 2,6 seconden in beeld — zeventig tekens per seconde,
-## ongeveer drie keer zo snel als iemand kan lezen. En hij verscheen op het
-## moment dat je vastzat, dus precies wanneer je hem het rustigst wilt lezen.
+## Dit heeft twee keer de verkeerde kant op gestaan. Eerst 2,6 seconden vast,
+## net als een gewone toast: de langste hint (BBD-210, 184 tekens, zes regels op
+## dit canvas) kreeg daarmee zeventig tekens per seconde, ongeveer drie keer zo
+## snel als iemand kan lezen. Toen: blijven staan tot je hem wegtikt. Dat is de
+## andere fout — het briefje beslaat op 192x416 een derde van het beeld, en wie
+## doorloopt zonder te tikken speelt de rest van de scène achter een grijs vlak.
 ##
+## Nu volgt de tijd de tekst. Zestien tekens per seconde is rustig lezen; de
+## bodem vangt een hint van vier woorden, het plafond zorgt dat het langste
+## briefje ook een keer weggaat als je hem laat staan. Wegtikken kan nog steeds,
+## en dat blijft de snelle route.
+const HINT_PER_TEKEN := 1.0 / 16.0
+const HINT_MIN := 3.5
+const HINT_MAX := 9.0
+
+
+static func hint_duur(text: String) -> float:
+	return clampf(text.length() * HINT_PER_TEKEN, HINT_MIN, HINT_MAX)
+
+
 ## Anders dan de telefoon zet dit briefje de invoer níet op slot: de telefoon
 ## onderbreekt je dag, de hint helpt je erdoorheen. Je moet ermee kunnen
 ## doorlopen. Daarom vangt het paneel zijn eigen tik op in plaats van elke tik
@@ -1205,6 +1222,16 @@ func _toon_hint(text: String) -> void:
 	_toasts.move_child(p, 0)
 	_hint_briefje = p
 
+	# Aan de tree en niet aan het paneel: `_leg_hint_weg()` doet `queue_free()`,
+	# en een tween die aan een vrijgegeven node hangt klaagt op de frame erna.
+	var tw := get_tree().create_tween()
+	tw.tween_interval(hint_duur(text))
+	tw.tween_callback(func() -> void:
+		# Alleen als dit nog steeds hetzelfde briefje is: een tweede Q vervangt
+		# het paneel, en dan hoort deze tijd bij een briefje dat er niet meer is.
+		if _hint_briefje == p:
+			_verberg_hint(p))
+
 
 func _leg_hint_weg() -> void:
 	if _hint_briefje == null:
@@ -1213,6 +1240,17 @@ func _leg_hint_weg() -> void:
 		AudioDirector.play_ui(&"klik")
 		_hint_briefje.queue_free()
 	_hint_briefje = null
+
+
+## Uitgelezen in plaats van weggetikt: wél faden, géén klik. Dat geluid is de
+## bevestiging van een tik, en er is niet getikt.
+func _verberg_hint(p: PanelContainer) -> void:
+	_hint_briefje = null
+	if not is_instance_valid(p):
+		return
+	var tw := get_tree().create_tween()
+	tw.tween_property(p, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(p.queue_free)
 
 
 ## Kill-before-recreate: langs een deuropening lopen hertriggert zone_entered op
@@ -1247,6 +1285,52 @@ func _on_hint() -> void:
 	# drie keer: "BBD-201 — Summit. Haal Daan uit Summit. Op de tafel in Summit:
 	# ...". De hinttekst wijst de plek al aan; dat is waar hij voor is.
 	Bus.toast_requested.emit("%s. %s %s" % [t.code, _wie(t) + ".", t.hint], &"hint")
+
+
+## Een gevuld rondje rechtsboven op de teller: de enige plek in de bovenbalk met
+## een vulling, dus hij trekt de aandacht zonder een nieuwe kleur te
+## introduceren.
+##
+## Kind van het Label en niet van de `PanelContainer` eromheen. Dat is geen
+## detail: een PanelContainer is een Container en legt zijn kinderen zelf neer,
+## ankers en offsets genegeerd. Als kind van de chip vulde deze badge dus de
+## hele chip en dekte hij de teller af — je zag een blauwe balk met "1" erin
+## waar "▤ 4/10" hoorde te staan. Een Label is geen Container, dus daar doen de
+## ankers wél wat ze zeggen. Dezelfde reden dat dit vroeger aan de ▤-knop hing.
+func _bouw_badge(chip: Control) -> void:
+	_badge = UiKit.label("", UiKit.FS_SMALL, UiKit.INK)
+	_badge.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_badge.visible = false
+	var vulling := StyleBoxFlat.new()
+	vulling.bg_color = UiKit.BLUEBIRD_BRIGHT
+	vulling.set_corner_radius_all(4)
+	_badge.add_theme_stylebox_override("normal", vulling)
+	_badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_badge.anchor_left = 1.0
+	# Net buiten de rechterbovenhoek van de teller: binnen de chip past hij nog,
+	# en over het laatste cijfer heen zou hij van "4/10" een "4/1" maken.
+	_badge.offset_left = -3.0
+	_badge.offset_right = 7.0
+	_badge.offset_top = -5.0
+	_badge.offset_bottom = 5.0
+	chip.add_child(_badge)
+
+
+## Kort opveren, als een briefje net geland is.
+func _pols_teller() -> void:
+	if _teller_chip == null:
+		return
+	if _badge_tween != null and _badge_tween.is_running():
+		_badge_tween.kill()
+	_teller_chip.pivot_offset = _teller_chip.size * 0.5
+	_badge_tween = create_tween()
+	_badge_tween.tween_property(_teller_chip, "scale", Vector2(1.10, 1.10), 0.12) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_badge_tween.tween_property(_teller_chip, "scale", Vector2.ONE, 0.16) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## De verticale band die vrij is van HUD-chrome, in canvaspixels: x is de

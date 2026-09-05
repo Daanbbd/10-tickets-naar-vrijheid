@@ -96,6 +96,17 @@ func object_tile(world_id: StringName) -> Vector2i:
 	return _object_tiles.get(world_id, Vector2i(-1, -1))
 
 
+## Het label van een object ("Scrumbord", "Tribune"), of leeg als het er geen
+## heeft. Voor tekst die naar een plek verwijst op een moment dat de ruimtenaam
+## niets toevoegt — je staat er dan al in. Zie `TicketController.handle_npc_talk()`.
+func object_label(world_id: StringName) -> String:
+	for raw: Variant in objects:
+		var d := raw as Dictionary
+		if StringName(d.get("world_id", "")) == world_id:
+			return String(d.get("label", ""))
+	return ""
+
+
 func has_world_id(id: StringName) -> bool:
 	return id in world_ids
 

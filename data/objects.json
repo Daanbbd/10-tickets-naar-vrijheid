@@ -150,16 +150,6 @@
   "dialogue": "koelkast"
  },
  {
-  "world_id": "lunchtafel",
-  "tile": [
-   20,
-   5
-  ],
-  "kind": "examine",
-  "label": "Lunchtafel",
-  "dialogue": "lunchtafel"
- },
- {
   "world_id": "prikbord",
   "tile": [
    11,
@@ -175,9 +165,10 @@
    21,
    4
   ],
-  "kind": "examine",
+  "kind": "ticket",
   "label": "Tribune",
-  "dialogue": "tribune"
+  "dialogue": "tribune",
+  "ticket": "t02"
  },
  {
   "world_id": "sprintbord_vloer",
@@ -185,10 +176,9 @@
    19,
    1
   ],
-  "kind": "use",
+  "kind": "examine",
   "label": "Sprintbord",
-  "dialogue": "ticketbord",
-  "action": "board"
+  "dialogue": "ticketbord"
  },
  {
   "world_id": "vergadertafel",
@@ -311,16 +301,6 @@
   "dialogue": "gang_plant"
  },
  {
-  "world_id": "plant_nw",
-  "tile": [
-   14,
-   10
-  ],
-  "kind": "examine",
-  "label": "Muurschildering",
-  "dialogue": "muurschildering"
- },
- {
   "world_id": "ticketbord",
   "tile": [
    17,
@@ -336,9 +316,8 @@
    12,
    24
   ],
-  "kind": "ticket",
+  "kind": "use",
   "label": "Scrumbord",
-  "ticket": "t02",
   "action": "board"
  },
  {

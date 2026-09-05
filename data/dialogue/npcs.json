@@ -8,14 +8,6 @@
      {
       "when": {
        "flags_all": [
-        "dennis_bezocht"
-       ]
-      },
-      "text": "Oh, jij nog een keer. Bord staat nog goed."
-     },
-     {
-      "when": {
-       "flags_all": [
         "alarm_af"
        ]
       },
@@ -27,7 +19,15 @@
         "gevolg_scope_te_groot"
        ]
       },
-      "text": "Ik heb het grof geschat. Het past niet. is maar weekje later"
+      "text": "Ik heb het grof geschat. Het past niet. Ik heb het doorgegeven."
+     },
+     {
+      "when": {
+       "flags_all": [
+        "dennis_bezocht"
+       ]
+      },
+      "text": "Oh, jij nog een keer. Bord staat nog goed."
      },
      {
       "text": "Alles staat op het bord. Heb ik vanmorgen alvast bijgewerkt."
@@ -42,16 +42,16 @@
       "when": {
        "min_tickets_done": 8
       },
-      "text": "Nog twee. Is maar weekje later."
+      "text": "Nog twee. Is maar weekje later. Hoe staat het bij jou?"
      },
      {
       "when": {
        "min_tickets_done": 4
       },
-      "text": "De helft. Ik heb de rest alvast nagelopen en grof geschat."
+      "text": "De helft. Ik heb de rest alvast nagelopen en grof geschat. Hoe staat het bij jou?"
      },
      {
-      "text": "Ik heb de issues alvast nagelopen. Verder heb ik niks nodig."
+      "text": "Ik heb de issues alvast nagelopen. Verder heb ik niks nodig. Hoe staat het bij jou?"
      }
     ],
     "choices": [
@@ -67,6 +67,11 @@
        {
         "op": "set_flag",
         "flag": "dennis_bezocht",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "dennis_bijgepraat",
         "value": true
        }
       ]
@@ -89,16 +94,26 @@
         "op": "set_flag",
         "flag": "dennis_bezocht",
         "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "dennis_bijgepraat",
+        "value": true
        }
       ]
      },
      {
-      "text": "Ik heb even geen tijd.",
+      "text": "Niks te melden.",
       "next": "weg",
       "effects": [
        {
         "op": "set_flag",
         "flag": "dennis_bezocht",
+        "value": true
+       },
+       {
+        "op": "set_flag",
+        "flag": "dennis_bijgepraat",
         "value": true
        }
       ]
@@ -1426,7 +1441,7 @@
         "gevolg_comicsans_beloofd"
        ]
       },
-      "text": "heb je haar Comic Sans beloofd,, geen Comic Sans is een beetje de standaard tegenwoordig"
+      "text": "je hebt haar Comic Sans beloofd,, geen Comic Sans is een beetje de standaard tegenwoordig,,"
      },
      {
       "when": {
@@ -1509,7 +1524,7 @@
         "detail"
        ]
       },
-      "text": "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat ook hè."
+      "text": "trouwens,, de marge onderaan is vier pixels te veel,, jij zag dat vast ook,,"
      },
      {
       "text": "Je mag het niet doorvertellen,, maar ik vind die blauwe versie ook mooi,,"
@@ -1651,7 +1666,6 @@
    },
    "tweede": {
     "speaker": "koen",
-    "next": "derde",
     "variants": [
      {
       "when": {
@@ -1665,14 +1679,6 @@
       },
       "text": "Zes al? Ik zit nog op de eerste render. Die is wel heel mooi geworden."
      },
-     {
-      "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken."
-     }
-    ]
-   },
-   "derde": {
-    "speaker": "koen",
-    "variants": [
      {
       "when": {
        "min_tickets_done": 6
@@ -1747,20 +1753,25 @@
    "verder": {
     "speaker": "koen",
     "text": "Oke lekker ouwe. Ik hou de piepelienies in de gaten.",
-    "next": "einde"
-   },
-   "einde": {
-    "speaker": ""
+    "next": "jonathan"
    },
    "uitleg": {
     "speaker": "koen",
     "text": "piepelienies. ci/cd. build, test, deploy. maar dan lekker. en als ze kapot zijn duurt het veertig minuten, vgm.",
-    "next": "einde"
+    "next": "jonathan"
    },
    "verstop": {
     "speaker": "koen",
     "text": "Ah nee. Zeg maar dat ik in een call zit, lekker ouwe.",
     "next": "einde"
+   },
+   "jonathan": {
+    "speaker": "koen",
+    "text": "Zeg maar niets tegen Jonathan, lekker ouwe. Dan komt hij meekijken.",
+    "next": "einde"
+   },
+   "einde": {
+    "speaker": ""
    }
   }
  },

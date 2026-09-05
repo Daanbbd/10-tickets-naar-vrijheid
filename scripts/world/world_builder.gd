@@ -236,6 +236,79 @@ func nearest_walkable(t: Vector2i, max_radius: int = 6) -> Vector2i:
 	return t
 
 
+## Een loopbare route van tegel naar tegel, als wereldposities.
+##
+## Er was geen enkele pathfinding in dit project: `Npc._move_towards()` gaat in
+## een rechte lijn op zijn doel af en laat `move_and_slide()` de rest doen. Dat
+## werkt zolang er niets tussen staat, en dat is op deze vloer bijna nergens
+## waar. Tussen de startplek (2,17) en het scrumbord (12,24) staat een muur op
+## x9; een collega die na een ticket naar huis loopt gaat dwars door de
+## bureau-eilanden. In beide gevallen glijdt hij langs de geometrie tot hij in
+## een hoek klem staat, en dan beweegt er niets meer zonder dat er iets misgaat
+## dat je kunt zien.
+##
+## Breedte-eerst en geen A*: de vloer is 80x26, dus 2080 tegels in het ergste
+## geval. Dat is goedkoper dan de prioriteitswachtrij die A* ervoor nodig heeft,
+## en het levert bij gelijke stapkosten hetzelfde kortste pad op.
+##
+## Vier richtingen en niet acht: diagonaal langs een binnenhoek snijdt door de
+## muur die die hoek maakt. De diagonalen komen er in de beweging vanzelf bij,
+## want een NPC loopt naar het volgende punt en niet naar het volgende vakje.
+##
+## Leeg terug betekent: onbereikbaar. Een niet-loopbaar begin- of eindpunt wordt
+## eerst naar de dichtstbijzijnde loopbare tegel getrokken, zodat een anker dat
+## in een muur staat geen lege route oplevert.
+func pad(van: Vector2i, naar: Vector2i) -> PackedVector2Array:
+	var start := nearest_walkable(van)
+	var doel := nearest_walkable(naar)
+	if start == doel:
+		return PackedVector2Array([tile_to_world(doel)])
+
+	var vorige := {start: start}
+	var wachtrij: Array[Vector2i] = [start]
+	var gevonden := false
+	while not wachtrij.is_empty():
+		var c: Vector2i = wachtrij.pop_front()
+		if c == doel:
+			gevonden = true
+			break
+		for d: Vector2i in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+			var n := c + d
+			if n.x < 0 or n.y < 0 or n.x >= size.x or n.y >= size.y:
+				continue
+			if vorige.has(n) or is_solid(n):
+				continue
+			vorige[n] = c
+			wachtrij.append(n)
+	if not gevonden:
+		return PackedVector2Array()
+
+	var tegels: Array[Vector2i] = []
+	var t := doel
+	while t != start:
+		tegels.append(t)
+		t = vorige[t]
+	tegels.reverse()
+
+	# Alleen de knikken bewaren. Een rechte gang van twintig tegels is één
+	# beweging; twintig tussenpunten maken daar twintig micro-correcties van, en
+	# dat is precies het schokkerige lopen dat een route hoort weg te nemen.
+	var uit := PackedVector2Array()
+	for i: int in tegels.size():
+		var laatste := i == tegels.size() - 1
+		if laatste or _knik(tegels, i):
+			uit.append(tile_to_world(tegels[i]))
+	return uit
+
+
+## Verandert de looprichting op dit punt? Het eerste punt telt nooit als knik:
+## daar komt de NPC al vandaan.
+func _knik(tegels: Array[Vector2i], i: int) -> bool:
+	if i == 0 or i + 1 >= tegels.size():
+		return false
+	return (tegels[i] - tegels[i - 1]) != (tegels[i + 1] - tegels[i])
+
+
 func zone_at(t: Vector2i) -> Dictionary:
 	for z: Variant in zones:
 		var d := z as Dictionary

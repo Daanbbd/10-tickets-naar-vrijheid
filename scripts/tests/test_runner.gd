@@ -86,6 +86,9 @@ func _ready() -> void:
 	_test_dialoogplan_ronde_c()
 	_test_finale_heeft_team()
 	_test_glyphdekking()
+	_test_besturingsregels_passen()
+	_test_looproute()
+	_test_paardenbug_is_een_doel()
 	await _test_minigames_passen()
 	_test_ruimteakoestiek()
 	await _test_wereldschermen_passen()
@@ -4006,14 +4009,18 @@ func _test_duimzone_rechts() -> void:
 			rechtsboven.x, rechtsboven.y])
 
 	# De knoppenbalk zelf blijft uitgezonderd: dáár mag geen stick opkomen,
-	# anders vechten ▤ ? ☰ en de joystick om dezelfde pixels. Dat is wat de
+	# anders vechten ? en ☰ en de joystick om dezelfde pixels. Dat is wat de
 	# oude alleen-rechts-regel probeerde te bereiken, en wat `_op_chrome()`
 	# preciezer doet.
-	var balk := b.bord_knop_rect()
-	_ok(balk.size != Vector2.ZERO, "de ▤-knop heeft geen rect om op te meten")
+	#
+	# Gemeten aan de balk en niet meer aan de ▤-knop: die knop is weg (het bord
+	# open je bij het bord in de wereld), en een test die aan een verdwenen knop
+	# hing zou de balk voortaan helemaal niet meer controleren.
+	var balk: Rect2 = (b._balk as Control).get_global_rect()
+	_ok(balk.size != Vector2.ZERO, "de knoppenbalk heeft geen rect om op te meten")
 	if balk.size != Vector2.ZERO:
 		_ok(not b._in_zone(balk.get_center()),
-			"midden op de ▤-knop (%.0f,%.0f) komt een stick op" % [
+			"midden op de knoppenbalk (%.0f,%.0f) komt een stick op" % [
 				balk.get_center().x, balk.get_center().y])
 
 	# Zelfde reden als in `_test_hudband()`: synchrone suite, dus meteen vrijgeven.
@@ -4284,6 +4291,7 @@ func _test_schermen_passen() -> void:
 	for pad: String in ["res://scenes/boot/title.tscn",
 			"res://scenes/boot/ending.tscn",
 			"res://scenes/boot/intro_uitleg.tscn",
+			"res://scenes/boot/besturing_uitleg.tscn",
 			"res://scenes/boot/character_select.tscn"]:
 		var scherm: Control = (load(pad) as PackedScene).instantiate()
 		add_child(scherm)
@@ -4431,13 +4439,19 @@ func _test_wereldchrome_past() -> void:
 
 ## De knoppenbalk is de PanelContainer met de drie knoppen erin. Op vorm
 ## gezocht en niet op kindpad, net als `_vind_knop()`.
+## Zoekt de knoppenbalk: de enige PanelContainer in `Besturing` met knoppen erin.
+##
+## Stond op `>= 3`, want de balk droeg ▤, ? en ☰. Sinds ▤ weg is (het bord open
+## je bij het bord in de wereld) zijn het er twee, en zocht deze helper naar een
+## balk die niet meer bestond — waarna `_test_wereldchrome_past()` de balk
+## helemaal niet meer mat in plaats van hem af te keuren.
 func _vind_balk(root: Node) -> PanelContainer:
 	if root is PanelContainer:
 		var knoppen := 0
 		for c: Control in _controls(root):
 			if c is Button:
 				knoppen += 1
-		if knoppen >= 3:
+		if knoppen >= 2:
 			return root as PanelContainer
 	for kind: Node in root.get_children():
 		var g := _vind_balk(kind)
@@ -4704,6 +4718,131 @@ func _test_finale_heeft_team() -> void:
 ## Alleen glyphs, geen lopende tekst: de dialoog is Nederlands en die dekking
 ## bewaakt `_test_schermen_passen()` al doordat een ontbrekend teken de breedte
 ## verandert. Wat hier staat zijn de tekens die niemand uitspreekt.
+## De vijf besturingsregels passen op het canvas.
+##
+## Deze test is er omdat het precies één keer misging op de manier die geen enkel
+## bestaand net ving. De regels lijnen hun tweede kolom met spaties uit, dus de
+## eerste versie van `BesturingUitleg` zette ze op AUTOWRAP_OFF. Een Label zonder
+## autowrap meldt zijn volledige tekstbreedte als minimum, de kolom eromheen
+## groeide daar met GROW_DIRECTION_BOTH aan beide kanten buiten beeld voor, en op
+## het scherm was zowel de linkermarge als het eind van de langste regel weg.
+##
+## `_meet_schermvulling()` ving dat niet: die meet alleen PanelContainer en
+## Button, want een Label mag breder meten dan hij tekent. Hier meten we de
+## tekst zelf, met de echte snit op de maat waarop hij getekend wordt. Een
+## zesde regel of één woord erbij valt dan hier om in plaats van in beeld.
+func _test_besturingsregels_passen() -> void:
+	_kop("de besturingsregels passen op 192 px")
+
+	_ok(Hud.kaartregels() == BesturingUitleg.regels(),
+		"de kaart in de HUD en het besturingsscherm tonen niet dezelfde regels")
+
+	# Het canvas min de kolommarges van `BesturingUitleg` (12 links, 12 rechts).
+	var ruimte := 192.0 - 24.0
+	var f := UiKit.font_voor(UiKit.FS_SMALL)
+	for r: String in BesturingUitleg.regels():
+		var breed := f.get_string_size(r, HORIZONTAL_ALIGNMENT_LEFT, -1.0, UiKit.FS_SMALL).x
+		_ok(breed <= ruimte,
+			"besturingsregel \"%s\" is %.0f px en er is %.0f px" % [r, breed, ruimte])
+
+
+## `WorldBuilder.pad()` loopt om muren heen, en de route klopt tegel voor tegel.
+##
+## Er was hiervoor geen enkele pathfinding: `Npc._move_towards()` ging in een
+## rechte lijn op zijn doel af. Twee plekken hadden daar last van. De intro laat
+## Dennis van de entree (2,17) naar het scrumbord (12,24) lopen, en daartussen
+## staat een muur op x9. En een collega die na een ticket wordt vrijgelaten
+## koerst naar zijn `home_tile` dwars door de bureau-eilanden; die kan permanent
+## klem komen te staan, en dat is niet te zien aan een foutmelding.
+func _test_looproute() -> void:
+	_kop("looproutes lopen om muren heen")
+
+	var b := WorldBuilder.new()
+	_ok(b.load_floor(), "de vloer laadt niet; leest deze test de plattegrond wel?")
+
+	var start := Vector2i(2, 17)      # spawn, data/floor.json
+	var bord := Vector2i(12, 23)      # naast scrumbord_gang (12,24)
+
+	# Vangnet: zonder een muur ertussen bewijst de rest van deze test niets.
+	_ok(_rechte_lijn_raakt_muur(b, start, bord),
+		"de rechte lijn van de entree naar het bord raakt geen muur meer; deze test bewijst dan niets")
+
+	var route := b.pad(start, bord)
+	_ok(not route.is_empty(), "geen route van de entree naar het scrumbord")
+	for punt: Vector2 in route:
+		var t := b.world_to_tile(punt)
+		_ok(not b.is_solid(t), "de route loopt over een muurtegel op %s" % t)
+	if not route.is_empty():
+		_ok(b.world_to_tile(route[route.size() - 1]) == bord,
+			"de route eindigt niet op de doeltegel maar op %s"
+				% b.world_to_tile(route[route.size() - 1]))
+
+	# Elk deel van de route is een rechte lijn zonder muur: dat is precies wat
+	# `Npc._move_towards()` per punt aflegt, dus alleen dán klopt de route ook
+	# als beweging en niet alleen als lijst tegels.
+	var vorige := start
+	for punt2: Vector2 in route:
+		var t2 := b.world_to_tile(punt2)
+		_ok(not _rechte_lijn_raakt_muur(b, vorige, t2),
+			"tussen %s en %s zit een muur; die stap is niet in een rechte lijn te lopen"
+				% [vorige, t2])
+		vorige = t2
+
+	# En de tweede last: een vrijgelaten collega naar huis.
+	for raw: Variant in GameData.npcs.values():
+		var d := raw as NpcDef
+		if d == null:
+			continue
+		var naar_huis := b.pad(bord, d.home_tile)
+		_ok(not naar_huis.is_empty(),
+			"'%s' kan vanaf het scrumbord niet naar huis lopen" % d.id)
+
+
+## Loopt de rechte lijn tussen twee tegels door een muur? Bemonsterd per halve
+## tegel, want een diagonaal die net een hoek snijdt mag niet wegvallen.
+func _rechte_lijn_raakt_muur(b: WorldBuilder, van: Vector2i, naar: Vector2i) -> bool:
+	var a := Vector2(van)
+	var z := Vector2(naar)
+	var stappen := int(a.distance_to(z) * 2.0) + 1
+	for i: int in range(stappen + 1):
+		var p := a.lerp(z, float(i) / float(stappen))
+		if b.is_solid(Vector2i(roundi(p.x), roundi(p.y))):
+			return true
+	return false
+
+
+## BBD-209 lost op door een bugpaard aan te spreken, niet bij zijn anker. De
+## doelwijzer stuurt je daarom naar een paard zodra het ticket ACTIVE is
+## (`Main._doel_node()`). Dat werkt alleen als er ook echt paarden spawnen op
+## hetzelfde moment dat het ticket vrijkomt; anders wijst hij naar niets en is
+## de speler weer terug bij het kostuum dat hem dezelfde regel geeft.
+func _test_paardenbug_is_een_doel() -> void:
+	_kop("BBD-209 heeft een paard om naartoe te wijzen")
+
+	var t: TicketDef = GameData.ticket(&"t09")
+	_ok(t != null and t.minigame_id == &"mg_paarden",
+		"t09 draait niet meer op mg_paarden; klopt de wijzer-omweg nog?")
+	_ok(t != null and t.wereldhandeling,
+		"t09 is geen wereldhandeling meer; dan hoort de omweg in _doel_node() weg")
+
+	var open_na: Array[String] = []
+	for v: Variant in (t.available_when.get("tickets_done", []) as Array):
+		open_na.append(String(v))
+	var bugs := 0
+	for raw: Variant in GameData.npcs.values():
+		var d := raw as NpcDef
+		if d == null or not String(d.id).begins_with("paard_bug"):
+			continue
+		bugs += 1
+		var wanneer: Array[String] = []
+		for v: Variant in (d.spawn_when.get("tickets_done", []) as Array):
+			wanneer.append(String(v))
+		_ok(wanneer == open_na,
+			"paardenbug '%s' spawnt op %s terwijl t09 opengaat op %s"
+				% [d.id, wanneer, open_na])
+	_ok(bugs >= 1, "er spawnt geen enkele paardenbug; BBD-209 is dan niet op te lossen")
+
+
 func _test_glyphdekking() -> void:
 	_kop("elk UI-teken bestaat in het font")
 

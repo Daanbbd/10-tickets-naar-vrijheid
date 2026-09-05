@@ -5,6 +5,7 @@ extends Node
 const SCENE_TITLE := "res://scenes/boot/title.tscn"
 const SCENE_INTRO_UITLEG := "res://scenes/boot/intro_uitleg.tscn"
 const SCENE_SELECT := "res://scenes/boot/character_select.tscn"
+const SCENE_BESTURING := "res://scenes/boot/besturing_uitleg.tscn"
 const SCENE_GAME := "res://scenes/world/main.tscn"
 const SCENE_END := "res://scenes/boot/ending.tscn"
 
@@ -221,6 +222,12 @@ func goto_intro_uitleg() -> void:
 
 func goto_character_select() -> void:
 	await _change_scene(SCENE_SELECT)
+
+## Het besturingsscherm zit tussen de personagekeuze en het spel. Alleen die
+## route komt er langs: `--speler=` en "Doorgaan" gaan rechtstreeks naar
+## `goto_game()`, en wie hervat weet al hoe hij loopt.
+func goto_besturing() -> void:
+	await _change_scene(SCENE_BESTURING)
 
 func goto_game() -> void:
 	await _change_scene(SCENE_GAME)

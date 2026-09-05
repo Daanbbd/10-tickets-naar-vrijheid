@@ -34,6 +34,9 @@ waar geen joystick opkomt.
 Met een muis komt er geen joystick op — daar loop je met WASD en klik je op een
 object waar je naast staat.
 
+Je krijgt deze uitleg ook in het spel: één scherm na je personagekeuze, met de
+besturing van het apparaat waar je op speelt. Later nog eens nodig? **F1**.
+
 Je dag wordt bij elk opgelost ticket bewaard, en ook als je de app wegdrukt.
 **Doorgaan** op het titelscherm zet je terug waar je gebleven was.
 

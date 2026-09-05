@@ -6,7 +6,12 @@ extends CharacterBody2D
 ## Bewust geen NavigationAgent2D: waypoints met move_toward volstaan op een
 ## kantoorvloer en zijn debugbaar.
 
+signal aangekomen
+
 const WALK_SPEED := 58.0
+## Voorop lopen is sneller dan slenteren en trager dan achter iemand aan rennen.
+## De speler loopt 96 en moet kunnen bijblijven zonder te hoeven sprinten.
+const LEID_SPEED := 74.0
 const FOLLOW_SPEED := 104.0
 const FOLLOW_DISTANCE := 26.0
 const ARRIVE_EPS := 3.0
@@ -32,7 +37,13 @@ var _leg: int = 0
 var _pause_left: float = 0.0
 var _following: Node2D = null
 var _home: Vector2 = Vector2.ZERO
-var _returning: bool = false
+## Een gerichte wandeling over een uitgerekende route: naar huis na een ticket,
+## of naar het bord tijdens de introductie. Vervangt de oude `_returning`-vlag,
+## die dezelfde bestemming in een rechte lijn benaderde.
+var _koers: PackedVector2Array = []
+var _koers_leg: int = 0
+var _koers_speed: float = WALK_SPEED
+var _builder: WorldBuilder = null
 var _facing: Vector2 = Vector2.DOWN
 var _stil: float = 0.0
 var _bezig_bij: float = 0.0
@@ -43,6 +54,7 @@ var _praat: bool = false
 func setup(d: NpcDef, builder: WorldBuilder) -> void:
 	def = d
 	npc_id = d.id
+	_builder = builder
 	name = "Npc_%s" % d.id
 
 	var home_tile := builder.nearest_walkable(d.home_tile)
@@ -74,7 +86,12 @@ func setup(d: NpcDef, builder: WorldBuilder) -> void:
 ## NPC's heten `npc_victor`; het dialoog-id is de tweede ingang, want bij een
 ## wervingsgesprek staat de spreker per node en niet op de boom.
 func _op_dialoog_start(dialogue_id: StringName, speaker: StringName) -> void:
-	_praat = dialogue_id == def.dialogue_id \
+	# `def.dialogue_id != &""` erbij, want een lege id is geen match maar een
+	# NPC zonder eigen gesprek. De drie paardenbugs uit BBD-209 hebben er geen,
+	# en `DialogueController` zendt bij een vertellerregel `dialogue_started`
+	# met een lege id: zonder deze wacht gingen alle drie in praatstand bij elke
+	# regel die er de rest van de dag viel.
+	_praat = (def.dialogue_id != &"" and dialogue_id == def.dialogue_id) \
 		or (speaker != &"" and speaker == StringName(String(npc_id).trim_prefix("npc_")))
 	if _praat:
 		_bezig = false
@@ -95,8 +112,8 @@ func _op_animatie_klaar() -> void:
 func _physics_process(delta: float) -> void:
 	if _following != null:
 		_do_follow(delta)
-	elif _returning:
-		_do_return(delta)
+	elif not _koers.is_empty():
+		_do_koers()
 	else:
 		_do_route(delta)
 
@@ -124,7 +141,17 @@ func _do_route(delta: float) -> void:
 	_move_towards(target, WALK_SPEED)
 
 
+## `is_instance_valid()` en niet alleen de null-check die `_physics_process()`
+## al doet: niets zet `_following` terug op null als het gevolgde object wordt
+## opgeruimd. `_exit_tree()` hieronder ruimt alleen de volger-kant op, en de
+## drie plekken die `start_following()` aanroepen (de intro, een geworven
+## collega, een storing) laten allemaal een verwijzing achter die deze node
+## overleeft. Dit is de enige plek in dit bestand die daarop "attempt to call
+## function on a previously freed instance" kan geven.
 func _do_follow(delta: float) -> void:
+	if not is_instance_valid(_following):
+		stop_following(true)
+		return
 	var to := _following.global_position - global_position
 	if to.length() <= FOLLOW_DISTANCE:
 		velocity = velocity.move_toward(Vector2.ZERO, 900.0 * delta)
@@ -132,12 +159,43 @@ func _do_follow(delta: float) -> void:
 	_move_towards(_following.global_position, FOLLOW_SPEED)
 
 
-func _do_return(delta: float) -> void:
-	if global_position.distance_to(_home) <= ARRIVE_EPS * 2.0:
-		_returning = false
+## Onderweg naar een bestemming, punt voor punt.
+##
+## Hier stond `_do_return()`: `_move_towards(_home, WALK_SPEED)`, een rechte
+## lijn. Een collega die bij het scrumbord wordt vrijgelaten koerst daarmee op
+## Summit (35,6) aan dwars door twee bureau-eilanden en de gangmuur;
+## `move_and_slide()` laat hem daarlangs glijden tot hij in een hoek klem staat
+## en er niets meer beweegt. Zie `WorldBuilder.pad()`.
+func _do_koers() -> void:
+	if _koers_leg >= _koers.size():
+		_koers = PackedVector2Array()
+		velocity = Vector2.ZERO
+		aangekomen.emit()
+		return
+	var doel := _koers[_koers_leg]
+	if global_position.distance_to(doel) <= ARRIVE_EPS * 2.0:
+		_koers_leg += 1
 		velocity = Vector2.ZERO
 		return
-	_move_towards(_home, WALK_SPEED)
+	_move_towards(doel, _koers_speed)
+
+
+## Loop over de vloer naar deze plek. Zonder loopbare route toch rechtstreeks:
+## een NPC die niets doet is erger dan een NPC die tegen een muur duwt, en
+## `pad()` trekt een doel in een muur al naar de dichtstbijzijnde tegel.
+func loop_naar(doel: Vector2, snelheid: float = WALK_SPEED) -> void:
+	_koers_speed = snelheid
+	_koers_leg = 0
+	_koers = PackedVector2Array()
+	if _builder != null:
+		_koers = _builder.pad(
+			_builder.world_to_tile(global_position), _builder.world_to_tile(doel))
+	if _koers.is_empty():
+		_koers = PackedVector2Array([doel])
+
+
+func onderweg() -> bool:
+	return not _koers.is_empty()
 
 
 func _move_towards(target: Vector2, speed: float) -> void:
@@ -194,7 +252,7 @@ func start_following(who: Node2D) -> void:
 	if _following == who:
 		return
 	_following = who
-	_returning = false
+	_koers = PackedVector2Array()
 	Session.add_follower(npc_id)
 	Bus.follower_joined.emit(npc_id)
 
@@ -203,7 +261,8 @@ func stop_following(go_home: bool = true) -> void:
 	if _following == null:
 		return
 	_following = null
-	_returning = go_home
+	if go_home:
+		loop_naar(_home)
 	Session.remove_follower(npc_id)
 	Bus.follower_released.emit(npc_id)
 

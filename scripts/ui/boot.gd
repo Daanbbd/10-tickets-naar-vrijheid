@@ -25,6 +25,7 @@ func _ready() -> void:
 		match String(args["scherm"]):
 			"uitleg": Shell.goto_intro_uitleg()
 			"select": Shell.goto_character_select()
+			"besturing": Shell.goto_besturing()
 			"einde":
 				# De aftiteling leest je dag: zonder voortgang zou hij een dag
 				# tonen waarin niets gebeurd is.
