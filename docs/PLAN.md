@@ -140,10 +140,25 @@ Daans opt-in; die kosten het meest.
     eerlijk slaagt. Branch `claude/godot-master-game-audit-bfb1b5`, worktree
     `10-tickets-vrijheid-handover-079cbc`, niet gemerged of gepusht.
 
-**Open uit de audit, keuze van Daan vóór iemand bouwt:** P3 (klok in scope,
-uitlijnen en A tegen B), P4 (de drie tickets zonder spel: 203, 205, 209), P5
-(finale-brandjes, is Fase 5 hieronder), en bevinding 5 en 7 (klantbericht k1
-maakt de keten 204→207 dood; k4 ontgrendelt een ticket dat al open is).
+11. **Nacht van 5 op 6 september, alles uit de audit gebouwd** (Daans opdracht
+    "werk de resterende items uit"): P3 (klokbalk-helper in `minigame_base`,
+    Dennis wacht 45 s in scope, build-drift in uitlijnen, 7 s per klap in
+    A tegen B, heatmap-knop 26 px met offset-drag), P4 (klant wacht 8 s per
+    ronde via `ask_choice(timeout_sec)`, verkeerde kabel kost 15 min plus
+    `Juice.flits()` en een nieuwe keuze, Bastiaans paard komt naar hem toe
+    i.p.v. `geen_zoektocht`), P5 (de finale als brandjes: `BrandjesModel`
+    puur en gekalibreerd, kaartjes met aflopende balk, zeven vaste
+    handelingen, gezaaid uit de dag; console-fase intact), klantberichten
+    (k1 zonder unlock, k4 trekt BBD-207 naar voren op 6/10), de dialoogvraag
+    boven keuzes in twee regels, Jonathan houdt twee kabels. Suite 22.245
+    controles, 0 fout; speelbeurt daan 10/10, uit om 18:17. Sectie A
+    hieronder is daarmee gedaan; wat afwijkt staat in
+    `docs/AUDIT-2026-09-05.md` bij P5.
+
+**Nog open uit de audit:** bevinding 1 (de ophaalbeat is 9× dezelfde zin,
+PLAN D), 11, 12, 15-18; de te lange klantvragen in `mg_klantfeedback.rondes`
+(worden nu afgekapt met een weglatingsteken); en Daans eigen telefoontest
+(landscape, `mg_scope`/`mg_whack` met een vinger, audio-unlock).
 
 Bewijs in `docs/audit-shots/`: `licht_*.png`, `resp_*.png`, `f2_*.png`,
 `f3_heatmap.png`, `f4_uitleg.png`, `f5_merge_wereld.png`, `praat_dirk.png`.
