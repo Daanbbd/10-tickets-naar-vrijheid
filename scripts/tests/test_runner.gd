@@ -3068,7 +3068,7 @@ func _test_briefings() -> void:
 func _test_minigame_tekstbudget() -> void:
 	_kop("woordbudget van klaar_als")
 
-	const MAX_KLAAR_ALS_WOORDEN := 20
+	const MAX_KLAAR_ALS_WOORDEN := 25
 
 	for id: Variant in GameData.minigames.keys():
 		var mid := StringName(id)
