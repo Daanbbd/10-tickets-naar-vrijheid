@@ -366,6 +366,8 @@ hier:
 |---|---|---|
 | `vram_texture_compression/for_mobile` | `false` | op `true` weigert de export met "configuration errors" zolang `import_etc2_astc` uitstaat — en blokcompressie smeert pixel-art uit, wat botst met `default_texture_filter=0` |
 | `vram_texture_compression/for_desktop` | `false` | idem |
+| `exclude_filter` | `addons/godot_mcp/*` | de editoraddon is 65 scripts die in een release niets doen; zonder dit gaan ze mee in de pck |
+| `html/custom_html_shell` | `res://html/shell.html` | de aanraakpoort die iOS Safari nodig heeft voor geluid; zonder dit start de standaardshell het spel bij page-load en is de AudioContext bevroren |
 | `html/head_include` | `<meta name="apple-mobile-web-app-capable" content="yes">` | zonder dit opent "Zet op beginscherm" op iOS een Safari-tab met adresbalk, en test je de portretlayout met minder hoogte dan het echt is |
 
 De exportfout hierboven meldt "due to configuration errors" en zet er dan niets
@@ -373,6 +375,65 @@ achter, ook niet met `--verbose`. De oorzaak is vrijwel altijd de
 texturecompressie.
 
 Dit werkt pas zodra de export templates geïnstalleerd zijn — zie hieronder.
+
+### Wat er bewust niet in de build zit
+
+Op 6 september 2026 was `index.pck` 28,9 MB, waarvan ruim 23 MB bronmateriaal
+dat het spel nooit laadt. Dat is geen detail: Godots web-export schrijft de hele
+pck in de wasm-heap, dus elke megabyte staat de hele sessie in het geheugen van
+de tab. Op iOS Safari knalde die tab er tijdens een playthrough drie keer uit.
+
+Twee mappen dragen sindsdien een leeg `.gdignore`, waardoor Godot ze niet scant
+en niet importeert:
+
+| map | wat het is | wie het wél gebruikt |
+|---|---|---|
+| `assets/personen/` | de echte teamfoto's, 488×542 tot 906×814 | `tools/generators/gen_portraits.py`, dat ze van schijf leest en er `assets/sprites/portraits/` van maakt (32×40 px). Alleen díe komen in de build |
+| `assets/nieuwe assets/` | het moodboard: 22 telefoonfoto's van het echte kantoor, geïmporteerd op 1536×2048 lossless | `tools/generators/gen_props.py` en `gen_tiles.py` als referentie, en `docs/LEVEL.md` |
+
+`.gdignore` en niet `exclude_filter`, om twee redenen: het is getrackt (de
+preset niet, zie hierboven), en het scheelt ook importtijd en `.godot/imported/`
+op schijf. De Python-generators lezen met gewone bestandspaden en merken er
+niets van.
+
+Resultaat: pck van 28,9 MB naar 5,65 MB. Meet het na elke assetronde met
+`ls -l build/web/index.pck`.
+
+### De aanraakpoort, en waarom hij er is
+
+`html/shell.html` is Godots eigen `godot.html` uit de web-template, met één
+toevoeging: een scherm met "Tik om te beginnen" dat het spel pas start als er
+een aanraking geweest is.
+
+Dat is geen cosmetiek. iOS Safari geeft een `AudioContext` alleen vrij binnen de
+afhandeling van een echte gesture, en Godot maakt de zijne aan tijdens
+`startGame()`. De standaardshell roept dat meteen bij page-load aan, dus de
+context was daar per definitie bevroren — en het titelscherm speelt zijn muziek
+0,2 s later (`boot.gd` → `title_screen.gd`, `AudioDirector.set_base(&"intro")`).
+`_godot_audio_resume` zit wél in de build, maar heeft geen enkele DOM-listener:
+hij hangt volledig aan Godots eigen inputpad, dat pas draait als het spel al
+loopt. Daan hoorde daardoor op zijn iPhone een hele playthrough lang niets.
+
+Het downloaden en compileren van de wasm loopt door terwijl de poort in beeld
+staat (`engine.init(GODOT_CONFIG.executable)`); alleen `startGame()` wacht op de
+tik. De poort kost dus geen laadtijd.
+
+**Diagnose.** Hang `?audio` aan de URL, dan zet de poort na de tik zijn eigen
+meting in beeld: `audio: running · 48000 Hz · worklet: true`. Godots eigen
+context zit in de moduleclosure en is van buiten niet te lezen, maar een context
+die in dezelfde tik wordt aangemaakt deelt wél het beleid van de pagina. Dat
+scheidt de twee overgebleven oorzaken als iemand alsnog niets hoort:
+
+| meting | wat het betekent |
+|---|---|
+| `running`, en toch stil | niet de autoplay-policy maar Godots audiopad zelf — kijk naar de AudioWorklet in de no-threads-build |
+| `suspended` | de tik is niet als gesture aangekomen |
+
+> **Nog open:** `assets/fonts/ark-pixel-12px-proportional-latin.ttf` is 4,75 MB
+> met 24.176 glyphs, terwijl de 10px- en 16px-snit ~0,5 MB en ~4.000 glyphs
+> hebben. Dat is de volledige CJK-uitlevering onder een `-latin`-naam, precies
+> wat `assets/fonts/HERKOMST.md` verbiedt. Vervangen door het echte
+> `-latin`-bestand scheelt nog eens ~1,8 MB pck en ~5 MB resident.
 
 ## Wat een webexport níet test
 
