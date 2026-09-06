@@ -2871,7 +2871,7 @@ func _test_briefings() -> void:
 		if String((raw as Dictionary).get("id", "")) in Gevolgen.ZWARE_WENSEN:
 			zwaar += 1
 	_ok(zwaar > 0, "geen enkele wens in BBD-201 is een zware wens")
-	_ok(Briefing.regel(GameData.ticket(&"t01")).contains("er %d geen wens" % zwaar),
+	_ok(Briefing.regel(GameData.ticket(&"t01")).contains("er %d eigenlijk een project" % zwaar),
 		"de scope-briefing noemt niet het werkelijke aantal zware wensen (%d)" % zwaar)
 
 	# Hetzelfde voor het knelpunt in de renderpijplijn: de genoemde stap moet de

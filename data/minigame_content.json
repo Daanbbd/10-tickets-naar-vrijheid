@@ -71,7 +71,7 @@
  "mg_planning": {
   "type": "standup",
   "briefing": "Zeven collega's in {tijd} seconden past niet. Je mag {ingrepen} keer afkappen. Niet de twee die iets melden: die moet je horen.",
-  "intro": "{sprekers} collega's doen hun rondje en je hebt {tijd} seconden. Dat past niet, dus je moet er afkappen: {ingrepen} keer. Twee collega's melden iets dat kapot is. Eén van hen is {belangrijk}. Die twee laat je uitpraten.",
+  "intro": "{sprekers} collega's, {tijd} seconden: dat past niet. Kap er {ingrepen} af. Twee collega's melden iets dat kapot is, waaronder {belangrijk}. Die twee laat je uitpraten.",
   "klaar_als": "De balk \"Gehoord\" staat op 2 van 2 voordat de tijd om is. Kap je iemand af vóór zijn melding, dan begin je opnieuw.",
   "tijd": 30.0,
   "ingrepen": 3,
@@ -103,7 +103,7 @@
     "naam": "Jonathan",
     "duur": 9.0,
     "belangrijk": true,
-    "aanwijzing": "de collega die net een technisch probleem signaleert",
+    "aanwijzing": "degene die een technisch probleem meldt",
     "nuttige_regel": 1,
     "regels": [
      "Ik zie overal store-id based assortment staan.",
@@ -806,8 +806,8 @@
  "mg_urenstaat": {
   "type": "slotboard",
   "titel": "Urenstaat",
-  "intro": "Dirk wil je urenstaat. Sleep elke post naar een uurblok tot alle acht uur gevuld zijn. Er is geen goed antwoord.",
-  "klaar_als": "Alle acht uurblokken zijn gevuld. Druk dan op \"Indienen\".",
+  "intro": "Dirk wil weten waar je acht uur vandaag heen gingen. Kies de verdeling die het dichtst in de buurt komt. Er is geen goed antwoord.",
+  "klaar_als": "Je hebt een verdeling gekozen. Dirk neemt elke verdeling aan.",
   "success": "Ingediend. Dirk heeft het gezien.",
   "opties": [
    {
