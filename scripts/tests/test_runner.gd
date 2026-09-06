@@ -3057,38 +3057,37 @@ func _test_briefings() -> void:
 				"de pijplijn-briefing noemt '%s' als knelpunt, maar die heeft niet de kleinste capaciteit" % label)
 
 
-## P1.4: het WAT/WAAROM-kaartje (`MinigameIntro`) verdwijnt vóór elke minigame
-## behalve `mg_deploy`; wat overblijft is de briefing van de eigenaar (één
-## regel, vóór het spel) en de WAT-overlay ín het veld (2,5 s, tijdens het
-## spel). Beide moeten kort genoeg zijn om als zo'n regel te lezen, niet als
-## de opgeknipte teksttutorial die de Party-blueprint verbiedt
-## (`docs/AUDIT-2026-09-05.md` deel 2, M1). Getest ná `Briefing.vul()`, dus met
-## de echte cijfers erin — niet de kale template met accolades.
+## Alleen `klaar_als` heeft een woordbudget, en wel omdat die regel in de
+## overlay van 2,5 s terechtkomt: wat daar staat moet je in één blik lezen.
+##
+## `intro` en `briefing` hadden dit budget ook (18 en 25 woorden), meegekomen
+## met P1 uit de auditbranch. Dat botste op 6 september met de uitlegteksten
+## die Daan diezelfde middag had goedgekeurd — elf van die teksten vielen erover
+## en zijn toen ingekort. Verkeerde volgorde: de goedgekeurde tekst is leidend
+## en de test hoort zich daaraan aan te passen, niet andersom. De teksten staan
+## weer in hun volle lengte; `intro` en `briefing` houden alleen de
+## tekenlimieten uit `_test_minigame_inhoud()` (220 en 120).
+##
+## Getest ná `Briefing.vul()`, dus met de echte cijfers erin — niet de kale
+## template met accolades.
 func _test_minigame_tekstbudget() -> void:
-	_kop("woordbudget van briefing en intro")
+	_kop("woordbudget van klaar_als")
 
-	const MAX_BRIEFING_WOORDEN := 25
-	const MAX_INTRO_WOORDEN := 18
+	# Op 25 en niet op 20: de langste goedgekeurde regel is die van de stand-up
+	# met 24 woorden. Het budget volgt de tekst die er ligt, niet andersom —
+	# dat is precies de fout die op 6 september elf teksten inkortte.
+	const MAX_KLAAR_ALS_WOORDEN := 25
 
 	for id: Variant in GameData.minigames.keys():
 		var mid := StringName(id)
-		if mid == &"mg_deploy":
-			continue    # de finale houdt zijn eigen kaartje (MinigameIntro) — geen budget hier
 		var c := MinigameContent.get_config(mid)
 
-		var briefing := Briefing.vul(String(c.get("briefing", "")), c)
-		if briefing != "":
-			var n := briefing.split(" ", false).size()
-			_ok(n <= MAX_BRIEFING_WOORDEN,
-				"%s: briefing van %d woorden is langer dan het budget van %d — \"%s\"" % [
-					mid, n, MAX_BRIEFING_WOORDEN, briefing])
-
-		var intro := Briefing.vul(String(c.get("intro", "")), c)
-		if intro != "":
-			var m := intro.split(" ", false).size()
-			_ok(m <= MAX_INTRO_WOORDEN,
-				"%s: intro van %d woorden is langer dan het budget van %d — \"%s\"" % [
-					mid, m, MAX_INTRO_WOORDEN, intro])
+		var klaar_als := Briefing.vul(String(c.get("klaar_als", "")), c)
+		if klaar_als != "":
+			var n := klaar_als.split(" ", false).size()
+			_ok(n <= MAX_KLAAR_ALS_WOORDEN,
+				"%s: klaar_als van %d woorden is langer dan het budget van %d — \"%s\"" % [
+					mid, n, MAX_KLAAR_ALS_WOORDEN, klaar_als])
 
 
 ## F3-c: Dirk is gegeneraliseerd naar data/storingen.json. Deze test bewaakt
