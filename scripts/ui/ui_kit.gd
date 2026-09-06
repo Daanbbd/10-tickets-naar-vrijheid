@@ -135,6 +135,20 @@ static func postit_kleur(naam: StringName) -> Color:
 	return POSTIT_KLEUREN.get(naam, POSTIT)
 
 
+## De kleur van een tijdbalk die nog `deel` (1,0 tot 0,0) over heeft: vloeiend
+## van groen via oranje naar rood, in plaats van drie harde banden. De urgentie
+## loopt continu op in plaats van in twee sprongen te springen.
+##
+## Stond in `mg_standup.gd`, waar de eerste aflopende balk zat. P3 zet er de
+## gedeelde klokbalk van `minigame_base.gd` (`bouw_klokbalk()`/`zet_klokbalk()`)
+## naast, gebruikt door `mg_scope.gd`, `mg_abgevecht.gd` en `mg_standup.gd`
+## zelf: drie kopieën van dezelfde kleurcurve is er twee te veel.
+static func tijdkleur(deel: float) -> Color:
+	if deel >= 0.5:
+		return GROEN.lerp(ORANJE, (1.0 - deel) / 0.5)
+	return ORANJE.lerp(ROOD, (0.5 - deel) / 0.5)
+
+
 ## Zelfde paneel, maar met een krappe binnenmarge. Voor lijstrijen, waar de
 ## standaard 6 px een rij van 26 px op 42 px brengt.
 static func panel_krap(bg: Color = PANEL, border: Color = INK, width: int = 1) -> StyleBoxFlat:
