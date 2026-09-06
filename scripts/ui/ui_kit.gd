@@ -301,6 +301,20 @@ static func card(text: String, tint: Color = PANEL) -> Button:
 	return b
 
 
+## De kleur van een aflopende balk: vloeiend van groen via oranje naar rood, in
+## plaats van drie harde banden — de urgentie loopt continu op in plaats van in
+## twee sprongen te springen. `deel` is 1 bij vol en 0 bij leeg.
+##
+## Stond tot P5 als `_tijdkleur()` in `mg_standup.gd`. De brandjes van de finale
+## hebben precies dezelfde balk, en twee kopieën van dezelfde kleurcurve lopen
+## vroeg of laat uit elkaar.
+static func tijdkleur(deel: float) -> Color:
+	var d := clampf(deel, 0.0, 1.0)
+	if d >= 0.5:
+		return GROEN.lerp(ORANJE, (1.0 - d) / 0.5)
+	return ORANJE.lerp(ROOD, (0.5 - d) / 0.5)
+
+
 static func spacer(h: float) -> Control:
 	var c := Control.new()
 	c.custom_minimum_size = Vector2(0, h)

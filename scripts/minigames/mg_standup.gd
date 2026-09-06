@@ -485,10 +485,11 @@ func _werk_balk_bij() -> void:
 
 ## Vloeiend van groen via oranje naar rood, in plaats van drie harde banden:
 ## de urgentie loopt continu op in plaats van in twee sprongen te springen.
+## Sinds P5 staat de curve in `UiKit.tijdkleur()`, omdat de brandjes van de
+## finale dezelfde balk hebben; deze naam blijft omdat de rest van dit bestand
+## hem gebruikt.
 static func _tijdkleur(deel: float) -> Color:
-	if deel >= 0.5:
-		return UiKit.GROEN.lerp(UiKit.ORANJE, (1.0 - deel) / 0.5)
-	return UiKit.ORANJE.lerp(UiKit.ROOD, (0.5 - deel) / 0.5)
+	return UiKit.tijdkleur(deel)
 
 
 func _werk_status_bij() -> void:

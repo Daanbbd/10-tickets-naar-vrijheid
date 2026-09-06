@@ -104,6 +104,7 @@ func _ready() -> void:
 	_test_fase2a()
 	await _test_fase2b()
 	_test_finale_kan_falen()
+	_test_finale_brandjes()
 	_test_dialoog_mond_volgt_spreker()
 	await _test_klaar_landt_niet_stil()
 	_rapport()
@@ -796,23 +797,28 @@ func _test_minigame_inhoud() -> void:
 					_ok(start.has(k2), "mg_deploy: start mist '%s'" % k2)
 					_ok(Gevolgen.finale_start().has(StringName(k2)),
 						"Gevolgen.finale_start() mist '%s', dat de data wel verwacht" % k2)
-				_ok(int(c.get("acties", 0)) > 0, "mg_deploy: geen handelingen")
+				# P5: `acties` en `kost` zijn weg. De schaarste is de klok, en
+				# die moet er dus wél zijn — zonder klok gaat de finale nooit
+				# live, want er is sinds P5 geen knop DEPLOYEN meer.
+				_ok(not c.has("acties"),
+					"mg_deploy: `acties` staat er nog; de economie van acht handelingen is met P5 vervallen")
+				_ok(float(c.get("klok_seconden", 0)) > 0.0, "mg_deploy: geen klok")
 
 				var keuzes := c.get("keuzes", []) as Array
-				_ok(keuzes.size() >= 4, "mg_deploy: te weinig keuzes voor acht handelingen")
-				var goedkoopste := 99
+				_ok(keuzes.size() == BrandjesModel.HANDELINGEN.size(),
+					"mg_deploy: %d keuzes, en de zeven knoppen verwachten er %d"
+						% [keuzes.size(), BrandjesModel.HANDELINGEN.size()])
 				for raw: Variant in keuzes:
 					var kz := raw as Dictionary
 					_ok(String(kz.get("id", "")) != "", "mg_deploy: keuze zonder id")
 					_ok(String(kz.get("label", "")) != "", "mg_deploy: keuze zonder label")
 					_ok(String(kz.get("regel", "")) != "",
 						"mg_deploy/%s: geen regel, dus een handeling zonder reactie" % kz.get("id", ""))
-					goedkoopste = mini(goedkoopste, int(kz.get("kost", 0)))
+					_ok(StringName(kz.get("id", "")) in BrandjesModel.HANDELINGEN,
+						"mg_deploy: keuze '%s' is geen van de zeven handelingen" % kz.get("id", ""))
 					for ek: Variant in (kz.get("effect", {}) as Dictionary):
 						_ok(String(ek) in ["bugs", "vertrouwen", "getest", "scope"],
 							"mg_deploy/%s: effect op onbekende waarde '%s'" % [kz.get("id", ""), ek])
-				_ok(goedkoopste <= int(c.get("acties", 0)),
-					"mg_deploy: zelfs de goedkoopste keuze past niet in het budget")
 
 				# Er moet altijd een uitkomst zijn, ook bij de slechtst denkbare
 				# stand. Zonder een drempel op 0 valt de finale door zonder tekst.
@@ -834,11 +840,14 @@ func _test_minigame_inhoud() -> void:
 				_ok(titels.size() == (c.get("uitkomsten", []) as Array).size(),
 					"mg_deploy: twee uitkomsten delen dezelfde titel — de score moet zichtbaar meebewegen")
 
+				# P5: `na` telt klokseconden en niet meer verbruikte
+				# handelingen. Een gebeurtenis ná de klok vuurt nooit.
 				for raw3: Variant in (c.get("gebeurtenissen", []) as Array):
 					var g := raw3 as Dictionary
 					_ok(String(g.get("tekst", "")) != "", "mg_deploy: gebeurtenis zonder tekst")
-					_ok(int(g.get("na", -1)) >= 0 and int(g.get("na", 0)) < int(c.get("acties", 0)),
-						"mg_deploy: gebeurtenis op handeling %s valt buiten het budget" % g.get("na", "?"))
+					_ok(float(g.get("na", -1)) >= 0.0
+							and float(g.get("na", 0)) < float(c.get("klok_seconden", 0)),
+						"mg_deploy: gebeurtenis op seconde %s valt buiten de klok" % g.get("na", "?"))
 			"scope":
 				var wensen := c.get("wensen", []) as Array
 				_ok(wensen.size() >= 5, "%s: te weinig wensen om te kiezen" % mid)
@@ -5766,6 +5775,175 @@ func _test_finale_kan_falen() -> void:
 	for raw: Variant in uitkomsten:
 		_ok(String((raw as Dictionary).get("titel", "")).begins_with("OPGELEVERD"),
 			"een geslaagde uitkomst hoort OPGELEVERD te heten; ROLLBACK is geen uitkomst in de data")
+
+
+## P5: de brandjes van de finale, doorgerekend zonder scene.
+##
+## `BrandjesModel` bestaat om deze test te kunnen schrijven. De vraag "is de
+## avond eerlijk?" is een getallenvraag, en die hoort headless beantwoord te
+## worden en niet met een screenshot: of een zorgvuldige dag met perfect spel
+## VLEKKELOOS haalt, of een rampdag dat met hetzelfde perfecte spel juist níet
+## haalt, en of niets doen de eerste deploy laat falen. Drie eisen tegelijk,
+## want elke los is triviaal te halen door de effecten op te schroeven.
+##
+## De gevonden getallen, met de data van 6 september (spawncurve
+## `[[0,9],[25,7],[50,5]]`, klok 75 s, 14 brandjes, effecten uit `keuzes`),
+## over vijf zaden:
+##
+## | dag                    | perfect spel | niets doen |
+## |------------------------|--------------|------------|
+## | zorgvuldig             | 16 en hoger  | -19        |
+## | ramp                   | 6 .. 9       | -          |
+## | ramp, volledig gezaaid | onder 13     | -          |
+##
+## De drempels staan op 13 / 9 / 4 / 0, en `_faal_drempel()` is 4. Een
+## zorgvuldige dag zit dus ruim boven VLEKKELOOS, een rampdag met perfect spel
+## klimt tot KRAP of MET EEN SMETJE maar nooit tot VLEKKELOOS, en niets doen
+## valt door de bodem. De marge zit vooral in twee plekken: `vertrouwen` heeft
+## geen plafond en `getest` wel (`Gevolgen.oplevering_score()` topt af op twee
+## controles per bug waarmee je begon), waardoor een zorgvuldige dag zijn winst
+## uit `informeren` haalt en een rampdag uit `fixen`.
+##
+## Meerdere zaden, want de rij is gehusseld: één zaad bewijst niets over een
+## avond die elke speelbeurt anders loopt.
+func _test_finale_brandjes() -> void:
+	_kop("de brandjes van de finale zijn eerlijk gekalibreerd")
+
+	var c := MinigameContent.get_config(&"mg_deploy")
+	var brandjes := c.get("brandjes", []) as Array
+	_ok(brandjes.size() >= 12, "mg_deploy: %d brandjes, en er horen er minstens 12 te zijn" % brandjes.size())
+
+	# --- 1. de data zelf ----------------------------------------------------
+	var geldige_handelingen := {}
+	for raw: Variant in c.get("keuzes", []):
+		geldige_handelingen[StringName((raw as Dictionary).get("id", ""))] = true
+	var gedekt := {}
+	var ids := {}
+	var alle: Array = brandjes.duplicate()
+	alle.append(c.get("brandje_niet_af", {}))
+	for raw: Variant in alle:
+		var b := raw as Dictionary
+		var bid := String(b.get("id", ""))
+		_ok(bid != "", "mg_deploy: brandje zonder id")
+		_ok(not ids.has(bid), "mg_deploy: twee brandjes delen id '%s'" % bid)
+		ids[bid] = true
+		var h := StringName(b.get("handeling", ""))
+		_ok(geldige_handelingen.has(h),
+			"mg_deploy/%s: handeling '%s' is geen van de zeven knoppen" % [bid, h])
+		gedekt[h] = true
+		_ok(float(b.get("duur", 0)) > 0.0, "mg_deploy/%s: duur is 0" % bid)
+		# 40 tekens is wat er op FS_SMALL naast een kaartje van 30 px past.
+		_ok(String(b.get("tekst", "")).length() <= 40,
+			"mg_deploy/%s: tekst is %d tekens en er passen er 40"
+				% [bid, String(b.get("tekst", "")).length()])
+		var straf := b.get("straf", {}) as Dictionary
+		_ok(not straf.is_empty(), "mg_deploy/%s: geen straf, dus verlopen kost niets" % bid)
+		for sk: Variant in straf:
+			_ok(String(sk) in ["bugs", "vertrouwen", "getest", "scope"],
+				"mg_deploy/%s: straf op onbekende waarde '%s'" % [bid, sk])
+		# De `when` van een brandje moet in de smalle grammatica passen die
+		# `BrandjesModel.mag()` kent; de rest van `Conditions` leest Session en
+		# is hier dus niet door te rekenen.
+		for wk: Variant in (b.get("when", {}) as Dictionary):
+			_ok(String(wk) in ["flags_all", "flags_none"],
+				"mg_deploy/%s: `when.%s` kent BrandjesModel niet" % [bid, wk])
+	for h: StringName in BrandjesModel.HANDELINGEN:
+		_ok(gedekt.has(h), "mg_deploy: geen enkel brandje vraagt om '%s'" % h)
+
+	var curve := c.get("spawn_curve", []) as Array
+	_ok(curve.size() >= 2, "mg_deploy: spawn_curve heeft %d punten" % curve.size())
+	var vorige_t := -1.0
+	var vorig_iv := 9999.0
+	for raw: Variant in curve:
+		var paar := raw as Array
+		_ok(paar.size() == 2, "mg_deploy: spawn_curve-punt is geen [t, interval]")
+		if paar.size() != 2:
+			continue
+		_ok(float(paar[0]) > vorige_t, "mg_deploy: spawn_curve loopt niet op in t")
+		_ok(float(paar[1]) <= vorig_iv, "mg_deploy: spawn_curve wordt trager in plaats van sneller")
+		_ok(float(paar[1]) > 0.0, "mg_deploy: spawn-interval 0")
+		vorige_t = float(paar[0])
+		vorig_iv = float(paar[1])
+
+	# --- 2, 3, 4. de drie dagen --------------------------------------------
+	var uitkomsten: Array = c.get("uitkomsten", [])
+	var top := int((uitkomsten[0] as Dictionary).get("min", 0))
+	var faal := int((uitkomsten[uitkomsten.size() - 2] as Dictionary).get("min", 0))
+
+	var zorgvuldig := {&"bugs": 1, &"vertrouwen": 7, &"getest": 3, &"scope": 2}
+	var ramp := {&"bugs": 8, &"vertrouwen": 1, &"getest": 0, &"scope": 7}
+
+	var zorg_laag := 999
+	var ramp_laag := 999
+	var ramp_hoog := -999
+	for zaad: int in [1, 7, 42, 1234, 99991]:
+		zorg_laag = mini(zorg_laag, _finale_perfect(c, zorgvuldig, zaad))
+		var r := _finale_perfect(c, ramp, zaad)
+		ramp_laag = mini(ramp_laag, r)
+		ramp_hoog = maxi(ramp_hoog, r)
+	_ok(zorg_laag >= top,
+		"een zorgvuldige dag met perfect spel haalt %d en VLEKKELOOS begint bij %d" % [zorg_laag, top])
+	_ok(ramp_hoog < top,
+		"een rampdag haalt met perfect spel %d en dat is VLEKKELOOS (vanaf %d)" % [ramp_hoog, top])
+	_ok(ramp_laag >= faal,
+		"een rampdag met perfect spel zakt naar %d en faalt dus alsnog (drempel %d)" % [ramp_laag, faal])
+
+	var niks := _finale_niets_doen(c, zorgvuldig, 42)
+	_ok(niks < faal,
+		"niets doen op een zorgvuldige dag haalt %d en de eerste deploy faalt pas onder %d" % [niks, faal])
+
+	# De rampdag zoals hij er in het spel echt uitziet: de losse kabel vooraan,
+	# een klant die twee keer belt en twee tickets die nooit afkwamen. Meer
+	# brandjes betekent meer om te blussen, dus dit is de kant waar perfect
+	# spel alsnog door VLEKKELOOS heen zou kunnen breken.
+	var vlaggen := {
+		&"gevolg_backend_fout_gekozen": true, &"gevolg_klant_ontevreden": true,
+	}
+	var open_werk: Array[String] = ["BBD-204", "BBD-207"]
+	for zaad2: int in [1, 7, 42, 1234, 99991]:
+		var m := BrandjesModel.new(c, ramp, vlaggen, open_werk, zaad2)
+		_ok(String((m.rij[0] as Dictionary)[&"id"]) == "kabel_b",
+			"de losse kabel hoort het eerste kaartje te zijn, niet '%s'" % (m.rij[0] as Dictionary)[&"id"])
+		var klant := 0
+		for b: Dictionary in m.rij:
+			if String(b[&"id"]) == "klant_paard":
+				klant += 1
+		_ok(klant == 2, "een ontevreden klant belt twee keer, niet %d keer" % klant)
+		while not m.tijd_om():
+			m.tik(_FINALE_STAP)
+			var b2 := m.kortste()
+			if not b2.is_empty():
+				m.blus(StringName(b2[&"handeling"]))
+		_ok(m.score() < top,
+			"een gezaaide rampdag haalt met perfect spel %d en dat is VLEKKELOOS (vanaf %d)"
+				% [m.score(), top])
+
+
+## De stap waarmee de kalibratie de avond doorrekent. Een kwart seconde: fijn
+## genoeg dat een balk van zes seconden niet in één sprong voorbij is, grof
+## genoeg dat 75 seconden in 300 stappen klaar zijn.
+const _FINALE_STAP := 0.25
+
+
+## Speelt de avond helemaal uit met perfecte reflexen: elke tik blust het
+## zichtbare brandje met de kortste balk, dus er verloopt niets. Geen enkele
+## loze handeling, want `blus()` op een handeling die niemand vraagt doet niets.
+func _finale_perfect(c: Dictionary, start: Dictionary, zaad: int) -> int:
+	var m := BrandjesModel.new(c, start, {}, [] as Array[String], zaad)
+	while not m.tijd_om():
+		m.tik(_FINALE_STAP)
+		var b := m.kortste()
+		if not b.is_empty():
+			m.blus(StringName(b[&"handeling"]))
+	return m.score()
+
+
+## Dezelfde avond, maar de speler kijkt ernaar. Alles verloopt.
+func _finale_niets_doen(c: Dictionary, start: Dictionary, zaad: int) -> int:
+	var m := BrandjesModel.new(c, start, {}, [] as Array[String], zaad)
+	while not m.tijd_om():
+		m.tik(_FINALE_STAP)
+	return m.score()
 
 
 ## Los geverifieerd defect: "in 37 van 59 ticketbomen beweegt de verkeerde
