@@ -224,6 +224,23 @@ var _sleept: bool = false
 var _greep: Vector2 = Vector2.ZERO
 var _qa_bezig: bool = false
 
+# P3/M3: "Victor kijkt mee" — geen harde klok (dit spel gaat over positie, niet
+# over tijd), wel een zachte teller die elke `_drift_sec` seconden één blok
+# dat nog niet vast staat een pixel verder van zijn plek af laat schuiven.
+# `_drift_actief` is dezelfde bewaakvlag als elders (zie `mg_standup.gd`'s
+# `_running`): pas aan het eind van `_on_setup()` op true.
+const DRIFT_MAX_PER_AS := 6.0
+const DRIFT_SCHUD_PX := 2.0
+const DRIFT_SCHUD_TIJD := 0.15
+
+var _drift_sec: float = 8.0
+var _drift_t: float = 0.0
+var _drift_actief: bool = false
+var _drift_toegevoegd: Dictionary = {}   ## StringName -> Vector2, drift tot nu toe per as
+var _drift_label: Label = null
+var _schud_tween: Tween = null
+var _puls_tween: Tween = null
+
 
 func _on_setup() -> void:
 	var c := content()
@@ -233,8 +250,12 @@ func _on_setup() -> void:
 
 	_raster = maxi(1, int(c.get("raster", 4)))
 	_tolerantie = maxf(0.0, float(c.get("tolerantie", 2)))
+	_drift_sec = maxf(1.0, float(c.get("drift_sec", 8.0)))
 
 	var body := build_chrome(default_title(), String(c.get("intro", "")))
+
+	_drift_label = UiKit.label("", UiKit.FS_SMALL, UiKit.WIT)
+	chrome_header().add_child(_drift_label)
 
 	var kader := PanelContainer.new()
 	kader.add_theme_stylebox_override("panel", UiKit.panel_krap(UiKit.WIT, UiKit.LINE))
@@ -275,6 +296,14 @@ func _on_setup() -> void:
 
 	_bouw_voet(body)
 	_werk_bij()
+
+	# De eerste 0,6 s: een pulserende rand rond het meest scheve blok, zodat
+	# slepen zich aandient zonder daar een woord tekst voor nodig te hebben.
+	var meest_scheef := _meest_scheef_blok()
+	if meest_scheef != null:
+		_puls_tween = puls_rand(meest_scheef, 2)
+
+	_drift_actief = true
 
 
 static func _afwijking(e: Dictionary) -> Vector2:
@@ -433,6 +462,16 @@ func _raak(punt: Vector2) -> Blok:
 	return null
 
 
+## De minigame is een overlay die halverwege een animatie afgebroken kan
+## worden; de drift-schudtween en de openingspuls overleven hun node niet
+## vanzelf.
+func _exit_tree() -> void:
+	if _schud_tween != null and _schud_tween.is_valid():
+		_schud_tween.kill()
+	if _puls_tween != null and _puls_tween.is_valid():
+		_puls_tween.kill()
+
+
 func _kies(id: StringName) -> void:
 	if _keuze == id:
 		return
@@ -467,6 +506,107 @@ func _werk_bij() -> void:
 	set_status("%s  ·  %d/%d op raster" % [
 		blok.naam if blok != null else "Kies een blok",
 		_op_raster_aantal(), _volgorde.size()])
+	_werk_drift_teller_bij()
+
+
+## Het blok met de grootste resterende afwijking — bepaalt waar de openings-
+## puls op valt.
+func _meest_scheef_blok() -> Blok:
+	var beste: Blok = null
+	var beste_afwijking := -1.0
+	for id: StringName in _volgorde:
+		var kandidaat := _blokken[id] as Blok
+		var r := kandidaat.rest(_raster)
+		var afwijking := absf(r.x) + absf(r.y)
+		if afwijking > beste_afwijking:
+			beste_afwijking = afwijking
+			beste = kandidaat
+	return beste
+
+
+func _werk_drift_teller_bij() -> void:
+	if _drift_label == null:
+		return
+	var scheef := _volgorde.size() - _op_raster_aantal()
+	_drift_label.text = "Victor kijkt mee  ·  %d scheef" % scheef
+
+
+# --- Victor kijkt mee: de build drift --------------------------------------
+
+## Elke `_drift_sec` seconden krijgt één blok dat nog niet vast staat een
+## pixel extra afwijking. Geen fail door tijd: wie niets doet, ziet de puzzel
+## alleen langzaam erger worden.
+func _process(delta: float) -> void:
+	if not _drift_actief:
+		return
+	_drift_t += delta
+	if _drift_t >= _drift_sec:
+		_drift_t -= _drift_sec
+		_val_drift()
+
+
+func _val_drift() -> void:
+	var kandidaten: Array[StringName] = []
+	for id: StringName in _volgorde:
+		if not (_blokken[id] as Blok).vast:
+			kandidaten.append(id)
+	if kandidaten.is_empty():
+		return   # alles staat al op het raster: niets meer om scheef te maken
+
+	var id := kandidaten[randi() % kandidaten.size()]
+	var blok := _blokken[id] as Blok
+	var toegevoegd: Vector2 = _drift_toegevoegd.get(id, Vector2.ZERO)
+	var assen: Array[int] = []
+	if toegevoegd.x < DRIFT_MAX_PER_AS:
+		assen.append(0)
+	if toegevoegd.y < DRIFT_MAX_PER_AS:
+		assen.append(1)
+	if assen.is_empty():
+		return   # dit blok heeft zijn maximale drift al gehad op beide assen
+
+	var gekozen_as := assen[randi() % assen.size()]
+	var r := blok.rest(_raster)
+	if gekozen_as == 0:
+		var richting := 1.0 if r.x >= 0.0 else -1.0
+		blok.start.x += richting
+		toegevoegd.x += 1.0
+	else:
+		var richting := 1.0 if r.y >= 0.0 else -1.0
+		blok.start.y += richting
+		toegevoegd.y += 1.0
+	_drift_toegevoegd[id] = toegevoegd
+	blok.vast = blok.op_raster(_raster, _tolerantie)
+
+	# Synchroon naar de nieuwe (net iets scheve) plek, en dáárna een kort
+	# schudtweentje erbovenop — niet via `_plaats()`, die zijn eigen snap-tween
+	# op `position` zou starten en zo met de schudtween om diezelfde
+	# eigenschap vechten.
+	var doel := blok.thuis + blok.rest(_raster)
+	blok.position = doel
+	_schud(blok, doel)
+
+	_werk_drift_teller_bij()
+	_toon_drift_melding()
+
+
+func _schud(blok: Blok, doel: Vector2) -> void:
+	if _schud_tween != null and _schud_tween.is_valid():
+		_schud_tween.kill()
+	_schud_tween = create_tween()
+	_schud_tween.tween_property(blok, "position", doel + Vector2(DRIFT_SCHUD_PX, 0.0),
+		DRIFT_SCHUD_TIJD * 0.5).set_trans(Tween.TRANS_SINE)
+	_schud_tween.tween_property(blok, "position", doel, DRIFT_SCHUD_TIJD * 0.5) \
+		.set_trans(Tween.TRANS_SINE)
+
+
+## De statusregel toont "de build drift" 1 s, en valt dan terug op de gewone
+## "<blok> · n/m op raster"-tekst.
+func _toon_drift_melding() -> void:
+	set_status("de build drift")
+	await get_tree().create_timer(1.0, true).timeout
+	if not is_inside_tree():
+		return
+	_werk_bij()
 
 
 # --- Afronden -------------------------------------------------------------

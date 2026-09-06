@@ -852,6 +852,9 @@ func _test_minigame_inhoud() -> void:
 					_ok(int(g.get("na", -1)) >= 0 and int(g.get("na", 0)) < int(c.get("acties", 0)),
 						"mg_deploy: gebeurtenis op handeling %s valt buiten het budget" % g.get("na", "?"))
 			"scope":
+				# P3: Dennis' klok — 0 of negatief zou de balk meteen op nul zetten
+				# en de speler geen tijd geven om te verdelen.
+				_ok(float(c.get("klok_sec", 0.0)) > 0.0, "%s: klok_sec moet positief zijn" % mid)
 				var wensen := c.get("wensen", []) as Array
 				_ok(wensen.size() >= 5, "%s: te weinig wensen om te kiezen" % mid)
 				var punten_totaal := 0
@@ -959,6 +962,9 @@ func _test_minigame_inhoud() -> void:
 					"%s: zelfs met de QA-strategie (%s afgekapt) valt de laatste belangrijke regel op %.1fs, buiten de %.0fs" % [
 						mid, genegeerd, met_afkappen, tijd])
 			"uitlijnen":
+				# P3: de build drift — 0 of negatief zou elk frame een blok
+				# opnieuw laten afwijken in plaats van eens per drift_sec.
+				_ok(float(c.get("drift_sec", 0.0)) > 0.0, "%s: drift_sec moet positief zijn" % mid)
 				var elementen := c.get("elementen", []) as Array
 				_ok(elementen.size() >= 3, "%s: te weinig elementen" % mid)
 				for raw: Variant in elementen:
@@ -1003,6 +1009,9 @@ func _test_minigame_inhoud() -> void:
 				_ok(float(c.get("ronde_sec", 0.0)) >= 5.0, "%s: een ronde korter dan vijf seconden is niet te lezen" % mid)
 				_ok(String(c.get("mis_regel", "")) != "", "%s: geen regel voor een misser" % mid)
 			"abgevecht":
+				# P3: de keuzeklok — 0 of negatief zou meteen de zwakste klap
+				# laten vallen, zonder dat de speler ooit zelf kan kiezen.
+				_ok(float(c.get("keuze_sec", 0.0)) > 0.0, "%s: keuze_sec moet positief zijn" % mid)
 				var hp_a := float(c.get("hp_a", 0.0))
 				var hp_b := float(c.get("hp_b", 0.0))
 				_ok(hp_a > 0.0 and hp_b > 0.0, "%s: hp_a/hp_b moeten positief zijn" % mid)

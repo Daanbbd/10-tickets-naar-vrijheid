@@ -140,8 +140,9 @@ static func postit_kleur(naam: StringName) -> Color:
 ## loopt continu op in plaats van in twee sprongen te springen.
 ##
 ## Stond in `mg_standup.gd`, waar de eerste aflopende balk zat. Sinds de klant
-## per ronde afgeteld wordt (BBD-203, `DialogueBox.show_choices()`) zijn dat er
-## twee, en twee kopieën van dezelfde kleurcurve is er een te veel: een balk
+## per ronde afgeteld wordt (BBD-203, `DialogueBox.show_choices()`) en P3 de
+## gedeelde klokbalk van `minigame_base.gd` (`bouw_klokbalk()`/`zet_klokbalk()`)
+## in scope, A tegen B en de stand-up zet, is dit de enige kleurcurve: een balk
 ## die halverwege oranje wordt hoort overal hetzelfde te betekenen.
 static func tijdkleur(deel: float) -> Color:
 	if deel >= 0.5:

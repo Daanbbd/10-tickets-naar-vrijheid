@@ -273,6 +273,94 @@ func set_status(text: String) -> void:
 		_status.text = text
 
 
+# --- Klokbalk: gedeelde tijdsdruk-balk --------------------------------------
+#
+# P3: vier minigames bouwden onafhankelijk van elkaar dezelfde balk (vak +
+# vulling die van groen via oranje naar rood loopt en in de laatste 20%
+# knippert). Overgezet uit `mg_standup.gd` naar hier, zodat er één klokbalk is
+# en niet vier: `bouw_klokbalk()` bouwt hem, `zet_klokbalk(deel)` update 'm
+# elke keer dat de resterende tijd verandert. De kleurcurve zelf komt uit
+# `UiKit.tijdkleur()` — geen tweede kopie daarvan hier. `mg_standup.gd`
+# gebruikt deze helper nu ook zelf.
+
+var _klok_vak: Control = null
+var _klok_balk: ColorRect = null
+
+# Onder welk aandeel resterende tijd de balk begint te knipperen.
+const _KLOK_PULS_DREMPEL := 0.2
+const _KLOK_PULS_SNELHEID := 9.0
+
+
+## Bouwt de balk (vak + vulling), in dezelfde stijl als de rest van de chrome.
+## De aanroeper voegt het resultaat zelf toe aan `chrome_header()` — precies
+## zoals elke andere vaste strook daar staat — en roept `zet_klokbalk()`
+## daarna en bij elke tik.
+func bouw_klokbalk() -> Control:
+	_klok_vak = Control.new()
+	_klok_vak.custom_minimum_size = Vector2(0, 7)
+	_klok_vak.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_klok_vak.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var achter := ColorRect.new()
+	achter.color = UiKit.NEUTRAAL_TINT
+	achter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiKit.full_rect(achter)
+	_klok_vak.add_child(achter)
+	# De vulling krimpt via zijn rechteranker, niet via size: een Control krijgt
+	# zijn formaat van de ouder, dus een size die je zelf zet is het volgende
+	# frame weer weg.
+	_klok_balk = ColorRect.new()
+	_klok_balk.color = UiKit.GROEN
+	_klok_balk.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_klok_balk.anchor_left = 0.0
+	_klok_balk.anchor_top = 0.0
+	_klok_balk.anchor_right = 1.0
+	_klok_balk.anchor_bottom = 1.0
+	_klok_vak.add_child(_klok_balk)
+	return _klok_vak
+
+
+## Zet de balk op `deel` (resterende tijd / totale tijd, 0..1 — buiten dat
+## bereik wordt geklemd): vloeiend van groen via oranje naar rood, en
+## knipperend zodra er nog maar 20% over is — "steeds roder" moet je voelen
+## aankomen, niet pas zien als de kleur al is omgeslagen.
+func zet_klokbalk(deel: float) -> void:
+	if _klok_balk == null:
+		return
+	deel = clampf(deel, 0.0, 1.0)
+	_klok_balk.anchor_right = deel
+	_klok_balk.color = UiKit.tijdkleur(deel)
+	if deel <= _KLOK_PULS_DREMPEL:
+		var t := Time.get_ticks_msec() / 1000.0
+		_klok_balk.modulate.a = lerpf(0.55, 1.0, (sin(t * _KLOK_PULS_SNELHEID) + 1.0) * 0.5)
+	else:
+		_klok_balk.modulate.a = 1.0
+
+
+## Twee (of `keer`) pulsen op de rand van `control` — de aanwijzing dat hier
+## iets moet gebeuren, zonder daar een woord tekst voor nodig te hebben
+## (uitlijnen: het scheefste blok; heatmap: de knop). Werkt op de
+## `border_color` van de stylebox die al via
+## `add_theme_stylebox_override("panel", ...)` op `control` staat — die
+## stylebox is bij `UiKit.panel()`/`panel_krap()` altijd een eigen instantie,
+## nooit gedeeld, dus dit raakt nooit een andere control. Geeft de Tween
+## terug: de aanroeper bewaart 'm en killt 'm in zijn eigen `_exit_tree()`,
+## dezelfde afspraak als elke andere tween in deze minigames.
+func puls_rand(control: Control, keer: int = 2) -> Tween:
+	if control == null:
+		return null
+	var sb := control.get_theme_stylebox(&"panel") as StyleBoxFlat
+	if sb == null:
+		return null
+	var origineel := sb.border_color
+	var tw := create_tween()
+	for _i in keer:
+		tw.tween_property(sb, "border_color", UiKit.BLUEBIRD_INK, 0.15) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(sb, "border_color", origineel, 0.15) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	return tw
+
+
 ## F5-b: een storing landt hier, niet als overlay erboven. De telefoon (laag
 ## 30) en de HUD-toast (laag 10) liggen allebei onder de minigame (laag 50),
 ## dus onzichtbaar zolang dit scherm openstaat — `Storingen` roept dit aan op

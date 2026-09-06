@@ -7,6 +7,7 @@
   "capaciteit": 13,
   "tevreden_min": 10,
   "eenheid": "punten",
+  "klok_sec": 45,
   "wensen": [
    {
     "id": "vergelijker",
@@ -256,6 +257,7 @@
   "waarom": "Een paar pixels schelen lijkt onbelangrijk, tot iemand er met de neus bovenop staat.",
   "tolerantie": 2,
   "raster": 4,
+  "drift_sec": 8,
   "elementen": [
    {
     "id": "logo",
@@ -462,7 +464,7 @@
    "label": "Bestellen",
    "maat": [
     64,
-    20
+    26
    ],
    "start": [
     50,
@@ -500,6 +502,7 @@
   "waarom": "Niet elke klap raakt. Drie pogingen om te zien welke dat wél doet.",
   "hp_a": 100,
   "hp_b": 100,
+  "keuze_sec": 7,
   "rondes": [
    {
     "vraag": "Openingsklap. Wat zet je aan?",

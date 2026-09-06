@@ -17,6 +17,10 @@ extends MinigameBase
 # wegvalt. Twee keer FADE gaat van de klok af, dus dit is ook een prijs.
 const FADE := 0.14
 
+# P3: de klokbalk zelf (vak, vulling, kleurcurve, knipperpuls) komt nu uit
+# `minigame_base.gd`'s `bouw_klokbalk()`/`zet_klokbalk()` — dezelfde balk als
+# `mg_scope.gd` en `mg_abgevecht.gd` gebruiken, in plaats van een vijfde kopie.
+
 var _sprekers: Array[Dictionary] = []
 var _idx: int = -1
 var _spreker_t: float = 0.0
@@ -32,8 +36,6 @@ var _gemist: Array[String] = []
 # eenmalig: zonder deze vlag zou _werk_regels_bij() 'm elk frame opnieuw
 # markeren zolang hij zichtbaar blijft.
 var _nuttig_regel_getoond: bool = false
-# Voor de dreigingspuls op de tijdbalk in de laatste seconden.
-var _puls_t: float = 0.0
 
 # Tijdens de wisseltween staat de spreker stil maar loopt de stand-up door.
 var _wissel: bool = false
@@ -57,8 +59,6 @@ var _segment_status: Dictionary = {}
 # interventies op zijn.
 var _qa_afkap_ids: Array[String] = []
 
-var _balk_vak: Control = null
-var _balk: ColorRect = null
 var _kaart: PanelContainer = null
 var _naam: Label = null
 var _regels: Array[Label] = []
@@ -137,27 +137,9 @@ func _bepaal_qa_afkap() -> Array[String]:
 ## De tijdbalk en de afkapknop horen niet in de scroll: dit zijn de twee dingen
 ## die je op elk moment nodig hebt. De tijdbalk boven de inhoud, de knop eronder.
 func _bouw_vast(_body: VBoxContainer) -> void:
-	_balk_vak = Control.new()
-	_balk_vak.custom_minimum_size = Vector2(0, 7)
-	_balk_vak.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_balk_vak.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var achter := ColorRect.new()
-	achter.color = UiKit.NEUTRAAL_TINT
-	achter.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	UiKit.full_rect(achter)
-	_balk_vak.add_child(achter)
-	# De vulling krimpt via zijn rechteranker, niet via size: een Control krijgt
-	# zijn formaat van de ouder, dus een size die je zelf zet is het volgende
-	# frame weer weg.
-	_balk = ColorRect.new()
-	_balk.color = UiKit.GROEN
-	_balk.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_balk.anchor_left = 0.0
-	_balk.anchor_top = 0.0
-	_balk.anchor_right = 1.0
-	_balk.anchor_bottom = 1.0
-	_balk_vak.add_child(_balk)
-	chrome_header().add_child(_balk_vak)
+	# P3: de klokbalk zelf komt nu uit `minigame_base.gd`, zodat er één balk is
+	# en niet vier — zie `bouw_klokbalk()`/`zet_klokbalk()`.
+	chrome_header().add_child(bouw_klokbalk())
 
 	_bouw_info_balk()
 
@@ -312,7 +294,6 @@ func _process(delta: float) -> void:
 		return
 
 	_tijd -= delta
-	_puls_t += delta
 	_werk_balk_bij()
 	_werk_status_bij()
 	if _tijd <= 0.0:
@@ -464,23 +445,10 @@ func _markeer_nuttige_regel(l: Label) -> void:
 	AudioDirector.play_ui(&"pak")
 
 
-# Onder welk aandeel resterende tijd de balk begint te knipperen — hetzelfde
-# punt waar hij vroeger in één sprong hard rood werd, nu ook voelbaar in
-# plaats van alleen zichtbaar.
-const _PULS_DREMPEL := 0.2
-const _PULS_SNELHEID := 9.0
-
-
+## P3: de balk zelf (kleur, knipperpuls) komt nu uit `minigame_base.gd`'s
+## `zet_klokbalk()` — hetzelfde gedrag, maar niet meer vier keer overgetypt.
 func _werk_balk_bij() -> void:
-	var deel := clampf(_tijd / maxf(0.001, _tijd_max), 0.0, 1.0)
-	_balk.anchor_right = deel
-	_balk.color = UiKit.tijdkleur(deel)
-	# Een knipperende balk in de laatste seconden: "steeds roder" moet je
-	# voelen aankomen, niet pas zien als de kleur al omgeslagen is.
-	if deel <= _PULS_DREMPEL:
-		_balk.modulate.a = lerpf(0.55, 1.0, (sin(_puls_t * _PULS_SNELHEID) + 1.0) * 0.5)
-	else:
-		_balk.modulate.a = 1.0
+	zet_klokbalk(_tijd / maxf(0.001, _tijd_max))
 
 
 func _werk_status_bij() -> void:
