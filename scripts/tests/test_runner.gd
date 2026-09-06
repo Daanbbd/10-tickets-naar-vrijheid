@@ -114,6 +114,7 @@ func _ready() -> void:
 	await _test_klaar_landt_niet_stil()
 	_test_schrijfstijl_geen_emdash()
 	_test_geen_await_op_killbare_tween()
+	_test_web_lifecycle_aangesloten()
 	await _test_standup_uitleg()
 	_test_uitlijnen_zonder_pijlen()
 	_rapport()
@@ -6720,6 +6721,43 @@ func _scrub_emdash(data: Variant, pad: String) -> void:
 ## false op een gekillde tween en die lus eindigt dus altijd. Een tween die
 ## niemand kan killen mag wél op `finished` wachten; daar is dat het eerlijke
 ## signaal.
+## De achtergrondroute moet op web langs `visibilitychange` lopen, niet langs
+## `NOTIFICATION_APPLICATION_PAUSED`.
+##
+## Die notificatie bestaat op web niet en de focus-takken zitten achter
+## `OS.has_feature("mobile")`, wat op een web-export altijd `false` is. Alle
+## vier de takken van `Shell._notification()` waren daardoor dood op een
+## telefoonbrowser: wegschakelen pauzeerde niets en bewaarde niets, en een
+## tabkill kostte alles sinds het laatst opgeleverde ticket. Niemand zag dat,
+## want een tak die nooit vuurt geeft geen foutmelding.
+##
+## Deze test is er zodat dat niet stilletjes terugkomt.
+func _test_web_lifecycle_aangesloten() -> void:
+	_kop("de webbuild hangt aan visibilitychange, niet aan APPLICATION_PAUSED")
+	var src := FileAccess.get_file_as_string("res://autoload/shell.gd")
+	_ok(src != "", "autoload/shell.gd niet te lezen")
+
+	_ok("_wire_web_lifecycle()" in src,
+		"Shell mist `_wire_web_lifecycle()`. Zonder dat pauzeert en bewaart een " +
+		"webbuild nooit als de speler wegschakelt.")
+	_ok("\t_wire_web_lifecycle()" in src,
+		"`_wire_web_lifecycle()` staat er wel maar wordt nergens aangeroepen; " +
+		"zet hem in `_ready()`.")
+	for gebeurtenis: String in ["visibilitychange", "pagehide"]:
+		_ok(("\"%s\"" % gebeurtenis) in src,
+			"Shell luistert niet op `%s`. Dat is het enige symmetrische " % gebeurtenis +
+			"achtergrondsignaal dat een browser geeft.")
+
+	# De callbacks moeten een veld zijn en geen lokale variabele:
+	# `JavaScriptBridge.create_callback()` geeft een object terug dat opgeruimd
+	# wordt zodra niemand het vasthoudt, en dan vuurt de listener nooit meer —
+	# opnieuw zonder foutmelding.
+	for veld: String in ["_js_verborgen", "_js_wegdrukken"]:
+		_ok(("var %s: JavaScriptObject" % veld) in src,
+			("`%s` moet een veld van Shell zijn, anders ruimt Godot de callback " +
+			"op en vuurt de listener stil nooit meer.") % veld)
+
+
 func _test_geen_await_op_killbare_tween() -> void:
 	_kop("geen await op een tween die elders gekilld wordt")
 	var re := RegEx.create_from_string("await[ \\t]+([A-Za-z_][A-Za-z0-9_]*)\\.finished")

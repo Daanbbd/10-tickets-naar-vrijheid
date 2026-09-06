@@ -26,6 +26,7 @@ func _ready() -> void:
 	get_tree().root.size_changed.connect(_pas_schaal_aan)
 	_qa_shot()
 	_qa_feedback()
+	_wire_web_lifecycle()
 
 
 ## Meegroeien op telefoons, letterboxen daarbuiten.
@@ -65,6 +66,73 @@ func _pas_schaal_aan() -> void:
 var _pauze_voor_achtergrond: bool = false
 var _in_achtergrond: bool = false
 
+## De twee JS-callbacks van `_wire_web_lifecycle()`. Ze staan hier en niet
+## lokaal omdat `JavaScriptBridge.create_callback()` een object teruggeeft dat
+## opgeruimd wordt zodra niemand het meer vasthoudt — en dan vuurt de listener
+## nooit meer, zonder foutmelding.
+var _js_verborgen: JavaScriptObject = null
+var _js_wegdrukken: JavaScriptObject = null
+
+
+## Hangt de achtergrondroute aan de gebeurtenissen die een browser wél stuurt.
+##
+## `_notification()` hieronder dekt web niet, en dat was niet zichtbaar omdat
+## geen van de vier takken een foutmelding geeft als hij nooit vuurt:
+##
+## - `NOTIFICATION_APPLICATION_PAUSED`/`RESUMED` zijn iOS/Android-notificaties.
+##   Godots webtemplate luistert alleen op `mouseover`, `mouseleave`, `focus` en
+##   `blur`; er zit geen `pagehide`, geen `beforeunload` en geen
+##   `visibilitychange` in die aan een notificatie hangt. Die twee takken kunnen
+##   op web dus niet afgaan.
+## - De focus-takken zitten achter `OS.has_feature("mobile")`, en die tag is op
+##   een web-export altijd `false` — ook op een telefoon. `Invoer.is_telefoon()`
+##   legt precies dat uit en noemt deze functie als een van de gaten die hij
+##   dicht.
+##
+## Het gevolg op een telefoon: wegschakelen pauzeerde niets, `Engine.max_fps`
+## bleef 0, en er werd niet opgeslagen. Als Safari de tab dan opruimt — wat Daan
+## op 6 september drie keer in één playthrough overkwam — kost dat alles sinds
+## het laatst opgeleverde ticket: je vondsten, je gepinde ticket, de collega's
+## die al meeliepen, je gewerkte minuten.
+##
+## `visibilitychange` en niet focus, om dezelfde reden die hieronder staat: in
+## een mobiele browser is focus wispelturig en asymmetrisch, maar
+## `visibilityState` is een toestand die altijd terugkomt. `pagehide` erbij als
+## laatste kans om te bewaren.
+##
+## Voorbehoud dat we niet weg kunnen programmeren: `user://` hangt op web aan
+## IndexedDB, en Godot schrijft dat weg met een debounce die alleen aftikt
+## zolang de main loop draait. Opslaan bij `visibilitychange` geeft die tik nog
+## een kans; opslaan bij `pagehide` vaak niet meer. Vandaar allebei, in die
+## volgorde.
+func _wire_web_lifecycle() -> void:
+	if not OS.has_feature("web"):
+		return
+	var venster := JavaScriptBridge.get_interface("window")
+	var document := JavaScriptBridge.get_interface("document")
+	if venster == null or document == null:
+		push_warning("Shell: geen JavaScriptBridge, web-lifecycle niet aangesloten")
+		return
+
+	_js_verborgen = JavaScriptBridge.create_callback(_op_visibility_change)
+	_js_wegdrukken = JavaScriptBridge.create_callback(_op_pagehide)
+	document.addEventListener("visibilitychange", _js_verborgen)
+	venster.addEventListener("pagehide", _js_wegdrukken)
+
+
+func _op_visibility_change(_args: Array) -> void:
+	var document := JavaScriptBridge.get_interface("document")
+	if document == null:
+		return
+	if String(document.visibilityState) == "hidden":
+		_naar_achtergrond()
+	else:
+		_naar_voorgrond()
+
+
+func _op_pagehide(_args: Array) -> void:
+	_naar_achtergrond()
+
 
 func _notification(what: int) -> void:
 	match what:
@@ -87,9 +155,15 @@ func _notification(what: int) -> void:
 			# dat hier ook aan, dan pauzeert de tree op een telefoon-browser
 			# soms wél en komt er nooit meer een `_naar_voorgrond()` — precies
 			# het "na het intro-gesprek reageert niets meer" dat dit
-			# veroorzaakte. Echt naar de achtergrond gaan op mobiel web (de
-			# tab verlaten) loopt toch al via `NOTIFICATION_APPLICATION_PAUSED`
-			# hieronder, dat geen featurecheck heeft.
+			# veroorzaakte.
+			#
+			# Hier stond dat het echt naar de achtergrond gaan op mobiel web
+			# "toch al via `NOTIFICATION_APPLICATION_PAUSED` hieronder" liep.
+			# Dat klopte niet: die notificatie bestaat op web helemaal niet, dus
+			# op een telefoonbrowser pauzeerde en bewaarde er nooit iets. Sinds
+			# `_wire_web_lifecycle()` doet `visibilitychange` dat werk, en die
+			# redenering klopt weer — nu langs een signaal dat wél symmetrisch
+			# is.
 			if OS.has_feature("mobile"):
 				_naar_achtergrond()
 		NOTIFICATION_WM_WINDOW_FOCUS_IN:
