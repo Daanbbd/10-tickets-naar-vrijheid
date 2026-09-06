@@ -75,7 +75,7 @@
   "klaar_als": "De balk \"Gehoord\" staat op 2 van 2 voordat de tijd om is. Kap je iemand af vóór zijn melding, dan begin je opnieuw.",
   "tijd": 30.0,
   "ingrepen": 3,
-  "kap_regel": "Je kapt hem af. Hij knikt.",
+  "kap_regel": "Afgekapt. Hij knikt.",
   "sprekers": [
    {
     "id": "dennis",
@@ -156,10 +156,11 @@
     ]
    }
   ],
-  "success": "Beide gehoord. Dennis: done.",
-  "failure": "Een van de twee heb je gemist. Dennis vraagt er straks nog naar.",
-  "gemist": "Afgekapt. Dat had je moeten horen.",
-  "nuttig": "Dit komt nog terug."
+  "success": "Beide meldingen gehoord. Dennis noteert: done.",
+  "failure": "De tijd is om en je hebt één van de twee meldingen gemist. Kap volgende keer eerder af.",
+  "gemist": "Te vroeg. Dit had je moeten horen.",
+  "nuttig": "Dit moest je horen.",
+  "failure_gemist": "Je kapte {naam} af voordat hij het kon zeggen. Nog een keer."
  },
  "mg_klantfeedback": {
   "type": "choicescene",

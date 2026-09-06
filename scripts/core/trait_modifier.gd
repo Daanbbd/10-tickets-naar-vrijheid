@@ -28,15 +28,15 @@ extends RefCounted
 ## te zien krijgt. Een voordeel dat je niet opmerkt bestaat niet, dus elke
 ## regel noemt wat er concreet anders is en niet dat er iets anders is.
 const VOORDEEL := {
-	"cableboard":  "Jouw vakgebied. Minder losse draden.",
-	"abgevecht":   "Jouw vakgebied. Je ziet de tegenklap van elke klap vooraf.",
-	"whack":       "Jouw vakgebied. Je hoeft ze niet op te zoeken.",
-	"choicescene": "Jouw vakgebied. Je hoeft minder te raden.",
-	"scope":       "Jouw vakgebied. Twee punten meer ruimte.",
-	"standup":     "Jouw vakgebied. Je mag één keer extra afkappen.",
-	"uitlijnen":   "Jouw vakgebied. Eén pixel meer speling.",
-	"heatmap":     "Jouw vakgebied. Je ziet per element hoe vaak erop geklikt is.",
-	"pijplijn":    "Jouw vakgebied. Twintig credits extra.",
+	"cableboard":  "Jouw backend. Er liggen minder losse draden bij.",
+	"abgevecht":   "Jouw test. Je ziet vooraf wat elke klap A kost.",
+	"whack":       "Jouw paarden. De wijzer wijst het dichtstbijzijnde aan.",
+	"choicescene": "Jouw klant. Eén goed antwoord minder nodig.",
+	"scope":       "Jouw sprint. Er passen twee punten meer in.",
+	"standup":     "Dit is jouw stand-up. Je mag één keer extra afkappen.",
+	"uitlijnen":   "Jouw pagina. Een blok klikt een pixel eerder vast.",
+	"heatmap":     "Jouw dashboard. Je ziet per element hoe vaak erop geklikt is.",
+	"pijplijn":    "Jouw pijplijn. Twintig credits extra.",
 }
 
 ## Mechanieken die bewust géén voordeel kennen, met de reden erbij. Staat hier

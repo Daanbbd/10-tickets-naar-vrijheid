@@ -63,7 +63,7 @@ dan krijg je de kennis van degene van wie het wél is.
 | Ticket | Wie | Wat je ervan wijzer wordt |
 |---|---|---|
 | BBD-201 | Daan | de capaciteit, haar tevredenheidsgrens, en hoeveel van haar wensen eigenlijk projecten zijn |
-| BBD-202 | Daan | wie er echt iets te melden heeft — dus wie je niet moet afkappen |
+| BBD-202 | Daan | dat je moet afkappen en de twee melders moet sparen; wie dat is staat niet in de briefing, maar in het uitlegscherm |
 | BBD-203 | Willem | hoeveel rondes, en welke score je moet halen |
 | BBD-204 | Victor | raster, speling en hoeveel er scheef staat |
 | BBD-205 | Jonathan | hoeveel verbindingen fout zijn en hoeveel draden afleiding zijn |
@@ -137,10 +137,14 @@ minigame real-time zijn zonder iets aan de pauze te veranderen. Drie doen dat:
 de stand-up, de renderpijplijn en de paardenbugs. Een timer heeft in die
 toestand `process_always` nodig: `get_tree().create_timer(t, true, false, true)`.
 
-`build_chrome(titel, intro)` levert kop, statusregel, intro, een scrollbare
-body en op een aanraakscherm een Stoppen-knop. Wat *niet* mag wegscrollen —
-een meter, een klok, de enige actieknop — hoort buiten die scroll, via
-`chrome_header()` of `chrome_footer()`.
+`build_chrome(titel, intro)` levert kop, statusregel, een scrollbare body en op
+een aanraakscherm een Stoppen-knop. De `intro`-parameter wordt niet meer
+gebruikt: `MinigameIntro` toont de uitleg al vóór dit scherm opent, onder de
+koppen "Zo werkt het" en "Klaar als" (de velden `intro` en `klaar_als` uit
+`data/minigame_content.json`). Een wereldhandeling heeft geen `klaar_als`: die
+krijgt geen apart uitlegscherm. Wat *niet* mag wegscrollen — een meter,
+een klok, de enige actieknop — hoort buiten die scroll, via `chrome_header()`
+of `chrome_footer()`.
 
 De chrome is een **donker** oppervlak (`UiKit.SCHERM_NACHT`), dezelfde
 ondergrond als het titel- en uitlegscherm: kop op `FS_HEAD` in
@@ -170,13 +174,19 @@ gat in de balans maar het punt, en `Gevolgen` onthoudt het.
 **Stand-up** (BBD-202) — zeven collega's praten na elkaar in real-time, en je
 hebt drie ingrepen om iemand af te kappen. Twee sprekers melden iets bruikbaars
 (Jonathan een structurele bug, Danny de checkout), en nergens staat wie dat
-zijn: dat moet je uit wat ze zeggen halen. Een balk "Nuttige info" vult zodra
-zo'n regel valt — dat ís de opgave, letterlijk zichtbaar. Sta hij vol als de
-stand-up afloopt (de klok op nul, of alle sprekers gehad), dan slaag je; anders
-niet, net als elke andere minigame gewoon een retry. Zonder afkappen halen de
-zeven sprekers de klok niet: Danny's regel valt pas als laatste, ruim buiten
-het budget. Wie iemand afkapt nádat zijn nuttige regel al gevallen is verliest
-niets — dat segment staat al groen.
+zijn: dat moet je uit wat ze zeggen halen (de aanwijzing wie de eerste is staat
+in het uitlegscherm, niet meer alleen in de briefing, dus ook wie Daan zelf
+speelt krijgt hem). Een balk "Gehoord" vult zodra zo'n regel valt —
+dat ís de opgave, letterlijk zichtbaar; de kaart toont ook een teller ("3 van
+7") zodat je altijd weet hoeveel van de zeven collega's nog moeten. Sta de
+balk vol als de stand-up afloopt (de klok op nul, of alle sprekers gehad), dan
+slaag je; anders niet, net als elke andere minigame gewoon een retry. Zonder
+afkappen halen de zeven sprekers de klok niet: Danny's regel valt pas als
+laatste, ruim buiten het budget. Kap je iemand af vóórdat zijn bruikbare regel
+viel, dan stopt de ronde meteen: de kaart blijft op die spreker staan en de
+banner noemt hem bij naam, in plaats van de resterende ~20 s nog uit te laten
+lopen op een ronde die toch al niet meer te winnen is. Wie iemand afkapt nádat
+zijn nuttige regel al gevallen is verliest niets — dat segment staat al groen.
 
 **ChoiceScene** (BBD-203) — dialoogkeuzes met punten tegen een drempel. Opties
 kunnen een `when` dragen, zodat sommige antwoorden alleen voor bepaalde
@@ -290,6 +300,12 @@ antwoord. Dat is geen modus meer maar de hele mechaniek: de gecontroleerde
 variant (met `accepts` en `max_fouten`) is verwijderd toen elk ticket zijn eigen
 mechaniek kreeg.
 
+Sinds F4-a is dit ook geen sleepspel meer: de speler kiest uit drie
+kant-en-klare tijdverdelingen in plaats van kaartjes naar vakken te slepen
+(zie de docstring van `mg_slotboard.gd`). De uitleg hieronder over uurblokken
+en capaciteit beschrijft hoe elke verdeling zelf rekent, niet meer hoe de
+speler ze samenstelt.
+
 - elke regel neemt elk uurblok
 - een regel neemt er meer dan één (`capaciteit`)
 - je slaagt zodra alles verdeeld is; er zijn geen fouten
@@ -315,7 +331,7 @@ Alles is in 60–120 seconden te doen en op de eerste of tweede poging haalbaar.
 | Minigame | Drempel |
 |---|---|
 | scope | ≤ 13 punten én ≥ 10 blij, uit negen wensen |
-| stand-up | zeven sprekers binnen 42 s, met drie ingrepen |
+| stand-up | zeven sprekers binnen 30 s, met drie ingrepen |
 | klantfeedback | 6 van maximaal 9 punten |
 | uitlijnen | vijf blokken binnen 2 px van hun raster |
 | backend | de gevraagde kabels, geen extra |

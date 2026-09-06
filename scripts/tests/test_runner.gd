@@ -105,6 +105,7 @@ func _ready() -> void:
 	_test_dialoog_mond_volgt_spreker()
 	await _test_klaar_landt_niet_stil()
 	_test_schrijfstijl_geen_emdash()
+	await _test_standup_uitleg()
 	_rapport()
 
 
@@ -5749,6 +5750,61 @@ func _test_schrijfstijl_geen_emdash() -> void:
 	for k: Variant in TraitModifier.VOORDEEL.keys():
 		var v := String(TraitModifier.VOORDEEL[k])
 		_ok(not v.contains(EMDASH), "TraitModifier.VOORDEEL['%s'] bevat een em-dash: %s" % [k, v])
+
+
+## De stand-up legt zichzelf uit (labels, geen briefing-only aanwijzing) en
+## stopt de ronde meteen zodra je een belangrijke spreker afkapt vóór zijn
+## regel viel — in plaats van de klok nog te laten uitlopen op een ronde die
+## toch al niet meer te winnen is. Draait de echte scene rechtstreeks, net als
+## `_test_urenstaat_scherm()`: geen `Shell.run_minigame()` en geen `Autopilot`,
+## want deze scene start zelf geen QA zonder een expliciete `qa_solve()`.
+func _test_standup_uitleg() -> void:
+	_kop("de stand-up legt zichzelf uit en stopt bij een gemiste melding")
+
+	var packed: PackedScene = load("res://scenes/minigames/mg_standup.tscn")
+	var mg: MinigameBase = packed.instantiate() as MinigameBase
+	mg.minigame_id = &"mg_planning"
+	add_child(mg)
+	mg.setup({})
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	# --- a. labels en statusregel --------------------------------------------
+	_ok(_vind_label(mg, "Nuttige info") == null,
+		"mg_standup: de oude 'Nuttige info'-tekst staat nog op het scherm")
+	_ok(_vind_label(mg, "Gehoord") != null,
+		"mg_standup: de infobalk heet niet 'Gehoord'")
+	var aantal_sprekers := (mg.content().get("sprekers", []) as Array).size()
+	_ok(_vind_label(mg, "1 van %d" % aantal_sprekers) != null,
+		"mg_standup: de sprekerteller op de kaart toont niet '1 van %d'" % aantal_sprekers)
+	_ok(_vind_label(mg, "nog 3x afkappen") != null,
+		"mg_standup: de statusregel noemt niet 'nog 3x afkappen'")
+
+	# --- b. te vroeg afkappen stopt de ronde meteen --------------------------
+	# Dennis (niet belangrijk): wisselt door naar Victor.
+	mg.call("_op_afkappen")
+	await get_tree().create_timer(0.4).timeout
+	# Victor (niet belangrijk): wisselt door naar Jonathan. Zijn nuttige regel
+	# (nuttige_regel: 1, duur 9 s, dus per regel 3 s) valt pas na 3 s van zijn
+	# beurt — bij aankomst hier is dat nog lang niet zo ver.
+	mg.call("_op_afkappen")
+	await get_tree().create_timer(0.4).timeout
+	# Jonathan is nu aan het woord en zijn nuttige regel is nog niet gevallen.
+	mg.call("_op_afkappen")
+
+	_ok(int(mg.get("_uitslag")) == -1,
+		"mg_standup: een belangrijke spreker afkappen vóór zijn regel valt, beëindigt de ronde niet meteen")
+	_ok(String(mg.get("_gemist_naam")) == "Jonathan",
+		"mg_standup: _gemist_naam is niet gezet op de afgekapte spreker (%s)" % mg.get("_gemist_naam"))
+
+	await get_tree().create_timer(1.6).timeout
+	_ok(bool(mg.get("_afgerond")),
+		"mg_standup: de ronde is na de gemiste melding niet afgerond")
+	_ok(_vind_label(mg, "Jonathan") != null,
+		"mg_standup: de banner na een gemiste melding noemt de afgekapte spreker niet bij naam")
+
+	mg.queue_free()
+	await get_tree().process_frame
 
 
 ## Recursief door elke string-waarde in `data`, met `pad` als foutmelding-context.
