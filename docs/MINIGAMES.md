@@ -28,7 +28,7 @@ plaats van uit de techniek.
 | BBD-207 | A tegen B | `mg_abgevecht.gd` | de juiste klap kiezen | Danny: "aanzetten en kijken", met vuisten |
 | BBD-208 | Renderpijplijn | `mg_pijplijn.gd` | doorstroom onder druk | Koen giet alles in piepelienies |
 | BBD-209 | wereldhandeling (`_wh_paarden()`) | — | een paard aanspreken | Bastiaan ziet wat er beweegt |
-| BBD-210 | Oplevering | `mg_oplevering.gd` | beperkte acties met gevolgen | de finale, per personage anders |
+| BBD-210 | Oplevering | `mg_oplevering.gd` | blussen wat tegelijk brandt | de finale, per personage anders |
 | de urenstaat | SlotBoard | `mg_slotboard.gd` | een formulier invullen | Dirk vraagt om je uren |
 
 Drie tickets (BBD-203, BBD-205, BBD-209) dragen `wereldhandeling: true` en
@@ -43,6 +43,27 @@ testsuite hem gebruikt als generieke "er loopt een echte minigame"-fixture voor
 de onderbrekings- en pauzetests (F5-a/F5-b), niet omdat een speler hem ooit te
 zien krijgt.
 
+### Wat er in een wereldhandeling op het spel staat (P4, 5 sep 2026)
+
+Ze waren alle drie een gesprek met een knop: je kon niet verliezen, niet te
+laat zijn en niets kwijtraken. Dat was de bevinding van de audit van 5 sep
+2026 (deel 2, P4). Het principe blijft — je blijft in de wereld, er komt geen
+overlay — maar er staat nu iets tegenover elke keuze.
+
+| Ticket | Wat het kost |
+|---|---|
+| BBD-203 | een klok van `ronde_sec` (8 s) per gespreksronde. Loopt die leeg, dan levert die ronde nul punten op en zegt `timeout_reactie` waarom. Drie rondes, dus je kunt hier zwijgend onder de drempel zakken |
+| BBD-205 | een verkeerde kabel: schok, rode flits, `Urenstaat.FOUT_MIN` (15 min) op de urenstaat, `fout_reactie`, en dan opnieuw kiezen uit wat er nog ligt. De juiste kabel blijft altijd liggen, dus het ticket loopt hoe dan ook af — de prijs is tijd, plus de bug van morgen (`gevolg_backend_fout_gekozen` hangt aan "in één keer goed") |
+| BBD-209 | niets extra's; het zoeken zelf is de handeling, en dat gold al. Wat verdween is Bastiaans vrijstelling: hij zoekt nu ook |
+
+De klok van BBD-203 is een dunne balk boven de keuzeknoppen die van groen via
+oranje naar rood leegloopt (`DialogueBox.show_choices()` met een
+`timeout_sec`, kleur uit `UiKit.tijdkleur()` — dezelfde curve als de
+stand-upbalk). Hij staat er alleen als de aanroeper er om vraagt: elke andere
+keuze in het spel blijft wachten tot je kiest. Tijdens een geautomatiseerde
+speelbeurt (`Autopilot.gevraagd()`) geldt hij nooit — zie
+`DialogueController.keuzeklok()`.
+
 `SlotBoard` bestaat nog, en draagt nu precies één taak: de urenstaat van Dirk.
 Dat is de winst van de omslag. Een vakkenraster is een formulier, en de enige
 plek in het spel waar je écht een formulier invult is de urenstaat — dus landt
@@ -50,7 +71,7 @@ de grap harder dan toen dezelfde vorm ook vier echte tickets moest dragen.
 
 ## Wat de eigenaar je vertelt
 
-Negen van de tien tickets zijn van iemand anders, en die iemand loopt met je
+Zeven van de tien tickets zijn van iemand anders, en die iemand loopt met je
 mee. Tot voor kort veranderde dat vooral *dat* het ticket openging: er kwam een
 regel dialoog en daarna een opgave die voor iedereen identiek was. Wie er
 meeliep was een sleutel, geen mens.
@@ -63,12 +84,12 @@ dan krijg je de kennis van degene van wie het wél is.
 | Ticket | Wie | Wat je ervan wijzer wordt |
 |---|---|---|
 | BBD-201 | Daan | de capaciteit, haar tevredenheidsgrens, en hoeveel van haar wensen eigenlijk projecten zijn |
-| BBD-202 | Daan | dat je moet afkappen en de twee melders moet sparen; wie dat is staat niet in de briefing, maar in het uitlegscherm |
+| BBD-202 | Daan (briefer, niet op te halen) | dat je moet afkappen en de twee melders moet sparen; wie dat is staat niet in de briefing, maar in het uitlegscherm |
 | BBD-203 | Willem | hoeveel rondes, en welke score je moet halen |
 | BBD-204 | Victor | raster, speling en hoeveel er scheef staat |
 | BBD-205 | Jonathan | hoeveel verbindingen fout zijn en hoeveel draden afleiding zijn |
 | BBD-206 | Danny | je basislijn en je doel |
-| BBD-207 | Danny | hoeveel HP A en B hebben |
+| BBD-207 | Danny (briefer, niet op te halen) | hoeveel HP A en B hebben |
 | BBD-208 | Koen | welke stap het knelpunt is |
 | BBD-209 | Bastiaan | het doel, de tijd, en dat de klantpaarden op bugs lijken |
 
@@ -95,21 +116,23 @@ je opmerkt, want een voordeel dat je niet ziet bestaat niet.
 | Mechaniek | Wat er verandert |
 |---|---|
 | Scope-schuif | twee punten meer sprintruimte; haar tevredenheidsgrens blijft |
-| Stand-up | één keer extra afkappen; het tijdbudget blijft |
-| ChoiceScene | de drempel gaat één goede keuze omlaag |
+| ChoiceScene | de drempel gaat één goede keuze omlaag, en zij wacht vier seconden langer per ronde |
 | Uitlijnen | één pixel meer speling |
 | CableBoard | twee losse draden minder |
-| A/B-test | de effecten staan vooraf op de knoppen |
 | TagPicker | een poging extra |
 | Renderpijplijn | twintig credits extra |
-| WhackAHorse | 25% meer tijd |
+| WhackAHorse | het dichtstbijzijnde bugpaard loopt naar je toe (aanspreken doe je zelf) |
 | Urenstaat | twee afleiderkaarten weg, één fout meer toegestaan |
 | Oplevering | **niets** — met opzet |
+| Stand-up (BBD-202) | **niets** — ticket van iedereen sinds 5 sep 2026 |
+| A/B-gevecht (BBD-207) | **niets** — ticket van iedereen sinds 5 sep 2026 |
 
 De oplevering is de uitzondering: die begint met de dag die je gehad hebt
 (`Gevolgen.finale_start()`), en een korting daarbovenop zou het gevolgensysteem
-uithollen. Elk personage heeft daar al zijn eigen foutcode. Die reden staat in
-`TraitModifier.GEEN_VOORDEEL`, zodat "besloten" te onderscheiden is van
+uithollen. Elk personage heeft daar al zijn eigen foutcode. Stand-up en
+A/B-gevecht zijn sinds Daans wens van 5 sep 2026 tickets van iedereen: geen
+eigenaar, dus geen vakgebied om een voordeel aan te hangen. Die redenen staan
+in `TraitModifier.GEEN_VOORDEEL`, zodat "besloten" te onderscheiden is van
 "vergeten".
 
 Het is de moeite waard te weten dat dit **nooit heeft gewerkt** tot deze ronde.
@@ -169,7 +192,9 @@ verplaatst er een. Twee meters die tegen elkaar in werken: `punten` mag niet
 boven `capaciteit`, `blij` moet op of boven `tevreden_min`. De goedkoopste wens
 is het paard (1 punt) en die maakt haar het blijst (4), dus je kunt slagen door
 het paard en Comic Sans op te leveren en de webshop weg te laten. Dat is geen
-gat in de balans maar het punt, en `Gevolgen` onthoudt het.
+gat in de balans maar het punt, en `Gevolgen` onthoudt het. P3: Dennis wacht
+`klok_sec` (45s) — op nul legt hij vast wat er dan staat, binnen de capaciteit
+of niet.
 
 **Stand-up** (BBD-202) — zeven collega's praten na elkaar in real-time, en je
 hebt drie ingrepen om iemand af te kappen. Twee sprekers melden iets bruikbaars
@@ -188,19 +213,22 @@ banner noemt hem bij naam, in plaats van de resterende ~20 s nog uit te laten
 lopen op een ronde die toch al niet meer te winnen is. Wie iemand afkapt nádat
 zijn nuttige regel al gevallen is verliest niets — dat segment staat al groen.
 
-**ChoiceScene** (BBD-203) — dialoogkeuzes met punten tegen een drempel. Opties
-kunnen een `when` dragen, zodat sommige antwoorden alleen voor bepaalde
-personages bestaan.
+**ChoiceScene** (BBD-203) — dialoogkeuzes met punten tegen een drempel, in de
+gewone dialoogbox. Opties kunnen een `when` dragen, zodat sommige antwoorden
+alleen voor bepaalde personages bestaan. Elke ronde loopt onder een klok: zij
+wacht `ronde_sec` seconden en typt daarna door.
 
 **Uitlijnen** (BBD-204) — een nagebouwde productpagina op zichtbaar ruitpapier,
 vijf blokken van hun raster af. Tik een blok, verschuif het met vier
 richtingsknoppen (slepen mag ook, maar de knoppen volstaan op zichzelf — met
 een duim is een blok van 16 px geen doel). Binnen `tolerantie` klikt een blok
 vast. De afwijkingen zijn geen veelvouden van `raster`, dus tolerantie is
-noodzakelijk in plaats van vriendelijk en `perfect` is onbereikbaar.
+noodzakelijk in plaats van vriendelijk en `perfect` is onbereikbaar. P3: geen
+harde klok — wel de build drift, elke `drift_sec` (8s) schuift een blok dat nog
+niet vast staat een pixel verder scheef, met een teller "Victor kijkt mee".
 
-**CableBoard** (BBD-205) — klik twee knooppunten om een kabel te leggen, nog
-eens om hem weg te halen. Extra kabels tellen als fout.
+**CableBoard** (BBD-205) — kies welke kabel je legt. Fout gelegd kost een
+kwartier en een vonk, en daarna kies je opnieuw uit de kabels die nog liggen.
 
 **Waar klikken ze?** (BBD-206) — een wireframe van de productpagina waarop de
 klikken van bezoekers als hittepunten landen, in real time. Eén element trekt
@@ -209,7 +237,9 @@ rondeklok om is; drie rondes, drie plekken, elke ronde meer ruis. Geen lijst
 met antwoorden: het antwoord staat op het scherm, maar je moet het zien terwijl
 het gebeurt. Twee van de drie rondes raak haalt het doel; één niet. Dit was de
 A/B-test — hetzelfde spel als BBD-207 met zeven van de negen dezelfde
-antwoorden — en is nu een ander werkwoord: kijken en slepen, onder tijd.
+antwoorden — en is nu een ander werkwoord: kijken en slepen, onder tijd. M6/P3:
+tijdens het slepen zweeft de knop 22 px boven de vinger, zodat de duim het
+hete element niet meer bedekt.
 
 **A tegen B** (BBD-207) — drie klappen, elk een keuze uit drie CRO-tweaks. Elke
 klap doet schade aan B én slaat terug op A; het net-effect (schade minus
@@ -217,7 +247,8 @@ tegenklap) bepaalt of hij de moeite waard was. A moet B knock-outen binnen de
 drie klappen, of B wint op punten. Verliezen laat het ticket gewoon openstaan
 — geen game over, alleen Danny die met een steeds absurdere reden terugkomt om
 het nog een keer te proberen (zie `data/dialogue/tickets.json` → `t07_fail`,
-gestuurd door `Session.get_counter(&"ab_pogingen")`).
+gestuurd door `Session.get_counter(&"ab_pogingen")`). P3: elke ronde krijgt een
+klok van `keuze_sec` (7s) — op nul valt de zwakste klap vanzelf.
 
 **Renderpijplijn** (BBD-208) — zes clips door Prompt → Render → Publish. Elke
 stage heeft capaciteit, elke clip rijpt, een rijpe clip schuif je door met een
@@ -232,10 +263,11 @@ geschrapt — Render blijft de enige stap die pijn doet.
 > en haalt de druk er juist uit: het punt is dat je Review leegtrekt vóórdat
 > Render klaar is, precies wat de intro zegt.
 
-**WhackAHorse** (BBD-209) — de arcadepiek. Bugpaarden raken telt; een
-klantpaard raken kost drie seconden en levert "JE HEBT EEN KLANTPAARD
-GESLAGEN" op. Nooit meer dan twee paarden tegelijk; de spawninterval loopt op
-na elke treffer. Geen game over, alleen tijd.
+**WhackAHorse** (BBD-209) — zoeken en aanspreken. De bugpaarden dwalen als
+gewone NPC's door het kantoor; het klantpaard lijkt erop en lost niets op, en
+dat is de grap die uit de oude arcade-versie overbleef. Bastiaans voordeel
+laat het dichtstbijzijnde bugpaard naar hem toe lopen; aanspreken blijft aan
+hem.
 
 **Oplevering** (BBD-210) — zie hieronder.
 
@@ -246,18 +278,42 @@ drag & drop; klikken op een geplaatst kaartje haalt het terug.
 
 Drie fasen, met een `enum` + `match` in plaats van fasenummers.
 
-1. **Voorbereiden.** Acht handelingen, verdeeld over zeven keuzes met een prijs.
+1. **Voorbereiden — de brandjes.** Brandjes komen binnen als kaartjes met een
+   eigen aflopende balk (6-10 s), hoogstens drie tegelijk, en sneller naarmate
+   de klok van 75 s vordert (`spawn_curve` in de data). Elk kaartje noemt in
+   Jira-Nederlands wat er brandt ("STAGING: 502 op /checkout", "Dennis:
+   statusje?", "Kabel B ligt los") en vraagt precies één van de zeven vaste
+   handelingen: `testen`, `fixen`, `scope`, `collega`, `informeren`,
+   `nakijken`, `risico`. Blus je op tijd, dan geldt het effect van die
+   handeling; laat je de balk verlopen, dan geldt de straf van het brandje. Een
+   handeling waar niets voor brandt doet niets, behalve een rode flits en een
+   knoppenslot van 0,4 s — blind rammen mag geen strategie zijn.
+
    Vier waarden vormen de toestand: `bugs` (lager is beter), `vertrouwen`,
-   `getest`, `scope`. Het aantal bugs is **onbekend** tot je test — testen
-   onthult het, en kost handelingen die je dan niet meer kunt fixen. Bug fixen
-   kan pas ná testen. Drie gebeurtenissen overkomen je op vaste momenten; de
-   laatste zet er een bug bíj, dus wie precies op nul handelingen uitkomt komt
-   bedrogen uit.
+   `getest`, `scope`. Het aantal bugs is **onbekend** tot je test — het eerste
+   geblusde `testen`-brandje onthult het, en blind live gaan kost per bug
+   extra. Er is geen knop DEPLOYEN: de klok ís de deploy, en op nul gaat het
+   live met wat er dan nog brandt.
+
+   **De dag zaait de avond.** Een verkeerd gelegde kabel
+   (`gevolg_backend_fout_gekozen`) is het allereerste kaartje; een ontevreden
+   klant (`gevolg_klant_ontevreden`) belt twee keer; elk ticket dat om vijf uur
+   nog open stond (`Session.niet_af()`, tot twee) meldt zich alsnog als "BBD-2xx
+   is nooit afgekomen". De rest van de rij is gehusseld, dus twee speelbeurten
+   zijn niet dezelfde avond.
+
+   De rekenkern staat los van de scene, in `scripts/minigames/brandjes_model.gd`
+   (`BrandjesModel`): een RefCounted die geen node aanraakt en `Session` niet
+   leest, zodat `_test_finale_brandjes()` de balans headless kan doorrekenen.
+   Die test is de kalibratie: een zorgvuldige dag met perfect spel haalt 16 of
+   hoger (VLEKKELOOS begint bij 13), een rampdag met datzelfde perfecte spel
+   6..9, en niets doen -19 — ruim onder de 4 waar de eerste deploy op faalt.
 2. **Deployen.** De checks lopen op groen. Dan faalt hij op precies jouw
    vakgebied: `varianten[<personage>].foutcode` uit de data, groot en in rood.
    SCOPE NOT APPROVED voor Daan, FRONTEND BUILD FAILED voor Victor, en zo
    verder — zie `docs/CHARACTERS.md`.
-3. **Herstellen.** Twee extra handelingen om op die foutcode te reageren.
+3. **Herstellen.** Twee extra handelingen om op die foutcode te reageren:
+   dezelfde zeven knoppen, geen brandjes en geen klok, met de foutcode in beeld.
    Daarna gaat het onvermijdelijk live.
 
 **Elke geslaagde uitkomst heet "OPGELEVERD".** Wat verschilt is de tekst
@@ -267,8 +323,10 @@ je jas al aan. Maar de **eerste deploy kan misgaan**: onder de drempel van
 "KRAP" volgt een ROLLBACK met de foutcode van je eigen personage, het ticket
 blijft open, je verliest een kwartier en je probeert het opnieuw. De tweede
 poging slaagt altijd — "OPGELEVERD, EINDELIJK" — want een dag die zelfs met
-perfect spel niet boven de drempel komt bestaat (0,7% van alle dagcombinaties)
-en mag niemand vastzetten. Er is dus wel een faalscherm, maar geen game over.
+perfect spel niet boven de drempel komt bestaat en mag niemand vastzetten. (Het
+percentage dat hier stond, 0,7%, is met de brandjes vervallen: dat was een
+doorrekening van acht handelingen op budget. De kalibratietest rekent nu de
+avond zelf door.) Er is dus wel een faalscherm, maar geen game over.
 
 De **begintoestand komt uit je dag**. `Gevolgen.finale_start()` telt de gevolgen
 van de negen tickets op en `TicketController` geeft die mee als
@@ -306,6 +364,13 @@ kant-en-klare tijdverdelingen in plaats van kaartjes naar vakken te slepen
 en capaciteit beschrijft hoe elke verdeling zelf rekent, niet meer hoe de
 speler ze samenstelt.
 
+Sinds P1 krijgt hij, als enige naast `mg_deploy`, ook geen WAT-uitleg: geen
+`MinigameIntro`-kaartje vooraf (die drempel is er toch al niet, want hij heeft
+geen eigenaar of briefer) én geen WAT-overlay ín het veld
+(`MinigameBase.build_chrome()` slaat hem expliciet over). Een formulier dat
+Dirk je voorlegt hoort geen minigame-belofte te dragen — zie M7 in
+`docs/AUDIT-2026-09-05.md` deel 2.
+
 - elke regel neemt elk uurblok
 - een regel neemt er meer dan één (`capaciteit`)
 - je slaagt zodra alles verdeeld is; er zijn geen fouten
@@ -332,13 +397,13 @@ Alles is in 60–120 seconden te doen en op de eerste of tweede poging haalbaar.
 |---|---|
 | scope | ≤ 13 punten én ≥ 10 blij, uit negen wensen |
 | stand-up | zeven sprekers binnen 30 s, met drie ingrepen |
-| klantfeedback | 6 van maximaal 9 punten |
+| klantfeedback | 6 van maximaal 9 punten, met 8 s bedenktijd per ronde (12 s voor Willem) |
 | uitlijnen | vijf blokken binnen 2 px van hun raster |
-| backend | de gevraagde kabels, geen extra |
+| backend | de juiste kabel; elke foute kost 15 minuten en je kiest opnieuw |
 | waar klikken ze | 2,7% vanaf een basis van 1,8%; twee van de drie rondes raak (0,4 / 0,5 / 0,5) |
 | tagpickers | 4 pogingen |
 | renderpijplijn | 5 van 6 clips in 60 s, binnen 100 credits |
-| paardenbugs | 10 bugs in 60 seconden |
+| paardenbugs | één bugpaard aanspreken |
 | oplevering | vier uitkomsten (13 / 9 / 4 / 0) op score `vertrouwen + min(getest, 2·startbugs) − 2·bugs + scope`, min nog eens `bugs` als je nooit getest hebt |
 | urenstaat | geen goed antwoord; alles verdelen volstaat |
 

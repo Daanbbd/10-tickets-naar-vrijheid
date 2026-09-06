@@ -5,10 +5,7 @@
    "tijd": "09:45",
    "variants": [
     {
-     "text": "Hoi! Superleuk dat het al loopt. Trouwens: kan er een geluidje bij als je op de site klikt? Mijn zwager zei dat mensen daar blij van worden.",
-     "effects": [
-      {"op": "unlock_ticket", "ticket": "t07"}
-     ]
+     "text": "Hoi! Superleuk dat het al loopt. Trouwens: kan er een geluidje bij als je op de site klikt? Mijn zwager zei dat mensen daar blij van worden."
     }
    ]
   },
@@ -50,9 +47,9 @@
    "tijd": "15:20",
    "variants": [
     {
-     "text": "Trouwens, ik heb nog een wens opgeschreven. Mijn neef zei dat dat een 'user story' moet heten. Ik zet hem in de bijlage, misschien handig voor jullie planning.",
+     "text": "Trouwens, mijn zwager zegt dat een geluidje bij het klikken echt werkt. Kunnen jullie dat even testen? A of B, zoiets.",
      "effects": [
-      {"op": "unlock_ticket", "ticket": "t01"}
+      {"op": "unlock_ticket", "ticket": "t07"}
      ]
     }
    ]

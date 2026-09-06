@@ -7,28 +7,63 @@ extends MinigameBase
 ## geslaagde drempel op de eerste deploy volgt een ROLLBACK met de foutcode van
 ## je eigen personage, het ticket blijft open en je probeert het opnieuw. De
 ## tweede poging slaagt altijd ("OPGELEVERD, EINDELIJK") — een dag die zelfs met
-## perfect spel niet boven de drempel komt bestaat (0,7% van alle
-## dagcombinaties, doorgerekend) en mag niemand vastzetten. Falen kost dus één
-## keer tijd en gezicht, nooit voortgang. Zie `faalt_deploy()`.
+## perfect spel niet boven de drempel komt bestaat en mag niemand vastzetten.
+## Falen kost dus één keer tijd en gezicht, nooit voortgang. Zie `faalt_deploy()`.
 ##
-## Het werkwoord is beperkte handelingen met echte gevolgen. Acht handelingen,
-## vier waarden, en een aantal bugs dat je niet kent tot je gaat kijken —
-## kijken kost precies de handelingen die je daarna niet meer aan fixen kwijt
-## kunt. Dat is de hele spanning, en het is ook de les.
+## **P5 (Fase 5).** Het werkwoord was acht handelingen met een prijskaartje op
+## één klok: het rustigste scherm van het spel op het moment dat het het
+## luidste hoorde te zijn (`docs/AUDIT-2026-09-05.md` deel 2, M8). Nu schreeuwt
+## alles tegelijk. Brandjes komen binnen als kaartjes met een eigen aflopende
+## balk, hoogstens drie tegelijk, en elk brandje vraagt precies één van de zeven
+## handelingen. Blussen levert het effect van die handeling op; de balk laten
+## verlopen kost de straf van het brandje. De economie (`acties`, `kost`,
+## `can_perform_action`) is weg: de schaarste is tijd, niet budget.
+##
+## Wat de dag besloot komt hier binnen als brandhaarden en niet alleen als
+## startgetallen: de fout gelegde kabel is het eerste kaartje, een ontevreden
+## klant belt twee keer, en elk ticket dat om vijf uur nog open stond meldt zich
+## alsnog. Zie `BrandjesModel._bouw_rij()`.
+##
+## De rekenkern staat bewust niet hier maar in `scripts/minigames/brandjes_model.gd`:
+## die klasse raakt geen node en leest `Session` niet, zodat
+## `_test_finale_brandjes()` de balans headless kan doorrekenen. Dit bestand is
+## alleen nog weergave, invoer en de console-fase.
 
 enum Fase { VOORBEREIDEN, DEPLOYEN, HERSTELLEN, KLAAR }
 
-## De vier waarden, in de leesrichting van het dashboard.
+## De vier waarden, in de leesrichting van de meterstrook. Voluit, geen
+## afkortingen: "BUGS 3 VERTR 4" las als een spreadsheet en niet als een dag.
 const METERS: Array[StringName] = [&"bugs", &"vertrouwen", &"getest", &"scope"]
 const METER_NAAM := {
-	&"bugs": "BUGS", &"vertrouwen": "VERTROUWEN",
-	&"getest": "GETEST", &"scope": "SCOPE",
+	&"bugs": "bugs", &"vertrouwen": "vertrouwen",
+	&"getest": "getest", &"scope": "scope",
 }
 
 ## Handelingen in fase 3: genoeg om te reageren, te weinig om het op te lossen.
 const HERSTEL_ACTIES := 2
 ## Hoeveel keer er al gedeployd is deze dag; alleen de eerste keer kan misgaan.
 const POGINGEN_TELLER := &"deploy_pogingen"
+
+## Eén kaartje, en de ruimte voor drie. De zone houdt die hoogte ook als er
+## niets brandt: kaartjes die de knoppen eronder verschuiven zijn niet te raken.
+const KAART_H := 30.0
+const KAART_SEP := 2.0
+const BALK_H := 4.0
+## Hoe lang een kaartje erover doet om weg te glijden.
+const KAART_WEG := 0.25
+
+## Hoe lang de knoppen op slot zitten na een handeling die nergens op sloeg.
+## Kort genoeg om niet als straf te voelen, lang genoeg om blind rammen op de
+## zeven knoppen onaantrekkelijk te maken.
+const BLOKKADE := 0.4
+const MIS_FLITS := 0.2
+
+## De hoogte van de antwoordregel: twee regels FS_SMALL, vast. Zie `_bouw()`.
+const REGEL_H := 28.0
+## De breedte die die regel op het smalste canvas (192 px) krijgt, gemeten aan
+## de echte scroll: 192 min de vier px chrome-marge aan weerszijden, min de
+## panelrand. `_test_finale_regels_passen()` rekent er de teksten mee na.
+const REGEL_BREED := 172.0
 
 ## De pijplijn die op groen loopt voordat hij op jouw vakgebied omvalt. Drie
 ## regels, niet zeven: een nep-console met zeven controles voor een uitkomst
@@ -44,45 +79,31 @@ const TIK_CHECK := 0.55
 const TIK_REGEL := 0.55
 const TIK_GEBEURTENIS := 1.5
 
-## Hoe lang fase 1 duurt zonder een `klok_seconden` in de content. Een minuut
-## en een kwart is genoeg om acht handelingen te overwegen, niet genoeg om ze
-## op je gemak uit te rekenen.
-const KLOK_STANDAARD := 75.0
 ## Vanaf hier kleurt de klok rood: een laatste visuele waarschuwing voordat hij
 ## voor je beslist.
 const KLOK_ALARM := 15.0
 
 
 var _fase: Fase = Fase.VOORBEREIDEN
+var _model: BrandjesModel = null
+## Alleen fase 3 telt nog handelingen. In fase 1 is de klok de schaarste.
 var _acties: int = 0
-var _acties_max: int = 0
-## Verbruikte handelingen, en niet het aantal keuzes: de gebeurtenissen vuren op
-## `na`, en een keuze van 0 handelingen brengt je dus geen stap dichter bij de
-## telefoon van 21:47.
-var _verbruikt: int = 0
-var _toestand: Dictionary = {}
-var _start_bugs: int = 0
-var _bekend: Dictionary = {}
-var _gedaan: Array[String] = []
-var _eenmalig_op: Dictionary = {}
-var _gebeurtenis: int = 0
 var _foutcode: String = ""
 var _foutregel: String = ""
-## Resterende seconden in fase 1. Loopt door tijdens het lezen van een keuze,
-## niet alleen tussen keuzes: dat is precies het verschil tussen een klok en
-## een teller.
-var _klok_resterend: float = 0.0
-var _klok_gestart: bool = false
-## Waar staat tijdens een handeling die zich nog aan het afspelen is; zonder dit
-## kan een snelle tikker twee keuzes over elkaar heen zetten.
+## Waar staat terwijl de console loopt; zonder dit kan een snelle tikker twee
+## fases over elkaar heen zetten.
 var _bezig: bool = false
-var _qa_bezig: bool = false
+var _blokkade: float = 0.0
+var _qa_stap: int = 0
 
 var _waarde: Dictionary = {}
 var _tweens: Dictionary = {}
-var _pips: HBoxContainer = null
+var _knoppen: Dictionary = {}
+## nr van het brandje -> zijn kaartje. `nr` en niet `id`, want de ontevreden
+## klant staat twee keer in de rij en kan dus twee keer tegelijk branden.
+var _kaarten: Dictionary = {}
+var _zone: Control = null
 var _regel: Label = null
-var _keuzes: VBoxContainer = null
 var _deploy: Button = null
 var _foutbalk: PanelContainer = null
 var _foutbalk_label: Label = null
@@ -97,30 +118,42 @@ func _on_setup() -> void:
 		fail()
 		return
 
-	# config wint van content: zo kan de opgetelde dag van de speler de
-	# begintoestand bepalen zonder dat deze minigame iets over de wereld hoeft
-	# te weten. Nu altijd leeg; straks niet meer, en dan hoeft hier niets bij.
+	# config wint van content: zo bepaalt de opgetelde dag van de speler de
+	# begintoestand zonder dat deze minigame iets over de wereld hoeft te weten.
 	var start: Dictionary = {}
 	for k: Variant in (c.get("start", {}) as Dictionary):
 		start[String(k)] = (c.get("start", {}) as Dictionary)[k]
 	for k: Variant in (cfg("start_override", {}) as Dictionary):
 		start[String(k)] = (cfg("start_override", {}) as Dictionary)[k]
 
-	for m: StringName in METERS:
-		_toestand[m] = maxi(0, int(start.get(String(m), 0)))
-	_start_bugs = int(_toestand[&"bugs"])
-	_acties = maxi(1, int(c.get("acties", 8)))
-	_acties_max = _acties
+	_model = BrandjesModel.new(c, start, _vlaggen(), _open_werk(), randi())
 
 	_lees_variant(c)
 	_bouw(c)
 	_refresh()
-	_status_regel()
-
-	_klok_resterend = maxf(1.0, float(c.get("klok_seconden", KLOK_STANDAARD)))
 	_refresh_klok()
-	_klok_gestart = true
-	_klok_loop()
+	_status_regel()
+	set_process(true)
+
+
+## De `gevolg_*`-vlaggen die het model nodig heeft om de rij te zaaien. Ze gaan
+## als gewone dictionary mee zodat `BrandjesModel` zelf geen Session kent.
+func _vlaggen() -> Dictionary:
+	var uit: Dictionary = {}
+	for v: StringName in Gevolgen.VLAGGEN:
+		uit[v] = Session.get_flag(v)
+	return uit
+
+
+## De codes van de tickets die om vijf uur nog open stonden. Elk daarvan meldt
+## zich in de finale alsnog; het model topt af op `NIET_AF_MAX`.
+func _open_werk() -> Array[String]:
+	var uit: Array[String] = []
+	for id: StringName in Session.niet_af():
+		var t: TicketDef = GameData.ticket(id)
+		if t != null and t.code != "":
+			uit.append(t.code)
+	return uit
 
 
 ## De foutcode hoort bij het vakgebied van de speler; dat is de hele pointe van
@@ -141,41 +174,79 @@ func _lees_variant(c: Dictionary) -> void:
 
 # --- Opbouw ---------------------------------------------------------------
 
+## Van boven naar beneden, en alles moet op 192x416 zonder scrollen passen:
+## kop met klok en meters (in de niet-scrollende header), de kaartjeszone, de
+## regel waarop de laatste handeling antwoordt, de zeven knoppen in twee
+## kolommen, en in de voet de knop die de finale afsluit plus de banner uit P2.
 func _bouw(c: Dictionary) -> void:
 	var body := build_chrome(default_title(), String(c.get("intro", "")))
 
-	# Het dashboard is het enige dat nooit mag wegscrollen, dus het gaat in de
-	# kopstrook van het chrome.
-	_bouw_dashboard()
+	_bouw_kop()
 	_bouw_foutbalk()
 
-	# Op de chrome zelf en niet op het witte dashboard, dus de donkere-ondergrond
-	# tint. Diezelfde regel wisselt van kleur via `_zeg()`; die kleuren staan daar.
-	_regel = UiKit.label("Hoeveel bugs erin zitten weet je pas als je test.",
+	_zone = Control.new()
+	_zone.custom_minimum_size = Vector2(0, KAART_H * 3.0 + KAART_SEP * 2.0)
+	_zone.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# SHRINK_BEGIN en niet de standaard FILL: de hoogte van deze zone is precies
+	# drie kaartjes, en overgebleven ruimte hoort naar beneden te vallen en niet
+	# hier te blijven hangen. Kaartjes staan op vaste plekken binnen de zone
+	# (`_plaats()`), dus een zone die meegroeit verschuift alleen de lege ruimte
+	# eronder — en die hoort bij de knoppen, die zo hoog mogelijk moeten staan.
+	_zone.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	# Een kaartje dat wegglijdt hoort de zone niet uit te lopen: de meting in
+	# `_meet_horizontale_overloop()` rekent alles buiten deze klem als weg.
+	_zone.clip_contents = true
+	_zone.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(_zone)
+
+	# Twee regels reserveren, en er ook twee blijven: de reactie op een
+	# handeling verschijnt hier, en een knoppenraster dat bij elke tik een paar
+	# pixels opschuift is niet te raken.
+	#
+	# `clip_text` is de rem. Zonder dat meldt een Label met autowrap de hoogte
+	# van zijn gewrapte tekst als minimum, en een gebeurtenis van drie regels
+	# duwde de onderste rij knoppen onder de vouw — met scrollbalk, halverwege
+	# de klok, in precies de minigame die om tempo vraagt. Dat de derde regel
+	# dan wegvalt is de tweede helft van de afspraak: geen enkele tekst die hier
+	# landt mag over twee regels heen gaan, en `_test_finale_regels_passen()`
+	# rekent dat na op elk woord dat `_zeg()` kan krijgen.
+	_regel = UiKit.label("Er komt zo iets binnen. Blus het met de juiste handeling.",
 		UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
-	# Twee regels reserveren: de reactie op een handeling verschijnt hier, en een
-	# lijst keuzes die bij elke tik een paar pixels opschuift is niet te raken.
-	_regel.custom_minimum_size = Vector2(0, 26)
+	_regel.custom_minimum_size = Vector2(0, REGEL_H)
+	_regel.clip_text = true
+	# Godots standaardthema zet `line_spacing` op 3, en dan meten twee regels
+	# 31 px in plaats van de 28 die `get_multiline_string_size()` meldt: de
+	# tweede regel viel onder de klem weg en Dirk zei alleen nog zijn halve zin.
+	# Nul, zodat de meting in `_test_finale_regels_passen()` letterlijk is wat
+	# dit label doet. De 10px-snit zit al in een regelhoogte van 14 en heeft die
+	# extra drie niet nodig.
+	_regel.add_theme_constant_override("line_spacing", 0)
 	body.add_child(_regel)
 
-	_keuzes = VBoxContainer.new()
-	_keuzes.add_theme_constant_override("separation", 2)
-	body.add_child(_keuzes)
+	_bouw_knoppen(body)
 
-	# De knop die de finale afsluit hoort buiten de scroll: hij mag nooit onder de
-	# lijst keuzes wegzakken, want dan is de finale niet af te maken.
-	# Dit was de enige knop in het spel met een eigen blauwe stijl; die stijl is
-	# nu UiKit.knop_primair() en staat op elke bevestigende actie. De eigen
-	# hoogte van 26 mocht mee weg: die zat onder UiKit.KNOP_MIN_H.
-	_deploy = UiKit.knop_primair(String(c.get("deploy_label", "DEPLOYEN")), UiKit.FS_BODY)
+	# De knop die de finale afsluit hoort buiten de scroll: hij mag nooit onder
+	# de knoppen wegzakken, want dan is de finale niet af te maken. In fase 1
+	# staat hij er niet: de klok ís de deploy, en een knop DEPLOYEN ernaast zou
+	# beloven dat je eerder klaar kunt zijn.
+	_deploy = UiKit.knop_primair(String(c.get("deploy_label", "LIVE ZETTEN")), UiKit.FS_BODY)
 	_deploy.focus_mode = Control.FOCUS_NONE
+	_deploy.visible = false
 	_deploy.pressed.connect(_op_deploy)
 	chrome_footer().add_child(_deploy)
 
-	_bouw_keuzes()
 
-
-func _bouw_dashboard() -> void:
+## De kop: de klok rechts, daaronder de vier meters met hun woord voluit.
+##
+## Een `HFlowContainer` en geen vaste rij. De vier woorden voluit plus hun
+## getallen passen krap op één regel binnen de 192 px van de smalste telefoon,
+## en "krap" wordt "niet" zodra `vertrouwen` twee cijfers krijgt. Een vaste rij
+## zou dan afbreken tot één letter per label (zie `_vast()`) of het paneel
+## buiten het canvas duwen; deze valt netjes terug op twee regels en staat op
+## elk breder scherm (`window/stretch/aspect = "expand"`) weer op één.
+## Afkortingen waren de andere uitweg — "BUGS 3 VERTR 4" las als een spreadsheet
+## en niet als een dag, dus die niet.
+func _bouw_kop() -> void:
 	var paneel := PanelContainer.new()
 	paneel.add_theme_stylebox_override("panel", UiKit.panel_krap(UiKit.WIT, UiKit.LINE))
 	paneel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -188,15 +259,7 @@ func _bouw_dashboard() -> void:
 	var kop := HBoxContainer.new()
 	kop.add_theme_constant_override("separation", 4)
 	v.add_child(kop)
-	kop.add_child(_vast("HANDELINGEN", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT))
-	_pips = HBoxContainer.new()
-	_pips.add_theme_constant_override("separation", 2)
-	_pips.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	kop.add_child(_pips)
-
-	# De klok hangt rechts uitgelijnd op dezelfde regel: hij hoort bij de
-	# handelingen, niet bij de meters eronder. Een losse rij zou suggereren
-	# dat hij een vijfde waarde is; dat is hij niet, hij is een deadline.
+	kop.add_child(_vast("TOT LIVE", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT))
 	var vulling := Control.new()
 	vulling.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	kop.add_child(vulling)
@@ -204,21 +267,16 @@ func _bouw_dashboard() -> void:
 	_klok_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	kop.add_child(_klok_label)
 
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 9)
-	grid.add_theme_constant_override("v_separation", 1)
-	v.add_child(grid)
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", 4)
+	flow.add_theme_constant_override("v_separation", 1)
+	v.add_child(flow)
 	for m: StringName in METERS:
 		var cel := HBoxContainer.new()
-		cel.add_theme_constant_override("separation", 2)
-		cel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		grid.add_child(cel)
-		var naam := _vast(String(METER_NAAM[m]), UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
-		naam.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cel.add_child(naam)
-		var w := _vast("0", UiKit.FS_BODY, UiKit.INK)
-		w.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		cel.add_theme_constant_override("separation", 1)
+		flow.add_child(cel)
+		cel.add_child(_vast(String(METER_NAAM[m]), UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT))
+		var w := _vast("0", UiKit.FS_SMALL, UiKit.INK)
 		cel.add_child(w)
 		_waarde[m] = w
 
@@ -226,7 +284,7 @@ func _bouw_dashboard() -> void:
 ## Een label dat niet mag afbreken. UiKit.label() zet autowrap aan omdat een
 ## lange regel anders de indeling van een 192px-canvas opentrekt, maar in een
 ## HBox is het omgekeerde het probleem: een afbrekend label meldt een minimum
-## van één letter, en dan zet de container HANDELINGEN rechtop.
+## van één letter, en dan zet de container de rij rechtop.
 func _vast(tekst: String, maat: int, kleur: Color) -> Label:
 	var l := UiKit.label(tekst, maat, kleur)
 	l.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -240,134 +298,269 @@ func _bouw_foutbalk() -> void:
 	_foutbalk = PanelContainer.new()
 	_foutbalk.add_theme_stylebox_override("panel", UiKit.panel_krap(UiKit.PANEL, UiKit.ROOD, 2))
 	_foutbalk.visible = false
-	# Na het dashboard, dus vlak boven de keuzes waar je in fase 3 op reageert.
 	chrome_header().add_child(_foutbalk)
 	# ROOD_OP_LICHT, niet ROOD: _foutbalk staat op UiKit.PANEL (licht), en ROOD
-	# zelf is een derivaat voor een donkere ondergrond (P3) — die dit paneel
-	# niet heeft, in tegenstelling tot de rest van deze minigame.
+	# zelf is een derivaat voor een donkere ondergrond (P3).
 	_foutbalk_label = UiKit.label("", UiKit.FS_SMALL, UiKit.ROOD_OP_LICHT)
 	_foutbalk.add_child(_foutbalk_label)
 
 
-func _bouw_keuzes() -> void:
-	for ch: Node in _keuzes.get_children():
-		_keuzes.remove_child(ch)
-		ch.queue_free()
+## De zeven handelingen als zeven vaste knoppen, altijd zichtbaar, twee
+## kolommen van vier en drie. Vast en niet herbouwd per beurt: een knop die van
+## plek wisselt terwijl je erop mikt is de snelste manier om een spel dat om
+## tempo vraagt onspeelbaar te maken.
+func _bouw_knoppen(body: VBoxContainer) -> void:
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 2)
+	grid.add_theme_constant_override("v_separation", 2)
+	body.add_child(grid)
 
 	for raw: Variant in content().get("keuzes", []):
 		var o := raw as Dictionary
-		var reden := _reden(o)
-		var tekst := "%s  ·%d" % [String(o.get("label", "?")), int(o.get("kost", 0))]
-		if reden != "":
-			tekst += "  (%s)" % reden
-		var b := UiKit.keuzeknop(tekst, UiKit.FS_SMALL)
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var id := StringName(o.get("id", ""))
+		var b := UiKit.keuzeknop(String(o.get("label", "?")), UiKit.FS_SMALL)
 		b.focus_mode = Control.FOCUS_NONE
-		if reden == "":
-			b.pressed.connect(_kies.bind(o))
-		else:
-			# Zichtbaar maar dood, met de reden erin. Een keuze die je niet mag
-			# doen is informatie: dat fixen pas kan na testen is precies wat de
-			# speler moet leren, en een verborgen knop leert hem niets.
-			b.disabled = true
-			b.add_theme_color_override("font_disabled_color", UiKit.GRIJS)
-			b.add_theme_stylebox_override("disabled",
-				UiKit.panel(UiKit.NEUTRAAL_TINT, UiKit.GRIJS))
-		_keuzes.add_child(b)
+		b.pressed.connect(_op_handeling.bind(id))
+		grid.add_child(b)
+		_knoppen[id] = b
 
 
-## Leeg betekent: deze keuze mag. Anders staat er waarom niet, kort genoeg om
-## op de knop zelf te passen.
-func _reden(o: Dictionary) -> String:
-	if bool(o.get("eenmalig", false)) and _eenmalig_op.has(String(o.get("id", ""))):
-		return "al gedaan"
-	var nodig := int(o.get("vereist_getest", 0))
-	if nodig > 0 and int(_toestand[&"getest"]) < nodig:
-		return "test eerst"
-	if not can_perform_action(int(o.get("kost", 0))):
-		return "te weinig"
-	return ""
+func _keuze(id: StringName) -> Dictionary:
+	for raw: Variant in content().get("keuzes", []):
+		if StringName((raw as Dictionary).get("id", "")) == id:
+			return raw as Dictionary
+	return {}
 
 
-# --- Handelingen ----------------------------------------------------------
+# --- De brandjes ----------------------------------------------------------
 
-## Contract uit de turn-systeemregels: dit gaat altijd voor het verlagen van
-## `_acties`, nooit erna.
-func can_perform_action(kost: int) -> bool:
-	return _acties >= kost
-
-
-func _kies(o: Dictionary) -> void:
-	if _bezig or _fase == Fase.DEPLOYEN or _fase == Fase.KLAAR:
-		return
-	var kost := int(o.get("kost", 0))
-	if _reden(o) != "" or not can_perform_action(kost):
+## De tijdlijn loopt in `_process` en niet in een `create_timer`-lus: elk
+## kaartje heeft een balk die per frame moet krimpen, en dan is een tik van een
+## seconde geen klok maar een schok. Bijkomend: dit stopt vanzelf als de tree
+## pauzeert (backgrounden), wat de oude lus met `process_always = true` niet
+## deed — de klok liep door terwijl de speler in een andere app zat.
+func _process(delta: float) -> void:
+	if _fase != Fase.VOORBEREIDEN or _model == null:
 		return
 
-	_bezig = true
-	_acties -= kost
-	_verbruikt += kost
-	_gedaan.append(String(o.get("id", "")))
-	if bool(o.get("eenmalig", false)):
-		_eenmalig_op[String(o.get("id", ""))] = true
+	if _blokkade > 0.0:
+		_blokkade = maxf(0.0, _blokkade - delta)
+		if _blokkade <= 0.0:
+			_zet_knoppen(true)
 
+	for e: Dictionary in _model.tik(delta):
+		_verwerk(e)
+	_werk_kaartjes_bij()
+	_refresh_klok()
+	_status_regel()
+
+
+func _verwerk(e: Dictionary) -> void:
+	match int(e.get(&"soort", -1)):
+		BrandjesModel.Soort.SPAWN:
+			# Geen eigen "toast"-sample: die bestaat niet in assets/audio/sfx,
+			# en `play_ui()` slikt een onbekende cue stil door. `interactie` is
+			# de korte tik die elders al "er meldt zich iets" betekent.
+			AudioDirector.play_ui(&"interactie")
+		BrandjesModel.Soort.VERLOPEN:
+			var b := e[&"brandje"] as Dictionary
+			_weg_kaart(int(b[&"nr"]), false)
+			_zeg("%s. Te laat." % String(b[&"tekst"]), UiKit.ROOD)
+			AudioDirector.play_ui(&"fout")
+			Juice.schok(2.0, 0.25)
+			_toon_veranderd(e[&"veranderd"] as Dictionary)
+		BrandjesModel.Soort.GEBEURTENIS:
+			var g := e[&"gebeurtenis"] as Dictionary
+			_toon_veranderd(e[&"veranderd"] as Dictionary)
+			if bool(g.get("storing", false)):
+				_storing(String(g.get("tekst", "")))
+			else:
+				_zeg(String(g.get("tekst", "")), UiKit.ORANJE)
+		BrandjesModel.Soort.TIJD_OM:
+			_tijd_is_om()
+
+
+func _toon_veranderd(veranderd: Dictionary) -> void:
+	_refresh()
+	for m: Variant in veranderd:
+		_flits(StringName(m), bool(veranderd[m]))
+
+
+## Een tik op een handeling. Vraagt een zichtbaar brandje er precies om, dan
+## dooft het brandje met de kortste balk. Zo niet, dan gebeurt er niets behalve
+## een rode flits: loze handelingen mogen de meters niet opdrijven.
+func _op_handeling(id: StringName) -> void:
+	if _bezig or _fase == Fase.DEPLOYEN or _fase == Fase.KLAAR or _model == null:
+		return
+	if _fase == Fase.HERSTELLEN:
+		_herstel_handeling(id)
+		return
+	if _blokkade > 0.0:
+		return
+
+	var r := _model.blus(id)
+	if r.is_empty():
+		_mis(id)
+		return
+
+	_weg_kaart(int((r[&"brandje"] as Dictionary)[&"nr"]), true)
+	AudioDirector.play_ui(&"klik")
+	_zeg(String(r[&"regel"]), UiKit.BLUEBIRD_BRIGHT)
 	# Onthullen voor het effect: zo zie je bij de eerste test het getal
 	# verschijnen dat er de hele tijd al stond.
-	var onthult := StringName(o.get("onthult", ""))
-	if onthult != &"" and not bool(_bekend.get(onthult, false)):
-		_bekend[onthult] = true
+	var onthuld := StringName(r[&"onthuld"])
+	if onthuld != &"":
+		_refresh()
+		_flits(onthuld, false)
+	_toon_veranderd(r[&"veranderd"] as Dictionary)
+	_werk_kaartjes_bij()
+
+
+func _mis(id: StringName) -> void:
+	AudioDirector.play_ui(&"fout")
+	_zeg("Niets brandt daar.", UiKit.ORANJE)
+	_blokkade = BLOKKADE
+	_zet_knoppen(false)
+	var b := _knoppen.get(id) as Button
+	if b == null:
+		return
+	b.modulate = UiKit.ROOD
+	create_tween().tween_property(b, "modulate", Color.WHITE, MIS_FLITS)
+
+
+func _zet_knoppen(aan: bool) -> void:
+	if aan and (_fase == Fase.DEPLOYEN or _fase == Fase.KLAAR):
+		return
+	for id: Variant in _knoppen:
+		(_knoppen[id] as Button).disabled = not aan
+
+
+# --- De kaartjes ----------------------------------------------------------
+
+func _werk_kaartjes_bij() -> void:
+	if _zone == null or _model == null:
+		return
+	for i: int in _model.zichtbaar.size():
+		var b := _model.zichtbaar[i]
+		var nr := int(b[&"nr"])
+		var kaart := _kaarten.get(nr) as Control
+		if kaart == null:
+			kaart = _maak_kaart(b)
+			_kaarten[nr] = kaart
+			_zone.add_child(kaart)
+		_plaats(kaart, i)
+		var deel := clampf(float(b[&"resterend"]) / maxf(0.01, float(b[&"duur"])), 0.0, 1.0)
+		var balk := kaart.get_node(^"balk") as ColorRect
+		balk.anchor_right = deel
+		balk.color = UiKit.tijdkleur(deel)
+
+
+func _maak_kaart(b: Dictionary) -> Control:
+	var kaart := Control.new()
+	kaart.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	kaart.clip_contents = true
+
+	var paneel := PanelContainer.new()
+	paneel.name = "paneel"
+	paneel.add_theme_stylebox_override("panel", UiKit.panel_krap(UiKit.PANEL, UiKit.LINE))
+	paneel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiKit.full_rect(paneel)
+	kaart.add_child(paneel)
+
+	var l := UiKit.label(String(b[&"tekst"]), UiKit.FS_SMALL, UiKit.INK)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	paneel.add_child(l)
+
+	# De balk hangt onderaan het kaartje en krimpt via zijn rechteranker, zodat
+	# hij geen enkele meting van de breedte nodig heeft. Kleur uit dezelfde
+	# functie als de stand-up: groen via oranje naar rood, continu.
+	var balk := ColorRect.new()
+	balk.name = "balk"
+	balk.anchor_left = 0.0
+	balk.anchor_right = 1.0
+	balk.anchor_top = 1.0
+	balk.anchor_bottom = 1.0
+	balk.offset_top = -BALK_H
+	balk.offset_bottom = 0.0
+	balk.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	kaart.add_child(balk)
+	return kaart
+
+
+func _plaats(kaart: Control, i: int) -> void:
+	kaart.anchor_left = 0.0
+	kaart.anchor_right = 1.0
+	var doel := float(i) * (KAART_H + KAART_SEP)
+	if int(kaart.get_meta(&"idx", -1)) == i:
+		return
+	kaart.set_meta(&"idx", i)
+	if kaart.offset_bottom == 0.0 and kaart.offset_top == 0.0:
+		kaart.offset_top = doel
+		kaart.offset_bottom = doel + KAART_H
+		return
+	# Een kaartje dat opschuift omdat het kaartje erboven gedoofd is, springt
+	# niet: dan zou de kaart onder je vinger wegschieten.
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(kaart, "offset_top", doel, 0.12)
+	tw.tween_property(kaart, "offset_bottom", doel + KAART_H, 0.12)
+
+
+## Groen en weg, of rood en weg. Het kaartje verlaat de map meteen zodat de
+## volgende laag er niet meer op wacht; de node zelf glijdt nog even door.
+func _weg_kaart(nr: int, gelukt: bool) -> void:
+	var kaart := _kaarten.get(nr) as Control
+	if kaart == null:
+		return
+	_kaarten.erase(nr)
+	var paneel := kaart.get_node_or_null(^"paneel") as PanelContainer
+	if paneel != null:
+		paneel.add_theme_stylebox_override("panel", UiKit.panel_krap(
+			UiKit.GROEN_TINT if gelukt else UiKit.ORANJE_TINT,
+			UiKit.GROEN_OP_LICHT if gelukt else UiKit.ROOD_OP_LICHT, 2))
+	var breed := maxf(_zone.size.x, 1.0)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(kaart, "offset_left", breed, KAART_WEG)
+	tw.tween_property(kaart, "offset_right", breed, KAART_WEG)
+	tw.tween_property(kaart, "modulate:a", 0.0, KAART_WEG)
+	tw.chain().tween_callback(kaart.queue_free)
+
+
+# --- Fase 3: herstellen ---------------------------------------------------
+
+## Na de ROLLBACK is er geen klok en zijn er geen brandjes meer, alleen twee
+## handelingen. Dezelfde zeven knoppen, dezelfde effecten: wat je hier nog doet
+## is wat je al de hele avond deed, maar dan met de foutcode in beeld.
+func _herstel_handeling(id: StringName) -> void:
+	if _acties <= 0:
+		return
+	var keuze := _keuze(id)
+	if keuze.is_empty():
+		return
+	_acties -= 1
+	_model.gedaan.append(String(id))
+
+	var onthult := StringName(keuze.get("onthult", ""))
+	if onthult != &"" and not bool(_model.bekend.get(onthult, false)):
+		_model.bekend[onthult] = true
 		_refresh()
 		_flits(onthult, false)
 
-	_pas_effect(o.get("effect", {}) as Dictionary)
-	_zeg(String(o.get("regel", "")), UiKit.BLUEBIRD_BRIGHT)
+	_toon_veranderd(_model.pas_effect(keuze.get("effect", {}) as Dictionary))
+	_zeg(String(keuze.get("regel", "")), UiKit.BLUEBIRD_BRIGHT)
 	AudioDirector.play_ui(&"klik")
-	_bouw_keuzes()
 	_status_regel()
-	await _pauze(TIK_REGEL)
-
-	# Toestand eerst helemaal bijwerken, dan pas de volgende fase in. Een
-	# gebeurtenis die na de overgang landt zou een fase raken die er niet is.
-	await _gebeurtenissen()
-	_bezig = false
-
 	if _acties <= 0:
-		await _op_deploy()
-
-
-## Gebeurtenissen overkomen je; je kiest ze niet. Ze vuren op verbruikte
-## handelingen, en de laatste zet er een bug bíj — wie zijn handelingen tot op
-## nul uitrekent komt daar precies bedrogen mee uit.
-##
-## Een gebeurtenis met `storing: true` krijgt een echte onderbreking: een korte
-## overname van het scherm in plaats van dezelfde stille `_zeg()`-regel als de
-## andere twee. Het effect verwerkt zich altijd eerst, dus het dashboard flitst
-## er al onderdoor terwijl de overname nog in beeld staat.
-func _gebeurtenissen() -> void:
-	var lijst: Array = content().get("gebeurtenissen", [])
-	while _gebeurtenis < lijst.size():
-		var g := lijst[_gebeurtenis] as Dictionary
-		if _verbruikt < int(g.get("na", 0)):
-			return
-		_gebeurtenis += 1
-		var effect := g.get("effect", {}) as Dictionary
-		var tekst := String(g.get("tekst", ""))
-		_pas_effect(effect)
-		if bool(g.get("storing", false)):
-			_bouw_keuzes()
-			await _toon_storing(tekst)
-		else:
-			_zeg(tekst, UiKit.ORANJE)
-			if not effect.is_empty():
-				AudioDirector.play_ui(&"fout")
-			_bouw_keuzes()
-			await _pauze(TIK_GEBEURTENIS)
+		_zet_knoppen(false)
 
 
 ## Neemt het scherm heel even helemaal over: een storing landt in je dag, niet
-## in een regel onderaan. `finish_with_banner()` blijft ongemoeid — dit is
-## opvoering, geen nieuwe uitkomst.
-func _toon_storing(tekst: String) -> void:
+## in een regel onderaan. Zolang hij openstaat staan de balken van de brandjes
+## stil — een storing die je kaartjes laat verlopen terwijl je er niet bij kunt
+## is geen onderbreking maar een straf voor het lezen ervan.
+func _storing(tekst: String) -> void:
+	_model.gepauzeerd = true
 	var overlay := PanelContainer.new()
 	overlay.add_theme_stylebox_override("panel", UiKit.panel(UiKit.INK, UiKit.ROOD, 3))
 	UiKit.full_rect(overlay)
@@ -401,32 +594,23 @@ func _toon_storing(tekst: String) -> void:
 	await uit_tw.finished
 	if is_instance_valid(overlay):
 		overlay.queue_free()
+	if _model != null:
+		_model.gepauzeerd = false
 
 
-func _pas_effect(effect: Dictionary) -> void:
-	var veranderd: Array[StringName] = []
-	var beter: Dictionary = {}
-	for k: Variant in effect:
-		var m := StringName(k)
-		if not _toestand.has(m):
-			continue
-		var oud := int(_toestand[m])
-		# Geen negatieve meters: minder dan nul bugs bestaat niet, en een
-		# negatief getal zou de score cadeau doen aan wie doorfixt.
-		var nieuw := maxi(0, oud + int(effect[k]))
-		if nieuw == oud:
-			continue
-		_toestand[m] = nieuw
-		veranderd.append(m)
-		beter[m] = (nieuw < oud) if m == &"bugs" else (nieuw > oud)
-	_refresh()
-	for m: StringName in veranderd:
-		_flits(m, bool(beter[m]))
+## De klok ís de deploy. Op nul gaat het live met wat er ligt, en de brandjes
+## die dan nog branden zijn de brandjes waarmee het live gaat.
+func _tijd_is_om() -> void:
+	_bezig = true
+	_zeg("De tijd is om. Je gaat nu live met wat er ligt.", UiKit.ORANJE)
+	AudioDirector.play_ui(&"fout")
+	await _pauze(TIK_REGEL)
+	if not is_inside_tree():
+		return
+	_bezig = false
+	await _op_deploy()
 
 
-## Deployen mag ook vroeg, met handelingen over. Niet terwijl er nog een
-## handeling aan het landen is: dan zou een gebeurtenis de toestand nog raken
-## terwijl de console al loopt.
 func _op_deploy() -> void:
 	if _bezig:
 		return
@@ -446,10 +630,13 @@ func _deployen() -> void:
 		return
 	_fase = Fase.DEPLOYEN
 	_bezig = true
+	set_process(false)
 	# De klok hoort bij fase 1. Zodra je deployt is de deadline gehaald of
 	# geforceerd, en een bevroren tijd op het scherm zou allebei ontkennen.
 	if _klok_label != null:
 		_klok_label.text = ""
+	_wis_kaarten()
+	_zet_knoppen(false)
 	set_status("deployen")
 	_open_console()
 	AudioDirector.play_ui(&"genereren")
@@ -474,16 +661,15 @@ func _deployen() -> void:
 	# Alles klaarzetten voor fase 3 vóór de faseovergang zelf: het aantal
 	# handelingen, de foutbalk, de knop. Daarna is HERSTELLEN waar.
 	_acties = HERSTEL_ACTIES
-	_acties_max = HERSTEL_ACTIES
 	_foutbalk_label.text = _foutcode
 	_foutbalk.visible = true
-	_deploy.text = "LIVE ZETTEN"
+	_deploy.visible = true
 	_sluit_console()
 	_fase = Fase.HERSTELLEN
 	_bezig = false
 
-	_zeg("Twee handelingen. Daarna gaat hij live, wat je ook doet.", UiKit.WIT)
-	_bouw_keuzes()
+	_zeg("Twee handelingen. Daarna zet je hem live, wat je ook doet.", UiKit.WIT)
+	_zet_knoppen(true)
 	_refresh()
 	_status_regel()
 
@@ -522,6 +708,14 @@ func _wis_console() -> void:
 		ch.queue_free()
 
 
+func _wis_kaarten() -> void:
+	for nr: Variant in _kaarten:
+		var kaart := _kaarten[nr] as Control
+		if is_instance_valid(kaart):
+			kaart.queue_free()
+	_kaarten.clear()
+
+
 func _check(naam: String) -> void:
 	if _console == null:
 		return
@@ -549,6 +743,7 @@ func _live() -> void:
 	_fase = Fase.KLAAR
 	_bezig = true
 	_foutbalk.visible = false
+	_zet_knoppen(false)
 	set_status("live")
 	_open_console()
 	AudioDirector.play_ui(&"genereren")
@@ -560,7 +755,7 @@ func _live() -> void:
 	# kost iets, en die rekening moet in beeld staan op het moment dat hij
 	# betaald wordt. Anders leest een lage score als pech in plaats van als de
 	# prijs voor niet-kijken — en dan leert de speler er niets van.
-	if not bool(_bekend.get(&"bugs", false)):
+	if not bool(_model.bekend.get(&"bugs", false)):
 		_console_regel("ONGETEST — elke bug telt dubbel", UiKit.ROOD, UiKit.FS_SMALL)
 		await _pauze(0.7)
 
@@ -581,13 +776,12 @@ func _live() -> void:
 		AudioDirector.play_ui(&"fout")
 		Juice.schok(3.0, 0.4)
 		await _pauze(1.8)
-		move_child(_banner, get_child_count() - 1)
 		await finish_with_banner(false, "ROLLBACK", score, {
 			&"score": score,
 			&"titel": "ROLLBACK",
 			&"tekst": "",
-			&"eind": _toestand.duplicate(),
-			&"gebruikt": _gedaan.duplicate(),
+			&"eind": _model.toestand.duplicate(),
+			&"gebruikt": _model.gedaan.duplicate(),
 			&"foutcode": _foutcode,
 		})
 		return
@@ -600,39 +794,29 @@ func _live() -> void:
 	AudioDirector.play_ui(&"deploy_ok")
 	await _pauze(1.8)
 
-	# De banner van MinigameBase is vóór de console aangehangen en zou er dus
-	# achter verdwijnen; hij hoort het laatste woord te hebben.
-	move_child(_banner, get_child_count() - 1)
+	# P2: de banner van MinigameBase zit sinds `finish_with_banner()` in de
+	# footer-strook, niet meer los over het veld.
 	await finish_with_banner(true, titel, score, {
 		&"score": score,
 		&"titel": titel,
 		&"tekst": tekst,
-		&"eind": _toestand.duplicate(),
-		&"gebruikt": _gedaan.duplicate(),
+		&"eind": _model.toestand.duplicate(),
+		&"gebruikt": _model.gedaan.duplicate(),
 		&"foutcode": _foutcode,
 	})
 
 
 ## Vertrouwen en scope zijn wat je oplevert, bugs is wat je meelevert, en getest
-## is wat je erover weet. De som zelf staat niet meer hier maar in
+## is wat je erover weet. De som zelf staat niet hier maar in
 ## `Gevolgen.oplevering_score()`: zo rekent de testsuite met dezelfde som als
 ## de finale, en niet met een kopie die stilletjes uit de pas kan lopen.
-##
-## Twee afwijkingen van de suggestie uit het ontwerp, allebei daar: `getest`
-## telt tot een plafond mee (twee controles per bug waarmee je begon; daarna
-## moet winst uit fixen komen, anders is acht keer de suite draaien de hoogste
-## score van het spel), en wie nooit getest heeft betaalt per bug extra. Blind
-## deployen was met nul handelingen te winnen — precies het gedrag dat de
-## minigame wil afleren — en `_bekend[&"bugs"]` is de enige eerlijke maat voor
-## blind: niet hoeveel je getest hebt, maar of je ooit gekeken hebt.
 func _score() -> int:
-	return Gevolgen.oplevering_score(_toestand, _start_bugs, bool(_bekend.get(&"bugs", false)))
+	return _model.score()
 
 
 ## Eerste uitkomst waarvan de drempel gehaald is; de data staat aflopend.
 ## Onder deze score gaat de eerste deploy mis: de drempel van de op één na
-## laagste uitkomst ("KRAP"), uit de data. Alles daaronder was toch al "het
-## enige wat je er nu over kunt zeggen".
+## laagste uitkomst ("KRAP"), uit de data.
 func _faal_drempel() -> int:
 	var uitkomsten: Array = content().get("uitkomsten", [])
 	if uitkomsten.size() < 2:
@@ -657,17 +841,18 @@ func _uitkomst(score: int) -> Dictionary:
 # --- Vormgeving -----------------------------------------------------------
 
 func _refresh() -> void:
+	if _model == null:
+		return
 	for m: StringName in METERS:
 		var l := _waarde[m] as Label
-		if bool(_bekend.get(m, false)) or not _verbergt(m):
-			l.text = str(int(_toestand[m]))
+		if bool(_model.bekend.get(m, false)) or not _verbergt(m):
+			l.text = str(int(_model.toestand[m]))
 			l.add_theme_color_override("font_color", _meter_kleur(m))
 		else:
 			# Je weet niet hoe erg het is tot je kijkt. Een 3 die er vanaf het
-			# begin staat haalt de hele keuze om te testen weg.
+			# begin staat haalt de hele reden om te testen weg.
 			l.text = "?"
 			l.add_theme_color_override("font_color", UiKit.GRIJS_OP_LICHT)
-	_refresh_pips()
 
 
 ## Een meter blijft verborgen zolang een keuze belooft hem te onthullen.
@@ -678,21 +863,10 @@ func _verbergt(m: StringName) -> bool:
 	return false
 
 
-func _refresh_pips() -> void:
-	for ch: Node in _pips.get_children():
-		_pips.remove_child(ch)
-		ch.queue_free()
-	for i: int in _acties_max:
-		var p := ColorRect.new()
-		p.custom_minimum_size = Vector2(4, 8)
-		p.color = UiKit.BLUEBIRD_INK if i < _acties else UiKit.NEUTRAAL_TINT
-		_pips.add_child(p)
-
-
-## GROEN_OP_LICHT/ROOD_OP_LICHT, niet GROEN/ROOD: `_waarde[m]` staat op het
-## dashboard, en dat paneel is UiKit.WIT — een lichte ondergrond (P3).
+## GROEN_OP_LICHT/ROOD_OP_LICHT, niet GROEN/ROOD: de meterstrook staat op
+## UiKit.WIT — een lichte ondergrond (P3).
 func _meter_kleur(m: StringName) -> Color:
-	var v := int(_toestand[m])
+	var v := int(_model.toestand[m])
 	match m:
 		&"bugs":
 			return UiKit.GROEN_OP_LICHT if v == 0 else UiKit.ROOD_OP_LICHT
@@ -734,65 +908,32 @@ func _zeg(tekst: String, kleur: Color) -> void:
 
 
 func _status_regel() -> void:
-	match _acties:
-		0: set_status("handelingen op")
-		1: set_status("nog 1 handeling")
-		_: set_status("nog %d handelingen" % _acties)
-
-
-## Tikt fase 1 weg in echte seconden, niet in handelingen: hij loopt ook door
-## terwijl je een keuze aan het lezen bent. Op nul forceert hij `_op_deploy()`
-## met wat er dan ligt — geen nieuwe mechaniek, alleen een grens aan hoe lang
-## je over de acht handelingen mag nadenken.
-func _klok_loop() -> void:
-	while _fase == Fase.VOORBEREIDEN and _klok_resterend > 0.0:
-		await _pauze(1.0)
-		# De minigame kan tussentijds afgesloten zijn (bv. een vroege abort);
-		# zonder deze wacht raakt deze achtergrondlus een vrijgegeven object.
-		if not is_inside_tree() or _fase != Fase.VOORBEREIDEN:
-			return
-		_klok_resterend = maxf(0.0, _klok_resterend - 1.0)
-		_refresh_klok()
-	if not is_inside_tree() or _fase != Fase.VOORBEREIDEN:
+	if _fase == Fase.HERSTELLEN:
+		set_status("nog %d handelingen" % _acties if _acties != 1 else "nog 1 handeling")
 		return
-
-	# Tijd op, maar niet midden in een handeling grijpen: een gebeurtenis die
-	# nog moet landen mag dat eerst doen.
-	while _fase == Fase.VOORBEREIDEN and _bezig:
-		await _pauze(0.1)
-		if not is_inside_tree():
-			return
-	if _fase != Fase.VOORBEREIDEN:
+	if _model == null:
 		return
-	_zeg("De tijd is om. Je gaat nu live met wat er ligt.", UiKit.ORANJE)
-	AudioDirector.play_ui(&"fout")
-	await _pauze(TIK_REGEL)
-	if not is_inside_tree():
-		return
-	await _op_deploy()
+	match _model.zichtbaar.size():
+		0: set_status("het is even stil")
+		1: set_status("1 brandje")
+		_: set_status("%d brandjes tegelijk" % _model.zichtbaar.size())
 
 
 func _refresh_klok() -> void:
-	if _klok_label == null or not _klok_gestart:
+	if _klok_label == null or _model == null:
 		return
-	var s := int(ceil(_klok_resterend))
+	var s := int(ceil(_model.klok))
 	_klok_label.text = "%d:%02d" % [s / 60, s % 60]
 	_klok_label.add_theme_color_override("font_color",
-		UiKit.ROOD if _klok_resterend <= KLOK_ALARM else UiKit.ORANJE)
+		UiKit.ROOD if _model.klok <= KLOK_ALARM else UiKit.ORANJE)
 
 
-## F5-a: dit was `process_always = true` omdat de wereld gepauzeerd stond
-## zolang deze minigame liep, en anders nooit was afgelopen. Dat is niet meer
-## zo tijdens een gewone speelbeurt — maar backgrounden (`Shell._naar_achtergrond()`)
-## pauzeert de tree nog altijd wél, onvoorwaardelijk, ook tijdens deze
-## minigame. Blijft dit op `true` staan, dan tikt `_klok_loop()` hierboven
-## door terwijl de speler in een andere app zit — precies hetzelfde als elke
-## niet-geflagde timer in `main.gd` vandaag al doet (`create_timer()` staat
-## standaard al op `process_always = true` in Godot zelf). Dat is dus geen
-## nieuwe aanname van deze functie, maar een bestaande eigenschap van de hele
-## codebase, en die in zijn geheel herzien hoort niet bij F5. Blijft daarom
-## bewust op `true` staan, in plaats van hier alleen deze ene minigame anders
-## te laten gedragen dan de rest.
+## F5-a: `process_always = true` staat hier nog steeds op de console-pauzes.
+## Backgrounden (`Shell._naar_achtergrond()`) pauzeert de tree onvoorwaardelijk,
+## ook tijdens deze minigame, en een console die dan halverwege blijft hangen is
+## een minigame die niet meer af te maken is. De klok van fase 1 loopt sinds P5
+## wél gewoon mee met de tree (`_process`) en staat dus stil als de speler in
+## een andere app zit.
 func _pauze(t: float) -> void:
 	await get_tree().create_timer(t, true, false, true).timeout
 
@@ -807,36 +948,29 @@ func _exit_tree() -> void:
 
 # --- QA -------------------------------------------------------------------
 
-## Speelt de finale langs de echte route: keuzes via _kies(), fase 2 via
-## _op_deploy(), en dan de twee herstelhandelingen. Geen kortsluiting naar
-## succeed(), want dan test dit niets van de mechaniek.
+## Speelt de finale langs de echte route: blus telkens het brandje met de
+## kortste balk, en in fase 3 de twee herstelhandelingen. Geen kortsluiting
+## naar succeed(), want dan test dit niets van de mechaniek.
+##
+## Wordt door `Autopilot` en `boot.gd` elke halve seconde opnieuw aangeroepen,
+## dus hij doet per aanroep één handeling en is idempotent: hij mag niet zelf
+## een lus draaien die de tweede aanroep dubbel laat lopen.
 func qa_solve() -> void:
-	if _qa_bezig:
+	if _bezig:
 		return
-	_qa_bezig = true
-	await _qa_route()
-
-
-## Eerst kijken wat er is, dan fixen, dan iemand laten meekijken — precies de
-## les die de minigame wil leren, en daarmee de bovenste uitkomst.
-func _qa_route() -> void:
-	for id: StringName in [&"testen", &"testen", &"fixen", &"fixen", &"collega"]:
-		if _fase != Fase.VOORBEREIDEN:
-			break
-		await _qa_kies(id)
-	if _fase == Fase.VOORBEREIDEN:
-		await _op_deploy()
-	for id: StringName in [&"informeren", &"nakijken"]:
-		if _fase != Fase.HERSTELLEN:
-			break
-		await _qa_kies(id)
-	if _fase == Fase.HERSTELLEN:
-		await _op_deploy()
-
-
-func _qa_kies(id: StringName) -> void:
-	for raw: Variant in content().get("keuzes", []):
-		var o := raw as Dictionary
-		if StringName(o.get("id", "")) == id:
-			await _kies(o)
-			return
+	match _fase:
+		Fase.VOORBEREIDEN:
+			var b := _model.kortste() if _model != null else {}
+			if not b.is_empty():
+				_op_handeling(StringName(b[&"handeling"]))
+		Fase.HERSTELLEN:
+			# Eerst de klant, dan nog een keer kijken: precies de les die de
+			# minigame wil leren, en daarmee de bovenste uitkomst.
+			var route: Array[StringName] = [&"informeren", &"nakijken"]
+			if _acties > 0 and _qa_stap < route.size():
+				_op_handeling(route[_qa_stap])
+				_qa_stap += 1
+			else:
+				await _op_deploy()
+		_:
+			pass

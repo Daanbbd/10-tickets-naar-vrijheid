@@ -124,15 +124,62 @@ Daans opt-in; die kosten het meest.
    het toe in een terzijde ("Ik ben een stockfoto. Mijn urenstaat is echt.",
    `03f52e1`).
 
+8. **Eén eigen ticket per personage** (BBD-202 en BBD-207 zijn van iedereen,
+   briefer-veld); de oplevering kost 60 min (`kosten_min`).
+9. **Audit 5 september** (`docs/AUDIT-2026-09-05.md`, deel 1 en 2, met
+   deelrapporten in `docs/audit-2026-09-05/`) en de fixes uit deel 1: de
+   stemtest eist nu echt kleine letters van Danny en Bastiaan, de intro zegt
+   bij hoeveel tickets je live mag, Daan of Dennis zegt hardop dat acht uur
+   nooit gehaald wordt, Dennis waarschuwt vóór de deploy over open tickets
+   (`open_tickets_min`), "overslaan »" is raakbaar, `mg_scope`/`mg_whack`
+   nemen touch, de collega-hint noemt de locatie.
+10. **Minigames P1/P2**: het WAT/WAAROM-kaartje alleen nog voor de finale, de
+    uitleg als vervagende overlay ín het veld, briefings ≤ 25 en intro's
+    ≤ 18 woorden (test), de eindbanner in de footer met confetti of schok,
+    `boot.gd` herhaalt `qa_solve()` zodat `--minigame=mg_cro --autoplay`
+    eerlijk slaagt. Branch `claude/godot-master-game-audit-bfb1b5`, worktree
+    `10-tickets-vrijheid-handover-079cbc`, niet gemerged of gepusht.
+
+11. **Nacht van 5 op 6 september, alles uit de audit gebouwd** (Daans opdracht
+    "werk de resterende items uit"): P3 (klokbalk-helper in `minigame_base`,
+    Dennis wacht 45 s in scope, build-drift in uitlijnen, 7 s per klap in
+    A tegen B, heatmap-knop 26 px met offset-drag), P4 (klant wacht 8 s per
+    ronde via `ask_choice(timeout_sec)`, verkeerde kabel kost 15 min plus
+    `Juice.flits()` en een nieuwe keuze, Bastiaans paard komt naar hem toe
+    i.p.v. `geen_zoektocht`), P5 (de finale als brandjes: `BrandjesModel`
+    puur en gekalibreerd, kaartjes met aflopende balk, zeven vaste
+    handelingen, gezaaid uit de dag; console-fase intact), klantberichten
+    (k1 zonder unlock, k4 trekt BBD-207 naar voren op 6/10), de dialoogvraag
+    boven keuzes in twee regels, Jonathan houdt twee kabels. Suite 22.245
+    controles, 0 fout; speelbeurt daan 10/10, uit om 18:17. Sectie A
+    hieronder is daarmee gedaan; wat afwijkt staat in
+    `docs/AUDIT-2026-09-05.md` bij P5.
+
+**Nog open uit de audit:** bevinding 1 (de ophaalbeat is 9× dezelfde zin,
+PLAN D), 11, 12, 15-18; de te lange klantvragen in `mg_klantfeedback.rondes`
+(worden nu afgekapt met een weglatingsteken); en Daans eigen telefoontest
+(landscape, `mg_scope`/`mg_whack` met een vinger, audio-unlock).
+
 Bewijs in `docs/audit-shots/`: `licht_*.png`, `resp_*.png`, `f2_*.png`,
 `f3_heatmap.png`, `f4_uitleg.png`, `f5_merge_wereld.png`, `praat_dirk.png`.
 
 ### Wat open staat, in volgorde van waarde
 
-**A. Fase 5 — de oplevering als Space Team (Fable ontwerpt, Sonnet bouwt).**
-Nu: 8 acties op één klok van 75 s, drie gebeurtenissen op verbruikte acties,
-dan de console. Doel: alles schreeuwt tegelijk. Concreet ontwerp om van te
-vertrekken (nog niet met Daan doorgesproken — doe dat eerst):
+**A. Fase 5 — de oplevering als Space Team. [gebouwd 6 sep]** Was: 8 acties op
+één klok van 75 s, drie gebeurtenissen op verbruikte acties, dan de console. Nu:
+brandjes als kaartjes met een eigen balk, hoogstens drie tegelijk, zeven vaste
+knoppen, en geen knop DEPLOYEN meer — de klok ís de deploy. De rekenkern staat
+in `scripts/minigames/brandjes_model.gd`, de kalibratie in
+`_test_finale_brandjes()`.
+
+**Afwijkingen van het ontwerp hieronder, één regel:** de meterstrook staat op
+192 px op twee regels in plaats van één (vier woorden voluit plus hun getallen
+passen daar niet naast elkaar; een `HFlowContainer` valt terug in plaats van af
+te breken), en `mg_oplevering.gd` is gebleven in plaats van een nieuw
+`mg_brandjes.gd` — de console-fase is precies het deel dat dan zou moeten
+verhuizen.
+
+Het ontwerp waar dit uit voortkwam:
 
 - *Brandjes* in plaats van acties: kaartjes die binnenkomen met een eigen
   aflopende balk (6-10 s), twee tot drie tegelijk, sneller naarmate de klok
@@ -281,8 +328,10 @@ loop naar het anker  →  niet jouw vak  →  loop naar de collega  →  loop te
   drie** de keuzes zetten `X_bezocht`. Bij hérpraten zijn regel 2 en 3
   byte-identiek; ~22 regels per beurt zijn permanent onbereikbaar.
 - **Niets escaleert.** 5 van 11 minigames hebben geen timer. De klant stuurt 6
-  berichten en verschuift nooit de opdracht. Er zijn **4 storingen in het hele
-  spel**, en `storingen.gd:133-137` *onderdrukt* ze: hoogstens één per minigame.
+  berichten en verschuift nooit de opdracht. Er zijn **16 storingen in het hele
+  spel** (was 4 op het moment van deze diagnose; Fase 2a, `76624b2`, breidde
+  dit uit naar zestien — dit getal staat hier ná die uitbreiding), en
+  `storingen.gd:133-137` *onderdrukt* ze: hoogstens één per minigame.
 - **En er is geen trek.** Niets kondigt de oplevering aan tot 9/10, en de laatste
   twee tickets zijn een gedwongen enkele rij — de vorm klapt van zandbak naar gang
   precies waar een komedie wil versnellen.

@@ -7,7 +7,7 @@ extends RefCounted
 const KEYS: Array[String] = [
 	"character", "trait", "flags_all", "flags_none",
 	"tickets_done", "tickets_not_done", "has_item", "min_tickets_done",
-	"overwerk", "min_counter",
+	"overwerk", "min_counter", "open_tickets_min",
 ]
 
 static func check(c: Dictionary) -> bool:
@@ -50,6 +50,11 @@ static func check(c: Dictionary) -> bool:
 			return false
 
 	if Session.done_count() < int(c.get("min_tickets_done", 0)):
+		return false
+
+	# Hoeveel tickets (zonder t10 zelf) nog niet af zijn: `t10_offer`
+	# waarschuwt hiermee vóór de deploy als er nog werk openstaat.
+	if Session.niet_af().size() < int(c.get("open_tickets_min", 0)):
 		return false
 
 	# Bewust met has() eromheen, anders dan min_tickets_done hierboven: een bool

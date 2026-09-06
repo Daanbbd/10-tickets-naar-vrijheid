@@ -65,10 +65,12 @@ class Hitte extends Control:
 
 
 ## Het veld: ontvangt aanrakingen en slepen, in beide gebeurtenisfamilies
-## (touch én muis), net als `mg_uitlijnen.Vel`.
+## (touch én muis), net als `mg_uitlijnen.Vel`. `muis` gaat mee in de
+## signalen — niet in `mg_uitlijnen.Vel` nodig, hier wel: de offset-drag
+## (P3/M6) geldt alleen met een vinger, nooit met een muis.
 class Veld extends Control:
-	signal aangeraakt(punt: Vector2)
-	signal gesleept(punt: Vector2)
+	signal aangeraakt(punt: Vector2, muis: bool)
+	signal gesleept(punt: Vector2, muis: bool)
 	signal losgelaten()
 
 	func _init(maat: Vector2) -> void:
@@ -80,24 +82,24 @@ class Veld extends Control:
 		if event is InputEventScreenTouch:
 			var t := event as InputEventScreenTouch
 			if t.pressed:
-				aangeraakt.emit(t.position)
+				aangeraakt.emit(t.position, false)
 			else:
 				losgelaten.emit()
 			accept_event()
 		elif event is InputEventScreenDrag:
-			gesleept.emit((event as InputEventScreenDrag).position)
+			gesleept.emit((event as InputEventScreenDrag).position, false)
 			accept_event()
 		elif event is InputEventMouseButton:
 			var m := event as InputEventMouseButton
 			if m.button_index != MOUSE_BUTTON_LEFT:
 				return
 			if m.pressed:
-				aangeraakt.emit(m.position)
+				aangeraakt.emit(m.position, true)
 			else:
 				losgelaten.emit()
 			accept_event()
 		elif event is InputEventMouseMotion:
-			gesleept.emit((event as InputEventMouseMotion).position)
+			gesleept.emit((event as InputEventMouseMotion).position, true)
 
 
 var _basis: float = 0.0
@@ -120,11 +122,24 @@ var _rects: Dictionary = {}           ## id -> Rect2 (veldcoördinaten)
 var _tellers: Dictionary = {}         ## id -> int
 var _teller_labels: Dictionary = {}   ## id -> Label
 var _knop: Panel = null
-var _knop_maat: Vector2 = Vector2(64.0, 20.0)
+# M6: was 20 px hoog — onder UiKit.KNOP_MIN_H (30) en precies zo klein dat een
+# duim het doel bedekt terwijl je sleept. 26 px is nog steeds krap, maar het
+# echte antwoord op "je duim bedekt het doel" is de offset-drag hieronder.
+var _knop_maat: Vector2 = Vector2(64.0, 26.0)
 
 var _sleept: bool = false
 var _greep: Vector2 = Vector2.ZERO
 var _spawn_t: float = 0.0
+
+# P3/M6: tijdens het slepen zweeft de knop 22 px boven de vinger, zodat de
+# vinger het hete element niet bedekt. `_offset_y` start op 0 bij elke nieuwe
+# aanraking (dus geen sprong: zie `_op_aanraking()`) en tweent daarna vloeiend
+# naar KNOP_OFFSET_Y toe — met een muis blijft hij op 0.
+const KNOP_OFFSET_Y := 22.0
+const KNOP_OFFSET_TIJD := 0.12
+var _offset_y: float = 0.0
+var _offset_tween: Tween = null
+var _puls_tween: Tween = null
 
 var _waarde: Label = null
 var _balk_houder: Control = null
@@ -181,6 +196,10 @@ func _on_setup() -> void:
 
 	_zet_conversie(_conversie)
 	_start_ronde()
+
+	# De eerste 0,6 s: twee pulsen op de rand van de knop, zodat slepen zich
+	# aandient zonder daar een woord tekst voor nodig te hebben.
+	_puls_tween = puls_rand(_knop, 2)
 
 
 func _rondes() -> Array:
@@ -257,7 +276,7 @@ func _bouw_element(d: Dictionary) -> void:
 
 
 func _bouw_knop(d: Dictionary) -> void:
-	var maat: Array = d.get("maat", [64, 20])
+	var maat: Array = d.get("maat", [64, 26])
 	var start: Array = d.get("start", [50, 160])
 	_knop_maat = Vector2(float(maat[0]), float(maat[1]))
 	_knop = Panel.new()
@@ -422,21 +441,31 @@ func _formatteer(v: float) -> String:
 
 # --- Slepen -----------------------------------------------------------------
 
-func _op_aanraking(punt: Vector2) -> void:
+func _op_aanraking(punt: Vector2, muis: bool) -> void:
 	if not _bezig or _knop == null:
 		return
 	# Je hoeft de knop niet exact te raken: een tik ernaast pakt hem ook, want op
-	# een telefoon is 20 px hoog een dun doelwit.
+	# een telefoon is 26 px hoog nog altijd een krap doelwit.
 	if Rect2(_knop.position, _knop.size).grow(8.0).has_point(punt):
 		_sleept = true
 		_greep = punt - _knop.position
 		AudioDirector.play_ui(&"klik")
+		# M6/P3: de knop springt niet naar zijn opgetilde plek — hij begint
+		# op 0 offset (dus exact waar hij al lag) en tweent van daaruit
+		# vloeiend omhoog naar KNOP_OFFSET_Y. Met een muis blijft hij op 0.
+		if _offset_tween != null and _offset_tween.is_valid():
+			_offset_tween.kill()
+		_offset_y = 0.0
+		if not muis:
+			_offset_tween = create_tween()
+			_offset_tween.tween_property(self, "_offset_y", KNOP_OFFSET_Y, KNOP_OFFSET_TIJD) \
+				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
-func _op_sleep(punt: Vector2) -> void:
+func _op_sleep(punt: Vector2, _muis: bool) -> void:
 	if not _sleept or _knop == null:
 		return
-	var doel := punt - _greep
+	var doel := punt - _greep - Vector2(0.0, _offset_y)
 	doel.x = clampf(doel.x, 0.0, VELD_MAAT.x - _knop.size.x)
 	doel.y = clampf(doel.y, 0.0, VELD_MAAT.y - _knop.size.y)
 	_knop.position = doel
@@ -444,6 +473,13 @@ func _op_sleep(punt: Vector2) -> void:
 
 func _op_los() -> void:
 	_sleept = false
+
+
+func _exit_tree() -> void:
+	if _offset_tween != null and _offset_tween.is_valid():
+		_offset_tween.kill()
+	if _puls_tween != null and _puls_tween.is_valid():
+		_puls_tween.kill()
 
 
 # --- QA ---------------------------------------------------------------------

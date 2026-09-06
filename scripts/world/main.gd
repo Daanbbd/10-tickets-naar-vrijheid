@@ -446,12 +446,26 @@ func _intro_beat() -> void:
 					"Goedemorgen. Je hebt haar berichtje gezien? Morgen live. "
 					+ "Laatste dag van sprint veertien. Ik zie je zo bij het bord.",
 					&"daan")
+			# Dezelfde grap als in Dennis' tak hieronder, uit Daans mond: de PO
+			# weet ook dat de acht uur nooit gehaald worden.
+			await dialogue.say(daan_def.name,
+					"Acht uur op de klok, tot %s. Dat haalt nooit iemand. Dirk boekt het toch." % [
+						Urenstaat.formatteer(Urenstaat.START_MIN + Urenstaat.BUDGET_MIN)],
+					&"daan")
 	else:
 		var dennis_def: NpcDef = GameData.npc(&"dennis")
 		if dennis_def != null:
 			await dialogue.say(dennis_def.name,
 					"Morgen. Laatste dag van sprint veertien. De klant denkt dat we "
 					+ "morgen live gaan, dus dat gaan we. Verder heb ik niks nodig.",
+					&"dennis")
+			# De grap hardop: het 8-uursbudget is per constructie onhaalbaar
+			# (klok.gd) en dat zei tot nu toe niemand vooraf. Dezelfde spreker,
+			# want de grap is dat de scrum master het zelf al weet en het
+			# gewoon zo laat.
+			await dialogue.say(dennis_def.name,
+					"Acht uur op de klok, tot %s. Dat haalt nooit iemand. Dirk boekt het toch." % [
+						Urenstaat.formatteer(Urenstaat.START_MIN + Urenstaat.BUDGET_MIN)],
 					&"dennis")
 
 	# Beat 2 — Dennis neemt je mee. Hij staat al ergens op De Werkvloer te
@@ -493,11 +507,12 @@ func _intro_beat() -> void:
 		_meld_vondst(_vind_werk(StringName(entry.get("zone", &""))), String(entry.get("naam", "")))
 	_uitgestelde_zones.clear()
 
-	# Beat 4/5 — het bord is leeg, en wordt gevuld. BBD-201 en BBD-202 zijn
-	# allebei van Daan en allebei open vanaf minuut één (`available_when: {}`),
-	# ongeacht wie je speelt: Dennis hangt dezelfde twee op of je nu voor het
-	# eerst van Daans tickets hoort, of ze zelf al kent. De toelichting is de
-	# detailtekst van het ticket zelf — `laat_landen()` roept via
+	# Beat 4/5 — het bord is leeg, en wordt gevuld. BBD-201 is van Daan, BBD-202
+	# is van iedereen (sinds 5 sep 2026, zie docs/QUESTS.md); allebei open vanaf
+	# minuut één (`available_when: {}`), ongeacht wie je speelt: Dennis hangt
+	# dezelfde twee op of je nu voor het eerst van Daans ticket hoort, of het
+	# zelf al kent. De toelichting is de detailtekst van het ticket zelf —
+	# `laat_landen()` roept via
 	# `Scrumbord.laat_briefje_landen()` alsnog `toon_detail()` aan, dus er komt
 	# geen dialoogbox over het bord heen te staan.
 	Session.lock_input()
@@ -527,17 +542,17 @@ func _intro_beat() -> void:
 	hud.zet_bord(false)
 	Session.unlock_input()
 
-	# Beat 6 — kiezen. Dezelfde vorm voor iedereen; alleen wie Daan zelf
-	# speelt krijgt de bijzin dat het zíjn eigen twee tickets zijn.
+	# Beat 6 — kiezen. Eén van Daan, één van iedereen: wie Daan zelf speelt
+	# hoort "jou" voor BBD-201, ieder ander hoort "Daan".
 	var sluit_def: NpcDef = GameData.npc(&"dennis")
 	if sluit_def != null:
 		if Session.character_id == &"daan":
 			await dialogue.say(sluit_def.name,
-					"Die twee zijn van jou. Kies er een, dan gaan we los.",
+					"Een van jou, een van ons allemaal. Kies er een, dan gaan we los.",
 					&"dennis")
 		else:
 			await dialogue.say(sluit_def.name,
-					"Kies er een op het bord. Wat je vastzet, blijft bovenaan staan.",
+					"Een van Daan, een van ons allemaal. Kies er een, dan gaan we los.",
 					&"dennis")
 
 	# Hier stond `hud.show_controls_card()`. De besturingsuitleg is nu een eigen
@@ -826,7 +841,12 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 			return false
 		_interact_with(it)
 
-	if not await _qa_wacht_tot(func() -> bool: return Session.is_done(tid), 90.0):
+	# Ruimer voor de finale: die duurt sinds P5 zijn eigen klok uit (75 s) plus
+	# twee consoles en een herstelfase, want er is geen knop DEPLOYEN meer die
+	# de avond vroeg afkapt. Op 90 s meldde het harnas "BBD-210 liep vast" op
+	# een minigame die gewoon nog bezig was.
+	var geduld := 180.0 if t.minigame_id == &"mg_deploy" else 90.0
+	if not await _qa_wacht_tot(func() -> bool: return Session.is_done(tid), geduld):
 		printerr("[SPEELBEURT] %s liep vast" % t.code)
 		return false
 

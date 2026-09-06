@@ -60,8 +60,10 @@ class Hole extends Control:
 	func _gui_input(event: InputEvent) -> void:
 		if not active:
 			return
-		if event is InputEventMouseButton and event.pressed \
-				and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		var tik := (event is InputEventMouseButton and (event as InputEventMouseButton).pressed
+				and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT) \
+			or (event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed)
+		if tik:
 			hit.emit(self)
 
 

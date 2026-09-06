@@ -44,8 +44,12 @@ const FOUT_MIN := 15
 
 
 ## Wat een ticket je kost. Krijgt het vakgebied als feit aangereikt — zie de
-## opmerking over cycli hierboven.
-static func kosten_voor_ticket(eigen_vakgebied: bool) -> int:
+## opmerking over cycli hierboven. `override_min` is de uitzondering voor de
+## finale (BBD-210): die kost altijd 60 minuten, ongeacht vakgebied, want de
+## oplevering is het uur waarin het hele team meekijkt.
+static func kosten_voor_ticket(eigen_vakgebied: bool, override_min: int = 0) -> int:
+	if override_min > 0:
+		return override_min
 	return EIGEN_MIN if eigen_vakgebied else HULP_MIN
 
 

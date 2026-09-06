@@ -28,7 +28,7 @@ Een nieuwe speler moet binnen een minuut weten **wat er gebouwd wordt** en
 **hoe dit spel werkt**. Dat gebeurt op een eigen scherm tussen titel en
 personagekeuze (`IntroUitleg`, `scripts/ui/intro_uitleg.gd` +
 `scenes/boot/intro_uitleg.tscn`), niet pas bij het spawnen: op de
-personagekeuze staat de ticketbalk en "twee tickets zelf" al, en dat leest pas
+personagekeuze staat de ticketbalk en "één ticket zelf" al, en dat leest pas
 ergens voor wie eerst weet dát er tickets bestaan om zelf te doen.
 `TitleScreen._on_start()` routeert er doorheen
 (`Shell.goto_intro_uitleg()`) vóór `Shell.goto_character_select()`.
@@ -152,7 +152,8 @@ dezelfde momenten, met andere teksten.
 Ze komt niet in het kantoor. Ze heeft geen sprite, geen bureau en geen
 standplaats — een klant die je kunt opzoeken is een collega, en een klant die
 je opzoekt kan wachten. Ze bestaat als melding die binnenkomt terwijl je iets
-anders aan het doen was: op 3, 5, 7 en 9 tickets, met een deinend paard, een
+anders aan het doen was: op de zes drempels uit `Gevolgen.DREMPELS` — 1 (k1),
+3 (k2), 5 (k3), 6 (k4), 7 (k5) en 9 (k6) tickets — met een deinend paard, een
 tijdstip dat opvalt (21:47) en een typing-indicator die ook knippert als ze
 niets stuurt.
 
@@ -305,7 +306,10 @@ aftiteling telt op wat je werkte tegen wat je mocht boeken.
 
 Dat de goedkoopst mogelijke dag van elk personage boven de acht uur uitkomt is
 een ontwerpinvariant, niet een balansdetail: `_test_urenstaat()` faalt als een
-herbalancering van ticket-eigendom hem stilletjes zou slopen.
+herbalancering van ticket-eigendom hem stilletjes zou slopen. De finale
+(BBD-210) telt daar los van mee: die is niet zomaar eigen werk maar het uur
+waarin het hele team meekijkt, en kost daarom altijd 60 minuten (`kosten_min`
+op het ticket), ongeacht wiens vakgebied het is.
 
 ## Bewust niet gebouwd
 

@@ -324,18 +324,38 @@ func briefing(t: TicketDef) -> void:
 
 
 func _briefing(t: TicketDef) -> void:
-	if QuestEngine.is_own_expertise(t.id):
+	# Een ticket van iemand (owner_character gezet) brieft via de eigenaar: die
+	# heb je net opgehaald, en dít is waarvoor. Speel je hem zelf, dan is het
+	# jouw vakgebied en ken je je eigen ticket al.
+	if t.owner_character != &"":
+		if QuestEngine.is_own_expertise(t.id):
+			return
+		var tekst := Briefing.regel(t)
+		if tekst == "":
+			return
+		var d: NpcDef = GameData.npc(QuestEngine.required_helper(t.id))
+		if d == null:
+			return
+		# `owner_character` is hier het derde argument en niet zomaar een extraatje:
+		# `say()` leidt daar zowel de pratende mond als het portret uit af. Dit is het
+		# gezicht dat vlak voor de minigame in beeld komt.
+		await _dialogue.say(d.name, tekst, t.owner_character)
 		return
-	var tekst := Briefing.regel(t)
-	if tekst == "":
+
+	# Een ticket van iedereen (BBD-202, BBD-207) heeft geen eigenaar om op te
+	# halen, maar kan wel een `briefer` hebben: iemand die vóór de minigame één
+	# feit vertelt zonder dat je hem ophaalt. Speel je de briefer zelf, dan
+	# zwijgt hij — je kent je eigen feit al, net als een eigenaar bij zijn eigen
+	# ticket.
+	if t.briefer == &"" or t.briefer == Session.character_id:
 		return
-	var d: NpcDef = GameData.npc(QuestEngine.required_helper(t.id))
-	if d == null:
+	var tekst2 := Briefing.regel(t)
+	if tekst2 == "":
 		return
-	# `owner_character` is hier het derde argument en niet zomaar een extraatje:
-	# `say()` leidt daar zowel de pratende mond als het portret uit af. Dit is het
-	# gezicht dat vlak voor de minigame in beeld komt.
-	await _dialogue.say(d.name, tekst, t.owner_character)
+	var d2: NpcDef = GameData.npc(StringName("npc_%s" % t.briefer))
+	if d2 == null:
+		return
+	await _dialogue.say(d2.name, tekst2, t.briefer)
 
 
 # --- Wereldhandelingen (F4-b) ----------------------------------------------
@@ -375,6 +395,15 @@ func _resolve_wereldhandeling(t: TicketDef, inhoud: Dictionary, via_npc: bool) -
 ## BBD-203, De klant heeft feedback. Willem (of jij, in zijn vakgebied) vertaalt
 ## haar drie tegenstrijdige rondes rechtstreeks in het lopende gesprek — een
 ## echte keuze per ronde in plaats van een quiz waarvan knop 1 altijd goed was.
+##
+## P4: zij wacht niet. Elke ronde krijgt `ronde_sec` seconden op de balk boven
+## de knoppen (`DialogueController.ask_choice()`); loopt die leeg, dan levert
+## die ronde nul punten op en typt zij door. Dat is de enige manier waarop je
+## hier punten kunt laten liggen zonder een verkeerd antwoord te geven, en het
+## is precies wat een gesprek met een ongeduldige klant duur maakt. Willems
+## vakgebiedvoordeel verlaagt niet alleen de drempel maar verlengt ook die
+## klok (`TraitModifier._choicescene()`): hij weet wat hij moet vragen én hij
+## krijgt de ruimte om het te vragen.
 func _wh_klantfeedback(content: Dictionary) -> MinigameResult:
 	var intro := String(content.get("intro", ""))
 	if intro != "":
@@ -394,7 +423,15 @@ func _wh_klantfeedback(content: Dictionary) -> MinigameResult:
 		var labels: Array[String] = []
 		for o: Dictionary in opties:
 			labels.append(String(o.get("tekst", "...")))
-		var i := await _dialogue.ask_choice(String(ronde.get("prompt", "")), labels)
+		var i := await _dialogue.ask_choice(String(ronde.get("prompt", "")), labels,
+			float(content.get("ronde_sec", 8.0)))
+		if i == DialogueController.KEUZE_VERLOPEN:
+			# Nul punten voor deze ronde, en zij merkt het op. Geen tweede kans:
+			# een klok die je opnieuw mag proberen is geen klok.
+			var stilte := String(content.get("timeout_reactie", ""))
+			if stilte != "":
+				await _line(stilte)
+			continue
 		if i < 0 or i >= opties.size():
 			continue
 
@@ -416,6 +453,14 @@ func _wh_klantfeedback(content: Dictionary) -> MinigameResult:
 ## dialoogkeuze bij het serverrack is de handeling zelf. `set_modulate` (via
 ## WorldMutator, op `reward_effects`/`world_changes` van t05) is het zichtbare
 ## gevolg zodra `QuestEngine.complete()` draait — niets nieuws nodig hier.
+##
+## P4: één keuze zonder prijs is geen keuze. Een verkeerde kabel geeft nu een
+## schok, een rode flits, een kwartier op de urenstaat en een regel, en daarna
+## kies je opnieuw uit wat er nog ligt. De juiste kabel blijft altijd staan
+## (`kabels_na_fout()`), dus het ticket loopt gegarandeerd af: de prijs is tijd
+## en de bug van morgen, nooit voortgang. `juist` in de payload betekent
+## sindsdien "in één keer goed" — dat is wat `Gevolgen.boek()` uitleest voor
+## `gevolg_backend_fout_gekozen`, en één foute kabel is genoeg voor die bug.
 func _wh_backend(content: Dictionary) -> MinigameResult:
 	var intro := String(content.get("intro", ""))
 	if intro != "":
@@ -426,46 +471,113 @@ func _wh_backend(content: Dictionary) -> MinigameResult:
 		var n := raw as Dictionary
 		labels_van_id[String(n.get("id", ""))] = String(n.get("label", n.get("id", "")))
 
-	var verbindingen: Array = content.get("verbindingen", [])
-	if verbindingen.is_empty():
-		return MinigameResult.make(&"mg_backend_fix", GameEnums.Outcome.SUCCESS, 1, {"juist": true})
+	var opties := kabelopties(content)
+	if opties.is_empty():
+		return MinigameResult.make(&"mg_backend_fix", GameEnums.Outcome.SUCCESS, 1,
+			{"juist": true, "pogingen": 0})
 
-	# De juiste verbinding wordt hieronder op index 0 opgebouwd, maar niet zo
-	# getoond: de briefing heeft 'm net voorgezegd, dus knop 1 zou altijd goed
-	# zijn zonder dat de speler ook maar hoefde te lezen.
-	var afleiders: Array = content.get("afleiders", [])
+	# Volgorde husselen, niet de opties zelf: `opties[0]` blijft "de juiste" voor
+	# de payload, `over` bepaalt alleen waar die op het scherm komt en welke
+	# kabels er na een foute keuze nog liggen.
+	var over: Array = range(opties.size())
+	over.shuffle()
 
-	# Jonathans vakgebiedvoordeel (`TraitModifier._cableboard()`) knipt de
-	# afleiderslijst in, maar zonder deze `bonus` bleef hier altijd `mini(2, …)`
-	# staan — twee foute kabels, getrimd of niet. Vergelijk met het ongetrimde
-	# bestand en trek het verschil van het aantal getoonde afleiders af, zodat
-	# "Minder losse draden." ook echt minder losse draden op het scherm zet.
-	var basis_afleiders: int = (MinigameContent.get_config(&"mg_backend_fix").get("afleiders", []) as Array).size()
-	var bonus := maxi(0, basis_afleiders - afleiders.size())
-	var opties: Array = [verbindingen[0]]
-	for i: int in range(maxi(0, mini(2, afleiders.size()) - bonus)):
-		opties.append(afleiders[i])
+	var pogingen := 0
+	var juist := false
+	while not over.is_empty():
+		var labels: Array[String] = []
+		for idx: int in over:
+			labels.append(_kabelregel(opties[idx] as Array, labels_van_id))
+		var gekozen := await _dialogue.ask_choice("Welke kabel leg je?", labels)
+		if gekozen < 0 or gekozen >= over.size():
+			# `ask_choice()` weigerde (er liep al een gesprek) en heeft dat zelf
+			# geteld. Nog een ronde opendraaien maakt daar een lus van die
+			# niemand ziet en die nooit stopt.
+			break
+		pogingen += 1
+		if int(over[gekozen]) == 0:
+			juist = pogingen == 1
+			break
+		_kabel_kost()
+		var fout_regel := String(content.get("fout_reactie", ""))
+		if fout_regel != "":
+			await _line(fout_regel)
+		over = kabels_na_fout(over, gekozen)
 
-	# Volgorde husselen, niet de opties zelf: `opties[0]` blijft "de juiste"
-	# voor de payload, `volgorde` bepaalt alleen waar die op het scherm komt.
-	var volgorde: Array = range(opties.size())
-	volgorde.shuffle()
-	var juist_index := volgorde.find(0)
-
-	var labels: Array[String] = []
-	for idx: int in volgorde:
-		var paar := opties[idx] as Array
-		var a := String(labels_van_id.get(String(paar[0]), paar[0]))
-		var b := String(labels_van_id.get(String(paar[1]), paar[1]))
-		labels.append("Verbind %s met %s." % [a, b])
-
-	var gekozen := await _dialogue.ask_choice("Welke kabel leg je?", labels)
-	var juist := gekozen == juist_index
 	var eindtekst := String(content.get("success", "")) if juist else String(content.get("failure", ""))
 	if eindtekst != "":
 		await _line(eindtekst)
 	return MinigameResult.make(&"mg_backend_fix", GameEnums.Outcome.SUCCESS, 1 if juist else 0,
-		{"juist": juist})
+		{"juist": juist, "pogingen": pogingen})
+
+
+## De kabels waaruit je kiest: de juiste op index 0, daarna de afleiders die er
+## na Jonathans vakgebiedvoordeel nog bij liggen. Niet in die volgorde getoond
+## — de briefing heeft de juiste net voorgezegd, dus knop 1 zou altijd goed
+## zijn zonder dat de speler ook maar hoefde te lezen.
+##
+## Jonathans vakgebiedvoordeel (`TraitModifier._cableboard()`) knipt de
+## afleiderslijst in, maar zonder deze `bonus` bleef hier altijd `mini(2, …)`
+## staan — twee foute kabels, getrimd of niet. Vergelijk met het ongetrimde
+## bestand en trek het verschil van het aantal getoonde afleiders af, zodat
+## "Minder losse draden." ook echt minder losse draden op het scherm zet.
+##
+## Die aftrek zakte hier ooit tot 0 getoonde afleiders: `MINDER_AFLEIDERS` is 2,
+## en met `bonus` ook 2 werd `mini(2, afleiders.size()) - bonus` exact 0 zodra
+## de ingekorte lijst nog minstens twee afleiders had (wat bij BBD-205 het geval
+## is — zes basisafleiders min twee is nog altijd vier). Dan bleef er precies
+## één optie over — de juiste, zonder keuze en zonder "verkeerde kabel"-prijs.
+## De regel is: altijd minstens twee opties zolang de data een afleider kent.
+## Vandaar geclampt op minimaal 1 getoonde afleider in plaats van rechtstreeks
+## op `mini(2, …) - bonus`.
+##
+## Static, zodat de suite de opgave zonder wereld kan narekenen.
+static func kabelopties(content: Dictionary) -> Array:
+	var verbindingen: Array = content.get("verbindingen", [])
+	if verbindingen.is_empty():
+		return []
+	var afleiders: Array = content.get("afleiders", [])
+	if afleiders.is_empty():
+		return [verbindingen[0]]
+	var basis_afleiders: int = (MinigameContent.get_config(&"mg_backend_fix").get(
+		"afleiders", []) as Array).size()
+	var bonus := maxi(0, basis_afleiders - afleiders.size())
+	var aantal_getoond := maxi(1, mini(2, afleiders.size()) - bonus)
+	var opties: Array = [verbindingen[0]]
+	for i: int in range(aantal_getoond):
+		opties.append(afleiders[i])
+	return opties
+
+
+## Wat er na een foute keuze nog op het scherm ligt: de gekozen kabel gaat
+## eruit, de rest houdt zijn volgorde. De juiste (index 0) kan er nooit uit,
+## dus is de laatste overgebleven optie hoe dan ook de juiste — daar eindigt de
+## handeling mee, ook als je alle afleiders eerst probeert.
+##
+## Static en zonder scherm, zodat de suite de hele reeks foute keuzes kan
+## narekenen zonder een dialoogbox te openen.
+static func kabels_na_fout(over: Array, gekozen: int) -> Array:
+	if gekozen < 0 or gekozen >= over.size() or int(over[gekozen]) == 0:
+		return over.duplicate()
+	var uit: Array = over.duplicate()
+	uit.remove_at(gekozen)
+	return uit
+
+
+static func _kabelregel(paar: Array, labels_van_id: Dictionary) -> String:
+	var a := String(labels_van_id.get(String(paar[0]), paar[0]))
+	var b := String(labels_van_id.get(String(paar[1]), paar[1]))
+	return "Verbind %s met %s." % [a, b]
+
+
+## Wat een verkeerde kabel kost: een vonk die je voelt, een die je ziet, en een
+## kwartier dat op de urenstaat blijft staan. Geen toast erbij — de HUD-klok
+## rolt zelf, en een tweede melding boven een regel tekst is ruis.
+func _kabel_kost() -> void:
+	Juice.schok()
+	Juice.flits(UiKit.ROOD)
+	AudioDirector.play_sfx(&"fout")
+	Session.book_time(Urenstaat.FOUT_MIN, &"fout")
 
 
 ## BBD-207, We hebben muziek nodig. Drie tags in plaats van twaalf, één
@@ -476,8 +588,11 @@ func _wh_backend(content: Dictionary) -> MinigameResult:
 ## blijft het ticket ACTIVE (net als "Stoppen" in een oude minigame). Via een
 ## bugpaard (`handle_npc_talk()`) IS het aanspreken zelf de handeling.
 ##
-## Bastiaans vakgebiedvoordeel (`TraitModifier._whack()`) zet `geen_zoektocht`:
-## hij hoeft niet zelf een paard te vinden, want hij weet al waar de bug zit.
+## Bastiaans vakgebiedvoordeel (`TraitModifier._whack()`) zet `paard_komt`.
+## Dat was `geen_zoektocht`: het ticket loste zichzelf op vanaf het bord, en
+## daarmee nam zijn eigen vakgebied de enige handeling van zijn eigen ticket
+## weg. Nu pint en zoekt iedereen, en loopt het dichtstbijzijnde bugpaard naar
+## hem toe terwijl hij loopt. Aanspreken doet hij zelf.
 ## De opdracht wordt hier ook echt een opdracht, en niet alleen een zin.
 ##
 ## Hier stond alleen die ene vertellerregel, gevolgd door `aborted()`. Daarna
@@ -490,15 +605,40 @@ func _wh_backend(content: Dictionary) -> MinigameResult:
 ## `Main._doel_node()` stuurt de wijzer daarna naar een paard in plaats van naar
 ## het kostuum.
 func _wh_paarden(t: TicketDef, content: Dictionary, via_npc: bool) -> MinigameResult:
-	if not via_npc and not bool(content.get("geen_zoektocht", false)):
+	if not via_npc:
 		Session.pin(t.id)
+		var komt := bool(content.get("paard_komt", false)) and _stuur_paard_naar_speler()
 		var intro := String(content.get("intro", ""))
-		if intro != "":
-			await _line(intro)
+		if intro == "":
+			intro = "Ze lopen ergens rond: in de gang, op het toilet, zelfs in Weekend. Spreek er een aan."
+		if komt:
+			intro += " Eén draait zich om en komt jouw kant op."
+		await _line(intro)
 		Bus.toast_requested.emit("Spreek een paardenbug aan", &"volgen")
 		return MinigameResult.aborted(t.minigame_id)
 	return MinigameResult.make(t.minigame_id, GameEnums.Outcome.SUCCESS, 1,
 		{"paard": true, "zelf_gevonden": via_npc})
+
+
+## Het dichtstbijzijnde bugpaard naar de speler laten lopen; true als er ook
+## echt eentje op weg is gegaan.
+##
+## `loop_naar()` en niet `start_following()`: volgen meldt de NPC aan als
+## collega (`Session.add_follower()`, `Bus.follower_joined`, de HUD-rij met
+## wie er met je meeloopt), en een bug in een paardenkostuum is geen collega
+## die je hebt opgehaald. Eén gerichte wandeling over de vloer is precies wat
+## het voordeel belooft: hij komt naar je toe, en aanspreken doe je zelf.
+func _stuur_paard_naar_speler() -> bool:
+	var main := get_parent()
+	var speler := main.get("player") as Node2D
+	var laag := main.get("npc_layer") as NpcLayer
+	if speler == null or laag == null:
+		return false
+	var paard := laag.dichtstbijzijnde_met_prefix("paard_bug", speler.global_position)
+	if paard == null:
+		return false
+	paard.loop_naar(speler.global_position)
+	return true
 
 
 # --- Collega aanspreken ---------------------------------------------------
@@ -659,7 +799,15 @@ func _fetch_hint(t: TicketDef, helper_id: StringName) -> String:
 	# bible hem noemt ("Frontend / design systemen"), en "de frontend / design
 	# systemen" is geen Nederlands.
 	var role := t.owner_role if t.owner_role != "" else "de specialist hiervoor"
-	return "Dit is niet jouw vakgebied. Je hebt %s nodig — %s." % [who, role]
+	var basis := "Dit is niet jouw vakgebied. Je hebt %s nodig, %s." % [who, role]
+	if d == null:
+		return basis
+	# Zelfde locatiestaart als de doelregel (Hud._aanduiding()), geen tweede
+	# implementatie van "waar zit deze collega".
+	var waar := Hud._aanduiding(d.zone, d.plek)
+	if waar == "":
+		return basis
+	return "%s %s%s." % [basis, waar.substr(0, 1).to_upper(), waar.substr(1)]
 
 
 ## Waarom hier nog niets ligt. Hier stond "Hier is nu niets te doen." — één

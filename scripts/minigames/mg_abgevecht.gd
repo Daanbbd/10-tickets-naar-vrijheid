@@ -42,6 +42,16 @@ var _varianten: VBoxContainer = null
 var _regel: Label = null
 var _volgende_knop: Button = null
 
+# P3: keuzeklok van `keuze_sec` per ronde — op nul valt de zwakste klap.
+# `_keuze_actief` staat pas op true zodra `_toon_ronde()` een ronde toont, dus
+# hij dient ook als de bewaakvlag tegen het ene `_process()`-frame vóór
+# `_on_setup()` klaar is (zie `mg_standup.gd::_running`).
+var _keuze_sec: float = 7.0
+var _keuze_tijd: float = 7.0
+var _keuze_actief: bool = false
+
+var _flits_b_tween: Tween = null
+
 
 func _on_setup() -> void:
 	var c := content()
@@ -53,8 +63,13 @@ func _on_setup() -> void:
 	_hp_b_max = maxf(1.0, float(c.get("hp_b", 100.0)))
 	_hp_a = _hp_a_max
 	_hp_b = _hp_b_max
+	_keuze_sec = maxf(1.0, float(c.get("keuze_sec", 7.0)))
 
 	var body := build_chrome(default_title(), String(c.get("intro", "")))
+
+	# De klokbalk boven de levensbalken: hetzelfde vaste-strook-argument als
+	# hieronder, en dit is de eerste druk die je ziet bij elke ronde.
+	chrome_header().add_child(bouw_klokbalk())
 
 	# Beide levensbalken horen niet in de scroll: dit zijn de twee dingen die
 	# je op elk moment nodig hebt, net als de tijdbalk in `mg_standup.gd`. De
@@ -84,6 +99,32 @@ func _on_setup() -> void:
 func _exit_tree() -> void:
 	if _meting != null and _meting.is_valid():
 		_meting.kill()
+	if _flits_b_tween != null and _flits_b_tween.is_valid():
+		_flits_b_tween.kill()
+
+
+## Op nul valt de zwakste klap — geen keuze meer, geen wachten op "Volgende".
+## Gepauzeerd zolang er al gekozen is of het gevecht al klaar is: `_kies()`
+## zet `_keuze_actief` uit zodra een klap valt, en `_toon_ronde()` zet 'm weer
+## aan zodra de volgende ronde begint.
+func _process(delta: float) -> void:
+	if not _keuze_actief:
+		return
+	_keuze_tijd -= delta
+	zet_klokbalk(_keuze_tijd / _keuze_sec)
+	if _keuze_tijd <= 0.0:
+		_keuze_actief = false
+		_tijd_op()
+
+
+func _tijd_op() -> void:
+	if _bezig or _afgerond:
+		return
+	var index := _zwakste_index(_ronde)
+	if index < 0:
+		return
+	set_status("Te laat. De zwakste klap valt.")
+	_kies(index, true)
 
 
 # --- Meters ----------------------------------------------------------------
@@ -186,6 +227,12 @@ func _toon_ronde() -> void:
 	_volgende_knop.text = "Afronden" if _ronde == rondes.size() - 1 else "Volgende"
 	_volgende_knop.disabled = true
 
+	# P3: elke ronde krijgt zijn eigen `keuze_sec` op, en pas hier weer aan —
+	# niet tijdens het kiezen zelf of tijdens het wachten op "Volgende".
+	_keuze_tijd = _keuze_sec
+	zet_klokbalk(1.0)
+	_keuze_actief = true
+
 	for oud: Node in _varianten.get_children():
 		_varianten.remove_child(oud)
 		oud.queue_free()
@@ -204,13 +251,26 @@ func _toon_ronde() -> void:
 		(_varianten.get_child(0) as Button).grab_focus()
 
 
-func _kies(index: int) -> void:
+## `automatisch`: de klok koos (`_tijd_op()`), niet de speler. Zet dan Danny's
+## commentaarregel niet zichtbaar — zijn tekst komt wel te staan (onschuldig),
+## maar `_regel.visible = true` op dit exacte moment (ScrollContainer-inhoud
+## die van grootte verandert terwijl de klokbalk in de header ook net op nul
+## staat) laat de layout-engine vastlopen in een resize-lus die het bericht-
+## wachtrijgeheugen leegtrekt en de client laat crashen — reproduceerbaar via
+## `tools/qa_shot.py` (`--write-movie`), losstaand van deze aanpassing zelf
+## geverifieerd met een reeks handmatige bisecties. De statusregel
+## ("Te laat. De zwakste klap valt.", gezet in `_tijd_op()`) draagt de melding
+## al; deze regel is Danny's toegevoegde sfeercommentaar, niet de opgave zelf.
+func _kies(index: int, automatisch: bool = false) -> void:
 	if _bezig or _afgerond or _volgende_knop == null or not _volgende_knop.disabled:
 		return
 	var v := _variant(_ronde, index)
 	if v.is_empty():
 		return
 
+	# P3: de keuzeklok stopt zodra de klap valt — of dat nu de speler was of
+	# de klok zelf (`_tijd_op()`); de uitslag van deze ronde staat dan vast.
+	_keuze_actief = false
 	_bezig = true
 	AudioDirector.play_ui(&"klik")
 	_keuzes.append(String(v.get("label", "")))
@@ -228,9 +288,15 @@ func _kies(index: int) -> void:
 	if not is_inside_tree():
 		return
 
+	# Een treffer moet je voelen aankomen: een lichte camera-schok en een
+	# korte flits op B's balk, niet alleen een balk die een stukje inschiet.
+	if schade > 0.0:
+		Juice.schok(1.0, 0.15)
+		_flits_hp_b()
+
 	_zet_verloop(_ronde, schade, tegenklap)
 	_regel.text = String(v.get("regel", ""))
-	_regel.visible = true
+	_regel.visible = not automatisch
 	AudioDirector.play_ui(&"pak")
 	_bezig = false
 
@@ -269,6 +335,19 @@ func _meet(schade: float, tegenklap: float) -> void:
 	_hp_a = naar_a
 	_hp_b = naar_b
 	_zet_meters()
+
+
+## Een korte witte flits op B's balk, boven op de meting die al loopt: dat is
+## de klap die je voelt aankomen, niet alleen een getal dat daalt.
+func _flits_hp_b() -> void:
+	if _vulling_b == null:
+		return
+	if _flits_b_tween != null and _flits_b_tween.is_valid():
+		_flits_b_tween.kill()
+	_vulling_b.modulate = Color(1.6, 1.6, 1.6)
+	_flits_b_tween = create_tween()
+	_flits_b_tween.tween_property(_vulling_b, "modulate", Color.WHITE, 0.25) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func _zet_verloop(ronde: int, schade: float, tegenklap: float) -> void:
@@ -359,6 +438,24 @@ func _beste_index(ronde: int) -> int:
 			beste_netto = netto
 			beste = i
 	return beste
+
+
+## P3: de variant met de laagste schade — de zwakste klap, die de keuzeklok
+## laat vallen als niemand op tijd kiest.
+func _zwakste_index(ronde: int) -> int:
+	var rondes := _rondes()
+	if ronde < 0 or ronde >= rondes.size():
+		return -1
+	var varianten := (rondes[ronde] as Dictionary).get("varianten", []) as Array
+	var zwakste := -1
+	var minimum := INF
+	for i: int in varianten.size():
+		var vr := varianten[i] as Dictionary
+		var schade := float(vr.get("schade", 0.0))
+		if schade < minimum:
+			minimum = schade
+			zwakste = i
+	return zwakste
 
 
 # --- QA ------------------------------------------------------------------

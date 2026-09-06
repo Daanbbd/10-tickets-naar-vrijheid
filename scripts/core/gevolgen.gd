@@ -184,18 +184,16 @@ static func boek(minigame_id: StringName, result: MinigameResult) -> void:
 			# zonder ooit zelf een paard te hebben aangesproken. Dat is een
 			# geldige route, en toch een andere dag dan wie het paard zelf vond.
 			#
-			# Ontdekt tijdens het dialoogplan (Ronde C): deze vlag kan alléén
-			# true worden als BBD-209 via geen_zoektocht wordt opgelost, en dat
-			# is exclusief Bastiaans eigen vakgebiedvoordeel (t09.owner_character
-			# == "bastiaan"; TicketController._wh_paarden() blokkeert de route
-			# via het bord voor iedereen anders). `npc_layer.gd` spawnt geen NPC
-			# voor je eigen personage, dus Bastiaan ziet `collega_bastiaan`'s
-			# eigen reactie op deze vlag (`dialogue/npcs.json`) nooit — die
-			# variant is dus niet alleen door zijn plek in de variantenlijst
-			# onbereikbaar (dat is nu gefixt), maar sowieso, voor de enige
-			# speler die 'm ooit kan zetten. Vlag blijft staan (kost geen getest
-			# meer sinds P1-6, en misschien leest de finale 'm ooit voor
-			# Bastiaan zelf), maar dat is een apart ontwerpbesluit.
+			# Ontdekt tijdens het dialoogplan (Ronde C): deze vlag kon alléén
+			# true worden als BBD-209 via `geen_zoektocht` werd opgelost, en dat
+			# was exclusief Bastiaans eigen vakgebiedvoordeel. Sinds P4 (5 sep
+			# 2026) bestaat die route niet meer: zijn voordeel is `paard_komt`,
+			# hij spreekt het paard nog steeds zelf aan, en
+			# `TicketController._wh_paarden()` geeft via het bord altijd
+			# `aborted()` terug. Er is dus vandaag geen speler die deze vlag kan
+			# zetten. De regel blijft staan omdat het payload-contract
+			# (`zelf_gevonden`) er is voor een toekomstige route die het paard
+			# wél voor je oplost; wat er dan gebeurt staat hier al beschreven.
 			Session.set_flag(&"gevolg_paard_gemist", not bool(p.get(&"zelf_gevonden", true)))
 
 
@@ -237,9 +235,10 @@ static func getal(sleutel: StringName, fallback: Variant = 0) -> Variant:
 ## duurder, niet onmogelijk.
 ##
 ## Historie, beknopt. P1-6: `gevolg_paard_gemist` kostte hier ooit `getest`,
-## maar alleen Bastiaans vakgebiedvoordeel (`geen_zoektocht`) kan die vlag
-## zetten en een trait geeft nooit een straf (`TraitModifier`); de vlag blijft
-## voor zijn eigen dialoogregel. BBD-202 (Deel 4): `gevolg_jonathan_gemist` en
+## maar alleen Bastiaans vakgebiedvoordeel (`geen_zoektocht`) kon die vlag
+## zetten en een trait geeft nooit een straf (`TraitModifier`); de vlag bleef
+## voor zijn eigen dialoogregel. P4 haalde `geen_zoektocht` weg, dus zet
+## vandaag geen enkele route hem nog — zie `boek()` bij `mg_paarden`. BBD-202 (Deel 4): `gevolg_jonathan_gemist` en
 ## `gevolg_danny_gemist` zijn weg — sinds de infobalk is slagen zelf al "beide
 ## regels gehoord", en wie mist verliest de minigame meteen (een retry, geen
 ## finale-tax). BBD-207 (Deel 3): Danny's A/B-gevecht speelt zich intern af,

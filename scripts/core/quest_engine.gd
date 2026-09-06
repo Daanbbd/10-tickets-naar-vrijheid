@@ -231,7 +231,7 @@ static func complete(id: StringName, result: MinigameResult) -> void:
 	# bewust niet uit de data komen: reward_effects is per ticket identiek voor
 	# elk personage en kent geen `when`, terwijl de prijs afhangt van of dit
 	# jouw vakgebied was. Code boekt wat het systeem kost, data wat een scène kost.
-	Session.book_time(Urenstaat.kosten_voor_ticket(is_own_expertise(id)), &"ticket")
+	Session.book_time(Urenstaat.kosten_voor_ticket(is_own_expertise(id), t.kosten_min), &"ticket")
 	# Ná de boeking: "af om 17:30" is inclusief het werk zelf. `Gevolgen` leest
 	# hieruit hoeveel tickets pas na je acht uur dichtgingen.
 	Session.completed_at[id] = Session.worked_minutes

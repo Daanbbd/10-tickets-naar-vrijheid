@@ -112,8 +112,10 @@ class WensRij extends PanelContainer:
 			UiKit.POSTIT_RAND if ja else UiKit.POSTIT_LEEG_RAND))
 
 	func _gui_input(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed \
-				and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		var tik := (event is InputEventMouseButton and (event as InputEventMouseButton).pressed
+				and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT) \
+			or (event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed)
+		if tik:
 			accept_event()
 			getikt.emit(wens_id)
 
@@ -147,6 +149,16 @@ var _schuif: Tween = null
 var _schuivende_rij: WensRij = null
 var _qa_bezig: bool = false
 
+# P3/M3: Dennis wacht niet eeuwig. `_klok_actief` doet dubbele dienst: hij
+# start op false zodat de eerste `_process()`-frames vóór `_on_setup()` klaar
+# is (Shell.run_minigame() voegt de node toe en wacht dan pas een frame op
+# `setup()`) niets doen, en hij gaat weer op false zodra `_vastleggen()`
+# start — "tijdens _vastleggen() stopt de klok" — zodat de klok niet
+# doortelt terwijl de uitslag al vaststaat.
+var _klok_sec: float = 45.0
+var _klok_tijd: float = 45.0
+var _klok_actief: bool = false
+
 
 func _on_setup() -> void:
 	var c := content()
@@ -159,6 +171,14 @@ func _on_setup() -> void:
 	_eenheid = String(c.get("eenheid", "punten"))
 
 	var body := build_chrome(default_title(), String(c.get("intro", "")))
+
+	# P3/M3: de klokbalk direct onder de titel, vóór de meters — dezelfde
+	# plek als in mg_standup.gd.
+	_klok_sec = maxf(1.0, float(c.get("klok_sec", 45.0)))
+	_klok_tijd = _klok_sec
+	chrome_header().add_child(bouw_klokbalk())
+	zet_klokbalk(1.0)
+	set_status("Dennis wacht · %d s" % maxi(0, ceili(_klok_tijd)))
 
 	_bouw_meters(body)
 	_sprint_kop = _bouw_kop(body, "IN DE SPRINT")
@@ -182,6 +202,37 @@ func _on_setup() -> void:
 		_volgorde.append(rij.wens_id)
 
 	_werk_bij(false)
+	_klok_actief = true
+
+
+## Dennis wacht 45 s (`klok_sec`); daarna legt hij vast wat er dan staat.
+## Zelfde bewaakvlag-truc als `mg_standup.gd::_running`: `_klok_actief` staat
+## nog op false tijdens het ene frame tussen `add_child()` en `setup()`.
+func _process(delta: float) -> void:
+	if not _klok_actief:
+		return
+	_klok_tijd -= delta
+	zet_klokbalk(_klok_tijd / _klok_sec)
+	set_status("Dennis wacht · %d s" % maxi(0, ceili(_klok_tijd)))
+	if _klok_tijd <= 0.0:
+		_klok_actief = false
+		_tijd_op()
+
+
+## Op nul: past de huidige selectie binnen de capaciteit, dan dezelfde route
+## als de knop (`_vastleggen()`, die zelf ook de tevredenheidsdrempel toetst —
+## faal je daardoor, dan is dat de les). Past hij niet, dan was de knop toch
+## al dicht (`_vastleg.disabled = te_vol`) en faalt de klok met de bestaande
+## "te_vol"-tekst, in plaats van de generieke faaltekst die `_vastleggen()`
+## voor dat geval achter de hand houdt.
+func _tijd_op() -> void:
+	var payload := _bouw_payload()
+	if int(payload[&"punten"]) <= _capaciteit:
+		_vastleggen()
+		return
+	var c := content()
+	await finish_with_banner(false,
+		String(c.get("te_vol", "Dit past niet in de sprint.")), int(payload[&"blij"]), payload)
 
 
 ## De twee meters horen boven de scroll. Zitten ze erin, dan scrollen ze weg
@@ -322,7 +373,8 @@ func _werk_bij(geanimeerd: bool) -> void:
 	# maken, en Dennis zou hem alsnog voor honderdtwintig procent inplannen.
 	_hint.text = String(content().get("te_vol", "")) if te_vol else ""
 	_vastleg.disabled = te_vol
-	set_status("%d van %d wensen" % [mee.size(), _volgorde.size()])
+	# P3: de statusregel is Dennis' klok (`_process()`), niet meer de
+	# wensenteller — die staat al in `_sprint_kop`/`_rest_kop` hierboven.
 
 
 ## Eén tween voor de hele verplaatsing: de regel licht op in zijn nieuwe lijst
@@ -356,8 +408,10 @@ func _exit_tree() -> void:
 
 # --- Vastleggen -----------------------------------------------------------
 
-func _vastleggen() -> void:
-	var c := content()
+## De verdeling in de payload die de finale leest (`Gevolgen.boek()`), en de
+## enige plek waar die wordt opgebouwd — `_vastleggen()` en `_tijd_op()`
+## (de klok op nul) delen 'm nu allebei.
+func _bouw_payload() -> Dictionary:
 	var mee := _in_sprint()
 	var punten := _som(mee, &"punten")
 	var blij := _som(mee, &"blij")
@@ -370,12 +424,23 @@ func _vastleggen() -> void:
 	for id: StringName in mee:
 		meegenomen.append(String(id))
 
-	var payload := {
+	return {
 		&"meegenomen": meegenomen,
 		&"weggelaten": weg,
 		&"punten": punten,
 		&"blij": blij,
 	}
+
+
+func _vastleggen() -> void:
+	# P3: "tijdens _vastleggen() stopt de klok" — ook als de knop 'm start en
+	# niet de klok zelf, want de uitslag staat dan al vast.
+	_klok_actief = false
+
+	var c := content()
+	var payload := _bouw_payload()
+	var punten := int(payload[&"punten"])
+	var blij := int(payload[&"blij"])
 
 	if punten > _capaciteit:
 		# Via de knop onbereikbaar; blijft staan voor het geval de scope ooit

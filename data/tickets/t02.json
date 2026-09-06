@@ -3,8 +3,6 @@
  "requirements": {},
  "dialogue_ids": {
   "offer": "t02_offer",
-  "fetch": "t02_fetch",
-  "recruit": "t02_recruit",
   "complete": "t02_complete",
   "fail": "t02_fail",
   "done": "t02_done"
@@ -44,7 +42,8 @@
  "title": "Waarom sta ik hier eigenlijk?",
  "summary": "Jij staat niet op de planning. Of je staat er drie keer op. Dennis weet het ook niet meer.",
  "anchor": "tribune",
- "owner_character": "daan",
+ "owner_character": "",
+ "briefer": "daan",
  "minigame_id": "mg_planning",
  "zone": "z4_koffiecorner",
  "zone_name": "Koffiecorner"

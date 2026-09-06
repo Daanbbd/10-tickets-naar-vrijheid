@@ -29,11 +29,9 @@ extends RefCounted
 ## regel noemt wat er concreet anders is en niet dat er iets anders is.
 const VOORDEEL := {
 	"cableboard":  "Jouw backend. Er liggen minder losse draden bij.",
-	"abgevecht":   "Jouw test. Je ziet vooraf wat elke klap A kost.",
-	"whack":       "Jouw paarden. De wijzer wijst het dichtstbijzijnde aan.",
-	"choicescene": "Jouw klant. Eén goed antwoord minder nodig.",
+	"whack":       "Jouw paarden. Het dichtstbijzijnde komt naar je toe.",
+	"choicescene": "Jouw klant. Eén goed antwoord minder nodig, en zij wacht langer.",
 	"scope":       "Jouw sprint. Er passen twee punten meer in.",
-	"standup":     "Dit is jouw stand-up. Je mag één keer extra afkappen.",
 	"uitlijnen":   "Jouw pagina. Een blok klikt een pixel eerder vast.",
 	"heatmap":     "Jouw dashboard. Je ziet per element hoe vaak erop geklikt is.",
 	"pijplijn":    "Jouw pijplijn. Twintig credits extra.",
@@ -48,6 +46,8 @@ const GEEN_VOORDEEL := {
 	"slotboard": "de urenstaat kent geen goed antwoord, dus er valt niets makkelijker te "
 		+ "maken; hij hangt bovendien aan Dirk en niet aan een ticket, dus pas_toe() "
 		+ "krijgt hem nooit te zien",
+	"standup": "ticket van iedereen sinds 5 sep 2026; geen vakgebied om voordeel aan te hangen",
+	"abgevecht": "ticket van iedereen sinds 5 sep 2026; geen vakgebied om voordeel aan te hangen",
 }
 
 ## Hoeveel afleiders er maximaal verdwijnen bij eigen vakgebied.
@@ -56,9 +56,12 @@ const EXTRA_TIJD := 1.25
 ## Sprintruimte erbij in de scope-minigame. Twee punten is de kleinste wens uit
 ## BBD-201, dus het is precies "er past nog net iets bij" en geen vrijbrief.
 const EXTRA_PUNTEN := 2
-const EXTRA_INGREEP := 1
 const EXTRA_SPELING := 1
 const EXTRA_CREDITS := 20
+## Seconden bedenktijd erbij per gespreksronde (BBD-203). Vier op acht is de
+## helft erbij: genoeg om de vierde optie ook echt te lezen, niet genoeg om de
+## klok te laten verdwijnen.
+const EXTRA_BEDENKTIJD := 4.0
 
 
 ## De aangepaste opgave, of een lege dictionary als er niets verandert.
@@ -76,7 +79,10 @@ const EXTRA_CREDITS := 20
 ## waarom hetzelfde niets gebeurde, en er stond wél een toast op het scherm die
 ## de speler een voordeel beloofde.
 static func pas_toe(t: TicketDef) -> Dictionary:
-	if t == null or not QuestEngine.is_own_expertise(t.id):
+	# Een ticket van iedereen (owner_character leeg) heeft geen vakgebied om
+	# een voordeel aan te hangen, ook al is het voor elk personage "eigen werk"
+	# (QuestEngine.is_own_expertise() zegt hier bewust ja op).
+	if t == null or t.owner_character == &"" or not QuestEngine.is_own_expertise(t.id):
 		return {}
 
 	# Eerst de inhoud uit het bestand, dan de ticket-specifieke afwijkingen
@@ -91,11 +97,9 @@ static func pas_toe(t: TicketDef) -> Dictionary:
 
 	match soort:
 		"cableboard":  _cableboard(config)
-		"abgevecht":   _abgevecht(config)
 		"whack":       _whack(config)
 		"choicescene": _choicescene(config)
 		"scope":       _scope(config)
-		"standup":     _standup(config)
 		"uitlijnen":   _uitlijnen(config)
 		"heatmap":     _heatmap(config)
 		"pijplijn":    _pijplijn(config)
@@ -105,7 +109,7 @@ static func pas_toe(t: TicketDef) -> Dictionary:
 ## Korte regel voor de speler, uit dezelfde bron als `pas_toe()`: een regel op het scherm die belooft wat
 ## de config niet levert is erger dan geen regel.
 static func voordeel_tekst(t: TicketDef) -> String:
-	if t == null or not QuestEngine.is_own_expertise(t.id):
+	if t == null or t.owner_character == &"" or not QuestEngine.is_own_expertise(t.id):
 		return ""
 	return String(VOORDEEL.get(soort_van(t), ""))
 
@@ -125,40 +129,34 @@ static func _cableboard(c: Dictionary) -> void:
 	c["afleiders"] = afleiders.slice(0, maxi(0, afleiders.size() - MINDER_AFLEIDERS))
 
 
-## Danny's voordeel: hij ziet de tegenklap van elke klap vooraf, niet de
-## schade. Dat vertelt hem wat een klap kost zonder te verklappen wat hij
-## oplevert — genoeg om een dure klap te mijden, niet genoeg om de opgave over
-## te slaan. `mg_abgevecht.gd` leest `toon_tegenklap` bij het bouwen van de
-## knoppen.
-static func _abgevecht(c: Dictionary) -> void:
-	c["toon_tegenklap"] = true
-
-
 ## F4-b: BBD-209 is een wereldhandeling geworden, geen getimede minigame meer —
 ## `duur` boosten blijft staan (schaadt niets, en houdt de opgave identiek als
-## `mg_whack` ooit teruggezet wordt), maar het echte voordeel voor Bastiaan is
-## nu dat hij geen paard hoeft te zoeken: hij weet al waar de bug zit. Zie
+## `mg_whack` ooit teruggezet wordt).
+##
+## P4: het voordeel was `geen_zoektocht` — Bastiaan hoefde helemaal niet meer
+## te zoeken, en daarmee nam zijn vakgebied de hele mechaniek van zijn eigen
+## ticket weg. Nu zoekt iedereen, en loopt het dichtstbijzijnde bugpaard naar
+## hem toe. Aanspreken moet hij nog steeds zelf. Zie
 ## `TicketController._wh_paarden()`.
 static func _whack(c: Dictionary) -> void:
 	c["duur"] = float(c.get("duur", 30.0)) * EXTRA_TIJD
-	c["geen_zoektocht"] = true
+	c["paard_komt"] = true
 
 
+## Twee kanten van hetzelfde voordeel: hij hoeft minder te raden (de drempel
+## zakt) en zij wacht langer (de keuzeklok van BBD-203 loopt trager leeg). Dat
+## tweede kwam er bij P4 bij: zonder klok was "minder raden" een getal dat de
+## speler alleen achteraf in de uitslag kon terugzien.
 static func _choicescene(c: Dictionary) -> void:
 	# de drempel is het aantal goede keuzes dat je moet halen
 	c["drempel"] = maxi(1, int(c.get("drempel", 3)) - 1)
+	c["ronde_sec"] = float(c.get("ronde_sec", 8.0)) + EXTRA_BEDENKTIJD
 
 
 ## Meer sprintruimte, niet minder eisen. Haar tevredenheidsgrens blijft staan:
 ## de opgave is nog steeds "wat neem je mee", alleen past er iets meer in.
 static func _scope(c: Dictionary) -> void:
 	c["capaciteit"] = int(c.get("capaciteit", 13)) + EXTRA_PUNTEN
-
-
-## Eén keer extra afkappen. Het budget blijft, dus de afweging blijft ook:
-## wie je afkapt kost je nog steeds wat hij ging melden.
-static func _standup(c: Dictionary) -> void:
-	c["ingrepen"] = int(c.get("ingrepen", 3)) + EXTRA_INGREEP
 
 
 static func _uitlijnen(c: Dictionary) -> void:

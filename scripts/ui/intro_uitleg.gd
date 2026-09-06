@@ -5,7 +5,7 @@ extends Control
 ## werk vraagt om een collega.
 ##
 ## Dit verving de zes dialoognodes die vroeger bij het spawnen speelden. Die
-## kwamen te laat: op de personagekeuze staat de ticketbalk en "twee tickets
+## kwamen te laat: op de personagekeuze staat de ticketbalk en "één ticket
 ## zelf" al vóór iemand ook maar wist dát er tickets bestonden om zelf te
 ## kunnen doen. Nu staat de uitleg vóór die keuze, niet erna.
 ##
@@ -24,9 +24,11 @@ const KAART_RUIMTE := 118.0
 const KAART_TEKSTBREEDTE := 154.0
 var _kaart: PanelContainer = null
 
+## Kleine letter: het telwoord staat altijd midden in een zin (zie `lessen()`),
+## nooit aan het begin.
 const TELWOORDEN: Array[String] = [
-	"Geen", "Eén", "Twee", "Drie", "Vier", "Vijf",
-	"Zes", "Zeven", "Acht", "Negen", "Tien",
+	"geen", "één", "twee", "drie", "vier", "vijf",
+	"zes", "zeven", "acht", "negen", "tien",
 ]
 
 
@@ -40,6 +42,17 @@ static func open_bij_start() -> int:
 		if t != null and t.available_when.is_empty():
 			n += 1
 	return n
+
+
+## Bij hoeveel opgeloste tickets de deploycomputer (t10) meedoet:
+## `data/tickets/t10.json`'s `available_when.min_tickets_done`. Zo blijft
+## `lessen()` in sync met de data in plaats van "alle tien" hard te coderen,
+## terwijl de deur in de praktijk al opent zodra dat aantal gehaald is.
+static func deploy_bij() -> int:
+	var t10: TicketDef = GameData.ticket(&"t10")
+	if t10 == null:
+		return 0
+	return int(t10.available_when.get("min_tickets_done", 0))
 
 
 ## Waar de dag over gaat. Twee regels, vóór de spelregels.
@@ -92,12 +105,14 @@ static func bericht() -> String:
 static func lessen() -> Array[String]:
 	var open := open_bij_start()
 	var telwoord := TELWOORDEN[open] if open < TELWOORDEN.size() else str(open)
+	var deploy := deploy_bij()
+	var deploy_telwoord := TELWOORDEN[deploy] if deploy < TELWOORDEN.size() else str(deploy)
 	# Twee regels en niet vier: de rest leer je in de wereld zelf (Dennis loopt
 	# met je mee naar het bord, de tickets landen erop, de besturingskaart komt
 	# daarna). Dit is de voetnoot onder het berichtje, niet het scherm.
 	return [
 		"Er liggen tien tickets verspreid door het kantoor. Dennis hangt de eerste twee voor je op het ticketbord. De andere vind je door rond te lopen; er staan er nu %s open." % telwoord.to_lower(),
-		"Hoort een ticket bij een collega, dan haal je die erbij. Zijn alle tien af, dan mag je naar huis.",
+		"Hoort een ticket bij een collega, dan haal je die erbij. Bij %s van de tien mag je live." % deploy_telwoord,
 	]
 
 

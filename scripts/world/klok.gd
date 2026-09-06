@@ -7,10 +7,13 @@ extends Node
 ## schrijven erin, en ze horen sámen één werkdag te vullen:
 ##
 ## 1. **Het grootboek** (`Urenstaat`): elke oplevering boekt 30 of 45 minuten,
-##    elke opgehaalde collega 15, elke mislukte poging 15. Voor een schone dag
-##    is dat ~510 minuten (Daan, Danny) tot ~540 (de rest) — 09:12 → ~17:42 of
-##    ~18:12, en dat is op zichzelf al voorbij de acht uur. Dat is de grap van
-##    de urenstaat, en `_test_urenstaat()` bewaakt hem.
+##    elke opgehaalde collega 15, elke mislukte poging 15. Sinds 5 sep 2026
+##    heeft elk personage 1 eigen ticket en 2 gedeelde (BBD-202, BBD-207, van
+##    iedereen); de finale (BBD-210, `t10.kosten_min`) telt daar los van mee
+##    voor een vast uur, ongeacht vakgebied. Dat maakt een schone dag voor
+##    iedereen gelijk: ~510 minuten — 09:12 → ~17:42, en dat is op zichzelf al
+##    voorbij de acht uur. Dat is de grap van de urenstaat, en
+##    `_test_urenstaat()` bewaakt hem.
 ## 2. **Deze node**: elke `TICK_SEC` seconden speeltijd één minuut, reden
 ##    `&"verloop"`, zodat de klok ook beweegt terwijl je loopt en niet alleen
 ##    springt bij een oplevering. Dit is wat `storingen.gd` gebruikt voor

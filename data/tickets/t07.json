@@ -7,8 +7,6 @@
  "requirements": {},
  "dialogue_ids": {
   "offer": "t07_offer",
-  "fetch": "t07_fetch",
-  "recruit": "t07_recruit",
   "complete": "t07_complete",
   "fail": "t07_fail",
   "done": "t07_done"
@@ -48,7 +46,8 @@
  "title": "A tegen B",
  "summary": "Danny wil weten of A wint. Aanzetten en kijken, alleen dan met vuisten.",
  "anchor": "speaker_koffiecorner",
- "owner_character": "danny",
+ "owner_character": "",
+ "briefer": "danny",
  "minigame_id": "mg_abgevecht",
  "zone": "z4_koffiecorner",
  "zone_name": "Koffiecorner"

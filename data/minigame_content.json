@@ -1,12 +1,12 @@
 {
  "mg_user_story": {
   "type": "scope",
-  "briefing": "Er passen {capaciteit} punten in de sprint en de klant moet op {tevreden_min} blij uitkomen. Van haar {wensen} wensen zijn er {zwaar} eigenlijk een project. Als ze 'een app' zegt: sorry wat.",
-  "intro": "De klant heeft {wensen} wensen. Tik een wens om hem in de sprint te zetten of er weer uit te halen. Elke wens kost punten en maakt haar blijer. Er passen {capaciteit} punten in de sprint.",
-  "klaar_als": "Er staan hoogstens {capaciteit} punten in de sprint en de klant is minstens {tevreden_min} blij. Druk dan op \"Vastleggen\".",
+  "briefing": "Er passen {capaciteit} punten in en zij moet op {tevreden_min} blij uitkomen. Van haar {wensen} wensen zijn er {zwaar} eigenlijk een project.",
+  "intro": "Tik een wens om hem in de sprint te zetten of eruit. Er passen {capaciteit} punten in.",
   "capaciteit": 13,
   "tevreden_min": 10,
   "eenheid": "punten",
+  "klok_sec": 45,
   "wensen": [
    {
     "id": "vergelijker",
@@ -66,13 +66,13 @@
   "success": "Je hebt een scope. Op papier. Dennis schat hem in op tweeënhalf keer wat je hebt opgeschreven.",
   "failure": "Zij gaat hier niet blij van worden. Dennis zegt dat dat mag, maar dan wel voor honderdtwintig procent.",
   "te_vol": "Dit past niet in de sprint.",
-  "te_weinig": "Hier gaat zij niet blij van worden."
+  "te_weinig": "Hier gaat zij niet blij van worden.",
+  "klaar_als": "Er staan hoogstens {capaciteit} punten in de sprint en de klant is minstens {tevreden_min} blij. Druk dan op \"Vastleggen\"."
  },
  "mg_planning": {
   "type": "standup",
   "briefing": "Zeven collega's in {tijd} seconden past niet. Je mag {ingrepen} keer afkappen. Niet de twee die iets melden: die moet je horen.",
-  "intro": "{sprekers} collega's, {tijd} seconden: dat past niet. Kap er {ingrepen} af. Twee collega's melden iets dat kapot is, waaronder {belangrijk}. Die twee laat je uitpraten.",
-  "klaar_als": "De balk \"Gehoord\" staat op 2 van 2 voordat de tijd om is. Kap je iemand af vóór zijn melding, dan begin je opnieuw.",
+  "intro": "{sprekers} collega's, {tijd} seconden. Kap er {ingrepen} af, maar laat {belangrijk} uitpraten.",
   "tijd": 30.0,
   "ingrepen": 3,
   "kap_regel": "Afgekapt. Hij knikt.",
@@ -160,6 +160,7 @@
   "failure": "De tijd is om en je hebt één van de twee meldingen gemist. Kap volgende keer eerder af.",
   "gemist": "Te vroeg. Dit had je moeten horen.",
   "nuttig": "Dit moest je horen.",
+  "klaar_als": "De balk \"Gehoord\" staat op 2 van 2 voordat de tijd om is. Kap je iemand af vóór zijn melding, dan begin je opnieuw.",
   "failure_gemist": "Je kapte {naam} af voordat hij het kon zeggen. Nog een keer."
  },
  "mg_klantfeedback": {
@@ -244,16 +245,18 @@
    }
   ],
   "drempel": 6,
+  "ronde_sec": 8,
+  "timeout_reactie": "Ze typt al door. Je hebt niks gezegd.",
   "success": "Elf punten zijn drie concrete requirements geworden. Mevrouw P. Aardenmens voelt zich gehoord en jij hebt iets om te bouwen. Beide waar, tegelijk.",
   "failure": "Het gesprek is heel gezellig geweest. Er is niets besloten. Willem schrijft er zelf drie requirements bij elkaar. Geen daarvan is wat ze bedoelde, en jij bouwt ze toch."
  },
  "mg_frontend_fix": {
   "type": "uitlijnen",
   "briefing": "Raster van {raster} pixels, {tolerantie} pixel speling. {elementen} blokken staan scheef. manmanman.",
-  "intro": "Vijf blokken van de productpagina staan een paar pixels scheef. Tik een blok en schuif het met de pijltjes tot het vastklikt op het raster. Slepen mag ook.",
-  "klaar_als": "Alle vijf blokken zitten vast op het raster. Druk dan op \"Klaar\".",
+  "intro": "Vijf blokken staan scheef. Schuif ze met de pijltjes of je vinger tot ze vastklikken.",
   "tolerantie": 2,
   "raster": 4,
+  "drift_sec": 8,
   "elementen": [
    {
     "id": "logo",
@@ -297,7 +300,8 @@
    }
   ],
   "success": "Alles staat op het raster. Victor kijkt er even naar en zegt: de uitlijning is nog wat meer uitgelijnd.",
-  "failure": "Het staat scheef. Niet erg scheef. Precies zo scheef dat je het blijft zien."
+  "failure": "Het staat scheef. Niet erg scheef. Precies zo scheef dat je het blijft zien.",
+  "klaar_als": "Alle vijf blokken zitten vast op het raster. Druk dan op \"Klaar\"."
  },
  "mg_backend_fix": {
   "type": "cableboard",
@@ -380,14 +384,14 @@
     "database"
    ]
   ],
+  "fout_reactie": "Vonk. Het rack herstart. Dat was hem niet.",
   "success": "De webshop praat weer met de database. Er staan echte prijzen op de pagina. Jonathan zegt dat het lokaal al werkte, en dat is ook waar.",
   "failure": "Je hebt de webshop rechtstreeks aan de Excel van de klant geknoopt. Het werkt. Dat is precies het probleem, en niemand haalt de kabel er nog uit."
  },
  "mg_cro": {
   "type": "heatmap",
   "briefing": "we zitten op {basis}{eenheid} en moeten naar {doel}{eenheid}. kijk waar ze klikken en zet de knop daar. psies.",
-  "intro": "Elke stip is een bezoeker die klikt. Sleep de knop Bestellen naar de plek met de meeste stippen voordat de ronde om is. Drie rondes van {ronde_sec} seconden.",
-  "klaar_als": "De knop staat in twee van de drie rondes op de plek waar ze klikken.",
+  "intro": "Elke stip is een bezoeker die klikt. Sleep de knop Bestellen naar de meeste stippen. Drie rondes.",
   "basis": 1.8,
   "doel": 2.7,
   "eenheid": "%",
@@ -458,7 +462,7 @@
    "label": "Bestellen",
    "maat": [
     64,
-    20
+    26
    ],
    "start": [
     50,
@@ -487,15 +491,16 @@
   ],
   "mis_regel": "de knop staat waar niemand kijkt. dat is ook data",
   "success": "Je zit boven de doelstelling. Danny zet er een pijltje bij in het dashboard.",
-  "failure": "Je zit onder de doelstelling. Ze klikten wel, maar niet daar. Nog een keer, zegt Danny."
+  "failure": "Je zit onder de doelstelling. Ze klikten wel, maar niet daar. Nog een keer, zegt Danny.",
+  "klaar_als": "De knop staat in twee van de drie rondes op de plek waar ze klikken."
  },
  "mg_abgevecht": {
   "type": "abgevecht",
   "briefing": "A en B staan allebei op {hp_a}. drie rondes om B op nul te krijgen. elke klap slaat ook terug. psies.",
-  "intro": "A en B zijn twee versies van de webshop. Drie rondes lang kies je een aanpassing voor A. Elke aanpassing doet B schade, maar kost A ook wat.",
-  "klaar_als": "B staat na drie rondes op nul.",
+  "intro": "A en B zijn twee versies van de webshop. Kies drie rondes lang een aanpassing voor A.",
   "hp_a": 100,
   "hp_b": 100,
+  "keuze_sec": 7,
   "rondes": [
    {
     "vraag": "Openingsklap. Wat zet je aan?",
@@ -568,13 +573,13 @@
    }
   ],
   "success": "B ligt eruit. A wint. dat is data. psies",
-  "failure": "B staat nog. A niet meer overtuigend genoeg. dat is ook data"
+  "failure": "B staat nog. A niet meer overtuigend genoeg. dat is ook data",
+  "klaar_als": "B staat na drie rondes op nul."
  },
  "mg_video": {
   "type": "pijplijn",
-  "briefing": "{doel} clips, {credits} credits. Het knelpunt is {knelpunt}: daar staat de rij stil. Begin daar. Daarna zet ik er piepelienies om, dan hoeft dit nooit meer met de hand.",
-  "intro": "Zes videoclips gaan door drie stappen: Prompt, Render, Publish. Tik een clip die klaar is om hem door te schuiven. In Render is plek voor twee, en een clip die daar klaar staat te wachten kost credits.",
-  "klaar_als": "{doel} clips staan op Publish binnen {tijd} seconden, voordat de {credits} credits op zijn.",
+  "briefing": "{doel} clips, {credits} credits. Het knelpunt is {knelpunt}: daar staat de rij stil. Begin daar. Daarna zet ik er piepelienies om.",
+  "intro": "Zes clips gaan door Prompt, Render, Publish. Tik een clip die klaar is. Render heeft plek voor twee.",
   "tijd": 60.0,
   "credits": 100,
   "doel": 5,
@@ -612,12 +617,13 @@
   ],
   "success": "Vijf clips gepubliceerd. Koen zet er piepelienies om, dan hoeft dit nooit meer met de hand.",
   "failure": "De credits zijn op. Er staat nog een paard te renderen dat niemand meer gaat zien.",
-  "credits_op": "Credits op."
+  "credits_op": "Credits op.",
+  "klaar_als": "{doel} clips staan op Publish binnen {tijd} seconden, voordat de {credits} credits op zijn."
  },
  "mg_paarden": {
   "type": "whack",
   "briefing": "hiya,, er lopen paarden op de verdieping,, dat zijn bugs. spreek er een aan. de klantpaarden lijken erop, dat is de grap.",
-  "intro": "Door alle wijzigingen lopen er paarden op de verdieping. Dat zijn bugs. Loop naar een paard en spreek het aan. Ze staan in de gang, bij de toiletten en in Weekend.",
+  "intro": "Er lopen paarden op de verdieping. Dat zijn bugs. Zoek er een op en spreek hem aan.",
   "doel": 10,
   "duur": 60,
   "spawn_start": 1.3,
@@ -630,10 +636,10 @@
  },
  "mg_deploy": {
   "type": "oplevering",
-  "intro": "Vrijdagavond, de laatste stap. Je hebt {acties} handelingen en {klok_seconden} seconden voordat je op DEPLOYEN drukt. Testen laat zien hoeveel bugs erin zitten. Fixen kan pas daarna.",
-  "klaar_als": "Je drukt op DEPLOYEN. Hoe minder bugs er dan nog in zitten, hoe beter het afloopt.",
-  "acties": 8,
+  "intro": "Alles wat brandt komt binnen als kaartje. Elk brandje heeft één juiste handeling. Verloopt de balk, dan kost het je.",
   "klok_seconden": 75,
+  "max_zichtbaar": 3,
+  "spawn_curve": [[0, 9], [25, 7], [50, 5]],
   "start": {
    "bugs": 3,
    "vertrouwen": 4,
@@ -644,91 +650,227 @@
    {
     "id": "testen",
     "label": "Testen",
-    "kost": 1,
     "regel": "Je draait de suite. Er komt iets uit.",
     "effect": {
-     "getest": 2
+     "getest": 1
     },
     "onthult": "bugs"
    },
    {
     "id": "fixen",
     "label": "Bug fixen",
-    "kost": 2,
     "regel": "Je fixt er een. Er zat een tweede onder.",
     "effect": {
-     "bugs": -2
-    },
-    "vereist_getest": 1
+     "bugs": -1,
+     "vertrouwen": 1
+    }
    },
    {
     "id": "scope",
     "label": "Scope inperken",
-    "kost": 1,
-    "regel": "Je haalt er iets uit. Niemand mist het vandaag.",
+    "regel": "Je haalt er iets uit. Wat overblijft doet het wel.",
     "effect": {
      "scope": -1,
      "bugs": -1,
-     "vertrouwen": -1
+     "vertrouwen": 1
     }
    },
    {
     "id": "collega",
-    "label": "Collega erbij halen",
-    "kost": 2,
+    "label": "Collega erbij",
     "regel": "Hij kijkt mee. Hij ziet iets wat jij niet zag.",
     "effect": {
      "bugs": -1,
-     "getest": 1,
      "vertrouwen": 1
-    },
-    "eenmalig": true
+    }
    },
    {
     "id": "informeren",
-    "label": "Klant informeren",
-    "kost": 1,
+    "label": "Klant mailen",
     "regel": "Je stuurt een bericht. Er komt een paardje terug.",
     "effect": {
-     "vertrouwen": 2
-    },
-    "eenmalig": true
+     "vertrouwen": 1
+    }
    },
    {
     "id": "nakijken",
-    "label": "Nog eens nakijken",
-    "kost": 1,
+    "label": "Nakijken",
     "regel": "Je kijkt het na. Het was al goed. Nu weet je dat.",
     "effect": {
-     "getest": 1
+     "getest": 1,
+     "vertrouwen": 1
     }
    },
    {
     "id": "risico",
-    "label": "Risico accepteren",
-    "kost": 0,
-    "regel": "Je besluit dat het goed genoeg is. Dat besluit staat nu op jouw naam.",
+    "label": "Risico nemen",
+    "regel": "Je besluit dat het goed genoeg is. Dat staat nu op jouw naam.",
     "effect": {
      "vertrouwen": -1
-    },
-    "eenmalig": true
+    }
    }
   ],
-  "gebeurtenissen": [
+  "brandjes": [
    {
-    "na": 2,
-    "tekst": "Telefoon. 21:47. Zij vraagt of dat paard nog iets meer naar links kan.",
-    "effect": {
+    "id": "kabel_b",
+    "tekst": "Kabel B ligt los",
+    "handeling": "fixen",
+    "duur": 6,
+    "straf": {
+     "bugs": 1
+    },
+    "when": {
+     "flags_all": [
+      "gevolg_backend_fout_gekozen"
+     ]
+    },
+    "eerst": true
+   },
+   {
+    "id": "staging_502",
+    "tekst": "STAGING: 502 op /checkout",
+    "handeling": "fixen",
+    "duur": 8,
+    "straf": {
+     "bugs": 1
+    }
+   },
+   {
+    "id": "oude_branch",
+    "tekst": "Er draait nog een oude branch",
+    "handeling": "fixen",
+    "duur": 8,
+    "straf": {
+     "bugs": 1
+    }
+   },
+   {
+    "id": "dennis_status",
+    "tekst": "Dennis: statusje?",
+    "handeling": "informeren",
+    "duur": 9,
+    "straf": {
      "vertrouwen": -1
     }
    },
    {
-    "na": 4,
-    "tekst": "Dirk: er staat vandaag 0u geboekt, terwijl de verwachting rond de 8u ligt.",
+    "id": "klant_paard",
+    "tekst": "Zij belt over het paard",
+    "handeling": "informeren",
+    "duur": 8,
+    "straf": {
+     "vertrouwen": -1
+    },
+    "dubbel": {
+     "flags_all": [
+      "gevolg_klant_ontevreden"
+     ]
+    }
+   },
+   {
+    "id": "willem_akkoord",
+    "tekst": "Willem: zij wil een akkoordje",
+    "handeling": "informeren",
+    "duur": 8,
+    "straf": {
+     "vertrouwen": -1
+    }
+   },
+   {
+    "id": "niemand_getest",
+    "tekst": "Niemand heeft dit getest",
+    "handeling": "testen",
+    "duur": 9,
+    "straf": {
+     "bugs": 1
+    }
+   },
+   {
+    "id": "danny_conversie",
+    "tekst": "Danny: conversie onder de drempel",
+    "handeling": "testen",
+    "duur": 9,
+    "straf": {
+     "bugs": 1
+    }
+   },
+   {
+    "id": "todo_prod",
+    "tekst": "Er staat nog een TODO in prod",
+    "handeling": "nakijken",
+    "duur": 10,
+    "straf": {
+     "bugs": 1
+    }
+   },
+   {
+    "id": "victor_pixel",
+    "tekst": "Victor: een pixel scheef",
+    "handeling": "nakijken",
+    "duur": 9,
+    "straf": {
+     "bugs": 1
+    }
+   },
+   {
+    "id": "koen_video",
+    "tekst": "Koen: mag de video er nog bij?",
+    "handeling": "scope",
+    "duur": 8,
+    "straf": {
+     "vertrouwen": -1
+    }
+   },
+   {
+    "id": "dennis_erbij",
+    "tekst": "Dennis: kan dit er nog bij?",
+    "handeling": "scope",
+    "duur": 7,
+    "straf": {
+     "vertrouwen": -1
+    }
+   },
+   {
+    "id": "jonathan_mee",
+    "tekst": "Jonathan: kijk even mee?",
+    "handeling": "collega",
+    "duur": 9,
+    "straf": {
+     "bugs": 1
+    }
+   },
+   {
+    "id": "niemand_tekent",
+    "tekst": "Niemand tekent hier voor",
+    "handeling": "risico",
+    "duur": 7,
+    "straf": {
+     "bugs": 1
+    }
+   }
+  ],
+  "brandje_niet_af": {
+   "id": "niet_af",
+   "tekst": "%s is nooit afgekomen",
+   "handeling": "scope",
+   "duur": 8,
+   "straf": {
+    "bugs": 1
+   }
+  },
+  "gebeurtenissen": [
+   {
+    "na": 18,
+    "tekst": "Telefoon. 21:47. Zij vraagt of dat paard nog iets meer naar links kan.",
     "effect": {}
    },
    {
-    "na": 6,
+    "na": 38,
+    "tekst": "Dirk: 0u geboekt vandaag. Verwacht was 8u.",
+    "effect": {}
+   },
+   {
+    "na": 55,
     "tekst": "Staging valt om. Hij komt na een minuut vanzelf terug. Niemand weet waarom hij omviel.",
     "effect": {
      "bugs": 1
@@ -758,7 +900,7 @@
     "tekst": "Het staat live. Dat is het enige wat je er nu over kunt zeggen."
    }
   ],
-  "deploy_label": "DEPLOYEN",
+  "deploy_label": "LIVE ZETTEN",
   "varianten": {
    "daan": {
     "foutcode": "SCOPE NOT APPROVED",
@@ -802,13 +944,13 @@
      "regel": "De AI-output is nooit nagekeken. Dat stond in de docs."
     }
    }
-  }
+  },
+  "klaar_als": "De klok loopt af met zo min mogelijk brandjes open. Wat blijft staan, gaat zo live."
  },
  "mg_urenstaat": {
   "type": "slotboard",
   "titel": "Urenstaat",
-  "intro": "Dirk wil weten waar je acht uur vandaag heen gingen. Kies de verdeling die het dichtst in de buurt komt. Er is geen goed antwoord.",
-  "klaar_als": "Je hebt een verdeling gekozen. Dirk neemt elke verdeling aan.",
+  "intro": "Dirk wil weten waar je acht uur heen gingen. Kies de verdeling die er het dichtst bij zit.",
   "success": "Ingediend. Dirk heeft het gezien.",
   "opties": [
    {
@@ -826,6 +968,7 @@
     "tekst": "Veel op overig",
     "reactie": "Het grootste deel gaat gewoon op 'overig'."
    }
-  ]
+  ],
+  "klaar_als": "Je hebt een verdeling gekozen. Dirk neemt elke verdeling aan."
  }
 }

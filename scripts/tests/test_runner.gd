@@ -56,18 +56,24 @@ func _ready() -> void:
 	_test_hudband()
 	_test_leesbaarheid()
 	_test_minigame_chrome()
+	_test_banner_niet_over_veld()
 	_test_navigatie()
 	_test_briefings()
+	_test_minigame_tekstbudget()
 	_test_intro()
 	_test_save_ronde()
 	_test_save_verwijderen()
 	_test_uitlijnen_perfect()
 	_test_wereldhandelingen()
+	_test_kabel_kost_tijd()
+	_test_jonathan_minder_kabels()
+	await _test_klant_wacht_niet()
 	_test_ab_escalatie()
 	_test_urenstaat_scherm()
 	_test_werving_begint_met_de_vraag()
 	_test_klant_is_een_persoon()
 	await _test_dialoogvenster_past()
+	await _test_vraag_boven_keuzes_leesbaar()
 	await _test_schermen_passen()
 	await _test_tagline_niet_afgekapt()
 	await _test_wereldchrome_past()
@@ -102,6 +108,8 @@ func _ready() -> void:
 	_test_fase2a()
 	await _test_fase2b()
 	_test_finale_kan_falen()
+	_test_finale_brandjes()
+	_test_finale_regels_passen()
 	_test_dialoog_mond_volgt_spreker()
 	await _test_klaar_landt_niet_stil()
 	_test_schrijfstijl_geen_emdash()
@@ -237,6 +245,13 @@ func _test_gevolgen() -> void:
 					var doel := StringName(ed.get("ticket", ""))
 					_ok(doel in GameData.ticket_ids(),
 						"%s: unlock_ticket noemt '%s', en dat ticket bestaat niet" % [bid, doel])
+					# Een unlock_ticket naar een ticket dat al vanaf het begin open
+					# staat (`available_when: {}`) doet per definitie niets — dat is
+					# de bug die k4 ooit had met t01.
+					if doel in GameData.ticket_ids():
+						_ok(not (GameData.ticket(doel).available_when as Dictionary).is_empty(),
+							"%s: unlock_ticket wijst naar '%s', dat staat al vanaf het begin open — dood effect"
+								% [bid, doel])
 
 	# --- geen enkele gevolgvlag is een typefout ----------------------------
 	# Een verkeerd gespelde vlag in een `flags_all` is de vervelendste fout die
@@ -344,11 +359,12 @@ func _test_gevolgen() -> void:
 		GameEnums.Outcome.SUCCESS, 1, {&"paard": true, &"zelf_gevonden": true}))
 	_ok(not Session.get_flag(&"gevolg_paard_gemist"),
 		"het paard zelf vinden zet gevolg_paard_gemist toch")
-	# P1-6: dit is de enige route waarlangs gevolg_paard_gemist ooit true wordt
-	# (Bastiaans vakgebiedvoordeel, via _wh_paarden()'s geen_zoektocht — zonder
-	# de trait blokkeert die functie de route via het bord juist). Een trait
-	# geeft alleen voordeel, nooit een straf (TraitModifier), dus getest mag
-	# door deze vlag niet zakken. `clampi(getest, 0, 3)` in finale_start() zou
+	# P1-6: gevolg_paard_gemist hangt aan het payload-veld `zelf_gevonden`, dat
+	# sinds P4 (5 sep 2026) geen enkele speelroute meer op false zet: Bastiaans
+	# voordeel is `paard_komt` en hij spreekt het paard zelf aan. Het contract
+	# wordt hier nog wel bewaakt, want het is de bodem onder een toekomstige
+	# route. Een trait geeft alleen voordeel, nooit een straf (TraitModifier),
+	# dus getest mag door deze vlag niet zakken. `clampi(getest, 0, 3)` in finale_start() zou
 	# een straf op een toch al lege getest-teller onzichtbaar maken, dus eerst
 	# gevolg_cro_gehaald erbij zodat de meting niet op de bodemklem struikelt.
 	Gevolgen.boek(&"mg_cro", MinigameResult.make(&"mg_cro",
@@ -813,23 +829,28 @@ func _test_minigame_inhoud() -> void:
 					_ok(start.has(k2), "mg_deploy: start mist '%s'" % k2)
 					_ok(Gevolgen.finale_start().has(StringName(k2)),
 						"Gevolgen.finale_start() mist '%s', dat de data wel verwacht" % k2)
-				_ok(int(c.get("acties", 0)) > 0, "mg_deploy: geen handelingen")
+				# P5: `acties` en `kost` zijn weg. De schaarste is de klok, en
+				# die moet er dus wél zijn — zonder klok gaat de finale nooit
+				# live, want er is sinds P5 geen knop DEPLOYEN meer.
+				_ok(not c.has("acties"),
+					"mg_deploy: `acties` staat er nog; de economie van acht handelingen is met P5 vervallen")
+				_ok(float(c.get("klok_seconden", 0)) > 0.0, "mg_deploy: geen klok")
 
 				var keuzes := c.get("keuzes", []) as Array
-				_ok(keuzes.size() >= 4, "mg_deploy: te weinig keuzes voor acht handelingen")
-				var goedkoopste := 99
+				_ok(keuzes.size() == BrandjesModel.HANDELINGEN.size(),
+					"mg_deploy: %d keuzes, en de zeven knoppen verwachten er %d"
+						% [keuzes.size(), BrandjesModel.HANDELINGEN.size()])
 				for raw: Variant in keuzes:
 					var kz := raw as Dictionary
 					_ok(String(kz.get("id", "")) != "", "mg_deploy: keuze zonder id")
 					_ok(String(kz.get("label", "")) != "", "mg_deploy: keuze zonder label")
 					_ok(String(kz.get("regel", "")) != "",
 						"mg_deploy/%s: geen regel, dus een handeling zonder reactie" % kz.get("id", ""))
-					goedkoopste = mini(goedkoopste, int(kz.get("kost", 0)))
+					_ok(StringName(kz.get("id", "")) in BrandjesModel.HANDELINGEN,
+						"mg_deploy: keuze '%s' is geen van de zeven handelingen" % kz.get("id", ""))
 					for ek: Variant in (kz.get("effect", {}) as Dictionary):
 						_ok(String(ek) in ["bugs", "vertrouwen", "getest", "scope"],
 							"mg_deploy/%s: effect op onbekende waarde '%s'" % [kz.get("id", ""), ek])
-				_ok(goedkoopste <= int(c.get("acties", 0)),
-					"mg_deploy: zelfs de goedkoopste keuze past niet in het budget")
 
 				# Er moet altijd een uitkomst zijn, ook bij de slechtst denkbare
 				# stand. Zonder een drempel op 0 valt de finale door zonder tekst.
@@ -851,12 +872,18 @@ func _test_minigame_inhoud() -> void:
 				_ok(titels.size() == (c.get("uitkomsten", []) as Array).size(),
 					"mg_deploy: twee uitkomsten delen dezelfde titel — de score moet zichtbaar meebewegen")
 
+				# P5: `na` telt klokseconden en niet meer verbruikte
+				# handelingen. Een gebeurtenis ná de klok vuurt nooit.
 				for raw3: Variant in (c.get("gebeurtenissen", []) as Array):
 					var g := raw3 as Dictionary
 					_ok(String(g.get("tekst", "")) != "", "mg_deploy: gebeurtenis zonder tekst")
-					_ok(int(g.get("na", -1)) >= 0 and int(g.get("na", 0)) < int(c.get("acties", 0)),
-						"mg_deploy: gebeurtenis op handeling %s valt buiten het budget" % g.get("na", "?"))
+					_ok(float(g.get("na", -1)) >= 0.0
+							and float(g.get("na", 0)) < float(c.get("klok_seconden", 0)),
+						"mg_deploy: gebeurtenis op seconde %s valt buiten de klok" % g.get("na", "?"))
 			"scope":
+				# P3: Dennis' klok — 0 of negatief zou de balk meteen op nul zetten
+				# en de speler geen tijd geven om te verdelen.
+				_ok(float(c.get("klok_sec", 0.0)) > 0.0, "%s: klok_sec moet positief zijn" % mid)
 				var wensen := c.get("wensen", []) as Array
 				_ok(wensen.size() >= 5, "%s: te weinig wensen om te kiezen" % mid)
 				var punten_totaal := 0
@@ -964,6 +991,9 @@ func _test_minigame_inhoud() -> void:
 					"%s: zelfs met de QA-strategie (%s afgekapt) valt de laatste belangrijke regel op %.1fs, buiten de %.0fs" % [
 						mid, genegeerd, met_afkappen, tijd])
 			"uitlijnen":
+				# P3: de build drift — 0 of negatief zou elk frame een blok
+				# opnieuw laten afwijken in plaats van eens per drift_sec.
+				_ok(float(c.get("drift_sec", 0.0)) > 0.0, "%s: drift_sec moet positief zijn" % mid)
 				var elementen := c.get("elementen", []) as Array
 				_ok(elementen.size() >= 3, "%s: te weinig elementen" % mid)
 				for raw: Variant in elementen:
@@ -1008,6 +1038,9 @@ func _test_minigame_inhoud() -> void:
 				_ok(float(c.get("ronde_sec", 0.0)) >= 5.0, "%s: een ronde korter dan vijf seconden is niet te lezen" % mid)
 				_ok(String(c.get("mis_regel", "")) != "", "%s: geen regel voor een misser" % mid)
 			"abgevecht":
+				# P3: de keuzeklok — 0 of negatief zou meteen de zwakste klap
+				# laten vallen, zonder dat de speler ooit zelf kan kiezen.
+				_ok(float(c.get("keuze_sec", 0.0)) > 0.0, "%s: keuze_sec moet positief zijn" % mid)
 				var hp_a := float(c.get("hp_a", 0.0))
 				var hp_b := float(c.get("hp_b", 0.0))
 				_ok(hp_a > 0.0 and hp_b > 0.0, "%s: hp_a/hp_b moeten positief zijn" % mid)
@@ -1141,9 +1174,33 @@ const SPELERSVARIANTEN_MIN := 12
 ## Kleine letter aan het begin is drift, tenzij het personage zo schrijft of de
 ## regel op zijn eigen tic opent. Begint een regel niet met een letter (Dennis
 ## opent op "-_-"), dan valt hij er vanzelf buiten.
+##
+## Voor Danny en Bastiaan (KLEINE_LETTER_STEMMEN) geldt het omgekeerde: hun
+## eerste letter moet klein zijn. Cijfers, aanhalingstekens en leestekens vóór
+## de eerste letter worden overgeslagen; een eigennaam aan het zinsbegin is
+## geen excuus, want Danny schrijft ook namen klein.
 static func _zinsbegin_klopt(wie: String, tekst: String) -> bool:
-	if wie in KLEINE_LETTER_STEMMEN or tekst == "":
+	if tekst == "":
 		return true
+
+	if wie in KLEINE_LETTER_STEMMEN:
+		var eerste_letter := ""
+		for i: int in tekst.length():
+			var ch := tekst[i]
+			if ch.to_lower() != ch.to_upper():
+				eerste_letter = ch
+				break
+		if eerste_letter == "":
+			return true   # geen letter in de hele regel, niets te controleren
+		if eerste_letter == eerste_letter.to_lower():
+			return true
+		for o: Variant in (KLEINE_OPENERS.get(wie, []) as Array):
+			if tekst.to_lower().begins_with(String(o)):
+				return true
+		return false
+
+	# Bestaande gedrag voor niet-kleine stemmen: alleen het allereerste teken
+	# telt (geen letter ervoor overslaan).
 	var eerste := tekst[0]
 	if eerste.to_lower() == eerste.to_upper():
 		return true   # geen letter
@@ -1202,9 +1259,14 @@ func _test_karakterstemmen() -> void:
 		for r: Variant in (per_personage[naam] as Array):
 			var tekst := String((r as Dictionary)["tekst"])
 			var bron := String((r as Dictionary)["bron"])
-			_ok(_zinsbegin_klopt(naam, tekst),
-				"%s — %s: begint met een kleine letter; dat is Danny's register, niet dat van %s"
-					% [naam, bron, naam])
+			if naam in KLEINE_LETTER_STEMMEN:
+				_ok(_zinsbegin_klopt(naam, tekst),
+					"%s — %s: begint met een hoofdletter; %s schrijft altijd klein"
+						% [naam, bron, naam])
+			else:
+				_ok(_zinsbegin_klopt(naam, tekst),
+					"%s — %s: begint met een kleine letter; dat is Danny's register, niet dat van %s"
+						% [naam, bron, naam])
 			for ander: Variant in EXCLUSIEVE_TICS.keys():
 				if String(ander) == naam:
 					continue
@@ -1393,6 +1455,10 @@ func _test_traits() -> void:
 				"%s/%s: er mogen geen credits af" % [cid, t.code])
 			_ok(float(na.get("tijd", 0.0)) >= float(basis.get("tijd", 0.0)),
 				"%s/%s: het tijdsbudget mag niet korter worden" % [cid, t.code])
+			# P4: de keuzeklok van BBD-203 en de rondeklok van BBD-206 lopen
+			# allebei op dit veld. Een voordeel mag er tijd bij doen, nooit af.
+			_ok(float(na.get("ronde_sec", 0.0)) >= float(basis.get("ronde_sec", 0.0)),
+				"%s/%s: de bedenktijd per ronde mag niet korter worden" % [cid, t.code])
 
 			if TraitModifier.VOORDEEL.has(soort):
 				_ok(TraitModifier.voordeel_tekst(t) != "",
@@ -1486,6 +1552,8 @@ func _test_urenstaat() -> void:
 	# --- het grootboek ---------------------------------------------------
 	_ok(Urenstaat.kosten_voor_ticket(true) < Urenstaat.kosten_voor_ticket(false),
 		"je eigen vakgebied moet goedkoper zijn dan een ticket met een collega erbij")
+	_ok(GameData.ticket(&"t10").kosten_min == 60,
+		"de finale (BBD-210) moet 60 minuten kosten: dat is het uur waarin het hele team meekijkt")
 
 	# --- de invariant: er is altijd meer werk dan uren -------------------
 	# Dit is de grap zelf. Als een personage zijn dag binnen de acht uur kan
@@ -1497,12 +1565,13 @@ func _test_urenstaat() -> void:
 		var eigen := 0
 		var goedkoopst := 0
 		for tid: StringName in GameData.ticket_ids():
+			var t: TicketDef = GameData.ticket(tid)
 			if QuestEngine.is_own_expertise(tid):
 				eigen += 1
-				goedkoopst += Urenstaat.kosten_voor_ticket(true)
+				goedkoopst += Urenstaat.kosten_voor_ticket(true, t.kosten_min)
 			else:
 				# buiten je vakgebied betaal je ook de zoektijd
-				goedkoopst += Urenstaat.kosten_voor_ticket(false) + Urenstaat.OPHALEN_MIN
+				goedkoopst += Urenstaat.kosten_voor_ticket(false, t.kosten_min) + Urenstaat.OPHALEN_MIN
 		var marge := goedkoopst - Urenstaat.BUDGET_MIN
 		_ok(marge > 0,
 			("%s kan zijn dag in %s afmaken, binnen het budget van %s. " +
@@ -1564,6 +1633,29 @@ func _test_urenstaat() -> void:
 	_ok(Conditions.check({}), "een lege conditie wordt onwaar in overwerk")
 	_ok(Conditions.check({"overwerk": true}), "overwerk is onwaar terwijl je budget op is")
 	_ok(not Conditions.check({"overwerk": false}), "overwerk:false is waar terwijl je budget op is")
+
+	# --- open_tickets_min: hoeveel tickets (zonder t10) nog niet af zijn -
+	# F8: `t10_offer` waarschuwt vóór de deploy als er nog werk open staat.
+	# Deze sleutel moet precies tellen wat `Session.niet_af()` telt, anders
+	# spreekt de waarschuwing het bord tegen.
+	_ok(Conditions.unknown_keys({"open_tickets_min": 1}).is_empty(),
+		"'open_tickets_min' is geen bekende conditiesleutel")
+	QuestEngine.start_run(&"daan")
+	var open_nu := Session.niet_af().size()
+	_ok(Conditions.check({"open_tickets_min": open_nu}),
+		"open_tickets_min telt niet wat Session.niet_af() telt")
+	_ok(not Conditions.check({"open_tickets_min": open_nu + 1}),
+		"open_tickets_min doet alsof er meer openstaat dan Session.niet_af() telt")
+	for tid: StringName in GameData.ticket_ids():
+		if tid == &"t10":
+			continue
+		QuestEngine.unlock(tid)
+		QuestEngine.mark_helper_present(tid)
+		QuestEngine.complete(tid, MinigameResult.new())
+		break   # precies één ticket dicht, zodat niet_af() met precies één daalt
+	_ok(Conditions.check({"open_tickets_min": open_nu - 1})
+			and not Conditions.check({"open_tickets_min": open_nu}),
+		"open_tickets_min daalt niet mee als Session.niet_af() met één daalt")
 
 
 ## P1-8: `Gevolgen.tint()` moet bij druk() == 0 de zone-kleur exact
@@ -2413,6 +2505,60 @@ func _test_minigame_chrome() -> void:
 		"minigame_base.gd zet nog GRIJS_OP_LICHT op een donkere ondergrond")
 
 
+## P2.4: de banner staat niet meer los over het speelveld — hij hoort als
+## laatste kind in `chrome_footer()`, in dezelfde `_kolom`-VBoxContainer als
+## `_scroll` (het speelveld). Een `VBoxContainer` stapelt zijn kinderen in
+## losse, niet-overlappende banden; zolang de footer ná de scroll komt kan de
+## banner het speelveld dus per definitie niet meer bedekken — dezelfde
+## `get_combined_minimum_size()`-benadering als `_test_balkmaat()`, in plaats
+## van te wachten op een echte layout-frame.
+func _test_banner_niet_over_veld() -> void:
+	_kop("de banner staat niet meer over het speelveld")
+
+	var packed: PackedScene = load("res://scenes/minigames/mg_uitlijnen.tscn")
+	var mg: MinigameBase = packed.instantiate() as MinigameBase
+	mg.minigame_id = &"mg_frontend_fix"
+	add_child(mg)
+	mg.setup({})
+
+	var scroll: Variant = mg.get("_scroll")
+	var kolom: Variant = mg.get("_kolom")
+	_ok(scroll is ScrollContainer and kolom is VBoxContainer,
+		"mg_frontend_fix: build_chrome() heeft geen _scroll/_kolom opgeleverd")
+	if not (scroll is ScrollContainer and kolom is VBoxContainer):
+		mg.queue_free()
+		return
+
+	# `mg.call(...)` en niet `mg.finish_with_banner(...)`: die laatste is een
+	# coroutine (bevat `await`) en de parser eist dan `await` op de aanroep
+	# zelf — precies de reden waarom `_test_minigame_intro_scherm()` hierboven
+	# ook via `Shell.call(&"run_minigame", ...)` gaat.
+	var lopend: Variant = mg.call(&"finish_with_banner", true, "x")
+
+	var banner: Variant = mg.get("_banner")
+	_ok(banner is PanelContainer, "finish_with_banner(): geen _banner aangemaakt")
+	if banner is PanelContainer:
+		var voet: VBoxContainer = mg.chrome_footer()
+		_ok((banner as Node).get_parent() == voet,
+			"de banner zit niet meer in chrome_footer() — hij kan weer los over het veld staan")
+		var kinderen := (kolom as VBoxContainer).get_children()
+		_ok(kinderen.find(voet) > kinderen.find(scroll),
+			"chrome_footer() staat niet ná de scrollcontainer met het speelveld — de banner kan hem dus alsnog bedekken")
+		# 36 is de bodem, niet het plafond: sommige uitkomsten
+		# (`data/minigame_content.json`'s "success"/"failure") zijn tot 168 tekens
+		# lang en moeten op meerdere regels kunnen wrappen — een harde 36 px zou
+		# die tekst afsnijden. Voor een korte tekst als hier ("x") moet de bodem
+		# wél precies gehaald worden.
+		var hoogte: float = (banner as Control).get_combined_minimum_size().y
+		_ok(hoogte >= 36.0,
+			"de banner is %.0f px hoog, lager dan de afgesproken bodem van 36" % hoogte)
+		_ok((banner as Control).size_flags_horizontal & Control.SIZE_EXPAND_FILL != 0,
+			"de banner vult niet de volle breedte van de footer")
+
+	await lopend
+	mg.queue_free()
+
+
 ## Relatieve luminantie volgens WCAG 2.x. Godot's `Color` bewaart sRGB-waarden,
 ## dus de gammastap hoort er hier bij; `srgb_to_linear()` zou hem overslaan.
 static func _luminantie(c: Color) -> float:
@@ -2487,7 +2633,7 @@ func _test_intro() -> void:
 
 	var eigen := "\n".join(IntroUitleg.lessen())
 	for les: String in [
-			"tien tickets", "naar huis", "verspreid", "ticketbord", "collega"]:
+			"tien tickets", "mag je live", "verspreid", "ticketbord", "collega"]:
 		_ok(eigen.contains(les), "IntroUitleg.lessen() noemt niet meer: '%s'" % les)
 
 	# Het getal in regel 3 moet de ticketdata volgen. Hier stond "Negen staan
@@ -2503,6 +2649,16 @@ func _test_intro() -> void:
 	_ok(eigen.contains("er staan er nu %s open" % IntroUitleg.TELWOORDEN[open_nu].to_lower()),
 		"de uitleg noemt niet 'er staan er nu %s open' terwijl er %d openstaan" % [
 			IntroUitleg.TELWOORDEN[open_nu].to_lower(), open_nu])
+
+	# Zelfde bewaking voor het deploygetal: "alle tien" was hard gecodeerd
+	# terwijl de deploycomputer (t10) al bij `min_tickets_done` opendraait.
+	var deploy_nu := IntroUitleg.deploy_bij()
+	_ok(deploy_nu > 0 and deploy_nu < GameData.ticket_ids().size(),
+		"deploy_bij() geeft %d van %d; klopt t10.available_when nog?" % [
+			deploy_nu, GameData.ticket_ids().size()])
+	_ok(eigen.contains("Bij %s van de tien mag je live" % IntroUitleg.TELWOORDEN[deploy_nu]),
+		"de uitleg noemt niet 'Bij %s van de tien mag je live' terwijl t10 bij %d opengaat" % [
+			IntroUitleg.TELWOORDEN[deploy_nu], deploy_nu])
 
 	# De knoppenbalk (Besturing) staat er op elk apparaat; een toetsnaam
 	# beschrijft dan iets dat niet overal bestaat.
@@ -2783,15 +2939,22 @@ func _test_briefings() -> void:
 	var gezien := 0
 	for tid: StringName in GameData.ticket_ids():
 		var t: TicketDef = GameData.ticket(tid)
-		if t == null or t.owner_character == &"":
-			continue    # de finale heeft geen eigenaar
+		if t == null:
+			continue
+		# Een ticket van iemand brieft via de eigenaar; een ticket van iedereen
+		# (owner_character leeg) kan in plaats daarvan een briefer hebben
+		# (BBD-202, BBD-207). Heeft het geen van beide (de finale, t10), dan is
+		# er niemand die iets te vertellen heeft.
+		var wie := t.owner_character if t.owner_character != &"" else t.briefer
+		if wie == &"":
+			continue    # de finale heeft geen eigenaar en geen briefer
 		gezien += 1
 
 		var tekst := Briefing.regel(t)
 		if "--print-briefings" in OS.get_cmdline_user_args():
-			print("   %s %s: %s" % [t.code, t.owner_character, tekst])
-		_ok(tekst != "", "%s: geen briefing voor een ticket met een eigenaar (%s)" % [
-			t.code, t.owner_character])
+			print("   %s %s: %s" % [t.code, wie, tekst])
+		_ok(tekst != "", "%s: geen briefing voor een ticket met een eigenaar of briefer (%s)" % [
+			t.code, wie])
 		_ok(not tekst.contains("{") and not tekst.contains("}"),
 			"%s: onopgeloste plaatshouder in de briefing: %s" % [t.code, tekst])
 		# Een briefing is een regel dialoog, geen handleiding.
@@ -2799,10 +2962,13 @@ func _test_briefings() -> void:
 			"%s: briefing van %d tekens is te lang voor het dialoogvenster" % [
 				t.code, tekst.length()])
 
-		# De eigenaar moet ook echt bestaan als NPC, anders zwijgt hij.
-		var d: NpcDef = GameData.npc(StringName("npc_%s" % t.owner_character))
-		_ok(d != null, "%s: eigenaar '%s' staat niet in npcs.json" % [
-			t.code, t.owner_character])
+		# Degene die het vertelt moet ook echt bestaan als NPC, anders zwijgt hij.
+		var d: NpcDef = GameData.npc(StringName("npc_%s" % wie))
+		_ok(d != null, "%s: eigenaar/briefer '%s' staat niet in npcs.json" % [
+			t.code, wie])
+
+		if t.owner_character == &"":
+			continue    # een ticket van iedereen heeft geen owner_role om te checken
 
 		# En zijn rol komt uit het personage, niet uit het ticket.
 		var c: CharacterDef = GameData.character(t.owner_character)
@@ -2814,7 +2980,7 @@ func _test_briefings() -> void:
 				"%s: owner_role '%s' wijkt af van de rol van %s ('%s')" % [
 					t.code, t.owner_role, c.id, c.role])
 
-	_ok(gezien == 9, "verwacht 9 tickets met een eigenaar, gevonden %d" % gezien)
+	_ok(gezien == 9, "verwacht 9 tickets met een eigenaar of briefer, gevonden %d" % gezien)
 
 	# Eén functietitel per collega. `characters.json` is de bron voor de briefing
 	# en het selectiescherm, `npcs.json` voor het bordje boven zijn hoofd op de
@@ -2888,6 +3054,40 @@ func _test_briefings() -> void:
 		if label != "" and brief_pj.contains(label):
 			_ok(int(stg.get("capaciteit", 99)) == kleinste,
 				"de pijplijn-briefing noemt '%s' als knelpunt, maar die heeft niet de kleinste capaciteit" % label)
+
+
+## P1.4: het WAT/WAAROM-kaartje (`MinigameIntro`) verdwijnt vóór elke minigame
+## behalve `mg_deploy`; wat overblijft is de briefing van de eigenaar (één
+## regel, vóór het spel) en de WAT-overlay ín het veld (2,5 s, tijdens het
+## spel). Beide moeten kort genoeg zijn om als zo'n regel te lezen, niet als
+## de opgeknipte teksttutorial die de Party-blueprint verbiedt
+## (`docs/AUDIT-2026-09-05.md` deel 2, M1). Getest ná `Briefing.vul()`, dus met
+## de echte cijfers erin — niet de kale template met accolades.
+func _test_minigame_tekstbudget() -> void:
+	_kop("woordbudget van briefing en intro")
+
+	const MAX_BRIEFING_WOORDEN := 25
+	const MAX_INTRO_WOORDEN := 18
+
+	for id: Variant in GameData.minigames.keys():
+		var mid := StringName(id)
+		if mid == &"mg_deploy":
+			continue    # de finale houdt zijn eigen kaartje (MinigameIntro) — geen budget hier
+		var c := MinigameContent.get_config(mid)
+
+		var briefing := Briefing.vul(String(c.get("briefing", "")), c)
+		if briefing != "":
+			var n := briefing.split(" ", false).size()
+			_ok(n <= MAX_BRIEFING_WOORDEN,
+				"%s: briefing van %d woorden is langer dan het budget van %d — \"%s\"" % [
+					mid, n, MAX_BRIEFING_WOORDEN, briefing])
+
+		var intro := Briefing.vul(String(c.get("intro", "")), c)
+		if intro != "":
+			var m := intro.split(" ", false).size()
+			_ok(m <= MAX_INTRO_WOORDEN,
+				"%s: intro van %d woorden is langer dan het budget van %d — \"%s\"" % [
+					mid, m, MAX_INTRO_WOORDEN, intro])
 
 
 ## F3-c: Dirk is gegeneraliseerd naar data/storingen.json. Deze test bewaakt
@@ -3143,21 +3343,24 @@ func _test_minigame_pauze() -> void:
 	_ok(not Shell.minigame_active(), "opruimen van de tweede testminigame is niet gelukt")
 
 
-## Het wat/waarom-scherm: de eerste keer verschijnt en blokkeert het tot er
-## op "Starten" gedrukt wordt, een tweede keer voor hetzelfde id slaat het
-## over, en "Terug" breekt af zonder de vlag te zetten (dus verschijnt het bij
-## een volgende poging weer). `Autopilot.gevraagd()` leest de commandoregel
-## rechtstreeks en is hier niet om te zetten — dat pad hoort bij de
-## `--autoplay`-doorloop, niet bij deze suite.
+## Het wat/waarom-scherm: sinds P1 alleen nog voor `mg_deploy`
+## (`MinigameIntro.INTRO_KAART_VOOR`) — de andere tien minigames kregen hun
+## WAT-regel terug als overlay ín het veld (`_test_minigame_tekstbudget()`
+## bewaakt die tekst). De eerste keer verschijnt het scherm en blokkeert het
+## tot er op "Starten" gedrukt wordt, een tweede keer voor hetzelfde id slaat
+## het over, en "Terug" breekt af zonder de vlag te zetten (dus verschijnt het
+## bij een volgende poging weer). `Autopilot.gevraagd()` leest de
+## commandoregel rechtstreeks en is hier niet om te zetten — dat pad hoort bij
+## de `--autoplay`-doorloop, niet bij deze suite.
 func _test_minigame_intro_scherm() -> void:
 	_kop("het wat/waarom-scherm vóór een minigame")
 
-	QuestEngine.start_run(&"daan")   # wist Session.flags: mg_paarden telt als ongezien
-	var vlag := MinigameIntro.gezien_vlag(&"mg_paarden")
-	_ok(not Session.get_flag(vlag), "vervuilde staat: mg_paarden gold al als gezien")
+	QuestEngine.start_run(&"daan")   # wist Session.flags: mg_deploy telt als ongezien
+	var vlag := MinigameIntro.gezien_vlag(&"mg_deploy")
+	_ok(not Session.get_flag(vlag), "vervuilde staat: mg_deploy gold al als gezien")
 
 	# --- eerste keer: het scherm verschijnt en blokkeert -----------------
-	var lopend: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
+	var lopend: Variant = Shell.call(&"run_minigame", &"mg_deploy", {})
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_ok(not Shell.minigame_active(),
@@ -3178,7 +3381,7 @@ func _test_minigame_intro_scherm() -> void:
 		await lopend
 
 	# --- tweede keer: hetzelfde id slaat het scherm over ------------------
-	var lopend2: Variant = Shell.call(&"run_minigame", &"mg_paarden", {})
+	var lopend2: Variant = Shell.call(&"run_minigame", &"mg_deploy", {})
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_ok(Shell.minigame_active(),
@@ -3192,7 +3395,7 @@ func _test_minigame_intro_scherm() -> void:
 
 	# --- "Terug": afbreken zonder de vlag te zetten ------------------------
 	QuestEngine.start_run(&"daan")   # opnieuw ongezien
-	Shell.call(&"run_minigame", &"mg_paarden", {})
+	Shell.call(&"run_minigame", &"mg_deploy", {})
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var poort2: MinigameIntro = get_tree().get_first_node_in_group(&"minigame_intro")
@@ -3393,6 +3596,17 @@ func _test_wereldhandelingen() -> void:
 				"%s: '%s' heeft een wereldhandeling-resolver, maar wereldhandeling staat niet aan" % [
 					t.code, t.minigame_id])
 
+	# P4: wat er op het spel staat, staat in de content en niet in de code. Drie
+	# sleutels dragen dat, en alle drie zijn ze stil weg te laten: dan verloopt
+	# een ronde zonder dat de klant iets zegt, of vonkt een kabel zonder regel.
+	var klant := MinigameContent.get_config(&"mg_klantfeedback")
+	_ok(float(klant.get("ronde_sec", 0.0)) >= 5.0,
+		"mg_klantfeedback: een gespreksronde korter dan vijf seconden is niet te lezen")
+	_ok(String(klant.get("timeout_reactie", "")) != "",
+		"mg_klantfeedback: geen timeout_reactie, dus een verlopen ronde gebeurt in stilte")
+	_ok(String(MinigameContent.get_config(&"mg_backend_fix").get("fout_reactie", "")) != "",
+		"mg_backend_fix: geen fout_reactie, dus een verkeerde kabel vonkt zonder een woord")
+
 	# De drie bekende eigenaren: een wereldhandeling is geen degradatie, het is
 	# nog steeds een werkwoord uit de mond van de eigenaar.
 	var verwacht_eigenaar := {
@@ -3417,6 +3631,130 @@ func _test_wereldhandelingen() -> void:
 			despawnd.append(String(c.get("npc", "")))
 	for nid: StringName in paarden:
 		_ok(String(nid) in despawnd, "t09 despawnt '%s' niet in zijn world_changes" % nid)
+
+
+## P4/BBD-205: een verkeerde kabel kost een kwartier, en de juiste blijft
+## liggen tot je hem legt.
+##
+## Via de pure delen van `TicketController` (`kabelopties()`,
+## `kabels_na_fout()`), want de handeling zelf draait op een dialoogbox en een
+## wereld. Wat hier bewaakt wordt is de belofte eronder: hoe vaak je ook
+## misgrijpt, het ticket kan niet vastlopen, en elke misser kost precies
+## `Urenstaat.FOUT_MIN` — de prijs is tijd, nooit voortgang.
+func _test_kabel_kost_tijd() -> void:
+	_kop("BBD-205: een verkeerde kabel kost een kwartier")
+
+	var content := MinigameContent.get_config(&"mg_backend_fix")
+	var opties := TicketController.kabelopties(content)
+	_ok(opties.size() >= 2,
+		"zonder trait horen er meerdere kabels te liggen, gevonden %d" % opties.size())
+
+	var over: Array = range(opties.size())
+	var voor := Session.worked_minutes
+	var fouten := 0
+	while over.size() > 1:
+		# Altijd een foute pakken: index 0 in `over` is de juiste kabel.
+		var mis := 1 if int(over[0]) == 0 else 0
+		over = TicketController.kabels_na_fout(over, mis)
+		fouten += 1
+		Session.book_time(Urenstaat.FOUT_MIN, &"fout")
+		_ok(over.has(0), "na %d foute kabels ligt de juiste er niet meer" % fouten)
+	_ok(fouten == opties.size() - 1,
+		"na %d foute kabels bleef er meer dan één over" % fouten)
+	_ok(int(over[0]) == 0, "de laatste overgebleven kabel is niet de juiste")
+	_ok(Session.worked_minutes - voor == fouten * Urenstaat.FOUT_MIN,
+		"%d foute kabels boekten %d minuten in plaats van %d" % [
+			fouten, Session.worked_minutes - voor, fouten * Urenstaat.FOUT_MIN])
+
+	# En de juiste kiezen haalt niets weg: `kabels_na_fout()` is de enige plek
+	# die opties wegneemt, en die weigert de juiste. Zonder dat kan de lus in
+	# `_wh_backend()` leeglopen zonder dat er ooit een kabel gelegd is.
+	var vol: Array = range(opties.size())
+	_ok(TicketController.kabels_na_fout(vol, vol.find(0)).size() == vol.size(),
+		"de juiste kabel verdwijnt uit de lijst als je hem kiest")
+
+
+## BBD-205 als Jonathan: `TraitModifier._cableboard()` (MINDER_AFLEIDERS = 2)
+## knipt de afleiderslijst van `kabelopties()` in, en zonder een ondergrens
+## zakte dat door naar precies één optie — de juiste, zonder keuze en zonder
+## "verkeerde kabel"-prijs. De regel is: altijd minstens twee opties zolang de
+## data een afleider kent, en "Minder losse draden." blijft waar als 2 in
+## plaats van 3 knoppen.
+func _test_jonathan_minder_kabels() -> void:
+	_kop("BBD-205: Jonathans vakgebiedvoordeel laat een keuze over")
+
+	var t05: TicketDef = GameData.ticket(&"t05")
+	QuestEngine.start_run(&"jonathan")
+	var jonathan_config: Dictionary = TraitModifier.pas_toe(t05)
+	_ok(not jonathan_config.is_empty(), "t05: Jonathans voordeel levert geen aangepaste opgave")
+	var jonathan_opties := TicketController.kabelopties(jonathan_config)
+	_ok(jonathan_opties.size() == 2,
+		"BBD-205 geeft Jonathan %d optie(s), verwacht er 2 (juist + één afleider)" % jonathan_opties.size())
+
+	for cid: Variant in GameData.character_ids():
+		if StringName(cid) == &"jonathan":
+			continue
+		QuestEngine.start_run(StringName(cid))
+		var basis_config: Dictionary = MinigameContent.get_config(t05.minigame_id)
+		var opties := TicketController.kabelopties(basis_config)
+		_ok(opties.size() == 3,
+			"BBD-205 geeft %s %d optie(s), verwacht er 3 (geen vakgebiedvoordeel)" % [cid, opties.size()])
+
+
+## P4/BBD-203: de klant wacht niet, behalve op de autopilot.
+##
+## Twee dingen, want ze kunnen los stuk: dat een keuze met een klok ook echt
+## dichtvalt (en dan `KEUZE_VERLOPEN` teruggeeft in plaats van stil de eerste
+## optie te worden), en dat diezelfde klok níét geldt zodra de autopilot
+## meekijkt. Dat tweede is geen detail: een geautomatiseerde speelbeurt drukt
+## elke 0,45 s één knop, dus een keuze die vanzelf dichtvalt zou een 10/10 van
+## timing laten afhangen in plaats van van inhoud.
+func _test_klant_wacht_niet() -> void:
+	_kop("BBD-203: zij wacht niet")
+
+	_ok(DialogueController.keuzeklok(8.0, true) == 0.0,
+		"met de autopilot erbij blijft er een keuzeklok staan")
+	_ok(DialogueController.keuzeklok(8.0, false) == 8.0,
+		"zonder autopilot verdwijnt de keuzeklok")
+	_ok(DialogueController.keuzeklok(-3.0, false) == 0.0,
+		"een negatieve klok komt er niet als nul uit")
+
+	var dc := DialogueController.new()
+	add_child(dc)
+	dc.setup()
+	var labels: Array[String] = ["De knop.", "De foto.", "De prijs."]
+
+	# Niemand drukt: na 0,2 s hoort de box dicht te zijn en de uitkomst
+	# onderscheidbaar van "eerste optie".
+	var verlopen: Variant = await dc.ask_choice("Zegt u het maar.", labels, 0.2)
+	_ok(int(verlopen) == DialogueController.KEUZE_VERLOPEN,
+		"een keuze met een klok van 0,2 s gaf %d terug in plaats van KEUZE_VERLOPEN" % int(verlopen))
+	_ok(not dc.is_active(), "de dialoogbox bleef openstaan nadat de klok afliep")
+
+	# Zelfde 0,2 s, maar via `keuzeklok()` met de autopilot erbij: die keuze
+	# hoort er vier keer zo lang later nog steeds te staan. De druk komt uit een
+	# timer en niet uit een tweede coroutine, want `ask_choice()` moet hier juist
+	# geawait worden -- anders meet deze test niets.
+	var gedrukt := {"knop": false}
+	get_tree().create_timer(0.8).timeout.connect(func() -> void:
+		var k := get_viewport().gui_get_focus_owner() as Button
+		if k == null:
+			return
+		gedrukt["knop"] = true
+		k.pressed.emit())
+
+	var begon := Time.get_ticks_msec()
+	var gekozen: Variant = await dc.ask_choice("Nog eens.", labels,
+		DialogueController.keuzeklok(0.2, true))
+	var duurde := float(Time.get_ticks_msec() - begon) / 1000.0
+	_ok(bool(gedrukt["knop"]),
+		"er stond geen keuzeknop met focus, dus de autopilot zou hier hangen")
+	_ok(int(gekozen) == 0,
+		"de gedrukte knop leverde %d op in plaats van 0" % int(gekozen))
+	_ok(duurde >= 0.7,
+		"de keuze viel na %.2f s vanzelf dicht; met de autopilot hoort er geen klok te lopen" % duurde)
+
+	dc.queue_free()
 
 
 ## F4-a: `mg_slotboard.gd` (de urenstaat, `mg_urenstaat`) werd een dialoogkeuze
@@ -3582,6 +3920,113 @@ func _test_dialoogvenster_past() -> void:
 			paneel.size.y, DialogueBox.HOOGTE_MIN])
 
 	box.queue_free()
+
+
+## De vraag boven vier keuzeknoppen werd afgekapt: `HOOGTE_MAX` (210) klemde
+## de hele box — vraag én knoppenkolom samen — en de tweede regel van de
+## vraag verdween half achter de vaste HUD-band (`p4_klant_balk.png`).
+## `mg_klantfeedback` levert de echte reproductie: vier opties per ronde, en de
+## langste ronde is de ronde die de audit-screenshot toonde.
+func _test_vraag_boven_keuzes_leesbaar() -> void:
+	_kop("de vraag boven keuzeknoppen blijft leesbaar")
+
+	var rd: Variant = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://data/minigame_content.json"))
+	var mg := (rd as Dictionary).get("mg_klantfeedback", {}) as Dictionary
+	var rondes := mg.get("rondes", []) as Array
+	_ok(not rondes.is_empty(), "mg_klantfeedback heeft geen rondes")
+
+	var langste_ronde: Dictionary = {}
+	for raw: Variant in rondes:
+		var r := raw as Dictionary
+		if String(r.get("prompt", "")).length() > String(langste_ronde.get("prompt", "")).length():
+			langste_ronde = r
+
+	var labels: Array[String] = []
+	for raw: Variant in (langste_ronde.get("opties", []) as Array):
+		labels.append(String((raw as Dictionary).get("tekst", "")))
+	_ok(labels.size() == 4,
+		"de langste mg_klantfeedback-ronde heeft %d opties, verwacht er 4" % labels.size())
+
+	var box := DialogueBox.new()
+	add_child(box)
+	await get_tree().process_frame
+	box.show_line("", String(langste_ronde.get("prompt", "")))
+	box.finish_typing()
+	await get_tree().process_frame
+	box.show_choices(labels)
+	# Twee frames: `_pas_hoogte_aan()` knipt de vraag eerst terug (zelf ook een
+	# `await`) en meet daarna pas, net als `_test_dialoogvenster_past()` hierboven.
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	_ok(box._text.get_visible_line_count() >= 2,
+		"de vraag krijgt %d zichtbare regel(s) i.p.v. minstens %d" % [
+			box._text.get_visible_line_count(), DialogueBox.MAX_REGELS_VRAAG_MET_KEUZES])
+
+	var paneel := box.get_child(0) as Control
+	_ok(paneel.size.y <= DialogueBox.HOOGTE_MAX_KEUZES + 0.5,
+		"dialoogvenster met vier keuzes is %.0f px hoog, HOOGTE_MAX_KEUZES zegt %.0f" % [
+			paneel.size.y, DialogueBox.HOOGTE_MAX_KEUZES])
+
+	var vp: float = get_viewport().get_visible_rect().size.y
+	_ok(paneel.global_position.y + paneel.size.y <= vp + 0.5,
+		"dialoogvenster met vier keuzes loopt %.0f px onder het scherm door" % (
+			paneel.global_position.y + paneel.size.y - vp))
+	_ok(paneel.global_position.y >= -0.5,
+		"dialoogvenster met vier keuzes begint %.0f px boven het scherm" % (
+			-paneel.global_position.y))
+
+	box.queue_free()
+
+	# Zonder keuzes moet een eerdere afkap weer verdwijnen: de volgende regel
+	# van een dialoogboom mag niet met een ellipsis van de vórige beurt blijven
+	# zitten. `_test_dialoogvenster_past()` bewijst al dat de hoogte terugzakt;
+	# dit bewijst dat de TEKST zelf ook echt terugkomt.
+	var box2 := DialogueBox.new()
+	add_child(box2)
+	await get_tree().process_frame
+	box2.show_line("", String(langste_ronde.get("prompt", "")))
+	box2.finish_typing()
+	await get_tree().process_frame
+	box2.show_choices(labels)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	box2.show_line("", "Done.")
+	await get_tree().process_frame
+	_ok(box2._text.text == "Done.",
+		"na keuzes blijft de vorige (afgekapte) vraag in het tekstlabel staan: '%s'" % box2._text.text)
+	box2.queue_free()
+
+	# Elke choices-node in de dialoogbomen krijgt dezelfde afkap. Een vraag
+	# van meer dan twee regels van ~26 tekens (~52 tekens) verliest daarmee
+	# woorden achter een ellipsis zodra hij mét keuzes op het scherm komt —
+	# dat is een contentkeuze en geen code-bug, dus hier alleen gemeld en
+	# niet herschreven.
+	const REGEL_BUDGET := 52
+	for map: String in ["npcs", "tickets", "wereld"]:
+		var dpad := "res://data/dialogue/%s.json" % map
+		var boom: Variant = JSON.parse_string(FileAccess.get_file_as_string(dpad))
+		if boom is Dictionary:
+			_meld_lange_keuzevragen(boom, "dialogue/%s.json" % map, REGEL_BUDGET)
+
+
+## Recursieve boomwandeling, in dezelfde stijl als `_gevolgvlaggen_in()`
+## hierboven: elke node met een niet-lege `choices`-lijst draagt een `text`
+## die straks als vraag boven de keuzeknoppen komt te staan.
+func _meld_lange_keuzevragen(d: Variant, pad: String, budget: int) -> void:
+	if d is Dictionary:
+		var choices: Array = d.get("choices", []) as Array
+		if not choices.is_empty():
+			var tekst := String(d.get("text", ""))
+			if tekst.length() > budget:
+				print("MELDING: %s heeft een keuzevraag van %d tekens (budget ~%d), " % [
+					pad, tekst.length(), budget] + "past niet in twee regels: \"%s\"" % tekst)
+		for k: Variant in (d as Dictionary).keys():
+			_meld_lange_keuzevragen(d[k], pad, budget)
+	elif d is Array:
+		for v: Variant in (d as Array):
+			_meld_lange_keuzevragen(v, pad, budget)
 
 
 ## Een wervingsgesprek begint met de hulpvraag, en met het ticketnummer erin.
@@ -3935,10 +4380,14 @@ func _object_tiles() -> Dictionary:
 ##
 ## Twee dingen worden hier gemeten die geen van beide uit een losse constructie
 ## van het scherm blijken. Ten eerste: er gebeurt niets in de wereld zolang je
-## niet geopend hebt. Het effect van k1 is `unlock_ticket t07`, en t07 staat op
+## niet geopend hebt. Het effect van k4 is `unlock_ticket t07`, en t07 staat op
 ## `available_when: {tickets_done: [t04]}` — dus op slot bij een verse run. Dat
 ## is de meetlat: een bericht dat de speler nog niet gelezen heeft mag de wereld
 ## niet al veranderd hebben.
+##
+## (Niet k1: sinds de BBD-204 → BBD-207-fix in `docs/AUDIT-2026-09-05.md`,
+## bevinding 5, draagt k1 geen effect meer — alleen k4 trekt BBD-207 naar
+## voren, op 6/10.)
 ##
 ## Ten tweede: er is precies één uitweg. Haar berichten dragen effects, dus een
 ## tweede knop of een ESC die de melding wegtikt zou een ticket kunnen
@@ -3957,16 +4406,16 @@ func _test_klant_melding_voor_bericht() -> void:
 	await get_tree().process_frame
 
 	# --- stap 1: de melding, en verder niets ------------------------------
-	tel.call(&"_toon", &"k1")
+	tel.call(&"_toon", &"k4")
 	await get_tree().process_frame
-	_ok(tel.is_open(), "_toon(k1): de telefoon staat niet open")
+	_ok(tel.is_open(), "_toon(k4): de telefoon staat niet open")
 	_ok(not bool(tel.get(&"_bericht_zichtbaar")),
-		"_toon(k1): het bericht staat er meteen, de melding is overgeslagen")
+		"_toon(k4): het bericht staat er meteen, de melding is overgeslagen")
 
 	var melding := tel.get(&"_meldingvak") as CanvasItem
 	var bericht := tel.get(&"_berichtvak") as CanvasItem
-	_ok(melding != null and melding.visible, "_toon(k1): het meldingsvak staat niet aan")
-	_ok(bericht != null and not bericht.visible, "_toon(k1): het berichtvak staat al aan")
+	_ok(melding != null and melding.visible, "_toon(k4): het meldingsvak staat niet aan")
+	_ok(bericht != null and not bericht.visible, "_toon(k4): het berichtvak staat al aan")
 
 	# Haar naam, uit de data. Niet "De Klant" en niet de naam van de manege:
 	# dit is het moment waarop de speler wil weten wie er belt.
@@ -3984,7 +4433,7 @@ func _test_klant_melding_voor_bericht() -> void:
 				% verboden)
 
 	_ok(not Session.is_available(&"t07"),
-		"k1: t07 ging al open terwijl het bericht nog niet gelezen was")
+		"k4: t07 ging al open terwijl het bericht nog niet gelezen was")
 
 	# ESC hoort de melding niet weg te tikken. Dit is de guard in `_input()`:
 	# die kijkt naar `_bericht_zichtbaar` en niet naar `_open`.
@@ -4008,7 +4457,7 @@ func _test_klant_melding_voor_bericht() -> void:
 	_ok(bericht != null and bericht.visible, "Openen: het berichtvak kwam niet aan")
 	var tekst := tel.get(&"_tekst") as RichTextLabel
 	_ok(tekst != null and tekst.text != "", "Openen: er staat geen berichttekst op het scherm")
-	_ok(Session.is_available(&"t07"), "Openen: het effect van k1 draaide niet")
+	_ok(Session.is_available(&"t07"), "Openen: het effect van k4 draaide niet")
 
 	# --- wegleggen mag nu wél ---------------------------------------------
 	tel.call(&"_weg")
@@ -4967,8 +5416,111 @@ func _test_minigames_passen() -> void:
 		await get_tree().process_frame
 		_meet_schermvulling(mg, String(mg_id))
 		_meet_horizontale_overloop(mg, String(mg_id))
+		if mg_id == &"mg_deploy":
+			_meet_past_zonder_scroll(mg, String(mg_id))
+			await _meet_drie_kaartjes(mg)
 		mg.queue_free()
 		await get_tree().process_frame
+
+
+## Marge op de scrollhoogte in `_meet_past_zonder_scroll()`. Deze meting is
+## royaler dan het echte scherm: een kale `instantiate()` meldde 275 px
+## scrollhoogte, terwijl de versie die op 192x416 daadwerkelijk scrolde hier op
+## 269 px inhoud uitkwam. Het verschil zit in wat het chrome er in een echte
+## speelbeurt omheen zet; een dozijn pixels reserve dekt dat, en houdt de meting
+## streng genoeg om precies dat geval te vangen.
+const _FIT_RESERVE := 12.0
+
+
+## Drie brandjes tegelijk staan er ook echt, met hun balk, binnen hun zone.
+##
+## Dit is de enige plek waar het tekenen van een kaartje wordt nagelopen. Een
+## screenshot kan het niet: de autopilot blust elk brandje binnen een halve
+## seconde, dus op geen enkel QA-frame staat er ooit een kaartje in beeld — en
+## juist daarom moet de meting hier staan en niet in een plaatje.
+func _meet_drie_kaartjes(mg: Node) -> void:
+	var model: Variant = mg.get(&"_model")
+	var zone := mg.get(&"_zone") as Control
+	_ok(model != null and zone != null, "mg_deploy: geen model of geen kaartjeszone")
+	if model == null or zone == null:
+		return
+
+	# Drie brandjes rechtstreeks zichtbaar maken, zoals het model dat na drie
+	# spawns zou doen, en de scene ze laten tekenen. Eerst opruimen: er staan al
+	# een paar frames op de teller, dus het eerste brandje van de avond is
+	# vanzelf al binnengekomen en heeft zijn eigen kaartje.
+	mg.call(&"_wis_kaarten")
+	var zichtbaar: Array = model.get(&"zichtbaar")
+	zichtbaar.clear()
+	var uit_rij: Array = model.get(&"rij")
+	for i: int in mini(3, uit_rij.size()):
+		zichtbaar.append(uit_rij[i])
+	_ok(zichtbaar.size() == 3, "mg_deploy: de rij levert geen drie brandjes om te tonen")
+	mg.call(&"_werk_kaartjes_bij")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var kaarten: Dictionary = mg.get(&"_kaarten")
+	_ok(kaarten.size() == 3, "mg_deploy: %d kaartjes voor drie brandjes" % kaarten.size())
+	var vlak := zone.get_global_rect()
+	for nr: Variant in kaarten:
+		var kaart := kaarten[nr] as Control
+		var r := kaart.get_global_rect()
+		_ok(r.position.y >= vlak.position.y - 0.5 and r.end.y <= vlak.end.y + 0.5,
+			"mg_deploy: een kaartje staat van y%d tot y%d in een zone van y%d tot y%d"
+				% [roundi(r.position.y), roundi(r.end.y),
+					roundi(vlak.position.y), roundi(vlak.end.y)])
+		var balk := kaart.get_node_or_null(^"balk") as ColorRect
+		_ok(balk != null, "mg_deploy: een kaartje zonder balk")
+		if balk != null:
+			_ok(balk.size.y > 0.0 and balk.size.x > 0.0,
+				"mg_deploy: de balk van een kaartje meet %s" % balk.size)
+	zichtbaar.clear()
+
+
+## De finale mag niet scrollen.
+##
+## Elke andere minigame mag: `build_chrome()` zet zijn inhoud in een
+## ScrollContainer juist zodat een lange lijst niet buiten beeld valt. De
+## oplevering kan dat niet gebruiken. Er lopen drie balken tegelijk af en er
+## staan zeven knoppen onder; wie moet scrollen om bij een knop te komen is de
+## balk al kwijt, en welk brandje er brandt zie je dan ook niet meer.
+##
+## Dit ving een echte fout: de knoppen heetten "Klant informeren" en "Risico
+## accepteren", die braken op een kolom van 85 px allebei over twee regels, en
+## de onderste rij zakte onder de vouw met een scrollbalk erbij.
+## `_meet_schermvulling()` ziet dat niet — die sluit alles in een klemmende
+## ouder juist uit, en de scroll is die klem.
+func _meet_past_zonder_scroll(mg: Node, naam: String) -> void:
+	var scroll: ScrollContainer = null
+	for c: Control in _controls(mg):
+		if c is ScrollContainer:
+			scroll = c as ScrollContainer
+			break
+	_ok(scroll != null, "%s: geen ScrollContainer in het chrome" % naam)
+	if scroll == null or scroll.get_child_count() == 0:
+		return
+	var inhoud := scroll.get_child(0) as Control
+	if inhoud == null:
+		return
+	var nodig := inhoud.get_combined_minimum_size().y
+	var ruimte := scroll.size.y - _FIT_RESERVE
+	_ok(nodig <= ruimte,
+		"%s: de inhoud vraagt %d px en er is %d px (van %d, min %d reserve), dus de finale scrolt"
+			% [naam, roundi(nodig), roundi(ruimte), roundi(scroll.size.y), roundi(_FIT_RESERVE)])
+
+	# En niet alleen de optelsom: elke knop moet ook echt binnen het zichtbare
+	# deel van de scroll staan, want een zone die de overgebleven hoogte opeet
+	# duwt de onderste rij eruit terwijl de minimumsom nog klopt.
+	var vlak := scroll.get_global_rect()
+	for c2: Control in _controls(scroll):
+		if not (c2 is Button) or not c2.is_visible_in_tree() or c2.size == Vector2.ZERO:
+			continue
+		var r := c2.get_global_rect()
+		_ok(r.position.y >= vlak.position.y - 0.5 and r.end.y <= vlak.end.y + 0.5,
+			"%s: knop '%s' staat van y%d tot y%d in een venster van y%d tot y%d — daar moet je voor scrollen"
+				% [naam, c2.text, roundi(r.position.y), roundi(r.end.y),
+					roundi(vlak.position.y), roundi(vlak.end.y)])
 
 
 ## Niets mag breder zijn dan de scroll waar het in hangt.
@@ -5626,6 +6178,220 @@ func _test_finale_kan_falen() -> void:
 	for raw: Variant in uitkomsten:
 		_ok(String((raw as Dictionary).get("titel", "")).begins_with("OPGELEVERD"),
 			"een geslaagde uitkomst hoort OPGELEVERD te heten; ROLLBACK is geen uitkomst in de data")
+
+
+## P5: de brandjes van de finale, doorgerekend zonder scene.
+##
+## `BrandjesModel` bestaat om deze test te kunnen schrijven. De vraag "is de
+## avond eerlijk?" is een getallenvraag, en die hoort headless beantwoord te
+## worden en niet met een screenshot: of een zorgvuldige dag met perfect spel
+## VLEKKELOOS haalt, of een rampdag dat met hetzelfde perfecte spel juist níet
+## haalt, en of niets doen de eerste deploy laat falen. Drie eisen tegelijk,
+## want elke los is triviaal te halen door de effecten op te schroeven.
+##
+## De gevonden getallen, met de data van 6 september (spawncurve
+## `[[0,9],[25,7],[50,5]]`, klok 75 s, 14 brandjes, effecten uit `keuzes`),
+## over vijf zaden:
+##
+## | dag                    | perfect spel | niets doen |
+## |------------------------|--------------|------------|
+## | zorgvuldig             | 16 en hoger  | -19        |
+## | ramp                   | 6 .. 9       | -          |
+## | ramp, volledig gezaaid | onder 13     | -          |
+##
+## De drempels staan op 13 / 9 / 4 / 0, en `_faal_drempel()` is 4. Een
+## zorgvuldige dag zit dus ruim boven VLEKKELOOS, een rampdag met perfect spel
+## klimt tot KRAP of MET EEN SMETJE maar nooit tot VLEKKELOOS, en niets doen
+## valt door de bodem. De marge zit vooral in twee plekken: `vertrouwen` heeft
+## geen plafond en `getest` wel (`Gevolgen.oplevering_score()` topt af op twee
+## controles per bug waarmee je begon), waardoor een zorgvuldige dag zijn winst
+## uit `informeren` haalt en een rampdag uit `fixen`.
+##
+## Meerdere zaden, want de rij is gehusseld: één zaad bewijst niets over een
+## avond die elke speelbeurt anders loopt.
+func _test_finale_brandjes() -> void:
+	_kop("de brandjes van de finale zijn eerlijk gekalibreerd")
+
+	var c := MinigameContent.get_config(&"mg_deploy")
+	var brandjes := c.get("brandjes", []) as Array
+	_ok(brandjes.size() >= 12, "mg_deploy: %d brandjes, en er horen er minstens 12 te zijn" % brandjes.size())
+
+	# --- 1. de data zelf ----------------------------------------------------
+	var geldige_handelingen := {}
+	for raw: Variant in c.get("keuzes", []):
+		geldige_handelingen[StringName((raw as Dictionary).get("id", ""))] = true
+	var gedekt := {}
+	var ids := {}
+	var alle: Array = brandjes.duplicate()
+	alle.append(c.get("brandje_niet_af", {}))
+	for raw: Variant in alle:
+		var b := raw as Dictionary
+		var bid := String(b.get("id", ""))
+		_ok(bid != "", "mg_deploy: brandje zonder id")
+		_ok(not ids.has(bid), "mg_deploy: twee brandjes delen id '%s'" % bid)
+		ids[bid] = true
+		var h := StringName(b.get("handeling", ""))
+		_ok(geldige_handelingen.has(h),
+			"mg_deploy/%s: handeling '%s' is geen van de zeven knoppen" % [bid, h])
+		gedekt[h] = true
+		_ok(float(b.get("duur", 0)) > 0.0, "mg_deploy/%s: duur is 0" % bid)
+		# 40 tekens is wat er op FS_SMALL naast een kaartje van 30 px past.
+		_ok(String(b.get("tekst", "")).length() <= 40,
+			"mg_deploy/%s: tekst is %d tekens en er passen er 40"
+				% [bid, String(b.get("tekst", "")).length()])
+		var straf := b.get("straf", {}) as Dictionary
+		_ok(not straf.is_empty(), "mg_deploy/%s: geen straf, dus verlopen kost niets" % bid)
+		for sk: Variant in straf:
+			_ok(String(sk) in ["bugs", "vertrouwen", "getest", "scope"],
+				"mg_deploy/%s: straf op onbekende waarde '%s'" % [bid, sk])
+		# De `when` van een brandje moet in de smalle grammatica passen die
+		# `BrandjesModel.mag()` kent; de rest van `Conditions` leest Session en
+		# is hier dus niet door te rekenen.
+		for wk: Variant in (b.get("when", {}) as Dictionary):
+			_ok(String(wk) in ["flags_all", "flags_none"],
+				"mg_deploy/%s: `when.%s` kent BrandjesModel niet" % [bid, wk])
+	for h: StringName in BrandjesModel.HANDELINGEN:
+		_ok(gedekt.has(h), "mg_deploy: geen enkel brandje vraagt om '%s'" % h)
+
+	var curve := c.get("spawn_curve", []) as Array
+	_ok(curve.size() >= 2, "mg_deploy: spawn_curve heeft %d punten" % curve.size())
+	var vorige_t := -1.0
+	var vorig_iv := 9999.0
+	for raw: Variant in curve:
+		var paar := raw as Array
+		_ok(paar.size() == 2, "mg_deploy: spawn_curve-punt is geen [t, interval]")
+		if paar.size() != 2:
+			continue
+		_ok(float(paar[0]) > vorige_t, "mg_deploy: spawn_curve loopt niet op in t")
+		_ok(float(paar[1]) <= vorig_iv, "mg_deploy: spawn_curve wordt trager in plaats van sneller")
+		_ok(float(paar[1]) > 0.0, "mg_deploy: spawn-interval 0")
+		vorige_t = float(paar[0])
+		vorig_iv = float(paar[1])
+
+	# --- 2, 3, 4. de drie dagen --------------------------------------------
+	var uitkomsten: Array = c.get("uitkomsten", [])
+	var top := int((uitkomsten[0] as Dictionary).get("min", 0))
+	var faal := int((uitkomsten[uitkomsten.size() - 2] as Dictionary).get("min", 0))
+
+	var zorgvuldig := {&"bugs": 1, &"vertrouwen": 7, &"getest": 3, &"scope": 2}
+	var ramp := {&"bugs": 8, &"vertrouwen": 1, &"getest": 0, &"scope": 7}
+
+	var zorg_laag := 999
+	var ramp_laag := 999
+	var ramp_hoog := -999
+	for zaad: int in [1, 7, 42, 1234, 99991]:
+		zorg_laag = mini(zorg_laag, _finale_perfect(c, zorgvuldig, zaad))
+		var r := _finale_perfect(c, ramp, zaad)
+		ramp_laag = mini(ramp_laag, r)
+		ramp_hoog = maxi(ramp_hoog, r)
+	_ok(zorg_laag >= top,
+		"een zorgvuldige dag met perfect spel haalt %d en VLEKKELOOS begint bij %d" % [zorg_laag, top])
+	_ok(ramp_hoog < top,
+		"een rampdag haalt met perfect spel %d en dat is VLEKKELOOS (vanaf %d)" % [ramp_hoog, top])
+	_ok(ramp_laag >= faal,
+		"een rampdag met perfect spel zakt naar %d en faalt dus alsnog (drempel %d)" % [ramp_laag, faal])
+
+	var niks := _finale_niets_doen(c, zorgvuldig, 42)
+	_ok(niks < faal,
+		"niets doen op een zorgvuldige dag haalt %d en de eerste deploy faalt pas onder %d" % [niks, faal])
+
+	# De rampdag zoals hij er in het spel echt uitziet: de losse kabel vooraan,
+	# een klant die twee keer belt en twee tickets die nooit afkwamen. Meer
+	# brandjes betekent meer om te blussen, dus dit is de kant waar perfect
+	# spel alsnog door VLEKKELOOS heen zou kunnen breken.
+	var vlaggen := {
+		&"gevolg_backend_fout_gekozen": true, &"gevolg_klant_ontevreden": true,
+	}
+	var open_werk: Array[String] = ["BBD-204", "BBD-207"]
+	for zaad2: int in [1, 7, 42, 1234, 99991]:
+		var m := BrandjesModel.new(c, ramp, vlaggen, open_werk, zaad2)
+		_ok(String((m.rij[0] as Dictionary)[&"id"]) == "kabel_b",
+			"de losse kabel hoort het eerste kaartje te zijn, niet '%s'" % (m.rij[0] as Dictionary)[&"id"])
+		var klant := 0
+		for b: Dictionary in m.rij:
+			if String(b[&"id"]) == "klant_paard":
+				klant += 1
+		_ok(klant == 2, "een ontevreden klant belt twee keer, niet %d keer" % klant)
+		while not m.tijd_om():
+			m.tik(_FINALE_STAP)
+			var b2 := m.kortste()
+			if not b2.is_empty():
+				m.blus(StringName(b2[&"handeling"]))
+		_ok(m.score() < top,
+			"een gezaaide rampdag haalt met perfect spel %d en dat is VLEKKELOOS (vanaf %d)"
+				% [m.score(), top])
+
+
+## De stap waarmee de kalibratie de avond doorrekent. Een kwart seconde: fijn
+## genoeg dat een balk van zes seconden niet in één sprong voorbij is, grof
+## genoeg dat 75 seconden in 300 stappen klaar zijn.
+const _FINALE_STAP := 0.25
+
+
+## Alles wat de finale op zijn antwoordregel kan zetten, past op twee regels.
+##
+## Die regel staat op `clip_text` en een vaste hoogte, want een Label dat met
+## zijn tekst meegroeit duwt de zeven knoppen onder de vouw (zie `_bouw()` in
+## mg_oplevering.gd). Dat is de veiligheidsrem; dit is de afspraak eromheen.
+## Zonder deze test valt een derde regel stil weg — en het was een gebeurtenis
+## die dat als eerste deed: "Dirk: er staat vandaag 0u geboekt, terwijl de
+## verwachting rond de 8u ligt." mat 74 tekens en dat zijn drie regels.
+func _test_finale_regels_passen() -> void:
+	_kop("de antwoordregel van de finale blijft twee regels")
+
+	var script := load("res://scripts/minigames/mg_oplevering.gd") as GDScript
+	var breed: float = script.REGEL_BREED
+	var hoog: float = script.REGEL_H
+	var f := UiKit.font_voor(UiKit.FS_SMALL)
+	var c := MinigameContent.get_config(&"mg_deploy")
+
+	var teksten: Array[String] = []
+	for raw: Variant in c.get("keuzes", []):
+		teksten.append(String((raw as Dictionary).get("regel", "")))
+	for raw: Variant in c.get("gebeurtenissen", []):
+		var g := raw as Dictionary
+		# Een `storing` neemt het hele scherm over en komt dus niet op de regel.
+		if not bool(g.get("storing", false)):
+			teksten.append(String(g.get("tekst", "")))
+	# Wat de scene er zelf op zet. Deze vier staan als letterlijke tekst in
+	# `mg_oplevering.gd` en dus ook hier: wie daar een zin herschrijft, schrijft
+	# hem hier mee. Constantes ervan maken zou de scene onleesbaarder maken dan
+	# deze herhaling kost.
+	teksten.append("Niets brandt daar.")
+	teksten.append("De tijd is om. Je gaat nu live met wat er ligt.")
+	teksten.append("Twee handelingen. Daarna zet je hem live, wat je ook doet.")
+	teksten.append("Er komt zo iets binnen. Blus het met de juiste handeling.")
+	for raw: Variant in c.get("brandjes", []):
+		teksten.append("%s. Te laat." % String((raw as Dictionary).get("tekst", "")))
+
+	for t: String in teksten:
+		if t == "":
+			continue
+		var m := f.get_multiline_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, breed, UiKit.FS_SMALL)
+		_ok(m.y <= hoog,
+			"mg_deploy: \"%s\" meet %d px hoog op %d px breed, en er is %d px — de derde regel valt weg"
+				% [t, roundi(m.y), roundi(breed), roundi(hoog)])
+
+
+## Speelt de avond helemaal uit met perfecte reflexen: elke tik blust het
+## zichtbare brandje met de kortste balk, dus er verloopt niets. Geen enkele
+## loze handeling, want `blus()` op een handeling die niemand vraagt doet niets.
+func _finale_perfect(c: Dictionary, start: Dictionary, zaad: int) -> int:
+	var m := BrandjesModel.new(c, start, {}, [] as Array[String], zaad)
+	while not m.tijd_om():
+		m.tik(_FINALE_STAP)
+		var b := m.kortste()
+		if not b.is_empty():
+			m.blus(StringName(b[&"handeling"]))
+	return m.score()
+
+
+## Dezelfde avond, maar de speler kijkt ernaar. Alles verloopt.
+func _finale_niets_doen(c: Dictionary, start: Dictionary, zaad: int) -> int:
+	var m := BrandjesModel.new(c, start, {}, [] as Array[String], zaad)
+	while not m.tijd_om():
+		m.tik(_FINALE_STAP)
+	return m.score()
 
 
 ## Los geverifieerd defect: "in 37 van 59 ticketbomen beweegt de verkeerde
