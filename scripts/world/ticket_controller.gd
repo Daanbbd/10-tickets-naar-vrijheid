@@ -9,6 +9,13 @@ var _builder: WorldBuilder
 var _dialogue: DialogueController
 var _hud: Hud
 var _busy: bool = false
+var _busy_sinds_ms: int = 0
+
+## Hoe lang `_busy` mag aanstaan terwijl er zichtbaar niets loopt. Ruim boven
+## het langste stille venster in een normale stroom — het briefje dat naar het
+## bord vliegt is ~1,6 s en de urenrol ~0,75 s — en ruim onder wat een speler
+## uitzit voordat hij denkt dat het spel stuk is.
+const SLOT_RESPIJT_MS := 5000
 
 
 ## Loopt er nu een ticketstroom — oppakken, werven, minigame, afronden?
@@ -22,6 +29,40 @@ func bezig() -> bool:
 	return _busy
 
 
+## Weigert deze interactie omdat er echt nog iets loopt?
+##
+## Het vangnet naast de fix in `Hud.toon_urenrol()`. `_busy` staat aan over een
+## hele `await`-keten en GDScript kent geen `finally`: hangt één van die awaits,
+## dan blijft het slot dicht en weigert elke volgende interactie stil — geen
+## prompt die verdwijnt, geen regel in de console, alleen een tik die niets
+## doet. Dat is playtest 2026-09-06 #37/#38, en het kostte Daan zijn speelbeurt.
+##
+## Draait er nog een dialoog, een minigame of een invoerslot, dan is dit gewoon
+## geduld en weigeren we terecht. Is het scherm leeg en staat het slot langer
+## dan `SLOT_RESPIJT_MS` dicht, dan lekt het en geven we de speler zijn spel
+## terug. Een lek hoort een `push_error()` te zijn en geen stilte: het is een
+## bug in deze klasse, geen speelbare toestand.
+## Het slot dichtzetten en onthouden wanneer. Zie `_slot_houdt()`.
+func _neem_slot() -> void:
+	_busy = true
+	_busy_sinds_ms = Time.get_ticks_msec()
+
+
+func _slot_houdt(wat: String) -> bool:
+	if not _busy:
+		return false
+	if Shell.minigame_active() or (_dialogue != null and _dialogue.is_active()) \
+			or Session.input_locked:
+		return true
+	var stil_ms := Time.get_ticks_msec() - _busy_sinds_ms
+	if stil_ms < SLOT_RESPIJT_MS:
+		return true
+	push_error(("TicketController: het slot stond %d ms dicht zonder dat er iets liep " +
+		"— vastgelopen await. Losgelaten bij '%s'.") % [stil_ms, wat])
+	_busy = false
+	return false
+
+
 func setup(registry: WorldRegistry, npcs: NpcLayer, builder: WorldBuilder) -> void:
 	_registry = registry
 	_npcs = npcs
@@ -33,14 +74,14 @@ func setup(registry: WorldRegistry, npcs: NpcLayer, builder: WorldBuilder) -> vo
 # --- Ticketobject aanspreken ---------------------------------------------
 
 func handle(ticket_id: StringName, source: Interactable) -> void:
-	if _busy:
+	if _slot_houdt("ticket %s" % ticket_id):
 		return
 	# Een object kan meerdere tickets dragen (het scrumbord is er zowel voor de
 	# planning als voor de paardenbugs), dus kies op basis van de stand van
 	# zaken en niet op een vast id. Het slot gaat vóór het kiezen dicht: die
 	# keuze kan een dialoogvenster openen, en dan mag er geen tweede E-druk
 	# tussendoor komen.
-	_busy = true
+	_neem_slot()
 	var t := await _ticket_for_anchor(source.world_id if source != null else &"", ticket_id)
 	if t == null:
 		push_error("TicketController: geen ticket voor anker '%s'" % (source.world_id if source else ticket_id))
@@ -644,7 +685,7 @@ func _stuur_paard_naar_speler() -> bool:
 # --- Collega aanspreken ---------------------------------------------------
 
 func handle_npc_talk(source: Interactable) -> void:
-	if _busy:
+	if _slot_houdt("collega aanspreken"):
 		return
 	var npc := source.get_parent() as Npc
 	if npc == null:
@@ -656,19 +697,19 @@ func handle_npc_talk(source: Interactable) -> void:
 	# hetzelfde als bij elk ander ticket (activeren, briefje, eigen-vakgebied,
 	# briefing); alleen de resolutiestap verschilt via `via_npc`.
 	if String(npc.npc_id).begins_with("paard_bug"):
-		_busy = true
+		_neem_slot()
 		await _handle_inner(GameData.ticket(&"t09"), true)
 		_busy = false
 		return
 	# Het klantpaard-dat-op-een-bug-lijkt blijft de grap uit de oude
 	# `mg_whack`: hem aanspreken lost niets op, want hij is geen bug.
 	if npc.npc_id == &"paard_klant_decoy":
-		_busy = true
+		_neem_slot()
 		await _line("Gewoon een paard van de klant. Geen bug — hij hoort hier niet, maar hij hoort ook nergens.")
 		_busy = false
 		return
 
-	_busy = true
+	_neem_slot()
 	# Is dit de expert die de speler nodig heeft voor een lopend ticket?
 	var wanted := await _ticket_waiting_for(npc.npc_id)
 	if wanted != null:

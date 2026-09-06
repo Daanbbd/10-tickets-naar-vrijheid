@@ -792,12 +792,10 @@ func _refresh_klok() -> void:
 ## popup zijn bedoeld voor die laatste, echte sprongen; op de ambient tik
 ## klinken ze non-stop zolang de speler beweegt. Vandaar de uitzondering.
 func _on_time_booked(minuten: int, reden: StringName, totaal: int) -> void:
-	if Autopilot.gevraagd():
-		_klok_min = totaal
-		_refresh_klok()
-		_meld_overwerk(totaal)
-		return
-	if reden != &"verloop":
+	# De popup en het klikje blijven weg onder de autopilot (en op de ambient
+	# tik), de rol zelf niet: die is met `_rol_duur()` nul seconden lang en
+	# loopt dus door dezelfde code. Zie `_rol_duur()`.
+	if not Autopilot.gevraagd() and reden != &"verloop":
 		_toon_plus(minuten)
 		AudioDirector.play_ui(&"klik")
 	_rol_naar(totaal)
@@ -824,7 +822,19 @@ func _rol_naar(doel: int) -> void:
 		func(v: float) -> void:
 			_klok_min = int(round(v))
 			_refresh_klok(),
-		float(_klok_min), float(doel), ROL_DUUR)
+		float(_klok_min), float(doel), _rol_duur())
+
+
+## Onder de autopilot rolt de klok in nul seconden — niet: helemaal niet.
+##
+## Hier stond een `Autopilot.gevraagd()`-afslag die de tween oversloeg, en in
+## `toon_urenrol()` stond er nog een die de hele wachter oversloeg. Daardoor
+## voerde de geautomatiseerde speelbeurt de kapotte tak letterlijk niet uit en
+## was de vastloper van #38 met geen enkele test te zien, terwijl alle zeven
+## personages 10/10 haalden. Een harnas dat de code van de speler overslaat
+## test niets.
+func _rol_duur() -> float:
+	return 0.0 if Autopilot.gevraagd() else ROL_DUUR
 
 
 func _toon_plus(minuten: int) -> void:
@@ -850,10 +860,24 @@ func _toon_plus(minuten: int) -> void:
 ## Zelf niets animeren: dat doet _on_time_booked al op het signaal. Deze functie
 ## is alleen de wachter, anders zouden er twee dingen dezelfde tween starten.
 func toon_urenrol() -> void:
+	# Pollen en niet `await _rol.finished`. Dat tweede stond hier, en het is de
+	# vastloper uit playtest 2026-09-06 (#37, #38): `_rol_naar()` doet `kill()`
+	# zodra er opnieuw tijd geboekt wordt — een storing met `kost_tijd`, of
+	# gewoon de ambient klok die elke 20 s een minuut boekt
+	# (`Klok._process()`). Een gekillde Tween emit `finished` nooit meer, dus
+	# die await keerde niet terug. `TicketController._handle_inner()` bleef
+	# erin hangen, `handle()` bereikte `_busy = false` nooit, en vanaf dat
+	# moment weigerde elke interactie stil: geen ticket op te pakken, geen
+	# collega aan te spreken, geen foutmelding. Lopen bleef werken, want
+	# `Session.input_locked` staat hier niet aan — precies het beeld dat Daan
+	# beschreef.
+	#
+	# `is_valid()` wordt false op een gekillde tween, dus deze lus eindigt
+	# altijd: hij loopt uit als de rol klaar is én als hij vervangen wordt.
+	while _rol != null and _rol.is_valid() and _rol.is_running():
+		await get_tree().process_frame
 	if Autopilot.gevraagd():
 		return
-	if _rol != null and _rol.is_valid() and _rol.is_running():
-		await _rol.finished
 	await get_tree().create_timer(NA_ROL, true, false, true).timeout
 
 
