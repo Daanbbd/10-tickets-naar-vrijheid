@@ -639,20 +639,7 @@
   "intro": "Alles wat brandt komt binnen als kaartje. Elk brandje heeft één juiste handeling. Verloopt de balk, dan kost het je.",
   "klok_seconden": 75,
   "max_zichtbaar": 3,
-  "spawn_curve": [
-   [
-    0,
-    9
-   ],
-   [
-    25,
-    7
-   ],
-   [
-    50,
-    5
-   ]
-  ],
+  "spawn_curve": [[0, 9], [25, 7], [50, 5]],
   "start": {
    "bugs": 3,
    "vertrouwen": 4,
