@@ -1,7 +1,7 @@
 class_name MinigameIntro
 extends Control
-## Het scherm tussen de briefing van de eigenaar en de minigame zelf: wat de
-## opgave is en waarom ze ertoe doet, met één knop.
+## Het scherm tussen de briefing van de eigenaar en de minigame zelf: hoe de
+## opgave werkt en wanneer je klaar bent, met één knop.
 ##
 ## Geen personage, geen portret — dat onderscheid is het hele punt. Vlak
 ## hiervoor kan de eigenaar van het ticket iets over zijn eigen ticket gezegd
@@ -39,8 +39,8 @@ static func moet_getoond(id: StringName) -> bool:
 ## toepassing omdat dit scherm zichzelf volledig in code opbouwt.
 ##
 ## `inhoud_override` is dezelfde `config["inhoud"]` die straks ook naar de
-## minigame gaat (een trait kan de opgave aanpassen) — zo lezen "Wat" en
-## "Waarom" hier exact de cijfers die de minigame ook gaat draaien.
+## minigame gaat (een trait kan de opgave aanpassen) — zo lezen "Zo werkt het"
+## en "Klaar als" hier exact de cijfers die de minigame ook gaat draaien.
 func setup(minigame_id: StringName, inhoud_override: Dictionary) -> void:
 	# Zelfde vindbaarheid als MinigameBase (`add_to_group(&"minigame")` in
 	# `_ready()`): de testsuite en eventuele andere systemen kunnen dit scherm
@@ -51,11 +51,11 @@ func setup(minigame_id: StringName, inhoud_override: Dictionary) -> void:
 	var c: Dictionary = inhoud_override if not inhoud_override.is_empty() \
 		else MinigameContent.get_config(minigame_id)
 	var wat := Briefing.vul(String(c.get("intro", "")), c)
-	var waarom := Briefing.vul(String(c.get("waarom", "")), c)
-	_bouw(titel, wat, waarom)
+	var klaar_als := Briefing.vul(String(c.get("klaar_als", "")), c)
+	_bouw(titel, wat, klaar_als)
 
 
-func _bouw(titel: String, wat: String, waarom: String) -> void:
+func _bouw(titel: String, wat: String, klaar_als: String) -> void:
 	# `fill_viewport` en niet `full_rect`: dit scherm hangt onder Shells
 	# `MinigameLayer`, en een Control onder een CanvasLayer krijgt geen
 	# ouderrect. Met alleen ankers bleef dit scherm 0x0, en omdat `full_rect`
@@ -82,8 +82,9 @@ func _bouw(titel: String, wat: String, waarom: String) -> void:
 	col.add_child(t)
 	col.add_child(UiKit.spacer(4))
 
-	# Scroll, net als build_chrome(): op 192x416 past "Wat" plus "Waarom" van
-	# een langere opgave (bv. de oplevering) lang niet altijd zonder te scrollen.
+	# Scroll, net als build_chrome(): op 192x416 past "Zo werkt het" plus
+	# "Klaar als" van een langere opgave (bv. de oplevering) lang niet altijd
+	# zonder te scrollen.
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -95,9 +96,9 @@ func _bouw(titel: String, wat: String, waarom: String) -> void:
 	scroll.add_child(body)
 
 	if wat != "":
-		body.add_child(_sectie("WAT", wat))
-	if waarom != "":
-		body.add_child(_sectie("WAAROM", waarom))
+		body.add_child(_sectie("ZO WERKT HET", wat))
+	if klaar_als != "":
+		body.add_child(_sectie("KLAAR ALS", klaar_als))
 
 	col.add_child(UiKit.spacer(4))
 

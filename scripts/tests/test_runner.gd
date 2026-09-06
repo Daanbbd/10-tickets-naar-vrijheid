@@ -104,6 +104,7 @@ func _ready() -> void:
 	_test_finale_kan_falen()
 	_test_dialoog_mond_volgt_spreker()
 	await _test_klaar_landt_niet_stil()
+	_test_schrijfstijl_geen_emdash()
 	_rapport()
 
 
@@ -716,23 +717,40 @@ func _test_minigame_inhoud() -> void:
 		if c.is_empty():
 			continue
 
-		# Het wat/waarom-scherm van MinigameIntro leest "intro" en "waarom" bij
-		# alle elf minigames, niet alleen de negen met een eigenaar-briefing
-		# (die controleert _test_briefings() al) — dus die twee velden gelden
-		# hier voor de volledige lijst.
+		# Het scherm van MinigameIntro leest "intro" bij alle elf minigames, niet
+		# alleen de negen met een eigenaar-briefing (die controleert
+		# _test_briefings() al) — dus dat veld geldt hier voor de volledige lijst.
 		var wat := Briefing.vul(String(c.get("intro", "")), c)
-		_ok(wat != "", "%s: geen 'intro' (het 'Wat' op het instructiescherm)" % mid)
+		_ok(wat != "", "%s: geen 'intro' (het 'Zo werkt het' op het instructiescherm)" % mid)
 		_ok(not wat.contains("{") and not wat.contains("}"),
 			"%s: onopgeloste plaatshouder in 'intro': %s" % [mid, wat])
 		_ok(wat.length() <= 220, "%s: 'intro' van %d tekens is te lang voor het instructiescherm" % [
 			mid, wat.length()])
 
-		var waarom := Briefing.vul(String(c.get("waarom", "")), c)
-		_ok(waarom != "", "%s: geen 'waarom' (het instructiescherm heeft er geen)" % mid)
-		_ok(not waarom.contains("{") and not waarom.contains("}"),
-			"%s: onopgeloste plaatshouder in 'waarom': %s" % [mid, waarom])
-		_ok(waarom.length() <= 160, "%s: 'waarom' van %d tekens is te lang voor het instructiescherm" % [
-			mid, waarom.length()])
+		_ok(not c.has("waarom"), "%s: 'waarom' bestaat niet meer, gebruik 'klaar_als'" % mid)
+
+		# Een wereldhandeling lost TicketController rechtstreeks op (zie
+		# _resolve_wereldhandeling()): die toont nooit het instructiescherm ná de
+		# briefing, dus 'klaar_als' zou daar dode tekst zijn. Geen ticket
+		# (mg_urenstaat, dat rechtstreeks aan Dirk hangt) telt hier als geen
+		# wereldhandeling: die minigame draait wél via MinigameIntro.
+		var is_wereldhandeling := false
+		for tid: StringName in GameData.ticket_ids():
+			var tk: TicketDef = GameData.ticket(tid)
+			if tk != null and tk.minigame_id == mid:
+				is_wereldhandeling = tk.wereldhandeling
+				break
+
+		if is_wereldhandeling:
+			_ok(not c.has("klaar_als"),
+				"%s: 'klaar_als' wordt bij een wereldhandeling nooit getoond, dode tekst" % mid)
+		else:
+			var klaar_als := Briefing.vul(String(c.get("klaar_als", "")), c)
+			_ok(klaar_als != "", "%s: geen 'klaar_als' (het instructiescherm heeft er geen)" % mid)
+			_ok(not klaar_als.contains("{") and not klaar_als.contains("}"),
+				"%s: onopgeloste plaatshouder in 'klaar_als': %s" % [mid, klaar_als])
+			_ok(klaar_als.length() <= 120, "%s: 'klaar_als' van %d tekens is te lang voor het instructiescherm" % [
+				mid, klaar_als.length()])
 
 		var t := String(c.get("type", ""))
 		match t:
@@ -2816,14 +2834,23 @@ func _test_briefings() -> void:
 	# speler oplossen. Danny, de tweede belangrijke spreker, krijgt bewust
 	# geen aanwijzing: hij moet ongemarkeerd blijven, dat is de enige verborgen
 	# informatie in het spel.
+	#
+	# De aanwijzing zit sinds het "ZO WERKT HET"/"KLAAR ALS"-scherm in de
+	# gevulde 'intro' (via het {belangrijk}-plaatshouder), niet meer in de
+	# losse 'briefing' — dus die controle verhuist mee. "Geen naam" blijft wel
+	# voor allebei gelden: de briefing verraadt niets, en de gevulde intro ook
+	# niet.
 	var st: Dictionary = MinigameContent.get_config(&"mg_planning")
 	var brief_st := Briefing.regel(GameData.ticket(&"t02"))
+	var intro_st := Briefing.vul(String(st.get("intro", "")), st)
 	var eerste_belangrijke := {}
 	for raw: Variant in (st.get("sprekers", []) as Array):
 		var sp := raw as Dictionary
 		var naam := String(sp.get("naam", ""))
 		_ok(naam == "" or not brief_st.contains(naam),
 			"de stand-up-briefing noemt %s bij naam, en verraadt zo wie je moet sparen" % naam)
+		_ok(naam == "" or not intro_st.contains(naam),
+			"het instructiescherm van de stand-up noemt %s bij naam, en verraadt zo wie je moet sparen" % naam)
 		if eerste_belangrijke.is_empty() and bool(sp.get("belangrijk", false)):
 			eerste_belangrijke = sp
 	_ok(not eerste_belangrijke.is_empty(),
@@ -2832,8 +2859,8 @@ func _test_briefings() -> void:
 		var aanwijzing := String(eerste_belangrijke.get("aanwijzing", ""))
 		_ok(aanwijzing != "",
 			"de eerste belangrijke spreker (%s) heeft geen aanwijzing" % eerste_belangrijke.get("naam", "?"))
-		_ok(aanwijzing != "" and brief_st.contains(aanwijzing),
-			"de stand-up-briefing bevat niet de aanwijzing van de belangrijke spreker")
+		_ok(aanwijzing != "" and intro_st.contains(aanwijzing),
+			"het instructiescherm van de stand-up bevat niet de aanwijzing van de belangrijke spreker")
 
 	# En de scope-briefing noemt hoeveel van haar wensen eigenlijk projecten
 	# zijn. Dat getal komt uit `Gevolgen.ZWARE_WENSEN` en moet kloppen: het
@@ -5697,3 +5724,42 @@ func _test_klaar_landt_niet_stil() -> void:
 
 	bord.queue_free()
 	await get_tree().process_frame
+
+
+## Schrijfstijl: geen enkele em-dash (—, U+2014) in de tekst die de speler
+## kan zien. Dekt data/minigame_content.json (elke string-waarde, recursief)
+## en de losse UI-teksten die niet uit JSON komen (IntroUitleg, BesturingUitleg,
+## TraitModifier.VOORDEEL).
+func _test_schrijfstijl_geen_emdash() -> void:
+	_kop("schrijfstijl: geen em-dash")
+	const EMDASH := "—"
+
+	for id: String in MinigameContent.all_ids():
+		_scrub_emdash(MinigameContent.get_config(StringName(id)), id)
+
+	for i: int in (IntroUitleg.lessen() as Array).size():
+		var r := String((IntroUitleg.lessen() as Array)[i])
+		_ok(not r.contains(EMDASH), "IntroUitleg.lessen()[%d] bevat een em-dash: %s" % [i, r])
+	for i: int in (IntroUitleg.opdracht() as Array).size():
+		var r2 := String((IntroUitleg.opdracht() as Array)[i])
+		_ok(not r2.contains(EMDASH), "IntroUitleg.opdracht()[%d] bevat een em-dash: %s" % [i, r2])
+	for i: int in (BesturingUitleg.regels() as Array).size():
+		var r3 := String((BesturingUitleg.regels() as Array)[i])
+		_ok(not r3.contains(EMDASH), "BesturingUitleg.regels()[%d] bevat een em-dash: %s" % [i, r3])
+	for k: Variant in TraitModifier.VOORDEEL.keys():
+		var v := String(TraitModifier.VOORDEEL[k])
+		_ok(not v.contains(EMDASH), "TraitModifier.VOORDEEL['%s'] bevat een em-dash: %s" % [k, v])
+
+
+## Recursief door elke string-waarde in `data`, met `pad` als foutmelding-context.
+func _scrub_emdash(data: Variant, pad: String) -> void:
+	const EMDASH := "—"
+	if data is Dictionary:
+		for k: Variant in (data as Dictionary).keys():
+			_scrub_emdash((data as Dictionary)[k], "%s/%s" % [pad, k])
+	elif data is Array:
+		for i: int in (data as Array).size():
+			_scrub_emdash((data as Array)[i], "%s[%d]" % [pad, i])
+	elif data is String:
+		_ok(not (data as String).contains(EMDASH),
+			"%s bevat een em-dash: %s" % [pad, data])

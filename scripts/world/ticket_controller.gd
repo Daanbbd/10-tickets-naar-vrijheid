@@ -492,7 +492,9 @@ func _wh_backend(content: Dictionary) -> MinigameResult:
 func _wh_paarden(t: TicketDef, content: Dictionary, via_npc: bool) -> MinigameResult:
 	if not via_npc and not bool(content.get("geen_zoektocht", false)):
 		Session.pin(t.id)
-		await _line("Ze lopen ergens rond: in de gang, op het toilet, zelfs in Weekend. Spreek er een aan.")
+		var intro := String(content.get("intro", ""))
+		if intro != "":
+			await _line(intro)
 		Bus.toast_requested.emit("Spreek een paardenbug aan", &"volgen")
 		return MinigameResult.aborted(t.minigame_id)
 	return MinigameResult.make(t.minigame_id, GameEnums.Outcome.SUCCESS, 1,

@@ -79,6 +79,7 @@ static func _feiten(c: Dictionary) -> Dictionary:
 			f["doel"] = _getal(float(c.get("doel", 0.0)))
 			f["eenheid"] = String(c.get("eenheid", ""))
 			f["rondes"] = (c.get("rondes", []) as Array).size()
+			f["ronde_sec"] = _getal(float(c.get("ronde_sec", 0.0)))
 		"abgevecht":
 			f["hp_a"] = int(c.get("hp_a", 0))
 			f["hp_b"] = int(c.get("hp_b", 0))
@@ -87,9 +88,13 @@ static func _feiten(c: Dictionary) -> Dictionary:
 			f["doel"] = int(c.get("doel", 0))
 			f["credits"] = int(c.get("credits", 0))
 			f["knelpunt"] = _knelpunt(c)
+			f["tijd"] = _getal(float(c.get("tijd", 0.0)))
 		"whack":
 			f["doel"] = int(c.get("doel", 0))
 			f["duur"] = int(round(float(c.get("duur", 0.0))))
+		"oplevering":
+			f["acties"] = int(c.get("acties", 0))
+			f["klok_seconden"] = int(c.get("klok_seconden", 0))
 	return f
 
 

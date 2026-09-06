@@ -96,7 +96,7 @@ static func lessen() -> Array[String]:
 	# met je mee naar het bord, de tickets landen erop, de besturingskaart komt
 	# daarna). Dit is de voetnoot onder het berichtje, niet het scherm.
 	return [
-		"Tien tickets, verspreid door het kantoor. Dennis hangt je eerste twee op het ticketbord. Daarna staan er %s open — kies zelf." % telwoord,
+		"Tien tickets, verspreid door het kantoor. Dennis hangt je eerste twee op het ticketbord. Daarna staan er %s open, kies zelf." % telwoord,
 		"Niet jouw vak? Haal er een collega bij. Alle tien af, dan mag je naar buiten.",
 	]
 
