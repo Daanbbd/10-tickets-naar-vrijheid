@@ -66,12 +66,14 @@ func _ready() -> void:
 	_test_uitlijnen_perfect()
 	_test_wereldhandelingen()
 	_test_kabel_kost_tijd()
+	_test_jonathan_minder_kabels()
 	await _test_klant_wacht_niet()
 	_test_ab_escalatie()
 	_test_urenstaat_scherm()
 	_test_werving_begint_met_de_vraag()
 	_test_klant_is_een_persoon()
 	await _test_dialoogvenster_past()
+	await _test_vraag_boven_keuzes_leesbaar()
 	await _test_schermen_passen()
 	await _test_tagline_niet_afgekapt()
 	await _test_wereldchrome_past()
@@ -3625,6 +3627,33 @@ func _test_kabel_kost_tijd() -> void:
 		"de juiste kabel verdwijnt uit de lijst als je hem kiest")
 
 
+## BBD-205 als Jonathan: `TraitModifier._cableboard()` (MINDER_AFLEIDERS = 2)
+## knipt de afleiderslijst van `kabelopties()` in, en zonder een ondergrens
+## zakte dat door naar precies één optie — de juiste, zonder keuze en zonder
+## "verkeerde kabel"-prijs. De regel is: altijd minstens twee opties zolang de
+## data een afleider kent, en "Minder losse draden." blijft waar als 2 in
+## plaats van 3 knoppen.
+func _test_jonathan_minder_kabels() -> void:
+	_kop("BBD-205: Jonathans vakgebiedvoordeel laat een keuze over")
+
+	var t05: TicketDef = GameData.ticket(&"t05")
+	QuestEngine.start_run(&"jonathan")
+	var jonathan_config: Dictionary = TraitModifier.pas_toe(t05)
+	_ok(not jonathan_config.is_empty(), "t05: Jonathans voordeel levert geen aangepaste opgave")
+	var jonathan_opties := TicketController.kabelopties(jonathan_config)
+	_ok(jonathan_opties.size() == 2,
+		"BBD-205 geeft Jonathan %d optie(s), verwacht er 2 (juist + één afleider)" % jonathan_opties.size())
+
+	for cid: Variant in GameData.character_ids():
+		if StringName(cid) == &"jonathan":
+			continue
+		QuestEngine.start_run(StringName(cid))
+		var basis_config: Dictionary = MinigameContent.get_config(t05.minigame_id)
+		var opties := TicketController.kabelopties(basis_config)
+		_ok(opties.size() == 3,
+			"BBD-205 geeft %s %d optie(s), verwacht er 3 (geen vakgebiedvoordeel)" % [cid, opties.size()])
+
+
 ## P4/BBD-203: de klant wacht niet, behalve op de autopilot.
 ##
 ## Twee dingen, want ze kunnen los stuk: dat een keuze met een klok ook echt
@@ -3844,6 +3873,113 @@ func _test_dialoogvenster_past() -> void:
 			paneel.size.y, DialogueBox.HOOGTE_MIN])
 
 	box.queue_free()
+
+
+## De vraag boven vier keuzeknoppen werd afgekapt: `HOOGTE_MAX` (210) klemde
+## de hele box — vraag én knoppenkolom samen — en de tweede regel van de
+## vraag verdween half achter de vaste HUD-band (`p4_klant_balk.png`).
+## `mg_klantfeedback` levert de echte reproductie: vier opties per ronde, en de
+## langste ronde is de ronde die de audit-screenshot toonde.
+func _test_vraag_boven_keuzes_leesbaar() -> void:
+	_kop("de vraag boven keuzeknoppen blijft leesbaar")
+
+	var rd: Variant = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://data/minigame_content.json"))
+	var mg := (rd as Dictionary).get("mg_klantfeedback", {}) as Dictionary
+	var rondes := mg.get("rondes", []) as Array
+	_ok(not rondes.is_empty(), "mg_klantfeedback heeft geen rondes")
+
+	var langste_ronde: Dictionary = {}
+	for raw: Variant in rondes:
+		var r := raw as Dictionary
+		if String(r.get("prompt", "")).length() > String(langste_ronde.get("prompt", "")).length():
+			langste_ronde = r
+
+	var labels: Array[String] = []
+	for raw: Variant in (langste_ronde.get("opties", []) as Array):
+		labels.append(String((raw as Dictionary).get("tekst", "")))
+	_ok(labels.size() == 4,
+		"de langste mg_klantfeedback-ronde heeft %d opties, verwacht er 4" % labels.size())
+
+	var box := DialogueBox.new()
+	add_child(box)
+	await get_tree().process_frame
+	box.show_line("", String(langste_ronde.get("prompt", "")))
+	box.finish_typing()
+	await get_tree().process_frame
+	box.show_choices(labels)
+	# Twee frames: `_pas_hoogte_aan()` knipt de vraag eerst terug (zelf ook een
+	# `await`) en meet daarna pas, net als `_test_dialoogvenster_past()` hierboven.
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	_ok(box._text.get_visible_line_count() >= 2,
+		"de vraag krijgt %d zichtbare regel(s) i.p.v. minstens %d" % [
+			box._text.get_visible_line_count(), DialogueBox.MAX_REGELS_VRAAG_MET_KEUZES])
+
+	var paneel := box.get_child(0) as Control
+	_ok(paneel.size.y <= DialogueBox.HOOGTE_MAX_KEUZES + 0.5,
+		"dialoogvenster met vier keuzes is %.0f px hoog, HOOGTE_MAX_KEUZES zegt %.0f" % [
+			paneel.size.y, DialogueBox.HOOGTE_MAX_KEUZES])
+
+	var vp: float = get_viewport().get_visible_rect().size.y
+	_ok(paneel.global_position.y + paneel.size.y <= vp + 0.5,
+		"dialoogvenster met vier keuzes loopt %.0f px onder het scherm door" % (
+			paneel.global_position.y + paneel.size.y - vp))
+	_ok(paneel.global_position.y >= -0.5,
+		"dialoogvenster met vier keuzes begint %.0f px boven het scherm" % (
+			-paneel.global_position.y))
+
+	box.queue_free()
+
+	# Zonder keuzes moet een eerdere afkap weer verdwijnen: de volgende regel
+	# van een dialoogboom mag niet met een ellipsis van de vórige beurt blijven
+	# zitten. `_test_dialoogvenster_past()` bewijst al dat de hoogte terugzakt;
+	# dit bewijst dat de TEKST zelf ook echt terugkomt.
+	var box2 := DialogueBox.new()
+	add_child(box2)
+	await get_tree().process_frame
+	box2.show_line("", String(langste_ronde.get("prompt", "")))
+	box2.finish_typing()
+	await get_tree().process_frame
+	box2.show_choices(labels)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	box2.show_line("", "Done.")
+	await get_tree().process_frame
+	_ok(box2._text.text == "Done.",
+		"na keuzes blijft de vorige (afgekapte) vraag in het tekstlabel staan: '%s'" % box2._text.text)
+	box2.queue_free()
+
+	# Elke choices-node in de dialoogbomen krijgt dezelfde afkap. Een vraag
+	# van meer dan twee regels van ~26 tekens (~52 tekens) verliest daarmee
+	# woorden achter een ellipsis zodra hij mét keuzes op het scherm komt —
+	# dat is een contentkeuze en geen code-bug, dus hier alleen gemeld en
+	# niet herschreven.
+	const REGEL_BUDGET := 52
+	for map: String in ["npcs", "tickets", "wereld"]:
+		var dpad := "res://data/dialogue/%s.json" % map
+		var boom: Variant = JSON.parse_string(FileAccess.get_file_as_string(dpad))
+		if boom is Dictionary:
+			_meld_lange_keuzevragen(boom, "dialogue/%s.json" % map, REGEL_BUDGET)
+
+
+## Recursieve boomwandeling, in dezelfde stijl als `_gevolgvlaggen_in()`
+## hierboven: elke node met een niet-lege `choices`-lijst draagt een `text`
+## die straks als vraag boven de keuzeknoppen komt te staan.
+func _meld_lange_keuzevragen(d: Variant, pad: String, budget: int) -> void:
+	if d is Dictionary:
+		var choices: Array = d.get("choices", []) as Array
+		if not choices.is_empty():
+			var tekst := String(d.get("text", ""))
+			if tekst.length() > budget:
+				print("MELDING: %s heeft een keuzevraag van %d tekens (budget ~%d), " % [
+					pad, tekst.length(), budget] + "past niet in twee regels: \"%s\"" % tekst)
+		for k: Variant in (d as Dictionary).keys():
+			_meld_lange_keuzevragen(d[k], pad, budget)
+	elif d is Array:
+		for v: Variant in (d as Array):
+			_meld_lange_keuzevragen(v, pad, budget)
 
 
 ## Een wervingsgesprek begint met de hulpvraag, en met het ticketnummer erin.

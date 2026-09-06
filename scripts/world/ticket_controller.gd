@@ -522,17 +522,29 @@ func _wh_backend(content: Dictionary) -> MinigameResult:
 ## bestand en trek het verschil van het aantal getoonde afleiders af, zodat
 ## "Minder losse draden." ook echt minder losse draden op het scherm zet.
 ##
+## Die aftrek zakte hier ooit tot 0 getoonde afleiders: `MINDER_AFLEIDERS` is 2,
+## en met `bonus` ook 2 werd `mini(2, afleiders.size()) - bonus` exact 0 zodra
+## de ingekorte lijst nog minstens twee afleiders had (wat bij BBD-205 het geval
+## is — zes basisafleiders min twee is nog altijd vier). Dan bleef er precies
+## één optie over — de juiste, zonder keuze en zonder "verkeerde kabel"-prijs.
+## De regel is: altijd minstens twee opties zolang de data een afleider kent.
+## Vandaar geclampt op minimaal 1 getoonde afleider in plaats van rechtstreeks
+## op `mini(2, …) - bonus`.
+##
 ## Static, zodat de suite de opgave zonder wereld kan narekenen.
 static func kabelopties(content: Dictionary) -> Array:
 	var verbindingen: Array = content.get("verbindingen", [])
 	if verbindingen.is_empty():
 		return []
 	var afleiders: Array = content.get("afleiders", [])
+	if afleiders.is_empty():
+		return [verbindingen[0]]
 	var basis_afleiders: int = (MinigameContent.get_config(&"mg_backend_fix").get(
 		"afleiders", []) as Array).size()
 	var bonus := maxi(0, basis_afleiders - afleiders.size())
+	var aantal_getoond := maxi(1, mini(2, afleiders.size()) - bonus)
 	var opties: Array = [verbindingen[0]]
-	for i: int in range(maxi(0, mini(2, afleiders.size()) - bonus)):
+	for i: int in range(aantal_getoond):
 		opties.append(afleiders[i])
 	return opties
 

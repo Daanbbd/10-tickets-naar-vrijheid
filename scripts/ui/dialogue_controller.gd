@@ -187,7 +187,7 @@ func _play_single(speaker: String, text: String, speaker_id: StringName = &"",
 
 
 func _show_and_wait(speaker: String, text: String, portrait: Texture2D = null) -> void:
-	_box.show_line(speaker, vul_in(text), portrait)
+	await _box.show_line(speaker, vul_in(text), portrait)
 	# Overslaan: de regel staat één frame volledig in beeld en gaat door. De
 	# effects van de node draaien gewoon (die staan in de lus in `play()`), een
 	# keuze wacht altijd (`_wait_for_choice()` zet de vlag weer uit).
@@ -227,7 +227,7 @@ func ask_choice(vraag: String, labels: Array[String], timeout_sec: float = 0.0) 
 	Session.lock_input()
 	Bus.dialogue_started.emit(&"", &"")
 	Bus.dialogue_speaker_changed.emit(&"")
-	_box.show_line("", vraag)
+	await _box.show_line("", vraag)
 	_box.finish_typing()
 	var keuze := await _wait_for_choice(labels, keuzeklok(timeout_sec, Autopilot.gevraagd()))
 	_box.close()
@@ -261,7 +261,7 @@ func _wait_for_choice(labels: Array[String], timeout_sec: float = 0.0) -> int:
 	_skip = false
 	_choice_index = -1
 	_verlopen = false
-	_box.show_choices(labels, timeout_sec)
+	await _box.show_choices(labels, timeout_sec)
 	while _choice_index < 0 and not _verlopen:
 		await get_tree().process_frame
 	return KEUZE_VERLOPEN if _verlopen else _choice_index
