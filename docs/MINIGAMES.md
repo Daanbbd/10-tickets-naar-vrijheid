@@ -167,7 +167,9 @@ verplaatst er een. Twee meters die tegen elkaar in werken: `punten` mag niet
 boven `capaciteit`, `blij` moet op of boven `tevreden_min`. De goedkoopste wens
 is het paard (1 punt) en die maakt haar het blijst (4), dus je kunt slagen door
 het paard en Comic Sans op te leveren en de webshop weg te laten. Dat is geen
-gat in de balans maar het punt, en `Gevolgen` onthoudt het.
+gat in de balans maar het punt, en `Gevolgen` onthoudt het. P3: Dennis wacht
+`klok_sec` (45s) — op nul legt hij vast wat er dan staat, binnen de capaciteit
+of niet.
 
 **Stand-up** (BBD-202) — zeven collega's praten na elkaar in real-time, en je
 hebt drie ingrepen om iemand af te kappen. Twee sprekers melden iets bruikbaars
@@ -189,7 +191,9 @@ vijf blokken van hun raster af. Tik een blok, verschuif het met vier
 richtingsknoppen (slepen mag ook, maar de knoppen volstaan op zichzelf — met
 een duim is een blok van 16 px geen doel). Binnen `tolerantie` klikt een blok
 vast. De afwijkingen zijn geen veelvouden van `raster`, dus tolerantie is
-noodzakelijk in plaats van vriendelijk en `perfect` is onbereikbaar.
+noodzakelijk in plaats van vriendelijk en `perfect` is onbereikbaar. P3: geen
+harde klok — wel de build drift, elke `drift_sec` (8s) schuift een blok dat nog
+niet vast staat een pixel verder scheef, met een teller "Victor kijkt mee".
 
 **CableBoard** (BBD-205) — klik twee knooppunten om een kabel te leggen, nog
 eens om hem weg te halen. Extra kabels tellen als fout.
@@ -201,7 +205,9 @@ rondeklok om is; drie rondes, drie plekken, elke ronde meer ruis. Geen lijst
 met antwoorden: het antwoord staat op het scherm, maar je moet het zien terwijl
 het gebeurt. Twee van de drie rondes raak haalt het doel; één niet. Dit was de
 A/B-test — hetzelfde spel als BBD-207 met zeven van de negen dezelfde
-antwoorden — en is nu een ander werkwoord: kijken en slepen, onder tijd.
+antwoorden — en is nu een ander werkwoord: kijken en slepen, onder tijd. M6/P3:
+tijdens het slepen zweeft de knop 22 px boven de vinger, zodat de duim het
+hete element niet meer bedekt.
 
 **A tegen B** (BBD-207) — drie klappen, elk een keuze uit drie CRO-tweaks. Elke
 klap doet schade aan B én slaat terug op A; het net-effect (schade minus
@@ -209,7 +215,8 @@ tegenklap) bepaalt of hij de moeite waard was. A moet B knock-outen binnen de
 drie klappen, of B wint op punten. Verliezen laat het ticket gewoon openstaan
 — geen game over, alleen Danny die met een steeds absurdere reden terugkomt om
 het nog een keer te proberen (zie `data/dialogue/tickets.json` → `t07_fail`,
-gestuurd door `Session.get_counter(&"ab_pogingen")`).
+gestuurd door `Session.get_counter(&"ab_pogingen")`). P3: elke ronde krijgt een
+klok van `keuze_sec` (7s) — op nul valt de zwakste klap vanzelf.
 
 **Renderpijplijn** (BBD-208) — zes clips door Prompt → Render → Publish. Elke
 stage heeft capaciteit, elke clip rijpt, een rijpe clip schuif je door met een
