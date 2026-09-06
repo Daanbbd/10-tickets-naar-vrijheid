@@ -28,7 +28,7 @@ plaats van uit de techniek.
 | BBD-207 | A tegen B | `mg_abgevecht.gd` | de juiste klap kiezen | Danny: "aanzetten en kijken", met vuisten |
 | BBD-208 | Renderpijplijn | `mg_pijplijn.gd` | doorstroom onder druk | Koen giet alles in piepelienies |
 | BBD-209 | wereldhandeling (`_wh_paarden()`) | — | een paard aanspreken | Bastiaan ziet wat er beweegt |
-| BBD-210 | Oplevering | `mg_oplevering.gd` | beperkte acties met gevolgen | de finale, per personage anders |
+| BBD-210 | Oplevering | `mg_oplevering.gd` | blussen wat tegelijk brandt | de finale, per personage anders |
 | de urenstaat | SlotBoard | `mg_slotboard.gd` | een formulier invullen | Dirk vraagt om je uren |
 
 Drie tickets (BBD-203, BBD-205, BBD-209) dragen `wereldhandeling: true` en
@@ -238,18 +238,42 @@ drag & drop; klikken op een geplaatst kaartje haalt het terug.
 
 Drie fasen, met een `enum` + `match` in plaats van fasenummers.
 
-1. **Voorbereiden.** Acht handelingen, verdeeld over zeven keuzes met een prijs.
+1. **Voorbereiden — de brandjes.** Brandjes komen binnen als kaartjes met een
+   eigen aflopende balk (6-10 s), hoogstens drie tegelijk, en sneller naarmate
+   de klok van 75 s vordert (`spawn_curve` in de data). Elk kaartje noemt in
+   Jira-Nederlands wat er brandt ("STAGING: 502 op /checkout", "Dennis:
+   statusje?", "Kabel B ligt los") en vraagt precies één van de zeven vaste
+   handelingen: `testen`, `fixen`, `scope`, `collega`, `informeren`,
+   `nakijken`, `risico`. Blus je op tijd, dan geldt het effect van die
+   handeling; laat je de balk verlopen, dan geldt de straf van het brandje. Een
+   handeling waar niets voor brandt doet niets, behalve een rode flits en een
+   knoppenslot van 0,4 s — blind rammen mag geen strategie zijn.
+
    Vier waarden vormen de toestand: `bugs` (lager is beter), `vertrouwen`,
-   `getest`, `scope`. Het aantal bugs is **onbekend** tot je test — testen
-   onthult het, en kost handelingen die je dan niet meer kunt fixen. Bug fixen
-   kan pas ná testen. Drie gebeurtenissen overkomen je op vaste momenten; de
-   laatste zet er een bug bíj, dus wie precies op nul handelingen uitkomt komt
-   bedrogen uit.
+   `getest`, `scope`. Het aantal bugs is **onbekend** tot je test — het eerste
+   geblusde `testen`-brandje onthult het, en blind live gaan kost per bug
+   extra. Er is geen knop DEPLOYEN: de klok ís de deploy, en op nul gaat het
+   live met wat er dan nog brandt.
+
+   **De dag zaait de avond.** Een verkeerd gelegde kabel
+   (`gevolg_backend_fout_gekozen`) is het allereerste kaartje; een ontevreden
+   klant (`gevolg_klant_ontevreden`) belt twee keer; elk ticket dat om vijf uur
+   nog open stond (`Session.niet_af()`, tot twee) meldt zich alsnog als "BBD-2xx
+   is nooit afgekomen". De rest van de rij is gehusseld, dus twee speelbeurten
+   zijn niet dezelfde avond.
+
+   De rekenkern staat los van de scene, in `scripts/minigames/brandjes_model.gd`
+   (`BrandjesModel`): een RefCounted die geen node aanraakt en `Session` niet
+   leest, zodat `_test_finale_brandjes()` de balans headless kan doorrekenen.
+   Die test is de kalibratie: een zorgvuldige dag met perfect spel haalt 16 of
+   hoger (VLEKKELOOS begint bij 13), een rampdag met datzelfde perfecte spel
+   6..9, en niets doen -19 — ruim onder de 4 waar de eerste deploy op faalt.
 2. **Deployen.** De checks lopen op groen. Dan faalt hij op precies jouw
    vakgebied: `varianten[<personage>].foutcode` uit de data, groot en in rood.
    SCOPE NOT APPROVED voor Daan, FRONTEND BUILD FAILED voor Victor, en zo
    verder — zie `docs/CHARACTERS.md`.
-3. **Herstellen.** Twee extra handelingen om op die foutcode te reageren.
+3. **Herstellen.** Twee extra handelingen om op die foutcode te reageren:
+   dezelfde zeven knoppen, geen brandjes en geen klok, met de foutcode in beeld.
    Daarna gaat het onvermijdelijk live.
 
 **Elke geslaagde uitkomst heet "OPGELEVERD".** Wat verschilt is de tekst
@@ -259,8 +283,10 @@ je jas al aan. Maar de **eerste deploy kan misgaan**: onder de drempel van
 "KRAP" volgt een ROLLBACK met de foutcode van je eigen personage, het ticket
 blijft open, je verliest een kwartier en je probeert het opnieuw. De tweede
 poging slaagt altijd — "OPGELEVERD, EINDELIJK" — want een dag die zelfs met
-perfect spel niet boven de drempel komt bestaat (0,7% van alle dagcombinaties)
-en mag niemand vastzetten. Er is dus wel een faalscherm, maar geen game over.
+perfect spel niet boven de drempel komt bestaat en mag niemand vastzetten. (Het
+percentage dat hier stond, 0,7%, is met de brandjes vervallen: dat was een
+doorrekening van acht handelingen op budget. De kalibratietest rekent nu de
+avond zelf door.) Er is dus wel een faalscherm, maar geen game over.
 
 De **begintoestand komt uit je dag**. `Gevolgen.finale_start()` telt de gevolgen
 van de negen tickets op en `TicketController` geeft die mee als

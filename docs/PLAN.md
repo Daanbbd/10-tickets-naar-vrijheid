@@ -150,10 +150,21 @@ Bewijs in `docs/audit-shots/`: `licht_*.png`, `resp_*.png`, `f2_*.png`,
 
 ### Wat open staat, in volgorde van waarde
 
-**A. Fase 5 — de oplevering als Space Team (Fable ontwerpt, Sonnet bouwt).**
-Nu: 8 acties op één klok van 75 s, drie gebeurtenissen op verbruikte acties,
-dan de console. Doel: alles schreeuwt tegelijk. Concreet ontwerp om van te
-vertrekken (nog niet met Daan doorgesproken — doe dat eerst):
+**A. Fase 5 — de oplevering als Space Team. [gebouwd 6 sep]** Was: 8 acties op
+één klok van 75 s, drie gebeurtenissen op verbruikte acties, dan de console. Nu:
+brandjes als kaartjes met een eigen balk, hoogstens drie tegelijk, zeven vaste
+knoppen, en geen knop DEPLOYEN meer — de klok ís de deploy. De rekenkern staat
+in `scripts/minigames/brandjes_model.gd`, de kalibratie in
+`_test_finale_brandjes()`.
+
+**Afwijkingen van het ontwerp hieronder, één regel:** de meterstrook staat op
+192 px op twee regels in plaats van één (vier woorden voluit plus hun getallen
+passen daar niet naast elkaar; een `HFlowContainer` valt terug in plaats van af
+te breken), en `mg_oplevering.gd` is gebleven in plaats van een nieuw
+`mg_brandjes.gd` — de console-fase is precies het deel dat dan zou moeten
+verhuizen.
+
+Het ontwerp waar dit uit voortkwam:
 
 - *Brandjes* in plaats van acties: kaartjes die binnenkomen met een eigen
   aflopende balk (6-10 s), twee tot drie tegelijk, sneller naarmate de klok

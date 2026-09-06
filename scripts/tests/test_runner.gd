@@ -105,6 +105,7 @@ func _ready() -> void:
 	await _test_fase2b()
 	_test_finale_kan_falen()
 	_test_finale_brandjes()
+	_test_finale_regels_passen()
 	_test_dialoog_mond_volgt_spreker()
 	await _test_klaar_landt_niet_stil()
 	_rapport()
@@ -5116,8 +5117,111 @@ func _test_minigames_passen() -> void:
 		await get_tree().process_frame
 		_meet_schermvulling(mg, String(mg_id))
 		_meet_horizontale_overloop(mg, String(mg_id))
+		if mg_id == &"mg_deploy":
+			_meet_past_zonder_scroll(mg, String(mg_id))
+			await _meet_drie_kaartjes(mg)
 		mg.queue_free()
 		await get_tree().process_frame
+
+
+## Marge op de scrollhoogte in `_meet_past_zonder_scroll()`. Deze meting is
+## royaler dan het echte scherm: een kale `instantiate()` meldde 275 px
+## scrollhoogte, terwijl de versie die op 192x416 daadwerkelijk scrolde hier op
+## 269 px inhoud uitkwam. Het verschil zit in wat het chrome er in een echte
+## speelbeurt omheen zet; een dozijn pixels reserve dekt dat, en houdt de meting
+## streng genoeg om precies dat geval te vangen.
+const _FIT_RESERVE := 12.0
+
+
+## Drie brandjes tegelijk staan er ook echt, met hun balk, binnen hun zone.
+##
+## Dit is de enige plek waar het tekenen van een kaartje wordt nagelopen. Een
+## screenshot kan het niet: de autopilot blust elk brandje binnen een halve
+## seconde, dus op geen enkel QA-frame staat er ooit een kaartje in beeld — en
+## juist daarom moet de meting hier staan en niet in een plaatje.
+func _meet_drie_kaartjes(mg: Node) -> void:
+	var model: Variant = mg.get(&"_model")
+	var zone := mg.get(&"_zone") as Control
+	_ok(model != null and zone != null, "mg_deploy: geen model of geen kaartjeszone")
+	if model == null or zone == null:
+		return
+
+	# Drie brandjes rechtstreeks zichtbaar maken, zoals het model dat na drie
+	# spawns zou doen, en de scene ze laten tekenen. Eerst opruimen: er staan al
+	# een paar frames op de teller, dus het eerste brandje van de avond is
+	# vanzelf al binnengekomen en heeft zijn eigen kaartje.
+	mg.call(&"_wis_kaarten")
+	var zichtbaar: Array = model.get(&"zichtbaar")
+	zichtbaar.clear()
+	var uit_rij: Array = model.get(&"rij")
+	for i: int in mini(3, uit_rij.size()):
+		zichtbaar.append(uit_rij[i])
+	_ok(zichtbaar.size() == 3, "mg_deploy: de rij levert geen drie brandjes om te tonen")
+	mg.call(&"_werk_kaartjes_bij")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var kaarten: Dictionary = mg.get(&"_kaarten")
+	_ok(kaarten.size() == 3, "mg_deploy: %d kaartjes voor drie brandjes" % kaarten.size())
+	var vlak := zone.get_global_rect()
+	for nr: Variant in kaarten:
+		var kaart := kaarten[nr] as Control
+		var r := kaart.get_global_rect()
+		_ok(r.position.y >= vlak.position.y - 0.5 and r.end.y <= vlak.end.y + 0.5,
+			"mg_deploy: een kaartje staat van y%d tot y%d in een zone van y%d tot y%d"
+				% [roundi(r.position.y), roundi(r.end.y),
+					roundi(vlak.position.y), roundi(vlak.end.y)])
+		var balk := kaart.get_node_or_null(^"balk") as ColorRect
+		_ok(balk != null, "mg_deploy: een kaartje zonder balk")
+		if balk != null:
+			_ok(balk.size.y > 0.0 and balk.size.x > 0.0,
+				"mg_deploy: de balk van een kaartje meet %s" % balk.size)
+	zichtbaar.clear()
+
+
+## De finale mag niet scrollen.
+##
+## Elke andere minigame mag: `build_chrome()` zet zijn inhoud in een
+## ScrollContainer juist zodat een lange lijst niet buiten beeld valt. De
+## oplevering kan dat niet gebruiken. Er lopen drie balken tegelijk af en er
+## staan zeven knoppen onder; wie moet scrollen om bij een knop te komen is de
+## balk al kwijt, en welk brandje er brandt zie je dan ook niet meer.
+##
+## Dit ving een echte fout: de knoppen heetten "Klant informeren" en "Risico
+## accepteren", die braken op een kolom van 85 px allebei over twee regels, en
+## de onderste rij zakte onder de vouw met een scrollbalk erbij.
+## `_meet_schermvulling()` ziet dat niet — die sluit alles in een klemmende
+## ouder juist uit, en de scroll is die klem.
+func _meet_past_zonder_scroll(mg: Node, naam: String) -> void:
+	var scroll: ScrollContainer = null
+	for c: Control in _controls(mg):
+		if c is ScrollContainer:
+			scroll = c as ScrollContainer
+			break
+	_ok(scroll != null, "%s: geen ScrollContainer in het chrome" % naam)
+	if scroll == null or scroll.get_child_count() == 0:
+		return
+	var inhoud := scroll.get_child(0) as Control
+	if inhoud == null:
+		return
+	var nodig := inhoud.get_combined_minimum_size().y
+	var ruimte := scroll.size.y - _FIT_RESERVE
+	_ok(nodig <= ruimte,
+		"%s: de inhoud vraagt %d px en er is %d px (van %d, min %d reserve), dus de finale scrolt"
+			% [naam, roundi(nodig), roundi(ruimte), roundi(scroll.size.y), roundi(_FIT_RESERVE)])
+
+	# En niet alleen de optelsom: elke knop moet ook echt binnen het zichtbare
+	# deel van de scroll staan, want een zone die de overgebleven hoogte opeet
+	# duwt de onderste rij eruit terwijl de minimumsom nog klopt.
+	var vlak := scroll.get_global_rect()
+	for c2: Control in _controls(scroll):
+		if not (c2 is Button) or not c2.is_visible_in_tree() or c2.size == Vector2.ZERO:
+			continue
+		var r := c2.get_global_rect()
+		_ok(r.position.y >= vlak.position.y - 0.5 and r.end.y <= vlak.end.y + 0.5,
+			"%s: knop '%s' staat van y%d tot y%d in een venster van y%d tot y%d — daar moet je voor scrollen"
+				% [naam, c2.text, roundi(r.position.y), roundi(r.end.y),
+					roundi(vlak.position.y), roundi(vlak.end.y)])
 
 
 ## Niets mag breder zijn dan de scroll waar het in hangt.
@@ -5923,6 +6027,51 @@ func _test_finale_brandjes() -> void:
 ## genoeg dat een balk van zes seconden niet in één sprong voorbij is, grof
 ## genoeg dat 75 seconden in 300 stappen klaar zijn.
 const _FINALE_STAP := 0.25
+
+
+## Alles wat de finale op zijn antwoordregel kan zetten, past op twee regels.
+##
+## Die regel staat op `clip_text` en een vaste hoogte, want een Label dat met
+## zijn tekst meegroeit duwt de zeven knoppen onder de vouw (zie `_bouw()` in
+## mg_oplevering.gd). Dat is de veiligheidsrem; dit is de afspraak eromheen.
+## Zonder deze test valt een derde regel stil weg — en het was een gebeurtenis
+## die dat als eerste deed: "Dirk: er staat vandaag 0u geboekt, terwijl de
+## verwachting rond de 8u ligt." mat 74 tekens en dat zijn drie regels.
+func _test_finale_regels_passen() -> void:
+	_kop("de antwoordregel van de finale blijft twee regels")
+
+	var script := load("res://scripts/minigames/mg_oplevering.gd") as GDScript
+	var breed: float = script.REGEL_BREED
+	var hoog: float = script.REGEL_H
+	var f := UiKit.font_voor(UiKit.FS_SMALL)
+	var c := MinigameContent.get_config(&"mg_deploy")
+
+	var teksten: Array[String] = []
+	for raw: Variant in c.get("keuzes", []):
+		teksten.append(String((raw as Dictionary).get("regel", "")))
+	for raw: Variant in c.get("gebeurtenissen", []):
+		var g := raw as Dictionary
+		# Een `storing` neemt het hele scherm over en komt dus niet op de regel.
+		if not bool(g.get("storing", false)):
+			teksten.append(String(g.get("tekst", "")))
+	# Wat de scene er zelf op zet. Deze vier staan als letterlijke tekst in
+	# `mg_oplevering.gd` en dus ook hier: wie daar een zin herschrijft, schrijft
+	# hem hier mee. Constantes ervan maken zou de scene onleesbaarder maken dan
+	# deze herhaling kost.
+	teksten.append("Niets brandt daar.")
+	teksten.append("De tijd is om. Je gaat nu live met wat er ligt.")
+	teksten.append("Twee handelingen. Daarna zet je hem live, wat je ook doet.")
+	teksten.append("Er komt zo iets binnen. Blus het met de juiste handeling.")
+	for raw: Variant in c.get("brandjes", []):
+		teksten.append("%s. Te laat." % String((raw as Dictionary).get("tekst", "")))
+
+	for t: String in teksten:
+		if t == "":
+			continue
+		var m := f.get_multiline_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, breed, UiKit.FS_SMALL)
+		_ok(m.y <= hoog,
+			"mg_deploy: \"%s\" meet %d px hoog op %d px breed, en er is %d px — de derde regel valt weg"
+				% [t, roundi(m.y), roundi(breed), roundi(hoog)])
 
 
 ## Speelt de avond helemaal uit met perfecte reflexen: elke tik blust het

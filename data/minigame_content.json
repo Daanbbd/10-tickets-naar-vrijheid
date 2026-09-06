@@ -683,7 +683,7 @@
    },
    {
     "id": "informeren",
-    "label": "Klant informeren",
+    "label": "Klant mailen",
     "regel": "Je stuurt een bericht. Er komt een paardje terug.",
     "effect": {
      "vertrouwen": 1
@@ -700,7 +700,7 @@
    },
    {
     "id": "risico",
-    "label": "Risico accepteren",
+    "label": "Risico nemen",
     "regel": "Je besluit dat het goed genoeg is. Dat staat nu op jouw naam.",
     "effect": {
      "vertrouwen": -1
@@ -863,7 +863,7 @@
    },
    {
     "na": 38,
-    "tekst": "Dirk: er staat vandaag 0u geboekt, terwijl de verwachting rond de 8u ligt.",
+    "tekst": "Dirk: 0u geboekt vandaag. Verwacht was 8u.",
     "effect": {}
    },
    {

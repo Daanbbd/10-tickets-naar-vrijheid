@@ -841,7 +841,12 @@ func _qa_doe_ticket(tid: StringName) -> bool:
 			return false
 		_interact_with(it)
 
-	if not await _qa_wacht_tot(func() -> bool: return Session.is_done(tid), 90.0):
+	# Ruimer voor de finale: die duurt sinds P5 zijn eigen klok uit (75 s) plus
+	# twee consoles en een herstelfase, want er is geen knop DEPLOYEN meer die
+	# de avond vroeg afkapt. Op 90 s meldde het harnas "BBD-210 liep vast" op
+	# een minigame die gewoon nog bezig was.
+	var geduld := 180.0 if t.minigame_id == &"mg_deploy" else 90.0
+	if not await _qa_wacht_tot(func() -> bool: return Session.is_done(tid), geduld):
 		printerr("[SPEELBEURT] %s liep vast" % t.code)
 		return false
 

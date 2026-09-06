@@ -47,7 +47,7 @@ const POGINGEN_TELLER := &"deploy_pogingen"
 ## Eén kaartje, en de ruimte voor drie. De zone houdt die hoogte ook als er
 ## niets brandt: kaartjes die de knoppen eronder verschuiven zijn niet te raken.
 const KAART_H := 30.0
-const KAART_SEP := 3.0
+const KAART_SEP := 2.0
 const BALK_H := 4.0
 ## Hoe lang een kaartje erover doet om weg te glijden.
 const KAART_WEG := 0.25
@@ -57,6 +57,13 @@ const KAART_WEG := 0.25
 ## zeven knoppen onaantrekkelijk te maken.
 const BLOKKADE := 0.4
 const MIS_FLITS := 0.2
+
+## De hoogte van de antwoordregel: twee regels FS_SMALL, vast. Zie `_bouw()`.
+const REGEL_H := 28.0
+## De breedte die die regel op het smalste canvas (192 px) krijgt, gemeten aan
+## de echte scroll: 192 min de vier px chrome-marge aan weerszijden, min de
+## panelrand. `_test_finale_regels_passen()` rekent er de teksten mee na.
+const REGEL_BREED := 172.0
 
 ## De pijplijn die op groen loopt voordat hij op jouw vakgebied omvalt. Drie
 ## regels, niet zeven: een nep-console met zeven controles voor een uitkomst
@@ -180,18 +187,40 @@ func _bouw(c: Dictionary) -> void:
 	_zone = Control.new()
 	_zone.custom_minimum_size = Vector2(0, KAART_H * 3.0 + KAART_SEP * 2.0)
 	_zone.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# SHRINK_BEGIN en niet de standaard FILL: de hoogte van deze zone is precies
+	# drie kaartjes, en overgebleven ruimte hoort naar beneden te vallen en niet
+	# hier te blijven hangen. Kaartjes staan op vaste plekken binnen de zone
+	# (`_plaats()`), dus een zone die meegroeit verschuift alleen de lege ruimte
+	# eronder — en die hoort bij de knoppen, die zo hoog mogelijk moeten staan.
+	_zone.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	# Een kaartje dat wegglijdt hoort de zone niet uit te lopen: de meting in
 	# `_meet_horizontale_overloop()` rekent alles buiten deze klem als weg.
 	_zone.clip_contents = true
 	_zone.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body.add_child(_zone)
 
-	# Twee regels reserveren: de reactie op een handeling verschijnt hier, en
-	# een knoppenraster dat bij elke tik een paar pixels opschuift is niet te
-	# raken.
+	# Twee regels reserveren, en er ook twee blijven: de reactie op een
+	# handeling verschijnt hier, en een knoppenraster dat bij elke tik een paar
+	# pixels opschuift is niet te raken.
+	#
+	# `clip_text` is de rem. Zonder dat meldt een Label met autowrap de hoogte
+	# van zijn gewrapte tekst als minimum, en een gebeurtenis van drie regels
+	# duwde de onderste rij knoppen onder de vouw — met scrollbalk, halverwege
+	# de klok, in precies de minigame die om tempo vraagt. Dat de derde regel
+	# dan wegvalt is de tweede helft van de afspraak: geen enkele tekst die hier
+	# landt mag over twee regels heen gaan, en `_test_finale_regels_passen()`
+	# rekent dat na op elk woord dat `_zeg()` kan krijgen.
 	_regel = UiKit.label("Er komt zo iets binnen. Blus het met de juiste handeling.",
 		UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
-	_regel.custom_minimum_size = Vector2(0, 26)
+	_regel.custom_minimum_size = Vector2(0, REGEL_H)
+	_regel.clip_text = true
+	# Godots standaardthema zet `line_spacing` op 3, en dan meten twee regels
+	# 31 px in plaats van de 28 die `get_multiline_string_size()` meldt: de
+	# tweede regel viel onder de klem weg en Dirk zei alleen nog zijn halve zin.
+	# Nul, zodat de meting in `_test_finale_regels_passen()` letterlijk is wat
+	# dit label doet. De 10px-snit zit al in een regelhoogte van 14 en heeft die
+	# extra drie niet nodig.
+	_regel.add_theme_constant_override("line_spacing", 0)
 	body.add_child(_regel)
 
 	_bouw_knoppen(body)
@@ -209,10 +238,14 @@ func _bouw(c: Dictionary) -> void:
 
 ## De kop: de klok rechts, daaronder de vier meters met hun woord voluit.
 ##
-## Een `HFlowContainer` en geen vaste rij: de vier woorden plus hun getal meten
-## op FS_SMALL 207 px en er is er 166 beschikbaar op een canvas van 192, dus
-## op de smalste telefoon vallen ze over twee regels. Op een breder scherm
-## (`window/stretch/aspect = "expand"`) staan ze vanzelf weer op één regel.
+## Een `HFlowContainer` en geen vaste rij. De vier woorden voluit plus hun
+## getallen passen krap op één regel binnen de 192 px van de smalste telefoon,
+## en "krap" wordt "niet" zodra `vertrouwen` twee cijfers krijgt. Een vaste rij
+## zou dan afbreken tot één letter per label (zie `_vast()`) of het paneel
+## buiten het canvas duwen; deze valt netjes terug op twee regels en staat op
+## elk breder scherm (`window/stretch/aspect = "expand"`) weer op één.
+## Afkortingen waren de andere uitweg — "BUGS 3 VERTR 4" las als een spreadsheet
+## en niet als een dag, dus die niet.
 func _bouw_kop() -> void:
 	var paneel := PanelContainer.new()
 	paneel.add_theme_stylebox_override("panel", UiKit.panel_krap(UiKit.WIT, UiKit.LINE))
@@ -235,12 +268,12 @@ func _bouw_kop() -> void:
 	kop.add_child(_klok_label)
 
 	var flow := HFlowContainer.new()
-	flow.add_theme_constant_override("h_separation", 6)
+	flow.add_theme_constant_override("h_separation", 4)
 	flow.add_theme_constant_override("v_separation", 1)
 	v.add_child(flow)
 	for m: StringName in METERS:
 		var cel := HBoxContainer.new()
-		cel.add_theme_constant_override("separation", 2)
+		cel.add_theme_constant_override("separation", 1)
 		flow.add_child(cel)
 		cel.add_child(_vast(String(METER_NAAM[m]), UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT))
 		var w := _vast("0", UiKit.FS_SMALL, UiKit.INK)
