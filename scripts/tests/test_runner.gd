@@ -113,6 +113,7 @@ func _ready() -> void:
 	_test_dialoog_mond_volgt_spreker()
 	await _test_klaar_landt_niet_stil()
 	_test_schrijfstijl_geen_emdash()
+	_test_geen_await_op_killbare_tween()
 	await _test_standup_uitleg()
 	_rapport()
 
@@ -6585,3 +6586,67 @@ func _scrub_emdash(data: Variant, pad: String) -> void:
 	elif data is String:
 		_ok(not (data as String).contains(EMDASH),
 			"%s bevat een em-dash: %s" % [pad, data])
+
+
+## Een gekillde Tween emit `finished` nooit meer. Wacht een coroutine daarop
+## terwijl een ander pad diezelfde tween kan killen, dan keert die await nooit
+## terug — en alles wat erachter hangt staat voorgoed stil.
+##
+## Dat kostte Daan zijn speelbeurt op 6 september (`docs/playtest/2026-09-06.md`
+## #37 en #38). `Hud.toon_urenrol()` deed `await _rol.finished`,
+## `Hud._rol_naar()` doet `_rol.kill()` bij elke geboekte minuut — ook de
+## ambient minuut die `Klok._process()` elke 20 s boekt. Viel die tik binnen de
+## rol, dan hing de await, keerde `TicketController._handle_inner()` niet terug
+## en bereikte `handle()` zijn `_busy = false` nooit. Daarna weigerde elke
+## interactie stil: geen ticket op te pakken, geen collega aan te spreken, geen
+## foutmelding, en lopen werkte gewoon door. `mg_abgevecht._meet()` had exact
+## dezelfde vorm.
+##
+## De regel: awaiten op `.finished` van een variabele die in hetzelfde bestand
+## `kill()` krijgt, mag niet — pol op `is_running()`, want `is_valid()` wordt
+## false op een gekillde tween en die lus eindigt dus altijd. Een tween die
+## niemand kan killen mag wél op `finished` wachten; daar is dat het eerlijke
+## signaal.
+func _test_geen_await_op_killbare_tween() -> void:
+	_kop("geen await op een tween die elders gekilld wordt")
+	var re := RegEx.create_from_string("await[ \\t]+([A-Za-z_][A-Za-z0-9_]*)\\.finished")
+	var gezien := 0
+	for pad: String in _gd_bestanden("res://scripts") + _gd_bestanden("res://autoload"):
+		if pad.ends_with("/test_runner.gd"):
+			continue
+		# Zonder commentaar: deze test beschrijft zijn eigen verbod in een
+		# docstring, en de fix in `hud.gd` legt in een comment uit wat er niet
+		# meer mag staan. Op de rauwe bron slaat hij dus op zichzelf aan.
+		var src := _zonder_commentaar(FileAccess.get_file_as_string(pad))
+		for m: RegExMatch in re.search_all(src):
+			gezien += 1
+			var naam := m.get_string(1)
+			_ok(not ("%s.kill()" % naam) in src,
+				("%s: `await %s.finished` terwijl %s.kill() in hetzelfde bestand staat. " +
+				"Een gekillde Tween emit finished nooit meer, dus die await keert nooit " +
+				"terug — wacht met `while %s != null and %s.is_valid() and %s.is_running()`.")
+					% [pad, naam, naam, naam, naam, naam])
+	_ok(gezien > 0, "geen enkele `await ....finished` gevonden; klopt de regex nog?")
+
+
+## De bron zonder `#`-commentaar, regel voor regel. Strings blijven heel: een
+## `#` binnen aanhalingstekens is tekst en geen commentaar.
+static func _zonder_commentaar(src: String) -> String:
+	var uit := PackedStringArray()
+	for regel: String in src.split("\n"):
+		var in_str := false
+		var quote := ""
+		var eind := regel.length()
+		for i: int in regel.length():
+			var c := regel[i]
+			if in_str:
+				if c == quote and (i == 0 or regel[i - 1] != "\\"):
+					in_str = false
+			elif c == "\"" or c == "'":
+				in_str = true
+				quote = c
+			elif c == "#":
+				eind = i
+				break
+		uit.append(regel.substr(0, eind))
+	return "\n".join(uit)

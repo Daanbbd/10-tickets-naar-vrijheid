@@ -197,6 +197,23 @@ arrangementen en worden bij het genereren meegeprint.
 
 ## Valkuilen die hier expliciet zijn opgelost
 
+- **Een gekillde `Tween` emit `finished` nooit meer.** `await <tween>.finished`
+  is daarmee een coroutine die niet terugkeert zodra een ander pad die tween
+  killt — en in dit project killt bijna elke tween-eigenaar zijn vorige tween
+  voordat hij een nieuwe maakt. Dat kostte Daan zijn speelbeurt op 6 september:
+  `Hud.toon_urenrol()` wachtte op `_rol`, `Hud._rol_naar()` killde `_rol` bij
+  elke geboekte minuut (ook de minuut die `Klok` elke 20 s vanzelf boekt), en
+  daarna bleef `TicketController._busy` voorgoed dicht — geen ticket meer op te
+  pakken, geen collega meer aan te spreken, en geen foutmelding, want die guard
+  returnt stil. Wacht daarom op `is_running()` en niet op `finished`:
+  `is_valid()` wordt false op een gekillde tween, dus die lus eindigt altijd.
+  `_test_geen_await_op_killbare_tween()` in `test_runner.gd` bewaakt het.
+- **Een `await`-keten achter een boolean guard heeft geen `finally`.** GDScript
+  kent er geen, dus elke hangende `await` binnen `TicketController._busy` of
+  `Shell._active` laat dat slot permanent dicht. Een guard die stil `return`t
+  maakt dat onzichtbaar. Vandaar `TicketController._slot_houdt()`: die laat het
+  slot los zodra het langer dan vijf seconden dichtstaat terwijl er geen
+  dialoog, geen minigame en geen invoerslot loopt, met een `push_error()` erbij.
 - **`TileSetAtlasSource` moet aan de `TileSet` hangen vóór je `TileData` opvraagt**,
   anders kent hij de physics layers nog niet.
 - **Een Control die in code onder een in code gemaakte `CanvasLayer` hangt blijft

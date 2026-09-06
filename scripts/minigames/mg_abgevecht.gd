@@ -331,7 +331,14 @@ func _meet(schade: float, tegenklap: float) -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_meting.tween_method(zet_b, van_b, naar_b, MEET_DUUR) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await _meting.finished
+	# Pollen en niet `await _meting.finished`: `_exit_tree()` en een volgende
+	# `_meet()` doen allebei `_meting.kill()`, en een gekillde Tween emit
+	# `finished` nooit meer. Deze await keerde dan niet terug, `_bezig` bleef
+	# aanstaan en het gevecht stond stil — met `Shell.run_minigame()` die nooit
+	# terugkomt en `TicketController._busy` die daarna voorgoed dicht blijft.
+	# Zelfde fout als in `Hud.toon_urenrol()`; zie playtest 2026-09-06 #37/#38.
+	while _meting != null and _meting.is_valid() and _meting.is_running():
+		await get_tree().process_frame
 	_hp_a = naar_a
 	_hp_b = naar_b
 	_zet_meters()

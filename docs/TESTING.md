@@ -121,6 +121,29 @@ daar zat de bug dat werven niets zichtbaars veranderde. De regel
 `[SPEELBEURT] BBD-203: Willem opgehaald, doel staat op t03` bewijst dat het
 ticket ook gepind wordt.
 
+### Waarom `--rommelig` bestaat
+
+De gewone speelbeurt speelt foutloos. De autopilot drukt altijd de knop met
+focus, en `DialogueBox.show_choices()` geeft die aan de eerste — dus op "Nog een
+keer, of is dit goed genoeg?" herkanst hij tien van de tien keer.
+`TicketController._ship_gebrekkig()` kwam daardoor in geen enkele
+geautomatiseerde speelbeurt voor.
+
+Juist daarachter zat de vastloper van playtest 2026-09-06: twee boekingen vlak
+achter elkaar (het kwartier voor de misser, daarna de ticketuren) met
+`Hud.toon_urenrol()` ertussen, die wachtte op een Tween die de tweede boeking
+killde. Alle zeven personages haalden 10/10 en niemand kon het zien.
+
+```bash
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --quit-after 90000 \
+  -- --speler=daan --playthrough --autoplay --rommelig --quit-when-done
+```
+
+De finale doet niet mee: `_wil_gebrekkig_shippen()` biedt bij BBD-210 geen keuze
+aan (een mislukte deploy is een rollback), dus een BBD-210 die mislukt blijft op
+ACTIVE staan en wordt nooit meer aangeraakt. `NIET_LATEN_MISLUKKEN` in
+`autopilot.gd` slaat hem daarom over.
+
 ## 3. Visuele controle
 
 Godot kan frames als PNG wegschrijven:
@@ -169,6 +192,7 @@ Alles achter `--` en alleen voor testen:
 | `--kijk=<x>,<y>` | zet de speler op die tegel en doet verder niets |
 | `--minuten=<n>` | boekt meteen n minuten op de klok (reden `qa`), zodat het daglicht en de klokchip op een later tijdstip te zien zijn; combineer met `--kijk=` |
 | `--autoplay` | drukt zelf op de interactietoets en lost minigames op |
+| `--rommelig` | bij `--autoplay`: elke minigame gaat de eerste keer mis en de vraag daarna wordt beantwoord met "Goed genoeg. Shippen." |
 | `--playthrough` | speelt alle tien de tickets af |
 | `--geen-pin` | speelbeurt zonder een ticket te kiezen, zodat de keuzevraag op een gedeeld object echt afgaat |
 | `--quit-when-done` | sluit af met exitcode 0/1 |
