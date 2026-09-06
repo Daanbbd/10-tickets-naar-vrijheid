@@ -67,7 +67,7 @@
   "failure": "Zij gaat hier niet blij van worden. Dennis zegt dat dat mag, maar dan wel voor honderdtwintig procent.",
   "te_vol": "Dit past niet in de sprint.",
   "te_weinig": "Hier gaat zij niet blij van worden.",
-  "klaar_als": "Er staan hoogstens {capaciteit} punten in de sprint en de klant is minstens {tevreden_min} blij. Druk dan op \"Vastleggen\"."
+  "klaar_als": "Hoogstens {capaciteit} punten in de sprint en de klant minstens {tevreden_min} blij. Druk dan op \"Vastleggen\"."
  },
  "mg_planning": {
   "type": "standup",
@@ -160,7 +160,7 @@
   "failure": "De tijd is om en je hebt één van de twee meldingen gemist. Kap volgende keer eerder af.",
   "gemist": "Te vroeg. Dit had je moeten horen.",
   "nuttig": "Dit moest je horen.",
-  "klaar_als": "De balk \"Gehoord\" staat op 2 van 2 voordat de tijd om is. Kap je iemand af vóór zijn melding, dan begin je opnieuw.",
+  "klaar_als": "De balk \"Gehoord\" staat op 2 van 2 voor de tijd om is. Te vroeg afkappen: opnieuw.",
   "failure_gemist": "Je kapte {naam} af voordat hij het kon zeggen. Nog een keer."
  },
  "mg_klantfeedback": {

@@ -83,14 +83,21 @@ var _storing_label: Label = null
 var _intro_overlay: Control = null
 var _intro_tween: Tween = null
 
+## Gezet door `Shell.run_minigame()` als het uitlegkaartje (`MinigameIntro`)
+## vlak hiervoor al getoond is voor dit minigame-id deze speelbeurt. Dan bouwt
+## `_bouw_intro_overlay()` geen overlay: die zou anders alleen herhalen wat de
+## speler net op het kaartje las. Staat de vlag uit (herkansing, het kaartje
+## sloeg over), dan toont de overlay de klaar_als-regel als doelherinnering.
+var kaart_net_getoond: bool = false
+
 
 ## Bouwt het venster en geeft de VBox terug waar de minigame zijn eigen UI in zet.
 ##
 ## `_intro` zelf blijft ongebruikt: `_bouw_intro_overlay()` hieronder leest
-## `content().get("intro")` rechtstreeks, gevuld via `Briefing.vul()`, zodat
-## een trait die de opgave aanpast (`content_override`) ook de overlay meekrijgt.
-## De parameter blijft bestaan zodat alle elf aanroepen ongewijzigd blijven —
-## zie `scripts/ui/minigame_intro.gd`.
+## `content().get("klaar_als")` (terugval op `intro`) rechtstreeks, gevuld via
+## `Briefing.vul()`, zodat een trait die de opgave aanpast (`content_override`)
+## ook de overlay meekrijgt. De parameter blijft bestaan zodat alle elf
+## aanroepen ongewijzigd blijven — zie `scripts/ui/minigame_intro.gd`.
 func build_chrome(title: String, _intro: String) -> VBoxContainer:
 	UiKit.full_rect(self)
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -165,24 +172,27 @@ func build_chrome(title: String, _intro: String) -> VBoxContainer:
 	return _body
 
 
-## P1.2: de WAT-regel als overlay ín het veld, 2,5 s zichtbaar en dan
-## wegvagend — vervangt het aparte `MinigameIntro`-scherm voor alle minigames
-## behalve `mg_deploy` (die drempel houdt hij, zie
-## `MinigameIntro.INTRO_KAART_VOOR`). De speler ziet het spel meteen; de
-## uitleg staat erover, niet ervoor.
+## De doelherinnering ín het veld, bij een HERKANSING: het uitlegkaartje
+## (`MinigameIntro`) is dit minigame-id deze speelbeurt al eerder getoond
+## (`kaart_net_getoond`), dus de speler weet allang hoe het werkt — deze
+## overlay herhaalt dat niet, maar herinnert kort aan de klaar_als-regel, want
+## dát is wat je bij een tweede poging weer kwijt kunt zijn.
 ##
 ## `mouse_filter = IGNORE` op overlay én paneel: de eerste tik moet het spel
 ## bereiken, niet dit venster — en de `Autopilot` (M4) mag hier nooit door
 ## geblokkeerd worden, wat met IGNORE per definitie niet kan. Geen overlay als
-## `intro` leeg is. Twee uitzonderingen: `MinigameIntro.INTRO_KAART_VOOR`
-## (`mg_deploy`) toont zijn WAT al op zijn eigen kaartje vóór dit venster
-## opent — deze overlay zou daar alleen een tweede keer hetzelfde herhalen —
-## en `mg_urenstaat` (Dirk) is een formulier (M7), geen spel dat om affordance
-## vraagt.
+## het kaartje net getoond is, als er geen tekst is, of voor `mg_urenstaat`
+## (Dirk) — dat is een formulier (M7), geen spel dat om affordance vraagt.
+##
+## Zichtduur schaalt met de tekstlengte (zelfde leessnelheid als
+## `Hud.HINT_PER_TEKEN`), niet vast op 2,5 s: een lange klaar_als-regel moet
+## ook echt te lezen zijn vóórdat hij wegvaagt.
 func _bouw_intro_overlay() -> void:
-	if minigame_id == &"mg_urenstaat" or minigame_id == MinigameIntro.INTRO_KAART_VOOR:
+	if kaart_net_getoond or minigame_id == &"mg_urenstaat":
 		return
-	var tekst := Briefing.vul(String(content().get("intro", "")), content())
+	var c := content()
+	var klaar_als := String(c.get("klaar_als", ""))
+	var tekst := Briefing.vul(klaar_als if klaar_als != "" else String(c.get("intro", "")), c)
 	if tekst == "":
 		return
 
@@ -203,8 +213,9 @@ func _bouw_intro_overlay() -> void:
 	paneel.add_child(label)
 
 	_intro_overlay = overlay
+	var zichtduur := clampf(tekst.length() / 16.0, 2.5, 6.0)
 	_intro_tween = create_tween()
-	_intro_tween.tween_interval(2.5)
+	_intro_tween.tween_interval(zichtduur)
 	_intro_tween.tween_property(overlay, "modulate:a", 0.0, 0.4)
 	_intro_tween.tween_callback(_weg_intro_overlay)
 
@@ -454,7 +465,7 @@ func finish_with_banner(ok: bool, text: String, score: int = 0, payload: Diction
 
 func _unhandled_input(event: InputEvent) -> void:
 	# P1.2: de eerste echte aanraking veegt de WAT-overlay weg, ongeacht of
-	# de 2,5 s al om zijn. `mouse_filter = IGNORE` op de overlay zorgt dat
+	# zijn zichtduur al om is. `mouse_filter = IGNORE` op de overlay zorgt dat
 	# dezelfde tik ook het spel zelf bereikt.
 	if _intro_overlay != null and (event is InputEventScreenTouch
 			or event is InputEventMouseButton or event is InputEventKey):

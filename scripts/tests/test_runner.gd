@@ -3057,26 +3057,18 @@ func _test_briefings() -> void:
 				"de pijplijn-briefing noemt '%s' als knelpunt, maar die heeft niet de kleinste capaciteit" % label)
 
 
-## Alleen `klaar_als` heeft een woordbudget, en wel omdat die regel in de
-## overlay van 2,5 s terechtkomt: wat daar staat moet je in één blik lezen.
-##
-## `intro` en `briefing` hadden dit budget ook (18 en 25 woorden), meegekomen
-## met P1 uit de auditbranch. Dat botste op 6 september met de uitlegteksten
-## die Daan diezelfde middag had goedgekeurd — elf van die teksten vielen erover
-## en zijn toen ingekort. Verkeerde volgorde: de goedgekeurde tekst is leidend
-## en de test hoort zich daaraan aan te passen, niet andersom. De teksten staan
-## weer in hun volle lengte; `intro` en `briefing` houden alleen de
-## tekenlimieten uit `_test_minigame_inhoud()` (220 en 120).
-##
-## Getest ná `Briefing.vul()`, dus met de echte cijfers erin — niet de kale
-## template met accolades.
+## Het uitlegkaartje (`MinigameIntro`) draagt `intro`/`briefing` de eerste
+## keer per minigame per speelbeurt en heeft daarvoor alleen de tekenlimieten
+## uit `_test_minigame_inhoud()` (220) — geen woordbudget meer, want dat
+## kaartje mag de opgave echt uitleggen. Het woordbudget zit op `klaar_als`:
+## dat is de regel die bij een HERKANSING als overlay ín het veld verschijnt
+## (`MinigameBase._bouw_intro_overlay()`), kort genoeg om in een oogopslag
+## te lezen. Getest ná `Briefing.vul()`, dus met de echte cijfers erin — niet
+## de kale template met accolades.
 func _test_minigame_tekstbudget() -> void:
 	_kop("woordbudget van klaar_als")
 
-	# Op 25 en niet op 20: de langste goedgekeurde regel is die van de stand-up
-	# met 24 woorden. Het budget volgt de tekst die er ligt, niet andersom —
-	# dat is precies de fout die op 6 september elf teksten inkortte.
-	const MAX_KLAAR_ALS_WOORDEN := 25
+	const MAX_KLAAR_ALS_WOORDEN := 20
 
 	for id: Variant in GameData.minigames.keys():
 		var mid := StringName(id)
@@ -3343,28 +3335,36 @@ func _test_minigame_pauze() -> void:
 	_ok(not Shell.minigame_active(), "opruimen van de tweede testminigame is niet gelukt")
 
 
-## Het wat/waarom-scherm: sinds P1 alleen nog voor `mg_deploy`
-## (`MinigameIntro.INTRO_KAART_VOOR`) — de andere tien minigames kregen hun
-## WAT-regel terug als overlay ín het veld (`_test_minigame_tekstbudget()`
-## bewaakt die tekst). De eerste keer verschijnt het scherm en blokkeert het
-## tot er op "Starten" gedrukt wordt, een tweede keer voor hetzelfde id slaat
-## het over, en "Terug" breekt af zonder de vlag te zetten (dus verschijnt het
-## bij een volgende poging weer). `Autopilot.gevraagd()` leest de
-## commandoregel rechtstreeks en is hier niet om te zetten — dat pad hoort bij
-## de `--autoplay`-doorloop, niet bij deze suite.
+## Het uitlegkaartje verschijnt weer voor élke minigame, de eerste keer per
+## minigame-id per speelbeurt: het scherm blokkeert tot er op "Starten" gedrukt
+## wordt, een tweede keer voor hetzelfde id slaat het over, en "Terug" breekt
+## af zonder de vlag te zetten (dus verschijnt het bij een volgende poging
+## weer). `Autopilot.gevraagd()` leest de commandoregel rechtstreeks en is
+## hier niet om te zetten — dat pad hoort bij de `--autoplay`-doorloop, niet
+## bij deze suite.
+##
+## Bij de eerste run (het kaartje is net getoond) mag de minigame géén
+## WAT-overlay ín het veld bouwen — dat zou alleen herhalen wat de speler net
+## las (`kaart_net_getoond`, gezet door `Shell.run_minigame()`). Bij de tweede
+## run (het kaartje sloeg over) hoort die overlay er wél te zijn, met de
+## gevulde `klaar_als`-regel als doelherinnering. `mg_frontend_fix` en niet
+## `mg_paarden`: alleen de eerste heeft een eigen `klaar_als` in
+## `data/minigame_content.json`, dus alleen daar is de overlaytekst
+## betekenisvol te controleren.
 func _test_minigame_intro_scherm() -> void:
-	_kop("het wat/waarom-scherm vóór een minigame")
+	_kop("het uitlegkaartje vóór een minigame, en de overlay bij een herkansing")
 
-	QuestEngine.start_run(&"daan")   # wist Session.flags: mg_deploy telt als ongezien
-	var vlag := MinigameIntro.gezien_vlag(&"mg_deploy")
-	_ok(not Session.get_flag(vlag), "vervuilde staat: mg_deploy gold al als gezien")
+	QuestEngine.start_run(&"daan")   # wist Session.flags: mg_frontend_fix telt als ongezien
+	var mid := &"mg_frontend_fix"
+	var vlag := MinigameIntro.gezien_vlag(mid)
+	_ok(not Session.get_flag(vlag), "vervuilde staat: %s gold al als gezien" % mid)
 
-	# --- eerste keer: het scherm verschijnt en blokkeert -----------------
-	var lopend: Variant = Shell.call(&"run_minigame", &"mg_deploy", {})
+	# --- eerste keer: het kaartje verschijnt en blokkeert -----------------
+	var lopend: Variant = Shell.call(&"run_minigame", mid, {})
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_ok(not Shell.minigame_active(),
-		"run_minigame(): de minigame draait al vóór het wat/waarom-scherm bevestigd is")
+		"run_minigame(): de minigame draait al vóór het kaartje bevestigd is")
 	var poort: MinigameIntro = get_tree().get_first_node_in_group(&"minigame_intro")
 	_ok(poort != null, "run_minigame(): geen MinigameIntro-node gevonden bij een ongezien id")
 
@@ -3376,26 +3376,41 @@ func _test_minigame_intro_scherm() -> void:
 			"MinigameIntro.besloten(true): de minigame startte niet na 'Starten'")
 		_ok(Session.get_flag(vlag), "MinigameIntro.besloten(true): de gezien-vlag staat niet")
 		var actief := Shell.active_minigame()
+		_ok(actief != null and actief.get("_intro_overlay") == null,
+			"eerste run: de minigame bouwt alsnog een overlay terwijl het kaartje er net was")
 		if actief != null:
 			actief.succeed(100, {"qa": true})
 		await lopend
 
-	# --- tweede keer: hetzelfde id slaat het scherm over ------------------
-	var lopend2: Variant = Shell.call(&"run_minigame", &"mg_deploy", {})
+	# --- tweede keer: hetzelfde id slaat het kaartje over — en toont in
+	# plaats daarvan de klaar_als-regel als overlay ín het veld ------------
+	var lopend2: Variant = Shell.call(&"run_minigame", mid, {})
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_ok(Shell.minigame_active(),
-		"run_minigame(): een gezien id toont het wat/waarom-scherm alsnog")
+		"run_minigame(): een gezien id toont het kaartje alsnog")
 	_ok(get_tree().get_first_node_in_group(&"minigame_intro") == null,
 		"run_minigame(): een gezien id maakt toch een MinigameIntro-node aan")
 	var actief2 := Shell.active_minigame()
+	var overlay2: Variant = actief2.get("_intro_overlay") if actief2 != null else null
+	_ok(overlay2 != null,
+		"tweede run (herkansing): geen overlay terwijl het kaartje was overgeslagen")
+	if overlay2 != null:
+		var c := MinigameContent.get_config(mid)
+		var verwacht := Briefing.vul(String(c.get("klaar_als", "")), c)
+		var gevonden := ""
+		for kind: Node in (overlay2 as Node).find_children("*", "Label", true, false):
+			gevonden = (kind as Label).text
+		_ok(gevonden == verwacht,
+			"tweede run: de overlaytekst is niet de gevulde klaar_als-regel (kreeg \"%s\", verwacht \"%s\")"
+				% [gevonden, verwacht])
 	if actief2 != null:
 		actief2.succeed(100, {"qa": true})
 	await lopend2
 
 	# --- "Terug": afbreken zonder de vlag te zetten ------------------------
 	QuestEngine.start_run(&"daan")   # opnieuw ongezien
-	Shell.call(&"run_minigame", &"mg_deploy", {})
+	Shell.call(&"run_minigame", mid, {})
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var poort2: MinigameIntro = get_tree().get_first_node_in_group(&"minigame_intro")

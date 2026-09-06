@@ -162,12 +162,23 @@ toestand `process_always` nodig: `get_tree().create_timer(t, true, false, true)`
 
 `build_chrome(titel, intro)` levert kop, statusregel, een scrollbare body en op
 een aanraakscherm een Stoppen-knop. De `intro`-parameter wordt niet meer
-gebruikt: `MinigameIntro` toont de uitleg al vóór dit scherm opent, onder de
-koppen "Zo werkt het" en "Klaar als" (de velden `intro` en `klaar_als` uit
-`data/minigame_content.json`). Een wereldhandeling heeft geen `klaar_als`: die
-krijgt geen apart uitlegscherm. Wat *niet* mag wegscrollen — een meter,
-een klok, de enige actieknop — hoort buiten die scroll, via `chrome_header()`
-of `chrome_footer()`.
+gebruikt: `MinigameIntro` toont de uitleg al vóór dit scherm opent, de eerste
+keer dat een minigame-id deze speelbeurt aan de beurt komt, onder de koppen
+"Zo werkt het" en "Klaar als" (de velden `intro` en `klaar_als` uit
+`data/minigame_content.json`). Bij een HERKANSING (het kaartje is deze
+speelbeurt al gezien) slaat dat kaartje over, en toont `build_chrome()` in
+plaats daarvan zelf een overlay ín het veld met de gevulde `klaar_als`-regel
+als doelherinnering — kort zichtbaar, en dan wegvagend of bij de eerste
+aanraking. De zichtduur schaalt met de tekstlengte (dezelfde leessnelheid als
+`Hud.HINT_PER_TEKEN`), niet vast op één getal. Een wereldhandeling heeft geen
+`klaar_als`: die krijgt geen apart uitlegscherm. Wat *niet* mag wegscrollen —
+een meter, een klok, de enige actieknop — hoort buiten die scroll, via
+`chrome_header()` of `chrome_footer()`.
+
+Woordbudget zit alleen op `klaar_als` (hoogstens 20 woorden, gevuld): dat is de
+regel die als overlay in een oogopslag te lezen moet zijn. `intro` en
+`briefing` hebben geen woordbudget, alleen de tekenlimiet van 220 uit
+`_test_minigame_inhoud()` — het kaartje mag de opgave echt uitleggen.
 
 De chrome is een **donker** oppervlak (`UiKit.SCHERM_NACHT`), dezelfde
 ondergrond als het titel- en uitlegscherm: kop op `FS_HEAD` in
@@ -364,9 +375,8 @@ kant-en-klare tijdverdelingen in plaats van kaartjes naar vakken te slepen
 en capaciteit beschrijft hoe elke verdeling zelf rekent, niet meer hoe de
 speler ze samenstelt.
 
-Sinds P1 krijgt hij, als enige naast `mg_deploy`, ook geen WAT-uitleg: geen
-`MinigameIntro`-kaartje vooraf (die drempel is er toch al niet, want hij heeft
-geen eigenaar of briefer) én geen WAT-overlay ín het veld
+Hij krijgt wel het gewone `MinigameIntro`-kaartje de eerste keer, maar als
+enige van alle minigames nooit de WAT-overlay ín het veld bij een herkansing
 (`MinigameBase.build_chrome()` slaat hem expliciet over). Een formulier dat
 Dirk je voorlegt hoort geen minigame-belofte te dragen — zie M7 in
 `docs/AUDIT-2026-09-05.md` deel 2.

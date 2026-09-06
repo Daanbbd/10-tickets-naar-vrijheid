@@ -17,23 +17,15 @@ extends Control
 ## horen zichtbaar bij elkaar — maar zonder enige DialogueBox-conventie
 ## (geen naam, geen portret, geen post-it-stijl).
 ##
-## Verschijnt alleen de eerste keer per minigame-id per speelbeurt
-## (`gezien_vlag()`, hetzelfde patroon als `Storingen.gevuurd_vlag()`), en
-## nooit tijdens een geautomatiseerde speelbeurt (`Autopilot.gevraagd()`) —
-## zelfde vroege-return-idioom als de hint-toast in `hud.gd`.
+## Verschijnt de eerste keer per minigame-id per speelbeurt (`gezien_vlag()`,
+## hetzelfde patroon als `Storingen.gevuurd_vlag()`), en nooit tijdens een
+## geautomatiseerde speelbeurt (`Autopilot.gevraagd()`) — zelfde
+## vroege-return-idioom als de hint-toast in `hud.gd`. Bij een herkansing
+## (het kaartje is deze speelbeurt al getoond) slaat dit scherm over; dan
+## herinnert `MinigameBase._bouw_intro_overlay()` ín het veld aan de
+## klaar_als-regel in plaats van het kaartje te herhalen.
 
 signal besloten(doorgegaan: bool)
-
-
-## P1: dit scherm blijft alleen bestaan voor de finale. De andere tien
-## minigames kregen hun WAT-regel terug als overlay ín het veld
-## (`MinigameBase.build_chrome()`), niet meer als apart scherm ervoor — dat
-## halveerde de tekstlaag vóór het spel (`docs/AUDIT-2026-09-05.md` deel 2,
-## M1/P1). `mg_deploy` heeft geen eigenaar en geen briefer die hem aankondigt
-## (de dialoogbox blijft dus leeg), en is het enige moment waar de speler
-## bewust "Starten" drukt vóór de climax van het spel — die drempel verdient
-## hij, de andere tien niet.
-const INTRO_KAART_VOOR: StringName = &"mg_deploy"
 
 
 static func gezien_vlag(id: StringName) -> StringName:
@@ -42,8 +34,7 @@ static func gezien_vlag(id: StringName) -> StringName:
 
 ## Of `Shell.run_minigame()` dit scherm voor `id` moet tonen.
 static func moet_getoond(id: StringName) -> bool:
-	return id == INTRO_KAART_VOOR \
-		and not Autopilot.gevraagd() and not Session.get_flag(gezien_vlag(id))
+	return not Autopilot.gevraagd() and not Session.get_flag(gezien_vlag(id))
 
 
 ## Aangeroepen na add_child, zelfde volgorde-contract als

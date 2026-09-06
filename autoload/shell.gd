@@ -319,6 +319,7 @@ func run_minigame(minigame_id: StringName, config: Dictionary) -> MinigameResult
 	# is een teller en componeert dus probleemloos met het paar hieronder.
 	# `Bus.minigame_started` blijft na dit blok staan: dat hoort bij de echte
 	# minigame, niet bij dit scherm.
+	var kaart_getoond := false
 	if MinigameIntro.moet_getoond(minigame_id):
 		Session.lock_input()
 		var poort := MinigameIntro.new()
@@ -330,6 +331,7 @@ func run_minigame(minigame_id: StringName, config: Dictionary) -> MinigameResult
 		if not doorgegaan:
 			return MinigameResult.aborted(minigame_id)
 		Session.set_flag(MinigameIntro.gezien_vlag(minigame_id), true)
+		kaart_getoond = true
 
 	var packed: PackedScene = load(path)
 	var mg := packed.instantiate() as MinigameBase
@@ -337,6 +339,10 @@ func run_minigame(minigame_id: StringName, config: Dictionary) -> MinigameResult
 		push_error("Shell: scene '%s' erft niet van MinigameBase" % path)
 		return MinigameResult.aborted(minigame_id)
 
+	# Vóór setup(): build_chrome() binnen setup() roept _bouw_intro_overlay()
+	# al aan, en die moet meteen weten of het kaartje deze beurt net getoond is
+	# — anders herhaalt de overlay alleen wat de speler net las.
+	mg.kaart_net_getoond = kaart_getoond
 	_active = mg
 	mg.minigame_id = minigame_id
 	mg.process_mode = Node.PROCESS_MODE_ALWAYS
