@@ -65,11 +65,15 @@ func _ready() -> void:
 	_test_save_verwijderen()
 	_test_uitlijnen_perfect()
 	_test_wereldhandelingen()
+	_test_kabel_kost_tijd()
+	_test_jonathan_minder_kabels()
+	await _test_klant_wacht_niet()
 	_test_ab_escalatie()
 	_test_urenstaat_scherm()
 	_test_werving_begint_met_de_vraag()
 	_test_klant_is_een_persoon()
 	await _test_dialoogvenster_past()
+	await _test_vraag_boven_keuzes_leesbaar()
 	await _test_schermen_passen()
 	await _test_tagline_niet_afgekapt()
 	await _test_wereldchrome_past()
@@ -237,6 +241,13 @@ func _test_gevolgen() -> void:
 					var doel := StringName(ed.get("ticket", ""))
 					_ok(doel in GameData.ticket_ids(),
 						"%s: unlock_ticket noemt '%s', en dat ticket bestaat niet" % [bid, doel])
+					# Een unlock_ticket naar een ticket dat al vanaf het begin open
+					# staat (`available_when: {}`) doet per definitie niets — dat is
+					# de bug die k4 ooit had met t01.
+					if doel in GameData.ticket_ids():
+						_ok(not (GameData.ticket(doel).available_when as Dictionary).is_empty(),
+							"%s: unlock_ticket wijst naar '%s', dat staat al vanaf het begin open — dood effect"
+								% [bid, doel])
 
 	# --- geen enkele gevolgvlag is een typefout ----------------------------
 	# Een verkeerd gespelde vlag in een `flags_all` is de vervelendste fout die
@@ -344,11 +355,12 @@ func _test_gevolgen() -> void:
 		GameEnums.Outcome.SUCCESS, 1, {&"paard": true, &"zelf_gevonden": true}))
 	_ok(not Session.get_flag(&"gevolg_paard_gemist"),
 		"het paard zelf vinden zet gevolg_paard_gemist toch")
-	# P1-6: dit is de enige route waarlangs gevolg_paard_gemist ooit true wordt
-	# (Bastiaans vakgebiedvoordeel, via _wh_paarden()'s geen_zoektocht — zonder
-	# de trait blokkeert die functie de route via het bord juist). Een trait
-	# geeft alleen voordeel, nooit een straf (TraitModifier), dus getest mag
-	# door deze vlag niet zakken. `clampi(getest, 0, 3)` in finale_start() zou
+	# P1-6: gevolg_paard_gemist hangt aan het payload-veld `zelf_gevonden`, dat
+	# sinds P4 (5 sep 2026) geen enkele speelroute meer op false zet: Bastiaans
+	# voordeel is `paard_komt` en hij spreekt het paard zelf aan. Het contract
+	# wordt hier nog wel bewaakt, want het is de bodem onder een toekomstige
+	# route. Een trait geeft alleen voordeel, nooit een straf (TraitModifier),
+	# dus getest mag door deze vlag niet zakken. `clampi(getest, 0, 3)` in finale_start() zou
 	# een straf op een toch al lege getest-teller onzichtbaar maken, dus eerst
 	# gevolg_cro_gehaald erbij zodat de meting niet op de bodemklem struikelt.
 	Gevolgen.boek(&"mg_cro", MinigameResult.make(&"mg_cro",
@@ -1405,6 +1417,10 @@ func _test_traits() -> void:
 				"%s/%s: er mogen geen credits af" % [cid, t.code])
 			_ok(float(na.get("tijd", 0.0)) >= float(basis.get("tijd", 0.0)),
 				"%s/%s: het tijdsbudget mag niet korter worden" % [cid, t.code])
+			# P4: de keuzeklok van BBD-203 en de rondeklok van BBD-206 lopen
+			# allebei op dit veld. Een voordeel mag er tijd bij doen, nooit af.
+			_ok(float(na.get("ronde_sec", 0.0)) >= float(basis.get("ronde_sec", 0.0)),
+				"%s/%s: de bedenktijd per ronde mag niet korter worden" % [cid, t.code])
 
 			if TraitModifier.VOORDEEL.has(soort):
 				_ok(TraitModifier.voordeel_tekst(t) != "",
@@ -3533,6 +3549,17 @@ func _test_wereldhandelingen() -> void:
 				"%s: '%s' heeft een wereldhandeling-resolver, maar wereldhandeling staat niet aan" % [
 					t.code, t.minigame_id])
 
+	# P4: wat er op het spel staat, staat in de content en niet in de code. Drie
+	# sleutels dragen dat, en alle drie zijn ze stil weg te laten: dan verloopt
+	# een ronde zonder dat de klant iets zegt, of vonkt een kabel zonder regel.
+	var klant := MinigameContent.get_config(&"mg_klantfeedback")
+	_ok(float(klant.get("ronde_sec", 0.0)) >= 5.0,
+		"mg_klantfeedback: een gespreksronde korter dan vijf seconden is niet te lezen")
+	_ok(String(klant.get("timeout_reactie", "")) != "",
+		"mg_klantfeedback: geen timeout_reactie, dus een verlopen ronde gebeurt in stilte")
+	_ok(String(MinigameContent.get_config(&"mg_backend_fix").get("fout_reactie", "")) != "",
+		"mg_backend_fix: geen fout_reactie, dus een verkeerde kabel vonkt zonder een woord")
+
 	# De drie bekende eigenaren: een wereldhandeling is geen degradatie, het is
 	# nog steeds een werkwoord uit de mond van de eigenaar.
 	var verwacht_eigenaar := {
@@ -3557,6 +3584,130 @@ func _test_wereldhandelingen() -> void:
 			despawnd.append(String(c.get("npc", "")))
 	for nid: StringName in paarden:
 		_ok(String(nid) in despawnd, "t09 despawnt '%s' niet in zijn world_changes" % nid)
+
+
+## P4/BBD-205: een verkeerde kabel kost een kwartier, en de juiste blijft
+## liggen tot je hem legt.
+##
+## Via de pure delen van `TicketController` (`kabelopties()`,
+## `kabels_na_fout()`), want de handeling zelf draait op een dialoogbox en een
+## wereld. Wat hier bewaakt wordt is de belofte eronder: hoe vaak je ook
+## misgrijpt, het ticket kan niet vastlopen, en elke misser kost precies
+## `Urenstaat.FOUT_MIN` — de prijs is tijd, nooit voortgang.
+func _test_kabel_kost_tijd() -> void:
+	_kop("BBD-205: een verkeerde kabel kost een kwartier")
+
+	var content := MinigameContent.get_config(&"mg_backend_fix")
+	var opties := TicketController.kabelopties(content)
+	_ok(opties.size() >= 2,
+		"zonder trait horen er meerdere kabels te liggen, gevonden %d" % opties.size())
+
+	var over: Array = range(opties.size())
+	var voor := Session.worked_minutes
+	var fouten := 0
+	while over.size() > 1:
+		# Altijd een foute pakken: index 0 in `over` is de juiste kabel.
+		var mis := 1 if int(over[0]) == 0 else 0
+		over = TicketController.kabels_na_fout(over, mis)
+		fouten += 1
+		Session.book_time(Urenstaat.FOUT_MIN, &"fout")
+		_ok(over.has(0), "na %d foute kabels ligt de juiste er niet meer" % fouten)
+	_ok(fouten == opties.size() - 1,
+		"na %d foute kabels bleef er meer dan één over" % fouten)
+	_ok(int(over[0]) == 0, "de laatste overgebleven kabel is niet de juiste")
+	_ok(Session.worked_minutes - voor == fouten * Urenstaat.FOUT_MIN,
+		"%d foute kabels boekten %d minuten in plaats van %d" % [
+			fouten, Session.worked_minutes - voor, fouten * Urenstaat.FOUT_MIN])
+
+	# En de juiste kiezen haalt niets weg: `kabels_na_fout()` is de enige plek
+	# die opties wegneemt, en die weigert de juiste. Zonder dat kan de lus in
+	# `_wh_backend()` leeglopen zonder dat er ooit een kabel gelegd is.
+	var vol: Array = range(opties.size())
+	_ok(TicketController.kabels_na_fout(vol, vol.find(0)).size() == vol.size(),
+		"de juiste kabel verdwijnt uit de lijst als je hem kiest")
+
+
+## BBD-205 als Jonathan: `TraitModifier._cableboard()` (MINDER_AFLEIDERS = 2)
+## knipt de afleiderslijst van `kabelopties()` in, en zonder een ondergrens
+## zakte dat door naar precies één optie — de juiste, zonder keuze en zonder
+## "verkeerde kabel"-prijs. De regel is: altijd minstens twee opties zolang de
+## data een afleider kent, en "Minder losse draden." blijft waar als 2 in
+## plaats van 3 knoppen.
+func _test_jonathan_minder_kabels() -> void:
+	_kop("BBD-205: Jonathans vakgebiedvoordeel laat een keuze over")
+
+	var t05: TicketDef = GameData.ticket(&"t05")
+	QuestEngine.start_run(&"jonathan")
+	var jonathan_config: Dictionary = TraitModifier.pas_toe(t05)
+	_ok(not jonathan_config.is_empty(), "t05: Jonathans voordeel levert geen aangepaste opgave")
+	var jonathan_opties := TicketController.kabelopties(jonathan_config)
+	_ok(jonathan_opties.size() == 2,
+		"BBD-205 geeft Jonathan %d optie(s), verwacht er 2 (juist + één afleider)" % jonathan_opties.size())
+
+	for cid: Variant in GameData.character_ids():
+		if StringName(cid) == &"jonathan":
+			continue
+		QuestEngine.start_run(StringName(cid))
+		var basis_config: Dictionary = MinigameContent.get_config(t05.minigame_id)
+		var opties := TicketController.kabelopties(basis_config)
+		_ok(opties.size() == 3,
+			"BBD-205 geeft %s %d optie(s), verwacht er 3 (geen vakgebiedvoordeel)" % [cid, opties.size()])
+
+
+## P4/BBD-203: de klant wacht niet, behalve op de autopilot.
+##
+## Twee dingen, want ze kunnen los stuk: dat een keuze met een klok ook echt
+## dichtvalt (en dan `KEUZE_VERLOPEN` teruggeeft in plaats van stil de eerste
+## optie te worden), en dat diezelfde klok níét geldt zodra de autopilot
+## meekijkt. Dat tweede is geen detail: een geautomatiseerde speelbeurt drukt
+## elke 0,45 s één knop, dus een keuze die vanzelf dichtvalt zou een 10/10 van
+## timing laten afhangen in plaats van van inhoud.
+func _test_klant_wacht_niet() -> void:
+	_kop("BBD-203: zij wacht niet")
+
+	_ok(DialogueController.keuzeklok(8.0, true) == 0.0,
+		"met de autopilot erbij blijft er een keuzeklok staan")
+	_ok(DialogueController.keuzeklok(8.0, false) == 8.0,
+		"zonder autopilot verdwijnt de keuzeklok")
+	_ok(DialogueController.keuzeklok(-3.0, false) == 0.0,
+		"een negatieve klok komt er niet als nul uit")
+
+	var dc := DialogueController.new()
+	add_child(dc)
+	dc.setup()
+	var labels: Array[String] = ["De knop.", "De foto.", "De prijs."]
+
+	# Niemand drukt: na 0,2 s hoort de box dicht te zijn en de uitkomst
+	# onderscheidbaar van "eerste optie".
+	var verlopen: Variant = await dc.ask_choice("Zegt u het maar.", labels, 0.2)
+	_ok(int(verlopen) == DialogueController.KEUZE_VERLOPEN,
+		"een keuze met een klok van 0,2 s gaf %d terug in plaats van KEUZE_VERLOPEN" % int(verlopen))
+	_ok(not dc.is_active(), "de dialoogbox bleef openstaan nadat de klok afliep")
+
+	# Zelfde 0,2 s, maar via `keuzeklok()` met de autopilot erbij: die keuze
+	# hoort er vier keer zo lang later nog steeds te staan. De druk komt uit een
+	# timer en niet uit een tweede coroutine, want `ask_choice()` moet hier juist
+	# geawait worden -- anders meet deze test niets.
+	var gedrukt := {"knop": false}
+	get_tree().create_timer(0.8).timeout.connect(func() -> void:
+		var k := get_viewport().gui_get_focus_owner() as Button
+		if k == null:
+			return
+		gedrukt["knop"] = true
+		k.pressed.emit())
+
+	var begon := Time.get_ticks_msec()
+	var gekozen: Variant = await dc.ask_choice("Nog eens.", labels,
+		DialogueController.keuzeklok(0.2, true))
+	var duurde := float(Time.get_ticks_msec() - begon) / 1000.0
+	_ok(bool(gedrukt["knop"]),
+		"er stond geen keuzeknop met focus, dus de autopilot zou hier hangen")
+	_ok(int(gekozen) == 0,
+		"de gedrukte knop leverde %d op in plaats van 0" % int(gekozen))
+	_ok(duurde >= 0.7,
+		"de keuze viel na %.2f s vanzelf dicht; met de autopilot hoort er geen klok te lopen" % duurde)
+
+	dc.queue_free()
 
 
 ## F4-a: `mg_slotboard.gd` (de urenstaat, `mg_urenstaat`) werd een dialoogkeuze
@@ -3722,6 +3873,113 @@ func _test_dialoogvenster_past() -> void:
 			paneel.size.y, DialogueBox.HOOGTE_MIN])
 
 	box.queue_free()
+
+
+## De vraag boven vier keuzeknoppen werd afgekapt: `HOOGTE_MAX` (210) klemde
+## de hele box — vraag én knoppenkolom samen — en de tweede regel van de
+## vraag verdween half achter de vaste HUD-band (`p4_klant_balk.png`).
+## `mg_klantfeedback` levert de echte reproductie: vier opties per ronde, en de
+## langste ronde is de ronde die de audit-screenshot toonde.
+func _test_vraag_boven_keuzes_leesbaar() -> void:
+	_kop("de vraag boven keuzeknoppen blijft leesbaar")
+
+	var rd: Variant = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://data/minigame_content.json"))
+	var mg := (rd as Dictionary).get("mg_klantfeedback", {}) as Dictionary
+	var rondes := mg.get("rondes", []) as Array
+	_ok(not rondes.is_empty(), "mg_klantfeedback heeft geen rondes")
+
+	var langste_ronde: Dictionary = {}
+	for raw: Variant in rondes:
+		var r := raw as Dictionary
+		if String(r.get("prompt", "")).length() > String(langste_ronde.get("prompt", "")).length():
+			langste_ronde = r
+
+	var labels: Array[String] = []
+	for raw: Variant in (langste_ronde.get("opties", []) as Array):
+		labels.append(String((raw as Dictionary).get("tekst", "")))
+	_ok(labels.size() == 4,
+		"de langste mg_klantfeedback-ronde heeft %d opties, verwacht er 4" % labels.size())
+
+	var box := DialogueBox.new()
+	add_child(box)
+	await get_tree().process_frame
+	box.show_line("", String(langste_ronde.get("prompt", "")))
+	box.finish_typing()
+	await get_tree().process_frame
+	box.show_choices(labels)
+	# Twee frames: `_pas_hoogte_aan()` knipt de vraag eerst terug (zelf ook een
+	# `await`) en meet daarna pas, net als `_test_dialoogvenster_past()` hierboven.
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	_ok(box._text.get_visible_line_count() >= 2,
+		"de vraag krijgt %d zichtbare regel(s) i.p.v. minstens %d" % [
+			box._text.get_visible_line_count(), DialogueBox.MAX_REGELS_VRAAG_MET_KEUZES])
+
+	var paneel := box.get_child(0) as Control
+	_ok(paneel.size.y <= DialogueBox.HOOGTE_MAX_KEUZES + 0.5,
+		"dialoogvenster met vier keuzes is %.0f px hoog, HOOGTE_MAX_KEUZES zegt %.0f" % [
+			paneel.size.y, DialogueBox.HOOGTE_MAX_KEUZES])
+
+	var vp: float = get_viewport().get_visible_rect().size.y
+	_ok(paneel.global_position.y + paneel.size.y <= vp + 0.5,
+		"dialoogvenster met vier keuzes loopt %.0f px onder het scherm door" % (
+			paneel.global_position.y + paneel.size.y - vp))
+	_ok(paneel.global_position.y >= -0.5,
+		"dialoogvenster met vier keuzes begint %.0f px boven het scherm" % (
+			-paneel.global_position.y))
+
+	box.queue_free()
+
+	# Zonder keuzes moet een eerdere afkap weer verdwijnen: de volgende regel
+	# van een dialoogboom mag niet met een ellipsis van de vórige beurt blijven
+	# zitten. `_test_dialoogvenster_past()` bewijst al dat de hoogte terugzakt;
+	# dit bewijst dat de TEKST zelf ook echt terugkomt.
+	var box2 := DialogueBox.new()
+	add_child(box2)
+	await get_tree().process_frame
+	box2.show_line("", String(langste_ronde.get("prompt", "")))
+	box2.finish_typing()
+	await get_tree().process_frame
+	box2.show_choices(labels)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	box2.show_line("", "Done.")
+	await get_tree().process_frame
+	_ok(box2._text.text == "Done.",
+		"na keuzes blijft de vorige (afgekapte) vraag in het tekstlabel staan: '%s'" % box2._text.text)
+	box2.queue_free()
+
+	# Elke choices-node in de dialoogbomen krijgt dezelfde afkap. Een vraag
+	# van meer dan twee regels van ~26 tekens (~52 tekens) verliest daarmee
+	# woorden achter een ellipsis zodra hij mét keuzes op het scherm komt —
+	# dat is een contentkeuze en geen code-bug, dus hier alleen gemeld en
+	# niet herschreven.
+	const REGEL_BUDGET := 52
+	for map: String in ["npcs", "tickets", "wereld"]:
+		var dpad := "res://data/dialogue/%s.json" % map
+		var boom: Variant = JSON.parse_string(FileAccess.get_file_as_string(dpad))
+		if boom is Dictionary:
+			_meld_lange_keuzevragen(boom, "dialogue/%s.json" % map, REGEL_BUDGET)
+
+
+## Recursieve boomwandeling, in dezelfde stijl als `_gevolgvlaggen_in()`
+## hierboven: elke node met een niet-lege `choices`-lijst draagt een `text`
+## die straks als vraag boven de keuzeknoppen komt te staan.
+func _meld_lange_keuzevragen(d: Variant, pad: String, budget: int) -> void:
+	if d is Dictionary:
+		var choices: Array = d.get("choices", []) as Array
+		if not choices.is_empty():
+			var tekst := String(d.get("text", ""))
+			if tekst.length() > budget:
+				print("MELDING: %s heeft een keuzevraag van %d tekens (budget ~%d), " % [
+					pad, tekst.length(), budget] + "past niet in twee regels: \"%s\"" % tekst)
+		for k: Variant in (d as Dictionary).keys():
+			_meld_lange_keuzevragen(d[k], pad, budget)
+	elif d is Array:
+		for v: Variant in (d as Array):
+			_meld_lange_keuzevragen(v, pad, budget)
 
 
 ## Een wervingsgesprek begint met de hulpvraag, en met het ticketnummer erin.
@@ -4075,10 +4333,14 @@ func _object_tiles() -> Dictionary:
 ##
 ## Twee dingen worden hier gemeten die geen van beide uit een losse constructie
 ## van het scherm blijken. Ten eerste: er gebeurt niets in de wereld zolang je
-## niet geopend hebt. Het effect van k1 is `unlock_ticket t07`, en t07 staat op
+## niet geopend hebt. Het effect van k4 is `unlock_ticket t07`, en t07 staat op
 ## `available_when: {tickets_done: [t04]}` — dus op slot bij een verse run. Dat
 ## is de meetlat: een bericht dat de speler nog niet gelezen heeft mag de wereld
 ## niet al veranderd hebben.
+##
+## (Niet k1: sinds de BBD-204 → BBD-207-fix in `docs/AUDIT-2026-09-05.md`,
+## bevinding 5, draagt k1 geen effect meer — alleen k4 trekt BBD-207 naar
+## voren, op 6/10.)
 ##
 ## Ten tweede: er is precies één uitweg. Haar berichten dragen effects, dus een
 ## tweede knop of een ESC die de melding wegtikt zou een ticket kunnen
@@ -4097,16 +4359,16 @@ func _test_klant_melding_voor_bericht() -> void:
 	await get_tree().process_frame
 
 	# --- stap 1: de melding, en verder niets ------------------------------
-	tel.call(&"_toon", &"k1")
+	tel.call(&"_toon", &"k4")
 	await get_tree().process_frame
-	_ok(tel.is_open(), "_toon(k1): de telefoon staat niet open")
+	_ok(tel.is_open(), "_toon(k4): de telefoon staat niet open")
 	_ok(not bool(tel.get(&"_bericht_zichtbaar")),
-		"_toon(k1): het bericht staat er meteen, de melding is overgeslagen")
+		"_toon(k4): het bericht staat er meteen, de melding is overgeslagen")
 
 	var melding := tel.get(&"_meldingvak") as CanvasItem
 	var bericht := tel.get(&"_berichtvak") as CanvasItem
-	_ok(melding != null and melding.visible, "_toon(k1): het meldingsvak staat niet aan")
-	_ok(bericht != null and not bericht.visible, "_toon(k1): het berichtvak staat al aan")
+	_ok(melding != null and melding.visible, "_toon(k4): het meldingsvak staat niet aan")
+	_ok(bericht != null and not bericht.visible, "_toon(k4): het berichtvak staat al aan")
 
 	# Haar naam, uit de data. Niet "De Klant" en niet de naam van de manege:
 	# dit is het moment waarop de speler wil weten wie er belt.
@@ -4124,7 +4386,7 @@ func _test_klant_melding_voor_bericht() -> void:
 				% verboden)
 
 	_ok(not Session.is_available(&"t07"),
-		"k1: t07 ging al open terwijl het bericht nog niet gelezen was")
+		"k4: t07 ging al open terwijl het bericht nog niet gelezen was")
 
 	# ESC hoort de melding niet weg te tikken. Dit is de guard in `_input()`:
 	# die kijkt naar `_bericht_zichtbaar` en niet naar `_open`.
@@ -4148,7 +4410,7 @@ func _test_klant_melding_voor_bericht() -> void:
 	_ok(bericht != null and bericht.visible, "Openen: het berichtvak kwam niet aan")
 	var tekst := tel.get(&"_tekst") as RichTextLabel
 	_ok(tekst != null and tekst.text != "", "Openen: er staat geen berichttekst op het scherm")
-	_ok(Session.is_available(&"t07"), "Openen: het effect van k1 draaide niet")
+	_ok(Session.is_available(&"t07"), "Openen: het effect van k4 draaide niet")
 
 	# --- wegleggen mag nu wél ---------------------------------------------
 	tel.call(&"_weg")
