@@ -151,7 +151,7 @@ func _bouw(c: Dictionary) -> void:
 
 	# Op de chrome zelf en niet op het witte dashboard, dus de donkere-ondergrond
 	# tint. Diezelfde regel wisselt van kleur via `_zeg()`; die kleuren staan daar.
-	_regel = UiKit.label("Hoeveel bugs erin zitten weet je niet. Testen vertelt het je.",
+	_regel = UiKit.label("Hoeveel bugs erin zitten weet je pas als je test.",
 		UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	# Twee regels reserveren: de reactie op een handeling verschijnt hier, en een
 	# lijst keuzes die bij elke tik een paar pixels opschuift is niet te raken.

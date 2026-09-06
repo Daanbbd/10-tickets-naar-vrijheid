@@ -1687,7 +1687,7 @@
   "nodes": {
    "start": {
     "speaker": "",
-    "text": "In de koffiecorner staat een scherm aan. Op het scherm: A tegen B. In Jira staat verder niets.",
+    "text": "Op de laptop in de koffiecorner staat iets open: A tegen B. Niemand weet wie dit heeft aangezet.",
     "next": "herkomst"
    },
    "herkomst": {
@@ -1724,7 +1724,7 @@
        ]
       },
       "speaker": "",
-      "text": "Je zet het scherm aan. A tegen B. Drie klappen, meer niet."
+      "text": "Je kijkt mee. Twee versies van de webshop, drie rondes. Danny komt erbij staan."
      },
      {
       "speaker": "danny",

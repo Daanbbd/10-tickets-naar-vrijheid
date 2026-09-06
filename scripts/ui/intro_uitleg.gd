@@ -96,8 +96,8 @@ static func lessen() -> Array[String]:
 	# met je mee naar het bord, de tickets landen erop, de besturingskaart komt
 	# daarna). Dit is de voetnoot onder het berichtje, niet het scherm.
 	return [
-		"Tien tickets, verspreid door het kantoor. Dennis hangt je eerste twee op het ticketbord. Daarna staan er %s open, kies zelf." % telwoord,
-		"Niet jouw vak? Haal er een collega bij. Alle tien af, dan mag je naar buiten.",
+		"Er liggen tien tickets verspreid door het kantoor. Dennis hangt de eerste twee voor je op het ticketbord. De andere vind je door rond te lopen; er staan er nu %s open." % telwoord.to_lower(),
+		"Hoort een ticket bij een collega, dan haal je die erbij. Zijn alle tien af, dan mag je naar huis.",
 	]
 
 
@@ -117,7 +117,11 @@ func _ready() -> void:
 	UiKit.full_rect(v)
 	v.offset_left = 12; v.offset_right = -12
 	v.offset_top = 16; v.offset_bottom = -12
-	v.add_theme_constant_override("separation", 4)
+	# Regel 1 van `lessen()` werd met de herschrijving voor F-uitlegteksten een
+	# woord langer en breekt daardoor over een extra regel; de vaste spacers
+	# in dit blok houden al voldoende visuele lucht, dus de kolombrede
+	# separation kan omlaag om de knop weer boven de onderrand te houden.
+	v.add_theme_constant_override("separation", 2)
 	add_child(v)
 
 	# Woensdag, 09:12 — en dan gaat haar telefoon. De opdracht komt niet van een
@@ -141,7 +145,7 @@ func _ready() -> void:
 	# "vandaag".
 	for r: String in opdracht():
 		v.add_child(UiKit.label(r, UiKit.FS_SMALL, UiKit.WIT))
-	v.add_child(UiKit.spacer(6))
+	v.add_child(UiKit.spacer(2))
 	_blok(v, "HOE DIT WERKT", lessen(), UiKit.GRIJS_OP_DONKER)
 
 	# Duwt de knop naar de onderrand, wat er ook boven staat.

@@ -450,7 +450,7 @@ func _intro_beat() -> void:
 		var dennis_def: NpcDef = GameData.npc(&"dennis")
 		if dennis_def != null:
 			await dialogue.say(dennis_def.name,
-					"Morgen. Laatste dag van sprint veertien. Zij denkt dat we "
+					"Morgen. Laatste dag van sprint veertien. De klant denkt dat we "
 					+ "morgen live gaan, dus dat gaan we. Verder heb ik niks nodig.",
 					&"dennis")
 

@@ -2487,7 +2487,7 @@ func _test_intro() -> void:
 
 	var eigen := "\n".join(IntroUitleg.lessen())
 	for les: String in [
-			"Tien tickets", "naar buiten", "verspreid", "ticketbord", "collega"]:
+			"tien tickets", "naar huis", "verspreid", "ticketbord", "collega"]:
 		_ok(eigen.contains(les), "IntroUitleg.lessen() noemt niet meer: '%s'" % les)
 
 	# Het getal in regel 3 moet de ticketdata volgen. Hier stond "Negen staan
@@ -2500,9 +2500,9 @@ func _test_intro() -> void:
 	_ok(open_nu > 0 and open_nu < GameData.ticket_ids().size(),
 		"open_bij_start() geeft %d van %d; klopt de available_when-keten nog?" % [
 			open_nu, GameData.ticket_ids().size()])
-	_ok(eigen.contains("Daarna staan er %s open" % IntroUitleg.TELWOORDEN[open_nu]),
-		"de uitleg noemt niet 'Daarna staan er %s open' terwijl er %d openstaan" % [
-			IntroUitleg.TELWOORDEN[open_nu], open_nu])
+	_ok(eigen.contains("er staan er nu %s open" % IntroUitleg.TELWOORDEN[open_nu].to_lower()),
+		"de uitleg noemt niet 'er staan er nu %s open' terwijl er %d openstaan" % [
+			IntroUitleg.TELWOORDEN[open_nu].to_lower(), open_nu])
 
 	# De knoppenbalk (Besturing) staat er op elk apparaat; een toetsnaam
 	# beschrijft dan iets dat niet overal bestaat.

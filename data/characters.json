@@ -4,7 +4,7 @@
     "name": "Daan",
     "role": "Product Owner",
     "tagline": "Bewaakt de scope. Verliest de scope.",
-    "description": "Jij vertaalt wensen naar user stories. Iedereen denkt dat jij beslist. Jij denkt dat de klant beslist. De klant denkt dat jij het al gebouwd hebt.",
+    "description": "Product owner. Bewaakt wat er in de sprint komt, en wat niet.",
     "traits": [
       "proces",
       "commercieel"
@@ -42,7 +42,7 @@
     "name": "Danny",
     "role": "CRO-specialist",
     "tagline": "Alles is een funnel. Ook de gang.",
-    "description": "Jij kijkt naar gedrag, niet naar meningen. Je hebt ooit een vergadering met een A/B-test gewonnen en dat is nooit meer goedgekomen.",
+    "description": "CRO-specialist. Kijkt naar wat bezoekers doen, niet naar wat ze zeggen.",
     "traits": [
       "data",
       "commercieel"
@@ -79,7 +79,7 @@
     "name": "Victor",
     "role": "Frontend developer",
     "tagline": "Design systemen. En het staat scheef.",
-    "description": "Jij bouwt wat anderen bedenken. Je vraagt niet of iets kan, je vraagt of iemand het heeft nagedacht. Meestal niet.",
+    "description": "Frontend developer. Bouwt wat anderen bedenken, en ziet elke pixel die scheef staat.",
     "traits": [
       "technisch",
       "detail"
@@ -115,7 +115,7 @@
     "name": "Jonathan",
     "role": "Backend developer",
     "tagline": "Werkt lokaal. Dat is ook iets.",
-    "description": "Jij houdt de dingen overeind die niemand ziet. Als jouw werk opvalt, is er iets kapot.",
+    "description": "Backend developer. Houdt overeind wat niemand ziet.",
     "traits": [
       "technisch",
       "data"
@@ -152,7 +152,7 @@
     "name": "Willem",
     "role": "Client Lead",
     "tagline": "Regelt het. Vraag niet hoe.",
-    "description": "Jij praat met de klant zodat niemand anders dat hoeft. Je zegt zelden nee, maar je zegt het net zo lang ja tot het iets anders betekent.",
+    "description": "Client lead. Praat met de klant zodat niemand anders dat hoeft.",
     "traits": [
       "commercieel",
       "sociaal"
@@ -188,7 +188,7 @@
     "name": "Bastiaan",
     "role": "Frontend developer",
     "tagline": "Shopify. Vindt altijd nog één ding.",
-    "description": "Jij ziet wat er niet klopt voordat iemand het gebouwd heeft. Dat is handig. Het is ook vermoeiend.",
+    "description": "Frontend developer, Shopify. Ziet wat er niet klopt voordat het gebouwd is.",
     "traits": [
       "technisch",
       "detail"
@@ -224,7 +224,7 @@
     "name": "Koen",
     "role": "Backend / AI & automatisering",
     "tagline": "Heeft er waarschijnlijk al iets voor.",
-    "description": "Jij lost het op met iets wat vorige maand nog niet bestond. Meestal werkt het. Uitleggen doe je onderweg.",
+    "description": "Backend en AI. Heeft er waarschijnlijk al iets voor gebouwd.",
     "traits": [
       "technisch",
       "sociaal"

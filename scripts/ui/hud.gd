@@ -992,13 +992,13 @@ func _refresh_objective() -> void:
 	var rest := QuestEngine.undiscovered_count()
 	var op_slot := QuestEngine.locked_count()
 	if rest <= 0 and op_slot > 0:
-		_zet_objective("Niets meer te vinden. %d wacht op ander werk." % op_slot)
+		_zet_objective("Alles gevonden. %d tickets komen vrij als je verder werkt." % op_slot)
 		return
 	# "op de vloer" stond hier, en dat was een idioom ("nog niet gevonden,
 	# ergens in het gebouw") dat botste met de zone die letterlijk De Vloer
 	# heet: je las het als "vier tickets in díe hoek" in plaats van "vier
 	# tickets nog nergens gezien".
-	_zet_objective("Nog %d in het kantoor. Loop een ruimte in." % rest)
+	_zet_objective("Nog %d tickets te vinden. Loop een ruimte in." % rest)
 
 
 ## De doelregel zetten, en hem laten zien als hij iets nieuws zegt.

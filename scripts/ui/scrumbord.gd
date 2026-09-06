@@ -171,7 +171,7 @@ func vul() -> void:
 	elif Session.all_done():
 		_detail.text = "[color=#%s]Alles opgelost. Ga naar de voordeur.[/color]" % UiKit.GROEN_OP_LICHT.to_html(false)
 	else:
-		_detail.text = "[color=#%s]Je hebt nog niets gevonden. Elk ticket ligt in de ruimte waar het hoort.[/color]" % UiKit.GRIJS_OP_LICHT.to_html(false)
+		_detail.text = "[color=#%s]Nog niets gevonden. Loop het kantoor door: elk ticket ligt bij de persoon of het ding waar het over gaat.[/color]" % UiKit.GRIJS_OP_LICHT.to_html(false)
 
 
 ## Hoeveel er nog liggen, en in de close-up ook waar je staat. Dit is de reden
@@ -189,16 +189,16 @@ func _restregel() -> String:
 	# duwt hij de briefjes uit beeld.
 	#
 	# "Nog 4 in het kantoor. 6 wachten nog." stond hier, en dat is twee keer
-	# "nog" in zeven woorden — plus het brak alsnog over twee regels. "Op slot"
-	# is bovendien het woord dat het bord en de HUD elders al gebruiken voor
-	# werk dat achter ander werk wacht.
+	# "nog" in zeven woorden — plus het brak alsnog over twee regels. Dit bord
+	# en de HUD zeiden hier eerder allebei "op slot"; dat is makersjargon en
+	# zegt een speler niets, dus staat er nu "komen later vrij".
 	if rest <= 0:
 		if op_slot > 0:
-			return "Alles gevonden, %d op slot." % op_slot
+			return "Alles gevonden. %d komen later vrij." % op_slot
 		return "Alles gevonden."
 	var regel := "Nog %s te vinden" % ("één" if rest == 1 else str(rest))
 	if op_slot > 0:
-		regel += ", %d op slot" % op_slot
+		regel += ", %d komen later vrij" % op_slot
 	return regel + "."
 
 

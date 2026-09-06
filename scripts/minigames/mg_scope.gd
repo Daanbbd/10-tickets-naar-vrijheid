@@ -163,7 +163,7 @@ func _on_setup() -> void:
 	_bouw_meters(body)
 	_sprint_kop = _bouw_kop(body, "IN DE SPRINT")
 	_sprint = _bouw_lijst(body)
-	_sprint_leeg = UiKit.label("Nog niets. Zij wacht.", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
+	_sprint_leeg = UiKit.label("Nog niets. De klant wacht.", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
 	body.add_child(_sprint_leeg)
 	_rest_kop = _bouw_kop(body, "NIET DEZE SPRINT")
 	_rest = _bouw_lijst(body)
