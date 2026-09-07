@@ -77,6 +77,17 @@ var _banner_label: Label = null
 var _storing_paneel: PanelContainer = null
 var _storing_label: Label = null
 
+## Het venster zelf (gezet in `build_chrome()`), zodat `impact()` hieronder
+## het kan laten schudden. Blijft `null` voor een minigame die `build_chrome()`
+## niet gebruikt.
+var _frame: PanelContainer = null
+var _impact_tween: Tween = null
+## Rustpositie van `_frame`, één keer vastgelegd bij de eerste `impact()`-
+## aanroep — zodat een reeks tikken achter elkaar niet optelt tot een venster
+## dat langzaam wegdrijft van waar het hoort te staan.
+var _impact_rust: Vector2 = Vector2.ZERO
+var _impact_rust_gezet: bool = false
+
 ## P1.2: de WAT-overlay ín het veld en zijn tween. Bijgehouden zodat een echte
 ## aanraking hem kan wegvegen (`_unhandled_input()`) en `_exit_tree()` de tween
 ## nooit los in de lucht laat hangen.
@@ -113,16 +124,16 @@ func build_chrome(title: String, _intro: String) -> VBoxContainer:
 	# HUD, en het is dezelfde ondergrond als het uitlegscherm en het titelscherm.
 	# De rand blijft LINE, zodat het venster nog leest als iets dat bovenop de
 	# gedimde wereld ligt in plaats van als de wereld zelf.
-	var frame := PanelContainer.new()
-	frame.add_theme_stylebox_override("panel", UiKit.panel(UiKit.SCHERM_NACHT, UiKit.LINE))
-	UiKit.full_rect(frame)
-	frame.offset_left = 4; frame.offset_right = -4
-	frame.offset_top = 4; frame.offset_bottom = -4
-	add_child(frame)
+	_frame = PanelContainer.new()
+	_frame.add_theme_stylebox_override("panel", UiKit.panel(UiKit.SCHERM_NACHT, UiKit.LINE))
+	UiKit.full_rect(_frame)
+	_frame.offset_left = 4; _frame.offset_right = -4
+	_frame.offset_top = 4; _frame.offset_bottom = -4
+	add_child(_frame)
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)
-	frame.add_child(col)
+	_frame.add_child(col)
 	_kolom = col
 
 	# Titel en status onder elkaar, niet naast elkaar: op 192 px is een kop op
@@ -235,6 +246,8 @@ func _weg_intro_overlay() -> void:
 func _exit_tree() -> void:
 	if _intro_tween != null and is_instance_valid(_intro_tween):
 		_intro_tween.kill()
+	if _impact_tween != null and is_instance_valid(_impact_tween):
+		_impact_tween.kill()
 
 
 ## Twee stroken die **niet** meescrollen: boven en onder de inhoud.
@@ -370,6 +383,58 @@ func puls_rand(control: Control, keer: int = 2) -> Tween:
 		tw.tween_property(sb, "border_color", origineel, 0.15) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	return tw
+
+
+## Laat het venster zelf schokken — de vervanging van `Juice.schok()` binnenin
+## een minigame.
+##
+## `Juice.schok()` schudt de node in de groep `game_camera`, dat is de
+## wereldcamera. Een minigame draait als overlay op `MinigameLayer`, een
+## `CanvasLayer` (`autoload/shell.tscn`) die niet meebeweegt met een
+## `Camera2D`, en dat venster dekt het beeld tot 4 px van de rand af
+## (`build_chrome()` hierboven). Een camerashok is dus achter dit paneel
+## onzichtbaar: alle vijf `Juice.schok()`-aanroepen in de minigame-laag waren
+## daarmee no-ops voor de speler (`docs/AUDIT-2026-09-07-MINIGAMES.md`). Een
+## minigame die een treffer voelbaar wil maken — mislukt, een storing die
+## inslaat — gebruikt daarom `impact()`, niet `Juice.schok()`.
+##
+## Schudt `_frame` met een amplitude die van `px` naar 0 uitdooft over `duur`
+## seconden en zet hem daarna exact terug op zijn rustpositie, zodat een reeks
+## tikken achter elkaar niet optelt tot een venster dat wegdrijft. Zonder
+## `_frame` (een minigame die `build_chrome()` niet gebruikt) gebeurt er stil
+## niets, net als bij `Juice.schok()` zonder camera in de boom.
+##
+## Onder `Autopilot.gevraagd()` blijft het schudden zelf uit — hetzelfde
+## patroon als `Juice.confetti()` hierboven: een QA-screenshot moet elke keer
+## identiek zijn, en een tijdsafhankelijke beweging is dat niet.
+##
+## `tril`: `-1` (standaard) betekent geen trilling; anders een waarde uit
+## `Haptiek.Sterkte` (`scripts/core/haptiek.gd`), bijvoorbeeld
+## `Haptiek.Sterkte.SLAG`. Die trilling blijft ook onder de autopilot gewoon
+## lopen — `Haptiek.tril()` is zelf al stil op een apparaat dat geen telefoon
+## is, en heeft geen invloed op wat een screenshot laat zien.
+func impact(px: float = 2.0, duur: float = 0.25, tril: int = -1) -> void:
+	if _frame != null:
+		if not _impact_rust_gezet:
+			_impact_rust = _frame.position
+			_impact_rust_gezet = true
+		if _impact_tween != null and _impact_tween.is_valid():
+			_impact_tween.kill()
+		if not Autopilot.gevraagd():
+			var rust := _impact_rust
+			_impact_tween = create_tween()
+			_impact_tween.tween_method(
+				func(t: float) -> void:
+					var uitdoving := 1.0 - t
+					var fase := t * duur * 45.0
+					_frame.position = rust + Vector2(sin(fase * 1.3), cos(fase)) * px * uitdoving,
+				0.0, 1.0, duur)
+			_impact_tween.tween_callback(func() -> void:
+				_frame.position = rust)
+		else:
+			_frame.position = _impact_rust
+	if tril >= 0:
+		Haptiek.tril(tril)
 
 
 ## F5-b: een storing landt hier, niet als overlay erboven. De telefoon (laag
