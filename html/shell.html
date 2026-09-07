@@ -325,6 +325,8 @@ const engine = new Engine(GODOT_CONFIG);
 			// niets aan hoe het spel normaal draait.
 			let __godotAudioLog = null;
 			let __godotWorkletLog = null;
+			let __godotConnectLog = null;
+			let __godotChunkLog = null;
 			if (window.location.search.indexOf('audio') !== -1) {
 				try {
 					const EchteCtx = window.AudioContext || window.webkitAudioContext;
@@ -360,6 +362,54 @@ const engine = new Engine(GODOT_CONFIG);
 						};
 					}
 
+					// Derde laag: verbindt de worklet-node zich ook echt met de
+					// uitvoer? `GodotAudioWorklet.start()`/`start_no_threads()`
+					// (in `index.js`) doen dat met `node.connect(ctx.destination)`,
+					// pas nadat `addModule()` geslaagd is en de node aangemaakt is
+					// \u2014 een aparte stap die de vorige twee lagen niet zien. Zonder
+					// deze `connect()` bereikt geen sample ooit de luidspreker,
+					// ook al melden context en module allebei succes.
+					// Vierde laag: als de graaf helemaal klopt (running, worklet
+					// geladen, verbonden, gain open) kan het nog steeds stil zijn
+					// omdat er geen enkel geluidssample onderweg is. Zonder threads
+					// stuurt Godot de gemixte audio als "chunk"-berichten van de
+					// hoofdthread naar de worklet-processor (`GodotAudioWorklet`
+					// in `index.js`, de `RingBuffer`). Dit tapt die berichten af en
+					// meet de grootste sample-waarde die erin zit: 0 betekent
+					// stilte die wél aankomt, niets betekent dat er nooit iets
+					// gestuurd wordt.
+					__godotChunkLog = { gezien: 0, piek: 0 };
+					if (typeof MessagePort !== 'undefined') {
+						const echtPostMessage = MessagePort.prototype.postMessage;
+						MessagePort.prototype.postMessage = function (msg, ...rest) {
+							if (msg && msg.cmd === 'chunk' && msg.data && msg.data.length) {
+								__godotChunkLog.gezien++;
+								const arr = msg.data;
+								for (let i = 0; i < arr.length; i++) {
+									const v = Math.abs(arr[i]);
+									if (v > __godotChunkLog.piek) {
+										__godotChunkLog.piek = v;
+									}
+								}
+							}
+							return echtPostMessage.call(this, msg, ...rest);
+						};
+					}
+
+					__godotConnectLog = [];
+					if (typeof AudioNode !== 'undefined') {
+						const echtConnect = AudioNode.prototype.connect;
+						AudioNode.prototype.connect = function (dest, ...rest) {
+							if (dest instanceof AudioDestinationNode) {
+								// Het knooppunt zelf erbij, niet alleen zijn naam: een
+								// GainNode die naar destination gaat kan zelf op 0 staan
+								// en dan is de hele graaf verder correct én toch stil.
+								__godotConnectLog.push({ node: this, van: this.constructor.name, tMs: Math.round(performance.now()) });
+							}
+							return echtConnect.call(this, dest, ...rest);
+						};
+					}
+
 					const toon = () => {
 						window.AudioContext = EchteCtx;
 						window.webkitAudioContext = EchteCtx;
@@ -377,10 +427,29 @@ const engine = new Engine(GODOT_CONFIG);
 						const workletTekst = __godotWorkletLog.length === 0
 							? 'geen worklet geladen'
 							: __godotWorkletLog.map((w) => w.status).join(', ');
+						const connectTekst = __godotConnectLog.length === 0
+							? 'GEEN connect() naar destination'
+							: __godotConnectLog.map((c) => {
+								// Voor een GainNode de waarde erbij: dat is precies het
+								// knooppunt dat een hele graaf stilletjes kan smoren
+								// terwijl elke andere meting hierboven "in orde" zegt.
+								if (c.node && 'gain' in c.node) {
+									return c.van + '(gain=' + c.node.gain.value + ')';
+								}
+								return c.van;
+							}).join('+') + ' \u2192 destination';
+						const chunkTekst = __godotChunkLog.gezien === 0
+							? 'GEEN chunks verstuurd'
+							: __godotChunkLog.gezien + 'x chunk, piek=' + __godotChunkLog.piek.toFixed(4);
 						document.getElementById('gate-note').textContent = laatste.ctx.sampleRate + ' Hz'
-							+ ' \u00b7 na ' + laatste.tMs + ' ms \u00b7 worklet: ' + workletTekst;
+							+ ' \u00b7 worklet: ' + workletTekst + ' \u00b7 ' + connectTekst;
+						document.getElementById('gate-title').textContent = chunkTekst;
 					};
-					setTimeout(toon, 4000);
+					// Ruimer dan de vorige lagen: dit moet niet alleen de
+					// audiodriver zien opstarten maar ook wachten tot de scene
+					// zo ver is dat er echt muziek gestart wordt
+					// (`title_screen.gd` \u2192 `AudioDirector.set_base()`).
+					setTimeout(toon, 7000);
 				} catch (err) {
 					console.error('audio-diagnose faalde:', err);
 				}
