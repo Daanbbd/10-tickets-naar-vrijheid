@@ -21,6 +21,24 @@ const LABEL_HOOGTE := 14.0
 ## `_maak_label()`.
 const LABEL_ONDER_GRENS := 80.0
 
+## Boven de meubels, onder de gidslaag.
+##
+## Het label had géén `z_index` — nagerekend: het woord kwam in dit bestand
+## niet voor. Het erfde dus 0 en y-sorteerde mee op de positie van zijn
+## WorldObject, terwijl props op de ónderrand van hun footprint sorteren
+## (`main.gd::_plaats_prop()`). De beamer staat op wereld-y 72 en de
+## vergadertafel op 80, dus die tafel werd ná het label getekend en dekte de
+## tekst af. Daan (#32): *"Tekst staat achter vergadertafel."*
+##
+## 21 en niet hoger: props, hangende bordjes, ticketbriefjes en barks zitten
+## allemaal op 20, en de doelwijzer en de tikmarker op 60. Dit label hoort boven
+## het meubilair en onder alles wat je kunt aantikken.
+const LABEL_Z := 21
+
+## Marge tot de schermrand bij het klemmen. Zelfde waarde als
+## `TapMarker.RANDMARGE`, want het is hetzelfde probleem.
+const LABEL_RANDMARGE := 4.0
+
 
 ## Hoort het label van een object op deze wereld-y onder het object te hangen?
 ## Statisch zodat de testsuite de grens kaal kan controleren.
@@ -127,12 +145,59 @@ func op_set_text(t: String) -> void:
 ## doos uit, want een Label knipt niet: je kreeg zes regels contourtekst dwars
 ## over het vergaderhok, de bureaus en de ticketbriefjes heen, zonder
 ## achtergrond. Dat leest niet als een whiteboard maar als een renderfout.
+## Het label horizontaal binnen beeld houden.
+##
+## Het stond hard op `-LABEL_BREEDTE * 0.5` ten opzichte van het object, dus bij
+## een object aan de rand van het zichtbare stuk vloer liep de helft van de
+## tekst buiten het canvas. Daan las daardoor "…EN SIGNAAL" (#31, #32),
+## "…taging: layout OK" (#23, #29) en "…supplementen …gelijken" (#36) — en dacht
+## bij dat laatste dat het restanten van een vastloper waren (#37).
+##
+## `TapMarker._leg_kaartje()` en `ObjectiveMarker` klemmen zich al zo; dit label
+## was de enige wereldtekst die het niet deed. Zelfde rekensom, dezelfde marge.
+func _process(_delta: float) -> void:
+	if _label == null or not _label.visible:
+		return
+	var vp := get_viewport()
+	if vp == null:
+		return
+	var zicht := vp.get_canvas_transform().affine_inverse() * \
+		Rect2(Vector2.ZERO, vp.get_visible_rect().size)
+	if zicht.size.x <= 0.0:
+		return
+	var half := _label.size.x * 0.5
+	var links := zicht.position.x + LABEL_RANDMARGE + half
+	var rechts := zicht.end.x - LABEL_RANDMARGE - half
+	var x := -half
+	if rechts > links:
+		x = clampf(global_position.x, links, rechts) - global_position.x - half
+	_label.position.x = floorf(x)
+
+
 func _meet_label() -> void:
 	if _label == null:
 		return
 	var hoog := maxf(LABEL_HOOGTE, _label.get_minimum_size().y)
 	_label.size = Vector2(LABEL_BREEDTE, hoog)
-	_label.position = Vector2(-LABEL_BREEDTE * 0.5, -hoog - 6.0)
+	# Onder of boven, dezelfde keuze als in `_maak_label()`.
+	#
+	# Hier stond die keuze niet: de y werd onvoorwaardelijk op `-hoog - 6` gezet,
+	# dus élk label kwam bóven zijn object — ook de labels waarvoor
+	# `_maak_label()` net zorgvuldig "eronder" had uitgerekend. `_maak_label()`
+	# loopt één keer bij het aanmaken en `_meet_label()` bij elke tekstwijziging,
+	# dus de tweede overschreef de eerste altijd.
+	#
+	# Dat is te zien op `docs/audit-shots/los.png` van 6 september: het
+	# whiteboard staat op rij 3 (wereld-y 56) en zijn drie regels tekst kwamen op
+	# y 14 uit — midden in de HUD-band, achter de klok. Precies wat
+	# `LABEL_ONDER_GRENS` moest voorkomen.
+	if label_onder(global_position.y):
+		var halve_hoogte := 8.0
+		if _sprite != null and _sprite.texture != null:
+			halve_hoogte = float(_sprite.texture.get_height()) * 0.5
+		_label.position = Vector2(-LABEL_BREEDTE * 0.5, halve_hoogte + 2.0)
+	else:
+		_label.position = Vector2(-LABEL_BREEDTE * 0.5, -hoog - 6.0)
 
 
 func _maak_label() -> Label:
@@ -176,7 +241,11 @@ func _maak_label() -> Label:
 	l.add_theme_stylebox_override("normal", vlak)
 	l.add_theme_constant_override("outline_size", 2)
 	l.add_theme_color_override("font_outline_color", UiKit.INK)
+	l.z_index = LABEL_Z
 	add_child(l)
+	# Alleen een object mét label heeft een lus nodig; de andere ~37 blijven
+	# stil. Zie `_process()`.
+	set_process(true)
 	return l
 
 func op_set_locked(v: bool) -> void:

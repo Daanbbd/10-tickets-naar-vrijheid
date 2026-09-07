@@ -6166,6 +6166,22 @@ func _test_fase2a() -> void:
 	_ok(not WorldObject.label_onder(200.0), "midden op de vloer blijft het label erboven")
 	_ok(not WorldObject.label_onder(400.0), "onderaan de vloer blijft het label erboven (de knoppenbalk dekt niets erbóven af)")
 
+	# Het label moet vóór het meubilair komen, en dat is geen smaak: props
+	# sorteren op de onderrand van hun footprint (`main.gd::_plaats_prop()`),
+	# dus een label zonder eigen `z_index` erft 0 en verdwijnt achter een tafel
+	# die verderop op de vloer staat. De beamer op wereld-y 72 ging zo achter
+	# de vergadertafel op 80 — Daan (#32): "Tekst staat achter vergadertafel."
+	#
+	# Boven de 20 waar props, hangende bordjes, ticketbriefjes en barks zitten,
+	# en onder de 60 van de doelwijzer en de tikmarker: die kun je aantikken en
+	# die horen dus vóór een decoratief label.
+	_ok(WorldObject.LABEL_Z > 20,
+		"WorldObject.LABEL_Z is %d, niet boven de 20 van de props — het label " % WorldObject.LABEL_Z +
+		"verdwijnt dan weer achter het meubilair")
+	_ok(WorldObject.LABEL_Z < 60,
+		"WorldObject.LABEL_Z is %d, boven de 60 van de doelwijzer en de " % WorldObject.LABEL_Z +
+		"tikmarker — een decoratief label hoort niet vóór wat je kunt aantikken")
+
 
 ## Fase 2b: terzijdes (een regel boven iets in de wereld, zonder de wereld stil
 ## te zetten) en overslaan (de rest van een gesprek in één beweging).

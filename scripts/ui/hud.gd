@@ -1180,10 +1180,30 @@ static func eigenaar_suffix(world_id: StringName) -> String:
 func _on_input_lock(locked: bool) -> void:
 	if locked:
 		_zone.modulate.a = 0.0
+		# En de rest van de bovenstapel erbij. Hier stond alléén de zonenaam, en
+		# dat was te weinig: een keuzedialoog is 248 px hoog en reikt tot y≈168,
+		# terwijl de doelregel plus een hintbriefje tot y≈200 komen. Die ~32 px
+		# overlap is wat Daan in #37 zag, met de dialoogbox (laag 20) over de
+		# HUD (laag 10) heen.
+		#
+		# De chips blijven staan: die zijn 26 px, ze zeggen hoeveel tickets en
+		# hoe laat het is, en ze zitten boven elke dialoogbox. Wat weggaat is de
+		# tekst die met de dialoog concurreert.
+		_objective.modulate.a = 0.0
+		_toasts.modulate.a = 0.0
+		return
+
+	_objective.modulate.a = 1.0
+	_toasts.modulate.a = 1.0
+	_leeg_toast_wachtrij()
 
 
 ## Hoe lang een gewone toast in beeld blijft.
 const TOAST_ZICHTBAAR := 2.6
+
+## Meldingen die binnenkwamen terwijl de invoer op slot stond, in aankomst-
+## volgorde. Zie `_on_toast()` en `_on_input_lock()`.
+var _toast_wachtrij: Array[Array] = []
 
 ## Hoeveel toasts er tegelijk mogen staan. Drie tegelijk (een opgelost ticket,
 ## een storing en Dennis) vulde zonder plafond het hele scherm — zie
@@ -1198,6 +1218,19 @@ func _on_toast(text: String, icon: StringName) -> void:
 	if icon == &"hint" and not Autopilot.gevraagd():
 		_toon_hint(text)
 		return
+
+	# Staat de invoer op slot, dan loopt er een dialoog, een minigame of de
+	# telefoon, en die vullen het scherm al. Een toast erbovenop was precies
+	# Daans "Hele scherm vol met notifications" (#29, #36): de doelregel, twee
+	# toasts en een keuzedialoog van 248 px stonden tegelijk in beeld, samen
+	# ruim de helft van 416 px.
+	#
+	# Wegwerpen mag niet — een opgelost ticket of een storing is nieuws dat je
+	# gemist zou hebben. Dus wachten tot de vloer weer vrij is, en dan één voor
+	# één. `_on_input_lock(false)` leegt de wachtrij.
+	if Session.input_locked:
+		_toast_wachtrij.append([text, icon])
+		return
 	while _toasts.get_child_count() >= TOAST_MAX:
 		_toasts.get_child(0).queue_free()
 		_toasts.remove_child(_toasts.get_child(0))
@@ -1211,6 +1244,29 @@ func _on_toast(text: String, icon: StringName) -> void:
 	tw.tween_interval(TOAST_ZICHTBAAR)
 	tw.tween_property(p, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(p.queue_free)
+
+
+## De meldingen die tijdens een slot binnenkwamen, één voor één alsnog tonen.
+##
+## Met een tik ertussen en niet alle drie tegelijk: drie panelen die samen
+## opkomen is dezelfde volle bovenrand, alleen dan een halve seconde later.
+func _leeg_toast_wachtrij() -> void:
+	if _toast_wachtrij.is_empty():
+		return
+	var wachtend := _toast_wachtrij.duplicate()
+	_toast_wachtrij.clear()
+	for i: int in wachtend.size():
+		var paar: Array = wachtend[i]
+		if i > 0:
+			# `process_always` op de timer: de wereld pauzeert niet tijdens een
+			# minigame, maar de shell kan de tree wel pauzeren.
+			await get_tree().create_timer(TOAST_ZICHTBAAR * 0.55, true, false, true).timeout
+		if not is_inside_tree() or Session.input_locked:
+			# Er is alweer een dialoog begonnen — terug in de wachtrij, in
+			# plaats van er alsnog overheen te vallen.
+			_toast_wachtrij.append(paar)
+			continue
+		_on_toast(String(paar[0]), StringName(paar[1]))
 
 
 ## Hoe lang een hint blijft staan: naar leeslengte, met een bodem en een plafond.
