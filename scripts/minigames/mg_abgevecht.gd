@@ -1,21 +1,62 @@
 extends MinigameBase
 ## BBD-207 — A tegen B. Danny's tweede A/B-getinte ticket, maar dit is geen
-## meting zoals BBD-206/`mg_abtest.gd`: dit is een gevecht. A moet B binnen
-## drie klappen knock-outen. Elke klap is een CRO-tweak die schade doet én
-## terugslaat — de vraag is niet of iets werkt, maar of het genoeg werkt om de
-## tegenklap waard te zijn. Precies het "aanzetten en kijken" van Danny's
-## andere ticket, alleen ziet dit er als een bokspartij uit in plaats van als
-## een grafiek.
+## meting zoals BBD-206/`mg_heatmap.gd`: dit is een gevecht. A moet B binnen
+## drie klappen knock-outen.
 ##
-## Verliest A, dan blijft het ticket open en komt Danny terug met een steeds
-## absurdere reden om het nog een keer te proberen — data die naar B wijst is
-## voor hem per definitie niet datagedreven genoeg. De teller die dat
-## bijhoudt (`Session.get_counter(&"ab_pogingen")`) wordt hier opgehoogd; de
-## oplopende regels zelf staan in `data/dialogue/tickets.json` bij `t07_fail`,
-## niet in deze minigame.
+## **Herontworpen na Daans playtest van 6 september.** Het wás drie keer een
+## rijtje van drie knoppen in een `ScrollContainer`, met health bars erboven.
+## Zijn oordeel (#28): *"had dit meer als een daadwerkelijke 1v1 arcade
+## fighting game verwacht, geen 'snel vragen beantwoorden' ding. met health bar
+## en alles en CRO grapjes bij critical hits."* En (#28b): *"wat een
+## verwarrende UX."*
+##
+## Wat er nu staat is een **timingspel**. Elke ronde slingert een marker over
+## een baan met een kritieke zone in het midden. Wélke klap je zet blijft jouw
+## keuze — daar zit de comedy, want "nog een veld erbij, voor de zekerheid" is
+## de grap — maar *wanneer* je hem zet bepaalt of hij aankomt:
+##
+## | timing | schade | tegenklap | wat je ziet |
+## |---|---|---|---|
+## | in de kritieke zone | ×1,5 | ×0,5 | CRITICAL, en Danny's regel als de clou |
+## | daarbuiten, binnen de baan | ×1 | ×1 | gewoon raak |
+## | in de buitenste `MIS_MARGE` | ×0,35 | ×1,4 | mis, en B slaat harder terug |
+##
+## De zone krimpt per ronde, wat de escalatie in de bestaande teksten volgt
+## ("Hij komt overeind", "Maak het af"). De data verandert niet: `schade`,
+## `tegenklap` en `regel` per variant blijven precies wat ze waren, dus alle
+## geschreven grappen staan er nog.
+##
+## Ruim genomen, met opzet: dit is een comedy adventure en geen uitdaging (zie
+## `docs/GAME_DESIGN.md`). Een totale mis vraagt actief slechte timing, en
+## verliezen kost niets dan tijd — Danny komt terug met een steeds absurdere
+## reden om het nog eens te proberen. De teller die dat bijhoudt
+## (`Session.get_counter(&"ab_pogingen")`) wordt hier opgehoogd; de oplopende
+## regels zelf staan in `data/dialogue/tickets.json` bij `t07_fail`.
 
 ## Lang genoeg om een klap te zien landen, kort genoeg om drie keer te doen.
 const MEET_DUUR := 0.5
+
+## De adempauze tussen twee rondes, waarin Danny's regel staat en de balken
+## uitzakken. Zie `_volgende()`.
+const NA_RONDE_SEC := 1.5
+
+## Breedte van de kritieke zone per ronde, als deel van de baan. Krimpt mee met
+## de escalatie in de rondeteksten.
+const ZONE_PER_RONDE: Array[float] = [0.34, 0.26, 0.20]
+
+## De buitenste band aan weerszijden waar een klap mis is.
+const MIS_MARGE := 0.15
+
+## Hoe lang de marker over één enkele overtocht doet, per ronde. Korter is
+## sneller, dus moeilijker.
+const SLINGER_SEC_PER_RONDE: Array[float] = [1.30, 1.05, 0.85]
+
+const CRIT_SCHADE := 1.5
+const CRIT_TEGENKLAP := 0.5
+const MIS_SCHADE := 0.35
+const MIS_TEGENKLAP := 1.4
+
+enum Kwaliteit { CRITICAL, RAAK, MIS }
 
 var _hp_a_max: float = 100.0
 var _hp_b_max: float = 100.0
@@ -25,32 +66,52 @@ var _hp_b: float = 100.0
 var _ronde: int = 0
 var _keuzes: Array[String] = []
 var _bezig: bool = false
+
+## Is de klap van deze ronde al gevallen? Verving de `disabled`-stand van de
+## verdwenen "Volgende"-knop als bewaker tegen een tweede klap in één ronde.
+var _klap_gevallen: bool = false
 var _qa_loopt: bool = false
 var _afgerond: bool = false
 
+## Gezet door `qa_solve()`: dwing de volgende klap in de kritieke zone, zodat
+## de geautomatiseerde speelbeurt deterministisch wint in plaats van van de
+## slingerstand af te hangen.
+var _qa_dwing_critical: bool = false
+
 var _meting: Tween = null
+var _flits_tween: Tween = null
 
 var _vulling_a: ColorRect = null
 var _vulling_b: ColorRect = null
 var _waarde_a: Label = null
 var _waarde_b: Label = null
-var _blok: Array[PanelContainer] = []
-var _blok_tekst: Array[Label] = []
+var _vechter_a: Control = null
+var _vechter_b: Control = null
 
 var _vraag: Label = null
 var _varianten: VBoxContainer = null
 var _regel: Label = null
-var _volgende_knop: Button = null
 
-# P3: keuzeklok van `keuze_sec` per ronde — op nul valt de zwakste klap.
-# `_keuze_actief` staat pas op true zodra `_toon_ronde()` een ronde toont, dus
-# hij dient ook als de bewaakvlag tegen het ene `_process()`-frame vóór
-# `_on_setup()` klaar is (zie `mg_standup.gd::_running`).
+## De slinger. `_slinger` loopt van 0 tot 1 en terug; `_zone_*` is de kritieke
+## zone van deze ronde. `_slinger_actief` staat pas op true zodra `_toon_ronde()`
+## een ronde toont, dus hij dient ook als bewaakvlag tegen het ene `_process()`-
+## frame vóór `_on_setup()` klaar is (zie `mg_standup.gd::_running`).
+var _slinger: float = 0.0
+var _slinger_heen: bool = true
+var _slinger_sec: float = 1.3
+var _zone_van: float = 0.33
+var _zone_tot: float = 0.67
+var _slinger_actief: bool = false
+
+var _baan: Control = null
+var _zone_vak: ColorRect = null
+var _marker: ColorRect = null
+
+## De rondeklok. Loopt door terwijl je kiest; op nul valt de zwakste klap, en
+## die valt dan ook als een mis — te lang twijfelen is hier hetzelfde als
+## verkeerd timen.
 var _keuze_sec: float = 7.0
 var _keuze_tijd: float = 7.0
-var _keuze_actief: bool = false
-
-var _flits_b_tween: Tween = null
 
 
 func _on_setup() -> void:
@@ -65,30 +126,31 @@ func _on_setup() -> void:
 	_hp_b = _hp_b_max
 	_keuze_sec = maxf(1.0, float(c.get("keuze_sec", 7.0)))
 
-	var body := build_chrome(default_title(), String(c.get("intro", "")))
+	# De veldvorm en niet de lijstvorm: dit is een gevecht en geen formulier.
+	# Zie `MinigameBase.build_chrome_veld()`.
+	var body := build_chrome_veld(default_title(), String(c.get("intro", "")))
 
-	# De klokbalk boven de levensbalken: hetzelfde vaste-strook-argument als
-	# hieronder, en dit is de eerste druk die je ziet bij elke ronde.
-	chrome_header().add_child(bouw_klokbalk())
-
-	# Beide levensbalken horen niet in de scroll: dit zijn de twee dingen die
-	# je op elk moment nodig hebt, net als de tijdbalk in `mg_standup.gd`. De
-	# Volgende-knop is dezelfde afspraak voor je duim.
-	chrome_header().add_child(_bouw_meters())
-	_volgende_knop = _bouw_volgende()
-	chrome_footer().add_child(_volgende_knop)
-
-	# Vraag en Danny's commentaar op de chrome zelf, niet op een witte kaart
-	# erboven: WIT en BLUEBIRD_BRIGHT, want INK en bb-blue verdwijnen allebei
-	# in het donkere oppervlak. Zelfde keuze als `mg_abtest.gd`.
-	_vraag = UiKit.label("", UiKit.FS_BODY, UiKit.WIT)
+	# De rondetekst bóven de arena en niet eronder: de arena houdt hoogte over
+	# boven de vechters, en die ruimte hoort de aankondiging te dragen in plaats
+	# van leeg te staan. Onder de vechters is bovendien geen plek meer — daar
+	# begint de slingerbaan.
+	_vraag = UiKit.label("", UiKit.FS_SMALL, UiKit.WIT)
+	_vraag.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_vraag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.add_child(_vraag)
+
+	body.add_child(_bouw_arena())
+
+	body.add_child(_bouw_baan())
 
 	_varianten = VBoxContainer.new()
 	_varianten.add_theme_constant_override("separation", 2)
+	_varianten.size_flags_vertical = Control.SIZE_SHRINK_END
 	body.add_child(_varianten)
 
 	_regel = UiKit.label("", UiKit.FS_SMALL, UiKit.BLUEBIRD_BRIGHT)
+	_regel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_regel.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_regel.visible = false
 	body.add_child(_regel)
 
@@ -99,21 +161,33 @@ func _on_setup() -> void:
 func _exit_tree() -> void:
 	if _meting != null and _meting.is_valid():
 		_meting.kill()
-	if _flits_b_tween != null and _flits_b_tween.is_valid():
-		_flits_b_tween.kill()
+	if _flits_tween != null and _flits_tween.is_valid():
+		_flits_tween.kill()
 
 
-## Op nul valt de zwakste klap — geen keuze meer, geen wachten op "Volgende".
-## Gepauzeerd zolang er al gekozen is of het gevecht al klaar is: `_kies()`
-## zet `_keuze_actief` uit zodra een klap valt, en `_toon_ronde()` zet 'm weer
-## aan zodra de volgende ronde begint.
+## De slinger en de rondeklok lopen samen: zolang er gekozen mag worden beweegt
+## de marker, en tikt de klok. Op nul valt de zwakste klap als een mis.
 func _process(delta: float) -> void:
-	if not _keuze_actief:
+	if not _slinger_actief:
 		return
+
+	var stap := delta / maxf(0.05, _slinger_sec)
+	if _slinger_heen:
+		_slinger += stap
+		if _slinger >= 1.0:
+			_slinger = 1.0
+			_slinger_heen = false
+	else:
+		_slinger -= stap
+		if _slinger <= 0.0:
+			_slinger = 0.0
+			_slinger_heen = true
+	_zet_marker()
+
 	_keuze_tijd -= delta
-	zet_klokbalk(_keuze_tijd / _keuze_sec)
+	set_status("Ronde %d/%d  ·  %ds" % [_ronde + 1, _rondes().size(), maxi(0, ceili(_keuze_tijd))])
 	if _keuze_tijd <= 0.0:
-		_keuze_actief = false
+		_slinger_actief = false
 		_tijd_op()
 
 
@@ -123,72 +197,10 @@ func _tijd_op() -> void:
 	var index := _zwakste_index(_ronde)
 	if index < 0:
 		return
-	set_status("Te laat. De zwakste klap valt.")
-	_kies(index, true)
+	_kies(index, Kwaliteit.MIS, true)
 
 
 # --- Meters ----------------------------------------------------------------
-
-func _bouw_meters() -> VBoxContainer:
-	var kol := VBoxContainer.new()
-	kol.add_theme_constant_override("separation", 3)
-
-	var rij_a := HBoxContainer.new()
-	var lbl_a := UiKit.label("A", UiKit.FS_SMALL, UiKit.WIT)
-	rij_a.add_child(lbl_a)
-	_waarde_a = UiKit.label("", UiKit.FS_SMALL, UiKit.WIT)
-	_waarde_a.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_waarde_a.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	rij_a.add_child(_waarde_a)
-	kol.add_child(rij_a)
-	var vak_a := Control.new()
-	vak_a.custom_minimum_size = Vector2(0, 7)
-	vak_a.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vak_a.add_child(_spoor())
-	_vulling_a = _rect(UiKit.GROEN)
-	vak_a.add_child(_vulling_a)
-	kol.add_child(vak_a)
-
-	var rij_b := HBoxContainer.new()
-	var lbl_b := UiKit.label("B", UiKit.FS_SMALL, UiKit.WIT)
-	rij_b.add_child(lbl_b)
-	_waarde_b = UiKit.label("", UiKit.FS_SMALL, UiKit.WIT)
-	_waarde_b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_waarde_b.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	rij_b.add_child(_waarde_b)
-	kol.add_child(rij_b)
-	var vak_b := Control.new()
-	vak_b.custom_minimum_size = Vector2(0, 7)
-	vak_b.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vak_b.add_child(_spoor())
-	_vulling_b = _rect(UiKit.ROOD)
-	vak_b.add_child(_vulling_b)
-	kol.add_child(vak_b)
-
-	# Het verloop: drie blokjes die tonen welke ronde je had en of die raakte.
-	# Dezelfde vorm als `mg_abtest.gd`'s `_blok`, zodat het gevecht een
-	# geschiedenis toont en niet alleen een stand.
-	var verloop := HBoxContainer.new()
-	verloop.add_theme_constant_override("separation", 2)
-	for i: int in _rondes().size():
-		var vak := PanelContainer.new()
-		vak.add_theme_stylebox_override("panel", UiKit.panel_krap(UiKit.NEUTRAAL_TINT, UiKit.LINE))
-		vak.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var t := UiKit.label("·", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
-		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		vak.add_child(t)
-		verloop.add_child(vak)
-		_blok.append(vak)
-		_blok_tekst.append(t)
-	kol.add_child(verloop)
-
-	return kol
-
-
-func _spoor() -> ColorRect:
-	var r := _rect(UiKit.NEUTRAAL_TINT)
-	return r
-
 
 func _rect(kleur: Color) -> ColorRect:
 	var r := ColorRect.new()
@@ -199,20 +211,227 @@ func _rect(kleur: Color) -> ColorRect:
 
 
 func _zet_meters() -> void:
-	_waarde_a.text = "%d/%d" % [maxi(0, roundi(_hp_a)), roundi(_hp_a_max)]
+	_waarde_a.text = "%d" % maxi(0, roundi(_hp_a))
 	_vulling_a.anchor_right = clampf(_hp_a / _hp_a_max, 0.0, 1.0)
-	_waarde_b.text = "%d/%d" % [maxi(0, roundi(_hp_b)), roundi(_hp_b_max)]
+	_waarde_b.text = "%d" % maxi(0, roundi(_hp_b))
 	_vulling_b.anchor_right = clampf(_hp_b / _hp_b_max, 0.0, 1.0)
 
 
-func _bouw_volgende() -> Button:
-	var b := UiKit.knop_primair("Volgende", UiKit.FS_SMALL)
-	b.custom_minimum_size = Vector2(0, 26)
-	b.add_theme_stylebox_override("disabled", UiKit.panel(UiKit.NEUTRAAL_TINT, UiKit.LINE))
-	b.add_theme_color_override("font_disabled_color", UiKit.GRIJS)
-	b.disabled = true
-	b.pressed.connect(_volgende)
-	return b
+# --- De arena ---------------------------------------------------------------
+
+## A en B als twee webshoppagina's die tegenover elkaar staan, want dat zíjn
+## ze: twee versies van dezelfde pagina. Twee mensen met vuisten zou grappig
+## zijn maar niet waar, en het paardensupplement staat in de hero.
+##
+## Een `Control` en geen `HBoxContainer`: een container herplaatst zijn
+## kinderen, en dan vecht de terugslag-tween met de layout. Hier staan ze op
+## ankers en beweegt alleen `scale`/`rotation`/`modulate`, wat ná de layout
+## wordt toegepast en er dus niet mee botst.
+## Hoe hoog een vechterpagina is. Genoeg voor een adresbalk, een hero, twee
+## tekstregels en een bestelknop; niet zo hoog dat de hero een vlak wordt.
+const PAGINA_HOOGTE := 148.0
+
+
+func _bouw_arena() -> Control:
+	var arena := Control.new()
+	# `EXPAND_FILL` en niet een vaste hoogte: de arena is het enige dat mág
+	# groeien, dus de vrije ruimte gaat naar de vechters in plaats van naar een
+	# gat onderaan. De minimumhoogte is de bodem waaronder een pagina niet meer
+	# als pagina leest.
+	arena.custom_minimum_size = Vector2(0, PAGINA_HOOGTE + 8.0)
+	arena.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	arena.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	arena.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# Vaste hoogte, verticaal gecentreerd: liet ik de pagina de hele arena
+	# vullen, dan rekte de hero uit tot een gekleurd blok van 200 px en las het
+	# niet meer als een pagina. De ruimte die overblijft staat er nu boven en
+	# onder, als kophoogte in een arena.
+	_vechter_a = _bouw_pagina(UiKit.BLUEBIRD_BRIGHT, true)
+	_plaats_vechter(_vechter_a, 0.02, 0.46)
+	arena.add_child(_vechter_a)
+
+	_vechter_b = _bouw_pagina(UiKit.ORANJE, false)
+	_plaats_vechter(_vechter_b, 0.54, 0.98)
+	arena.add_child(_vechter_b)
+
+	return arena
+
+
+## Op de bodem van de arena en niet in het midden: de ruimte die de arena
+## overhoudt hoort boven de vechters te staan als kophoogte, niet als twee
+## gaten van 70 px boven én onder. Nu staan ze ergens op.
+func _plaats_vechter(v: Control, links: float, rechts: float) -> void:
+	v.anchor_left = links
+	v.anchor_right = rechts
+	v.anchor_top = 1.0
+	v.anchor_bottom = 1.0
+	v.offset_left = 0.0
+	v.offset_right = 0.0
+	v.offset_top = -PAGINA_HOOGTE
+	v.offset_bottom = 0.0
+
+
+## Eén pagina: naam en levensbalk bovenaan, dan een hero en een bestelknop.
+##
+## De levensbalken zaten hiervóór als eigen strook boven de arena, plus drie
+## verloopblokjes eronder. Dat was 44 px chrome boven een gevecht van 104 px, en
+## precies het soort stapeling waar Daan over klaagde ("hele scherm vol"). Nu
+## staat het leven óp de vechter, waar het hoort: je kijkt naar de pagina die
+## klappen krijgt en ziet daar hoe hij ervoor staat.
+func _bouw_pagina(accent: Color, is_a: bool) -> Control:
+	var kader := PanelContainer.new()
+	kader.add_theme_stylebox_override("panel", UiKit.panel(UiKit.PANEL, UiKit.LINE))
+	kader.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var kol := VBoxContainer.new()
+	kol.add_theme_constant_override("separation", 2)
+	kader.add_child(kol)
+
+	var kop := HBoxContainer.new()
+	kop.add_theme_constant_override("separation", 2)
+	# Autowrap uit, zelfde reden als in `build_chrome_veld()`: met afbreken aan
+	# is de minimumbreedte één teken, en dan valt "100" hier als 1/0/0 onder
+	# elkaar in een pagina van 77 px.
+	var naam := UiKit.label("A" if is_a else "B", UiKit.FS_SMALL, accent.darkened(0.25))
+	naam.autowrap_mode = TextServer.AUTOWRAP_OFF
+	naam.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	kop.add_child(naam)
+	var waarde := UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT)
+	waarde.autowrap_mode = TextServer.AUTOWRAP_OFF
+	waarde.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	kop.add_child(waarde)
+	kol.add_child(kop)
+
+	var vak := Control.new()
+	vak.custom_minimum_size = Vector2(0, 5)
+	vak.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vak.add_child(_rect(UiKit.NEUTRAAL_TINT))
+	var vulling := _rect(accent)
+	vak.add_child(vulling)
+	kol.add_child(vak)
+
+	var hero := ColorRect.new()
+	hero.color = accent
+	hero.custom_minimum_size = Vector2(0, 22)
+	hero.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	kol.add_child(hero)
+
+	for i: int in 2:
+		var regel := ColorRect.new()
+		regel.color = UiKit.NEUTRAAL_TINT
+		regel.custom_minimum_size = Vector2(0, 3)
+		kol.add_child(regel)
+
+	var knop := ColorRect.new()
+	knop.color = accent.darkened(0.2)
+	knop.custom_minimum_size = Vector2(0, 8)
+	kol.add_child(knop)
+
+	if is_a:
+		_vulling_a = vulling
+		_waarde_a = waarde
+	else:
+		_vulling_b = vulling
+		_waarde_b = waarde
+	return kader
+
+
+## De terugslag. `pivot_offset` op het midden, zodat de pagina om zijn eigen as
+## kantelt in plaats van om zijn linkerbovenhoek.
+func _klap_op(vechter: Control, zwaar: bool) -> void:
+	if vechter == null or vechter.size == Vector2.ZERO:
+		return
+	if _flits_tween != null and _flits_tween.is_valid():
+		_flits_tween.kill()
+	vechter.pivot_offset = vechter.size * 0.5
+	var kant := -1.0 if vechter == _vechter_b else 1.0
+	var hoek := deg_to_rad(9.0 if zwaar else 4.0) * kant
+	vechter.modulate = Color(1.8, 1.5, 1.5) if zwaar else Color(1.3, 1.2, 1.2)
+	_flits_tween = create_tween()
+	_flits_tween.set_parallel(true)
+	_flits_tween.tween_property(vechter, "rotation", hoek, 0.06)
+	_flits_tween.tween_property(vechter, "modulate", Color.WHITE, 0.3)
+	_flits_tween.chain().tween_property(vechter, "rotation", 0.0, 0.28) \
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+# --- De baan ---------------------------------------------------------------
+
+## De slingerbaan met de kritieke zone. Dit is de enige tijdsdruk in beeld: de
+## gedeelde `bouw_klokbalk()` staat er bewust níet bij, want twee balken die
+## allebei iets over tijd zeggen is precies de schermvervuiling waar Daan over
+## klaagde. De rondeklok staat als getal in de statusregel.
+func _bouw_baan() -> Control:
+	_baan = Control.new()
+	_baan.custom_minimum_size = Vector2(0, 12)
+	_baan.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_baan.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var spoor := _rect(UiKit.PANEL_DARK)
+	_baan.add_child(spoor)
+
+	# De misbanden aan weerszijden, zodat je ziet waar het niet moet.
+	for links: bool in [true, false]:
+		var mis := ColorRect.new()
+		mis.color = Color(UiKit.ROOD, 0.30)
+		mis.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		mis.anchor_top = 0.0
+		mis.anchor_bottom = 1.0
+		mis.anchor_left = 0.0 if links else 1.0 - MIS_MARGE
+		mis.anchor_right = MIS_MARGE if links else 1.0
+		mis.offset_left = 0.0
+		mis.offset_right = 0.0
+		mis.offset_top = 0.0
+		mis.offset_bottom = 0.0
+		_baan.add_child(mis)
+
+	_zone_vak = ColorRect.new()
+	_zone_vak.color = UiKit.GROEN
+	_zone_vak.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_zone_vak.anchor_top = 0.0
+	_zone_vak.anchor_bottom = 1.0
+	_baan.add_child(_zone_vak)
+
+	_marker = ColorRect.new()
+	_marker.color = UiKit.WIT
+	_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_marker.anchor_top = 0.0
+	_marker.anchor_bottom = 1.0
+	_marker.offset_left = -1.0
+	_marker.offset_right = 2.0
+	_baan.add_child(_marker)
+
+	return _baan
+
+
+func _zet_zone() -> void:
+	var breed: float = ZONE_PER_RONDE[mini(_ronde, ZONE_PER_RONDE.size() - 1)]
+	_zone_van = 0.5 - breed * 0.5
+	_zone_tot = 0.5 + breed * 0.5
+	if _zone_vak != null:
+		_zone_vak.anchor_left = _zone_van
+		_zone_vak.anchor_right = _zone_tot
+		_zone_vak.offset_left = 0.0
+		_zone_vak.offset_right = 0.0
+
+
+func _zet_marker() -> void:
+	if _marker == null:
+		return
+	_marker.anchor_left = _slinger
+	_marker.anchor_right = _slinger
+
+
+## Waar de marker stond toen je sloeg.
+func _kwaliteit_nu() -> Kwaliteit:
+	if _qa_dwing_critical:
+		return Kwaliteit.CRITICAL
+	if _slinger >= _zone_van and _slinger <= _zone_tot:
+		return Kwaliteit.CRITICAL
+	if _slinger < MIS_MARGE or _slinger > 1.0 - MIS_MARGE:
+		return Kwaliteit.MIS
+	return Kwaliteit.RAAK
 
 
 # --- Rondes ------------------------------------------------------------
@@ -221,17 +440,17 @@ func _toon_ronde() -> void:
 	var rondes := _rondes()
 	var r := rondes[_ronde] as Dictionary
 	_vraag.text = String(r.get("vraag", ""))
-	set_status("Ronde %d/%d" % [_ronde + 1, rondes.size()])
 	_regel.text = ""
 	_regel.visible = false
-	_volgende_knop.text = "Afronden" if _ronde == rondes.size() - 1 else "Volgende"
-	_volgende_knop.disabled = true
-
-	# P3: elke ronde krijgt zijn eigen `keuze_sec` op, en pas hier weer aan —
-	# niet tijdens het kiezen zelf of tijdens het wachten op "Volgende".
+	_klap_gevallen = false
 	_keuze_tijd = _keuze_sec
-	zet_klokbalk(1.0)
-	_keuze_actief = true
+	_slinger = 0.0
+	_slinger_heen = true
+	_slinger_sec = SLINGER_SEC_PER_RONDE[mini(_ronde, SLINGER_SEC_PER_RONDE.size() - 1)]
+	_zet_zone()
+	_zet_marker()
+	set_status("Ronde %d/%d  ·  %ds" % [_ronde + 1, rondes.size(), roundi(_keuze_sec)])
+	_slinger_actief = true
 
 	for oud: Node in _varianten.get_children():
 		_varianten.remove_child(oud)
@@ -241,36 +460,38 @@ func _toon_ronde() -> void:
 	for i: int in varianten.size():
 		var v := varianten[i] as Dictionary
 		var b := UiKit.keuzeknop(_variant_label(v), UiKit.FS_SMALL)
+		b.custom_minimum_size = Vector2(0, 26)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.add_theme_stylebox_override("disabled", UiKit.panel(UiKit.NEUTRAAL_TINT, UiKit.LINE))
 		b.add_theme_color_override("font_disabled_color", UiKit.GRIJS)
-		b.pressed.connect(_kies.bind(i))
+		b.pressed.connect(_sla.bind(i))
 		_varianten.add_child(b)
 
 	if _varianten.get_child_count() > 0:
 		(_varianten.get_child(0) as Button).grab_focus()
 
 
+## Een klap van de speler: de kwaliteit wordt hier bevroren, op de stand van de
+## marker op dit exacte frame.
+func _sla(index: int) -> void:
+	_kies(index, _kwaliteit_nu(), false)
+
+
 ## `automatisch`: de klok koos (`_tijd_op()`), niet de speler. Zet dan Danny's
 ## commentaarregel niet zichtbaar — zijn tekst komt wel te staan (onschuldig),
-## maar `_regel.visible = true` op dit exacte moment (ScrollContainer-inhoud
-## die van grootte verandert terwijl de klokbalk in de header ook net op nul
-## staat) laat de layout-engine vastlopen in een resize-lus die het bericht-
-## wachtrijgeheugen leegtrekt en de client laat crashen — reproduceerbaar via
-## `tools/qa_shot.py` (`--write-movie`), losstaand van deze aanpassing zelf
-## geverifieerd met een reeks handmatige bisecties. De statusregel
-## ("Te laat. De zwakste klap valt.", gezet in `_tijd_op()`) draagt de melding
-## al; deze regel is Danny's toegevoegde sfeercommentaar, niet de opgave zelf.
-func _kies(index: int, automatisch: bool = false) -> void:
-	if _bezig or _afgerond or _volgende_knop == null or not _volgende_knop.disabled:
+## maar `_regel.visible = true` op dit exacte moment liet de layout-engine
+## vastlopen in een resize-lus die het spel deed crashen; zie de commit
+## "de zwakste klap" en playtest 2026-09-06. De statusregel draagt de melding al.
+func _kies(index: int, kwaliteit: Kwaliteit, automatisch: bool) -> void:
+	if _bezig or _afgerond or _klap_gevallen:
 		return
 	var v := _variant(_ronde, index)
 	if v.is_empty():
 		return
 
-	# P3: de keuzeklok stopt zodra de klap valt — of dat nu de speler was of
-	# de klok zelf (`_tijd_op()`); de uitslag van deze ronde staat dan vast.
-	_keuze_actief = false
+	_slinger_actief = false
+	_qa_dwing_critical = false
+	_klap_gevallen = true
 	_bezig = true
 	AudioDirector.play_ui(&"klik")
 	_keuzes.append(String(v.get("label", "")))
@@ -284,34 +505,57 @@ func _kies(index: int, automatisch: bool = false) -> void:
 
 	var schade := float(v.get("schade", 0.0))
 	var tegenklap := float(v.get("tegenklap", 0.0))
+	match kwaliteit:
+		Kwaliteit.CRITICAL:
+			schade *= CRIT_SCHADE
+			tegenklap *= CRIT_TEGENKLAP
+		Kwaliteit.MIS:
+			schade *= MIS_SCHADE
+			tegenklap *= MIS_TEGENKLAP
+		_:
+			pass
+
+	set_status(_kop_voor(kwaliteit))
+
+	# De klap eerst voelen, dan de balken laten zakken.
+	if schade > 0.0:
+		_klap_op(_vechter_b, kwaliteit == Kwaliteit.CRITICAL)
+		Juice.schok(1.6 if kwaliteit == Kwaliteit.CRITICAL else 1.0, 0.15)
+		AudioDirector.play_sfx(&"raak")
+	if tegenklap > 0.0:
+		_klap_op(_vechter_a, kwaliteit == Kwaliteit.MIS)
+
 	await _meet(schade, tegenklap)
 	if not is_inside_tree():
 		return
 
-	# Een treffer moet je voelen aankomen: een lichte camera-schok en een
-	# korte flits op B's balk, niet alleen een balk die een stukje inschiet.
-	if schade > 0.0:
-		Juice.schok(1.0, 0.15)
-		_flits_hp_b()
-
-	_zet_verloop(_ronde, schade, tegenklap)
+	# De CRO-grap is de belofte van een critical: bij een voltreffer krijg je
+	# Danny's regel als clou, bij een gewone klap ook, maar bij een mis staat
+	# de reden in de kop en niet in zijn mond.
 	_regel.text = String(v.get("regel", ""))
 	_regel.visible = not automatisch
 	AudioDirector.play_ui(&"pak")
 	_bezig = false
 
-	# Een KO onderbreekt het gevecht meteen — geen reden om op "Volgende" te
-	# wachten als er niets meer te kiezen valt.
 	if _hp_a <= 0.0 or _hp_b <= 0.0:
 		await _afronden()
 		return
 
-	_volgende_knop.disabled = false
-	_volgende_knop.grab_focus()
+	await _volgende()
 
 
-## De klap moet landen, niet alleen een nieuw getal tonen: beide balken
-## bewegen tegelijk, want dezelfde klap kost en levert in één beweging.
+func _kop_voor(kwaliteit: Kwaliteit) -> String:
+	match kwaliteit:
+		Kwaliteit.CRITICAL:
+			return "CRITICAL"
+		Kwaliteit.MIS:
+			return "Mis. Hij slaat terug."
+		_:
+			return "Raak."
+
+
+## De klap moet landen, niet alleen een nieuw getal tonen: beide balken bewegen
+## tegelijk, want dezelfde klap kost en levert in één beweging.
 func _meet(schade: float, tegenklap: float) -> void:
 	var van_a := _hp_a
 	var van_b := _hp_b
@@ -344,31 +588,15 @@ func _meet(schade: float, tegenklap: float) -> void:
 	_zet_meters()
 
 
-## Een korte witte flits op B's balk, boven op de meting die al loopt: dat is
-## de klap die je voelt aankomen, niet alleen een getal dat daalt.
-func _flits_hp_b() -> void:
-	if _vulling_b == null:
-		return
-	if _flits_b_tween != null and _flits_b_tween.is_valid():
-		_flits_b_tween.kill()
-	_vulling_b.modulate = Color(1.6, 1.6, 1.6)
-	_flits_b_tween = create_tween()
-	_flits_b_tween.tween_property(_vulling_b, "modulate", Color.WHITE, 0.25) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-
-func _zet_verloop(ronde: int, schade: float, tegenklap: float) -> void:
-	if ronde >= _blok.size():
-		return
-	var raak := schade > tegenklap
-	_blok[ronde].add_theme_stylebox_override("panel",
-		UiKit.panel_krap(UiKit.GROEN if raak else UiKit.ROOD, UiKit.INK))
-	_blok_tekst[ronde].text = "%+d" % roundi(schade - tegenklap)
-	_blok_tekst[ronde].add_theme_color_override("font_color", UiKit.INK)
-
-
+## Doorlopen zonder knop. Er stond een "Volgende" onder de drie klappen, en die
+## kostte 24 px speelveld plus een tik per ronde — in een gevecht is dat een
+## rem. `NA_RONDE_SEC` is lang genoeg om Danny's regel te lezen en de balken te
+## zien zakken, kort genoeg om niet als wachten te voelen.
 func _volgende() -> void:
-	if _bezig or _afgerond:
+	if _afgerond:
+		return
+	await _wacht(NA_RONDE_SEC)
+	if not is_inside_tree() or _afgerond:
 		return
 	_ronde += 1
 	if _ronde >= _rondes().size() or _hp_a <= 0.0 or _hp_b <= 0.0:
@@ -377,16 +605,15 @@ func _volgende() -> void:
 		_toon_ronde()
 
 
-## A wint als B eerder nul staat dan A. Blijft B overeind tot de laatste
-## ronde voorbij is, dan wint B op punten — precies zoals "niets doen" in
-## `mg_abtest.gd` de doelstelling nooit haalt.
+## A wint als B eerder nul staat dan A. Blijft B overeind tot de laatste ronde
+## voorbij is, dan wint B op punten.
 func _afronden() -> void:
 	if _afgerond:
 		return
 	_afgerond = true
+	_slinger_actief = false
 	var c := content()
 	var a_wint := _hp_b <= 0.0 and _hp_a > 0.0
-	_volgende_knop.disabled = true
 
 	if not a_wint:
 		Session.add_counter(&"ab_pogingen")
@@ -430,7 +657,7 @@ func _variant(ronde: int, index: int) -> Dictionary:
 
 
 ## De variant met het beste netto-effect (schade toegebracht minus tegenklap
-## opgelopen) — het equivalent van `mg_abtest.gd`'s `_beste_index()`.
+## opgelopen).
 func _beste_index(ronde: int) -> int:
 	var rondes := _rondes()
 	if ronde < 0 or ronde >= rondes.size():
@@ -447,8 +674,8 @@ func _beste_index(ronde: int) -> int:
 	return beste
 
 
-## P3: de variant met de laagste schade — de zwakste klap, die de keuzeklok
-## laat vallen als niemand op tijd kiest.
+## De variant met de laagste schade — de zwakste klap, die de rondeklok laat
+## vallen als niemand op tijd slaat.
 func _zwakste_index(ronde: int) -> int:
 	var rondes := _rondes()
 	if ronde < 0 or ronde >= rondes.size():
@@ -467,24 +694,33 @@ func _zwakste_index(ronde: int) -> int:
 
 # --- QA ------------------------------------------------------------------
 
-## Speelt het gevecht echt uit: steeds de beste klap, de meting uitwachten,
-## door naar de volgende — of naar de afronding als een KO eerder valt. Zelfde
-## opzet als `mg_abtest.gd::qa_solve()`.
+## Speelt het gevecht echt uit: steeds de beste klap, en die klap wordt
+## deterministisch een critical.
+##
+## `_qa_dwing_critical` en niet "wacht tot de marker in de zone staat": een
+## harnas dat op een slingerstand wacht is een harnas dat soms mist, en dan is
+## een rode speelbeurt geen bewijs meer van een echte fout. De timing zelf is
+## niet headless te toetsen — dat hoort in `_test_abgevecht_timing()`, die de
+## rekenkant kaal narekent.
 func qa_solve() -> void:
-	if _qa_loopt or _varianten == null or _volgende_knop == null:
+	if _qa_loopt or _varianten == null:
 		return
 	_qa_loopt = true
 	var totaal := _rondes().size()
 	while _ronde < totaal and not _afgerond:
-		await _kies(_beste_index(_ronde))
+		if _klap_gevallen or _bezig:
+			await get_tree().process_frame
+			continue
+		_qa_dwing_critical = true
+		await _kies(_beste_index(_ronde), Kwaliteit.CRITICAL, false)
 		if not is_inside_tree():
 			return
-		if _afgerond:
-			return
-		if _volgende_knop.disabled:
-			_qa_loopt = false
-			return
-		if _ronde + 1 >= totaal:
-			await _volgende()
-			return
-		await _volgende()
+	_qa_loopt = false
+
+
+## `await get_tree().create_timer(...)` en niet een Tween: een timer die ook
+## tijdens een gepauzeerde tree doorloopt, want de wereld pauzeert niet tijdens
+## een minigame maar de shell kan dat wel doen. Zelfde vorm als in
+## `mg_standup.gd`.
+func _wacht(sec: float) -> void:
+	await get_tree().create_timer(sec, true, false, true).timeout

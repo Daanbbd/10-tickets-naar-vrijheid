@@ -69,6 +69,10 @@ func cfg(key: String, fallback: Variant = null) -> Variant:
 var _body: VBoxContainer = null
 var _kolom: VBoxContainer = null
 var _scroll: ScrollContainer = null
+## De node in `_kolom` die de body draagt: de ScrollContainer bij de lijstvorm,
+## de body zelf bij de veldvorm. `chrome_header()`/`chrome_footer()` hangen zich
+## hieraan, zodat ze in beide vormen op de goede plek landen.
+var _inhoud: Control = null
 var _header: VBoxContainer = null
 var _footer: VBoxContainer = null
 var _status: Label = null
@@ -109,7 +113,20 @@ var kaart_net_getoond: bool = false
 ## `Briefing.vul()`, zodat een trait die de opgave aanpast (`content_override`)
 ## ook de overlay meekrijgt. De parameter blijft bestaan zodat alle elf
 ## aanroepen ongewijzigd blijven — zie `scripts/ui/minigame_intro.gd`.
-func build_chrome(title: String, _intro: String) -> VBoxContainer:
+## Het gedimde venster met zijn kolom. Gedeeld door `build_chrome()` en
+## `build_chrome_veld()`; alles wat daarna verschilt is wat er ín de kolom komt.
+##
+## Donker oppervlak, net als de rest van de shell. Dit was een crème
+## `UiKit.panel()`, en dat maakte de minigames het enige lichte scherm in een
+## spel waarvan het titelscherm, het uitlegscherm, de karakterselectie en de
+## HUD allemaal donker zijn. Je speelt tien keer per beurt zo'n scherm; de
+## flits bij het openen was daarmee het meest voorkomende beeld van het spel.
+##
+## SCHERM_NACHT en niet PANEL_DARK: dit is een scherm en geen paneeltje in de
+## HUD, en het is dezelfde ondergrond als het uitlegscherm en het titelscherm.
+## De rand blijft LINE, zodat het venster nog leest als iets dat bovenop de
+## gedimde wereld ligt in plaats van als de wereld zelf.
+func _bouw_venster() -> VBoxContainer:
 	UiKit.full_rect(self)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(UiKit.dimmer(0.72))
@@ -135,6 +152,21 @@ func build_chrome(title: String, _intro: String) -> VBoxContainer:
 	col.add_theme_constant_override("separation", 3)
 	_frame.add_child(col)
 	_kolom = col
+	return col
+
+
+## De lijstvorm: kop, statusregel, **ScrollContainer**, "Stoppen" onderaan.
+##
+## Dit is de oorspronkelijke `build_chrome()`, en hij hoort bij wat écht een
+## formulier is — de urenstaat van Dirk, de keuzefasen van de oplevering. Voor
+## een spel is hij verkeerd, en dat was jarenlang de vorm van alle elf:
+## Daans playtest van 6 september gaf vier van de vier minigames die hij speelde
+## een negatief oordeel, en de rode draad is niet de mechaniek maar deze
+## trechter. Op 192 px dwingt een ScrollContainer elke mechaniek in een
+## verticale lijst knoppen, dus een bokspartij mét health bars leest als een
+## quiz en uitlijnen leest als een formulier. Zie `build_chrome_veld()`.
+func build_chrome(title: String, _intro: String) -> VBoxContainer:
+	var col := _bouw_venster()
 
 	# Titel en status onder elkaar, niet naast elkaar: op 192 px is een kop op
 	# FS_HEAD naast een statusregel breder dan het scherm, en een Container
@@ -152,7 +184,7 @@ func build_chrome(title: String, _intro: String) -> VBoxContainer:
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(_status)
 
-	# Op een portretcanvas past de inhoud van een minigame lang niet altijd in
+	# Op een portretcanvas past de inhoud van een formulier lang niet altijd in
 	# beeld. Zonder scroll valt de knop onderaan buiten het scherm en is de
 	# minigame niet uit te spelen.
 	var scroll := ScrollContainer.new()
@@ -160,6 +192,7 @@ func build_chrome(title: String, _intro: String) -> VBoxContainer:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	col.add_child(scroll)
 	_scroll = scroll
+	_inhoud = scroll
 
 	_body = VBoxContainer.new()
 	_body.add_theme_constant_override("separation", 3)
@@ -178,6 +211,68 @@ func build_chrome(title: String, _intro: String) -> VBoxContainer:
 
 	# P2: de banner zelf wordt pas gebouwd in `finish_with_banner()`, als
 	# laatste kind van `chrome_footer()` — niet hier meer midden over het veld.
+	_bouw_intro_overlay()
+
+	return _body
+
+
+## De veldvorm: één krappe kopregel, daaronder het hele scherm voor het spel,
+## en "Stoppen" als hoekje in plaats van een knop onderaan een lijst.
+##
+## **Geen ScrollContainer.** Dat is het hele punt. De teruggegeven VBox vult de
+## resterende hoogte, dus wie hem gebruikt moet zijn inhoud ook echt op die
+## ruimte inrichten in plaats van er een rij knoppen in te stapelen — een veld
+## dat overloopt is hier een ontwerpfout en geen scrollbalkje.
+##
+## Titel en status staan op één regel op FS_SMALL. Dat kost leesbaarheid van de
+## kop en levert ~30 px speelveld op, en op een canvas van 192x416 is dat de
+## goede kant van die ruil: de kop lees je één keer, het veld de hele minigame.
+func build_chrome_veld(title: String, _intro: String) -> VBoxContainer:
+	var col := _bouw_venster()
+
+	var kop := HBoxContainer.new()
+	kop.add_theme_constant_override("separation", 4)
+	kop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_child(kop)
+
+	# `autowrap_mode = OFF` op beide, en dat is hier geen detail: `UiKit.label()`
+	# zet WORD_SMART aan, en een label dat mag afbreken meldt een minimumbreedte
+	# van één teken. In een HBox knijpt de buur met `EXPAND_FILL` hem dan tot die
+	# breedte en valt de tekst verticaal uit, één letter per regel — precies wat
+	# "Ronde 1/3 · 7s" hier deed. Deze twee zijn eenregelig, dus uit, en de kop
+	# kapt af in plaats van te groeien.
+	var t := UiKit.label(title, UiKit.FS_SMALL, UiKit.BLUEBIRD_BRIGHT)
+	t.autowrap_mode = TextServer.AUTOWRAP_OFF
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	t.clip_text = true
+	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	kop.add_child(t)
+
+	_status = UiKit.label("", UiKit.FS_SMALL, UiKit.GRIJS_OP_DONKER)
+	_status.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	kop.add_child(_status)
+
+	# Het kruisje. Geen `UiKit.button()`: dat is een knop met vulling en marge,
+	# en die trekt in een speelveld meer aandacht dan de actie die hij afbreekt.
+	var stop := Button.new()
+	stop.text = "×"
+	stop.flat = true
+	stop.focus_mode = Control.FOCUS_NONE
+	stop.tooltip_text = "Stoppen"
+	stop.add_theme_font_override("font", UiKit.font_voor(UiKit.FS_BODY))
+	stop.add_theme_font_size_override("font_size", UiKit.FS_BODY)
+	stop.add_theme_color_override("font_color", UiKit.GRIJS_OP_DONKER)
+	stop.pressed.connect(abort)
+	kop.add_child(stop)
+
+	_body = VBoxContainer.new()
+	_body.add_theme_constant_override("separation", 2)
+	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(_body)
+	_inhoud = _body
+
 	_bouw_intro_overlay()
 
 	return _body
@@ -270,7 +365,7 @@ func chrome_header() -> VBoxContainer:
 	if _header == null:
 		_header = _strook()
 		_kolom.add_child(_header)
-		_kolom.move_child(_header, _scroll.get_index())
+		_kolom.move_child(_header, _inhoud.get_index())
 	return _header
 
 
@@ -278,7 +373,7 @@ func chrome_footer() -> VBoxContainer:
 	if _footer == null:
 		_footer = _strook()
 		_kolom.add_child(_footer)
-		_kolom.move_child(_footer, _scroll.get_index() + 1)
+		_kolom.move_child(_footer, _inhoud.get_index() + 1)
 	return _footer
 
 
