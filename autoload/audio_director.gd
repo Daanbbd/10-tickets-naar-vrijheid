@@ -122,17 +122,51 @@ var _filter: AudioEffectLowPassFilter = null
 var _ruimte_tween: Tween = null
 
 
-## Een eigen bus met één filter erop, in code en niet als `.tres`: er is in dit
-## project geen buslayout-bestand, en er één introduceren voor één effect maakt
-## een asset die je in de editor moet openen om te snappen.
+## De "Muziek"-bus en zijn laagdoorlaatfilter komen uit `default_bus_layout.tres`
+## en worden hier alleen nog opgezocht, niet meer aangemaakt.
+##
+## Dit stond eerst omgekeerd, met als reden: "er is in dit project geen
+## buslayout-bestand, en er één introduceren voor één effect maakt een asset
+## die je in de editor moet openen om te snappen." Dat argument hield geen
+## stand op web: `AudioServer.add_bus()` bleek daar niet betrouwbaar de bus
+## te laten bestaan die de rest van deze klasse als vanzelfsprekend aanneemt.
+## Daan zag het van twee kanten — in de editor een `Index p_bus = 1 is out of
+## bounds (buses.size() = 1)`-fout zodra iets de bus aansprak vóórdat hij er
+## echt stond, en op web volledige stilte: `?audio`-diagnose in de browser liet
+## een kerngezonde WebAudio-graaf zien (context "running", de worklet geladen,
+## verbonden, gain op 1) terwijl `AudioServer` zelf duizenden audiochunks met
+## piekwaarde exact 0.0000 verstuurde. Zodra de bus al in de layout staat vóór
+## er ook maar één regel GDScript draait, bestaat hij gegarandeerd op elk
+## platform — dat bleek zijn eigen fix: een bus met de hand in de editor
+## aanmaken loste de stilte meteen op.
 func _maak_muziekbus() -> void:
-	_muziekbus = AudioServer.bus_count
-	AudioServer.add_bus(_muziekbus)
-	AudioServer.set_bus_name(_muziekbus, MUZIEKBUS)
-	AudioServer.set_bus_send(_muziekbus, &"Master")
-	_filter = AudioEffectLowPassFilter.new()
-	_filter.cutoff_hz = 20000.0
-	AudioServer.add_bus_effect(_muziekbus, _filter)
+	_muziekbus = AudioServer.get_bus_index(MUZIEKBUS)
+	if _muziekbus < 0:
+		# Terugval voor een context zonder `default_bus_layout.tres` geladen
+		# (bijvoorbeeld een geïsoleerde scene-test) — zodat deze klasse niet
+		# stil breekt, maar wel hoorbaar (in de log) afwijkt van de normale weg.
+		push_warning("AudioDirector: bus '%s' niet gevonden in de buslayout; maak 'm zelf aan" % MUZIEKBUS)
+		_muziekbus = AudioServer.bus_count
+		AudioServer.add_bus(_muziekbus)
+		AudioServer.set_bus_name(_muziekbus, MUZIEKBUS)
+		AudioServer.set_bus_send(_muziekbus, &"Master")
+
+	_filter = _vind_laagdoorlaat(_muziekbus)
+	if _filter == null:
+		_filter = AudioEffectLowPassFilter.new()
+		_filter.cutoff_hz = 20000.0
+		AudioServer.add_bus_effect(_muziekbus, _filter)
+
+
+## Het bestaande filtereffect op deze bus opzoeken op type, niet op een vaste
+## indexaanname: de layout mag ooit een tweede effect krijgen zonder dat deze
+## functie daar afhankelijk van wordt.
+func _vind_laagdoorlaat(bus: int) -> AudioEffectLowPassFilter:
+	for i: int in AudioServer.get_bus_effect_count(bus):
+		var fx := AudioServer.get_bus_effect(bus, i)
+		if fx is AudioEffectLowPassFilter:
+			return fx
+	return null
 
 
 ## De ruimte waar de speler nu staat. Onbekende zone valt terug op onbewerkt,
