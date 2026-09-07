@@ -64,9 +64,9 @@
    }
   ],
   "success": "Je hebt een scope. Op papier. Dennis schat hem in op tweeënhalf keer wat je hebt opgeschreven.",
-  "failure": "Zij gaat hier niet blij van worden. Dennis zegt dat dat mag, maar dan wel voor honderdtwintig procent.",
+  "failure": "Mevrouw Aardenmens gaat hier niet blij van worden. Dennis zegt dat dat mag, maar dan wel voor honderdtwintig procent.",
   "te_vol": "Dit past niet in de sprint.",
-  "te_weinig": "Hier gaat zij niet blij van worden.",
+  "te_weinig": "Hier gaat de klant niet blij van worden.",
   "klaar_als": "Er staan hoogstens {capaciteit} punten in de sprint en de klant is minstens {tevreden_min} blij. Druk dan op \"Vastleggen\"."
  },
  "mg_planning": {

@@ -81,7 +81,7 @@ class WensRij extends PanelContainer:
 		add_child(rij)
 		var t := UiKit.label(String(wens.get("tekst", "")), UiKit.FS_SMALL, UiKit.INK)
 		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		t.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		rij.add_child(t)
 		rij.add_child(_cijfer(punten, "pt"))
 		rij.add_child(_cijfer(blij, "bl"))
@@ -98,9 +98,13 @@ class WensRij extends PanelContainer:
 		var l := UiKit.label("%d%s" % [n, eenheid], UiKit.FS_SMALL, UiKit.INK)
 		l.autowrap_mode = TextServer.AUTOWRAP_OFF
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		# Bovenaan uitlijnen en niet gecentreerd: bij een wens die over twee
+		# regels valt stond het getal precies tussen die twee regels in, en dan
+		# leest het als een cijfer dwars door de tekst. Nu staat het naast de
+		# eerste regel, waar het hoort.
+		l.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 		l.custom_minimum_size = Vector2(20, 0)
-		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		l.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		return l
 
 	## Geel papier zit in de sprint, verschoten papier ligt ernaast. De kleur
@@ -170,6 +174,21 @@ func _on_setup() -> void:
 	_tevreden_min = int(c.get("tevreden_min", 10))
 	_eenheid = String(c.get("eenheid", "punten"))
 
+	# De lijstvorm, en dat is hier een bewuste uitzondering. Daan (#35): *"wtf"*,
+	# *"dit is wederom een erg vage minigame"*. Dat komt doordat je negen wensen
+	# moet verdelen terwijl er vier in beeld staan, achter een scrollbar.
+	#
+	# De veldvorm zou dat oplossen — geen scroll, dus alles in één beeld — maar
+	# alleen als de negen briefjes eenregelig worden, en dat kost ~140 px aan
+	# tekst. Die tekst is precies het grappigste van deze minigame ("Een app.
+	# Een echte, geen website in een jasje", "Een formulier waar haar schoonzus
+	# feedback in kan"). Layout winnen door goedgekeurde comedy in te korten is
+	# de verkeerde volgorde, dus dat gebeurt hier niet.
+	#
+	# Wat dit scherm nodig heeft is een andere presentatie van dezelfde
+	# mechaniek — de wensen één voor één, groot en leesbaar, met de twee meters
+	# die live meelopen, en daarna een compacte herzieningsronde. Dat is
+	# ontwerp en geen fix, en het staat als vraag bij Daan.
 	var body := build_chrome(default_title(), String(c.get("intro", "")))
 
 	# P3/M3: de klokbalk direct onder de titel, vóór de meters — dezelfde
