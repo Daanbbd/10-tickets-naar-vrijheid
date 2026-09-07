@@ -248,18 +248,53 @@ const engine = new Engine(GODOT_CONFIG);
 		//
 		// Waarom dit hier staat en niet in GDScript: op iOS Safari komt een
 		// AudioContext gesuspendeerd terug als hij buiten een user gesture
-		// wordt aangemaakt, en Godot maakt de zijne aan tijdens `startGame()`.
+		// wordt aangemaakt, en Godot maakt de zijne aan tijdens `engine.start()`.
 		// De standaardshell roept dat meteen bij page-load aan, dus de context
 		// was daar per definitie bevroren en het titelscherm speelde zijn
 		// muziek tegen een dood audiopad. `_godot_audio_resume` bestaat wel in
 		// de build maar heeft geen enkele DOM-listener: hij hangt volledig aan
 		// Godots eigen inputpad, dat pas draait als het spel al loopt.
 		//
-		// `init()` doet het downloaden en compileren van de wasm; dat mag
-		// gewoon vast lopen terwijl de poort in beeld staat. Alleen
-		// `startGame()` wacht op de tik.
+		// **7 sep, na een echte test op Daans iPhone: de poort alleen was niet
+		// genoeg.** `?audio` gaf op zijn toestel `suspended`, terwijl dezelfde
+		// build op desktop Chromium `running` gaf. De oorzaak zat niet in de
+		// poort maar in wat er n\u00e1 de tik nog moest gebeuren.
+		//
+		// `engine.startGame()` \u2014 wat hier eerst stond \u2014 doet zelf
+		// `Promise.all([init(exe), preloadFile(mainPack, mainPack)])` v\u00f3\u00f3rdat
+		// het spel start. `init()` haalt alleen de wasm op; het hoofdpakket
+		// (`index.pck`, ~6 MB) werd dus pas n\u00e1 de tik gedownload, \u00edn de
+		// gesturehandler. Op localhost is dat een fetch van een paar
+		// milliseconden en valt het niet op. Over een echt netwerk (Daans
+		// telefoon tegen de gh-pages-CDN) duurt diezelfde fetch lang genoeg om
+		// buiten het venster te vallen waarbinnen iOS Safari een AudioContext
+		// nog aan een gesture koppelt \u2014 Chrome is daar veel rekkelijker in,
+		// vandaar dat de desktoptest niets liet zien. Godots eigen context,
+		// die pas ontstaat n\u00e1 die fetch, kwam daardoor alsnog gesuspendeerd
+		// uit de bus, ook al was er getikt.
+		//
+		// De fix: het hoofdpakket ook v\u00f3\u00f3rladen, terwijl de poort nog niet eens
+		// in beeld staat. N\u00e1 de tik blijft er dan geen netwerkwerk meer over \u2014
+		// alleen `copyToFS()` en `callMain()`, synchrone JS die binnen het
+		// gesturevenster past. Zie `engine.start()` verderop: dat is
+		// `startGame()` met de twee stappen losgeknipt, niet een eigen vinding.
 		const gate = document.getElementById('gate');
 		let gestart = false;
+
+		// Dezelfde afleiding als `Engine.prototype.startGame()` zelf gebruikt.
+		const mainPack = GODOT_CONFIG.mainPack || (GODOT_CONFIG.executable + '.pck');
+
+		// V\u00f3\u00f3r `init()`/`preloadFile()`, zodat de voortgangsbalk het hele
+		// gewicht dekt (wasm + pck) en niet alleen de wasm zoals eerst.
+		engine.config.onProgress = function (current, total) {
+			if (current > 0 && total > 0) {
+				statusProgress.value = current;
+				statusProgress.max = total;
+			} else {
+				statusProgress.removeAttribute('value');
+				statusProgress.removeAttribute('max');
+			}
+		};
 
 		function start() {
 			if (gestart) {
@@ -295,16 +330,14 @@ const engine = new Engine(GODOT_CONFIG);
 				}
 			}
 
-			engine.startGame({
-				'onProgress': function (current, total) {
-					if (current > 0 && total > 0) {
-						statusProgress.value = current;
-						statusProgress.max = total;
-					} else {
-						statusProgress.removeAttribute('value');
-						statusProgress.removeAttribute('max');
-					}
-				},
+			// `engine.start()` en niet `engine.startGame()`: die laatste zou
+			// het hoofdpakket hier, \u00edn de tik, n\u00f3g een keer proberen te
+			// downloaden. Het zit al in `preloader.preloadedFiles` (zie
+			// `Promise.all(...)` verderop), dus dit is alleen nog
+			// `copyToFS()` + `callMain()` \u2014 geen fetch, geen wachttijd die het
+			// gesturevenster kan doorbreken.
+			engine.start({
+				args: ['--main-pack', mainPack].concat(GODOT_CONFIG.args),
 			}).then(() => {
 				setStatusMode('hidden');
 			}, displayFailureNotice);
@@ -312,8 +345,12 @@ const engine = new Engine(GODOT_CONFIG);
 
 		// `init()` wil het basispad als de engine nog niet geladen is; dat is
 		// `executable` uit GODOT_CONFIG ("index"), hetzelfde dat `startGame()`
-		// zelf gebruikt.
-		engine.init(GODOT_CONFIG.executable).then(() => {
+		// zelf gebruikt. Het hoofdpakket gaat er parallel bij: zie de lange
+		// toelichting hierboven voor waarom dat niet tot n\u00e1 de tik mag wachten.
+		Promise.all([
+			engine.init(GODOT_CONFIG.executable),
+			engine.preloadFile(mainPack, mainPack),
+		]).then(() => {
 			setStatusMode('hidden');
 			gate.classList.add('visible');
 		}, displayFailureNotice);

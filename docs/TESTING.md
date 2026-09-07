@@ -414,9 +414,29 @@ context was daar per definitie bevroren — en het titelscherm speelt zijn muzie
 hij hangt volledig aan Godots eigen inputpad, dat pas draait als het spel al
 loopt. Daan hoorde daardoor op zijn iPhone een hele playthrough lang niets.
 
-Het downloaden en compileren van de wasm loopt door terwijl de poort in beeld
-staat (`engine.init(GODOT_CONFIG.executable)`); alleen `startGame()` wacht op de
-tik. De poort kost dus geen laadtijd.
+Het downloaden en compileren loopt door terwijl de poort in beeld staat, en dat
+geldt sinds 7 september voor **beide** bestanden: niet alleen de wasm
+(`engine.init()`) maar ook het hoofdpakket (`index.pck`, `engine.preloadFile()`).
+
+Dat tweede stond er eerst niet, en dat was een echte bug, geen cosmetiek.
+`startGame()` — wat de tik eerst rechtstreeks aanriep — doet zelf
+`Promise.all([init(exe), preloadFile(mainPack, mainPack)])` vóórdat het spel
+start; `init()` haalt alléén de wasm op. Het pakket (~6 MB) werd dus ná de tik
+gedownload, ín de gesturehandler. Op localhost is dat een fetch van een paar
+milliseconden en viel het niet op — maar op Daans iPhone, tegen de echte
+gh-pages-CDN, duurde diezelfde fetch lang genoeg om het venster te sluiten
+waarbinnen iOS Safari een `AudioContext` nog aan een gesture koppelt. Chrome is
+daar veel rekkelijker in (een langer levende documentbrede activatie in plaats
+van een strikt gesturevenster), dus de desktoptest liet niets zien: `?audio`
+gaf daar keurig `running`, terwijl Daans telefoon `suspended` bleef geven.
+
+De poort wacht nu op `Promise.all([engine.init(exe), engine.preloadFile(pack,
+pack)])`, en de tik roept `engine.start(...)` aan — `startGame()` met dezelfde
+twee stappen losgeknipt, niets uitgevonden. Ná de tik is er dan geen
+netwerkwerk meer over: alleen `copyToFS()` en `callMain()`, synchrone JS die
+wél binnen het gesturevenster past. Nagerekend met `performance.getEntriesByType
+('resource')`: één fetch van `index.pck`, vóór de poort verschijnt, en geen
+tweede na de tik.
 
 **Diagnose.** Hang `?audio` aan de URL, dan zet de poort na de tik zijn eigen
 meting in beeld: `audio: running · 48000 Hz · worklet: true`. Godots eigen
@@ -427,7 +447,7 @@ scheidt de twee overgebleven oorzaken als iemand alsnog niets hoort:
 | meting | wat het betekent |
 |---|---|
 | `running`, en toch stil | niet de autoplay-policy maar Godots audiopad zelf — kijk naar de AudioWorklet in de no-threads-build |
-| `suspended` | de tik is niet als gesture aangekomen |
+| `suspended` | het hoofdpakket werd niet vóór de tik voorgeladen — controleer of `Promise.all(...)` in `html/shell.html` echt op `preloadFile()` wacht |
 
 > **Nog open:** `assets/fonts/ark-pixel-12px-proportional-latin.ttf` is 4,75 MB
 > met 24.176 glyphs, terwijl de 10px- en 16px-snit ~0,5 MB en ~4.000 glyphs
