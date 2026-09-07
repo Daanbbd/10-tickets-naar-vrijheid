@@ -115,6 +115,7 @@ func _ready() -> void:
 	_test_schrijfstijl_geen_emdash()
 	_test_geen_await_op_killbare_tween()
 	await _test_standup_uitleg()
+	_test_uitlijnen_zonder_pijlen()
 	_rapport()
 
 
@@ -6664,3 +6665,11 @@ static func _zonder_commentaar(src: String) -> String:
 				break
 		uit.append(regel.substr(0, eind))
 	return "\n".join(uit)
+
+
+## Gereserveerde haak voor de taak "Uitlijnen: knoppen weg, vel groter,
+## reviews/aanbevolen erbij" (plan `feedback-op-uitlijnen-de-zippy-anchor.md`,
+## deel 2). Wordt door die taak volledig ingevuld; tot die tijd een no-op zodat
+## de aanroep hierboven al kan bestaan zonder de suite te breken.
+func _test_uitlijnen_zonder_pijlen() -> void:
+	pass
