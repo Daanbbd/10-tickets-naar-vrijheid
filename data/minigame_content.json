@@ -160,6 +160,7 @@
   "failure": "De tijd is om en je hebt één van de twee meldingen gemist. Kap volgende keer eerder af.",
   "gemist": "Te vroeg. Dit had je moeten horen.",
   "nuttig": "Dit moest je horen.",
+  "fout_notitie": "Opgeschreven. Dennis kijkt er even naar.",
   "klaar_als": "De balk \"Gehoord\" staat op 2 van 2 voordat de tijd om is. Kap je iemand af vóór zijn melding, dan begin je opnieuw.",
   "failure_gemist": "Je kapte {naam} af voordat hij het kon zeggen. Nog een keer."
  },

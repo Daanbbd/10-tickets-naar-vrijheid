@@ -6658,8 +6658,16 @@ func _test_standup_uitleg() -> void:
 	var aantal_sprekers := (mg.content().get("sprekers", []) as Array).size()
 	_ok(_vind_label(mg, "1 van %d" % aantal_sprekers) != null,
 		"mg_standup: de sprekerteller op de kaart toont niet '1 van %d'" % aantal_sprekers)
-	_ok(_vind_label(mg, "nog 3x afkappen") != null,
-		"mg_standup: de statusregel noemt niet 'nog 3x afkappen'")
+	# Het aantal resterende ingrepen stond in de statusregel ("30 sec · nog 3x
+	# afkappen") en staat nu op de knop die het beperkt. De statusregel werd
+	# daarmee zo breed dat de titel in de kopregel tot "De" werd afgekapt.
+	# Wat de test bewaakt is onveranderd: de speler moet kunnen zien hoeveel
+	# keer hij nog mag afkappen.
+	_ok(_vind_knop(mg, "Afkappen (3)") != null,
+		"mg_standup: de afkapknop noemt niet hoeveel ingrepen er nog zijn")
+	_ok(_vind_knop(mg, "Opschrijven") != null,
+		"mg_standup: er is geen Opschrijven-knop, en dat is sinds het " +
+		"herontwerp de opgave zelf")
 
 	# --- b. te vroeg afkappen stopt de ronde meteen --------------------------
 	# Dennis (niet belangrijk): wisselt door naar Victor.

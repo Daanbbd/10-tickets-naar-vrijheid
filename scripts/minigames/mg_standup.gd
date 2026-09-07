@@ -17,6 +17,11 @@ extends MinigameBase
 # wegvalt. Twee keer FADE gaat van de klok af, dus dit is ook een prijs.
 const FADE := 0.14
 
+## Wat een verkeerde notitie van de klok kost. Genoeg om alles-opschrijven
+## onhaalbaar te maken, te weinig om één misser fataal te laten zijn — dit is
+## een comedy adventure en geen uitdaging (zie `docs/GAME_DESIGN.md`).
+const FOUT_SEC := 3.0
+
 # P3: de klokbalk zelf (vak, vulling, kleurcurve, knipperpuls) komt nu uit
 # `minigame_base.gd`'s `bouw_klokbalk()`/`zet_klokbalk()` — dezelfde balk als
 # `mg_scope.gd` en `mg_abgevecht.gd` gebruiken, in plaats van een vijfde kopie.
@@ -69,6 +74,16 @@ var _teller: Label = null
 var _regels: Array[Label] = []
 var _flits: Label = null
 var _knop: Button = null
+var _noteer_knop: Button = null
+
+## Wat de speler al genoteerd heeft, als "sprekerid:regelindex". Eén notitie per
+## regel: twee keer op dezelfde regel tikken kost niet twee keer de klok, want
+## dat is geen tweede afweging maar een dubbele tik.
+var _genoteerd: Dictionary = {}
+
+## De hoogste regelindex die nu op de kaart staat. `_werk_regels_bij()` houdt
+## hem bij, `_op_opschrijven()` beoordeelt hem.
+var _regel_nu: int = -1
 
 var _info_kop: Label = null
 var _info_teller: Label = null
@@ -100,11 +115,14 @@ func _on_setup() -> void:
 			_segment_status[id] = "open"
 	_qa_afkap_ids = _bepaal_qa_afkap()
 
-	# P1: de intro verschijnt niet hier expliciet — `build_chrome()` bouwt hem
-	# zelf als overlay ín het veld, uit `content().get("intro")`, gevuld met
-	# dezelfde `_ingrepen` via `Briefing.vul()`. Deze lege string blijft staan
-	# zodat de aanroep ongewijzigd is (zie `build_chrome()`'s eigen contract).
-	var body := build_chrome(default_title(), "")
+	# P1: de intro verschijnt niet hier expliciet — de chrome bouwt hem zelf als
+	# overlay ín het veld, uit `content().get("intro")`, gevuld met dezelfde
+	# `_ingrepen` via `Briefing.vul()`. Deze lege string blijft staan zodat de
+	# aanroep ongewijzigd is (zie het contract van `build_chrome_veld()`).
+	#
+	# De veldvorm en niet de lijstvorm: dit is een real-time spel, geen
+	# formulier, en de kop op FS_HEAD at twee regels die hier niets deden.
+	var body := build_chrome_veld(default_title(), "")
 	_bouw_vast(body)
 	_bouw_kaart(body)
 
@@ -148,14 +166,39 @@ func _bouw_vast(_body: VBoxContainer) -> void:
 
 	_bouw_info_balk()
 
-	_knop = UiKit.knop_primair("Afkappen", UiKit.FS_BODY)
-	# Dit is de enige actie in de hele minigame en hij moet onder je duim liggen,
-	# dus hij mag ruimer zijn dan de 24 px die UiKit als bodem aanhoudt.
+	# Twee acties naast elkaar, want er zijn er nu twee.
+	#
+	# Hiervóór was "Afkappen" de enige knop in de hele minigame, en de nuttige
+	# regel ving zichzelf op het moment dat hij verscheen — inclusief een groene
+	# markering die verklapte dát dit hem was. De speler keek dus veertig
+	# seconden naar regels die zichzelf afhandelden en mocht drie keer iemand
+	# wegsturen. Daans oordeel (#20): *"Ik kan maar een paar keer afkappen, de
+	# rest van de mini game zit ik passief te wachten en te hopen dat ik het
+	# haal. Wat een kutgame."*
+	#
+	# Nu is opschrijven de opgave. Elke regel is een afweging: is dit het ding
+	# dat je moet melden, of praat er iemand. Een verkeerde notitie kost
+	# `FOUT_SEC` van de klok, dus alles maar opschrijven werkt niet — achttien
+	# regels tegen drie seconden per misser is meer dan de klok lang is.
+	var rij := HBoxContainer.new()
+	rij.add_theme_constant_override("separation", 3)
+
+	_noteer_knop = UiKit.knop_primair("Opschrijven", UiKit.FS_SMALL)
+	_noteer_knop.custom_minimum_size = Vector2(0, 32)
+	_noteer_knop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_noteer_knop.focus_mode = Control.FOCUS_NONE
+	_noteer_knop.pressed.connect(_op_opschrijven)
+	rij.add_child(_noteer_knop)
+
+	_knop = UiKit.button(_kap_label(), UiKit.FS_SMALL)
 	_knop.custom_minimum_size = Vector2(0, 32)
+	_knop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_knop.focus_mode = Control.FOCUS_NONE
 	_knop.disabled = _ingrepen <= 0
 	_knop.pressed.connect(_op_afkappen)
-	chrome_footer().add_child(_knop)
+	rij.add_child(_knop)
+
+	chrome_footer().add_child(rij)
 
 
 ## Het doel van de minigame, letterlijk zichtbaar: één segment per belangrijke
@@ -400,6 +443,7 @@ func _op_afkappen() -> void:
 		return
 
 	_ingrepen -= 1
+	_knop.text = _kap_label()
 	_knop.disabled = _ingrepen <= 0
 	var id := String(sp.get("id", ""))
 	_afgekapt.append(id)
@@ -452,29 +496,69 @@ func _werk_regels_bij() -> void:
 	var tot := clampi(int(_spreker_t / per) + 1, 1, aantal)
 	for i: int in _regels.size():
 		_regels[i].visible = i < tot
+	_regel_nu = tot - 1
 
-	# De regel die er inhoudelijk toe doet licht op zodra hij zichtbaar wordt —
-	# niet vooraf, niet per persoon. Wie hem niet hoort (afgekapt vóór hij
-	# valt) heeft 'm gewoon nooit gezien; geen vooruitblik, geen oneerlijke gok.
-	# Dit is ook het moment waarop zijn segment op de infobalk vult: niet pas
-	# aan het eind van zijn beurt, en niet als hij toch nog wordt afgekapt ná
-	# deze regel — dan staat hij al groen.
+	# De nuttige regel markeert zich hier NIET meer, en vangt zich hier ook
+	# niet meer. Dat deed hij wel: hij werd groen en zijn segment vulde op het
+	# moment dat hij verscheen, dus de opgave loste zich vanzelf op en de speler
+	# keek toe. Wat overblijft is bijhouden *dat* hij gevallen is, want
+	# `_op_afkappen()` moet nog weten of afkappen een melding kost.
 	if not _nuttig_regel_getoond and sp.has("nuttige_regel"):
-		var idx := int(sp["nuttige_regel"])
-		if idx < tot and idx < _regels.size():
+		if int(sp["nuttige_regel"]) < tot:
 			_nuttig_regel_getoond = true
-			_markeer_nuttige_regel(_regels[idx])
-			var id := String(sp.get("id", ""))
-			if id in _belangrijke_ids:
-				_segment_status[id] = "gevangen"
-				_werk_info_balk_bij()
-				var gevangen := 0
-				for status: Variant in _segment_status.values():
-					if String(status) == "gevangen":
-						gevangen += 1
-				_flits_tonen("%s %d van %d." % [
-					String(content().get("nuttig", "")), gevangen, _belangrijke_ids.size()
-				], UiKit.GROEN_OP_LICHT)
+
+
+## Opschrijven wat er nú op de kaart staat. Dit is de opgave: beoordelen of de
+## regel die je net leest het ding is dat gemeld moet worden.
+##
+## Er staat opzettelijk geen enkele hint in beeld welke regel dat is. De
+## briefing wijst één belangrijke spreker aan op rol ("degene die een technisch
+## probleem meldt") en Danny krijgt er geen — dat blijft de enige verborgen
+## informatie in het spel, en dat was altijd al de bedoeling. Alleen was die
+## kennis nergens voor nodig zolang de regel zichzelf ving.
+func _op_opschrijven() -> void:
+	if _uitslag != 0 or _wissel or _afgerond:
+		return
+	var sp := _huidig()
+	if sp.is_empty() or _regel_nu < 0:
+		return
+
+	var id := String(sp.get("id", ""))
+	var sleutel := "%s:%d" % [id, _regel_nu]
+	if _genoteerd.has(sleutel):
+		return
+	_genoteerd[sleutel] = true
+
+	var is_de_melding := bool(sp.get("belangrijk", false)) \
+		and sp.has("nuttige_regel") \
+		and int(sp["nuttige_regel"]) == _regel_nu \
+		and String(_segment_status.get(id, "")) == "open"
+
+	if is_de_melding:
+		_segment_status[id] = "gevangen"
+		_werk_info_balk_bij()
+		if _regel_nu < _regels.size():
+			_markeer_nuttige_regel(_regels[_regel_nu])
+		var gevangen := 0
+		for status: Variant in _segment_status.values():
+			if String(status) == "gevangen":
+				gevangen += 1
+		_flits_tonen("%s %d van %d." % [
+			String(content().get("nuttig", "")), gevangen, _belangrijke_ids.size()
+		], UiKit.GROEN_OP_LICHT)
+		if _balk_vol():
+			_uitslag = 1
+		return
+
+	# Mis. De prijs is tijd en niet voortgang, zoals overal in dit spel.
+	_tijd = maxf(0.0, _tijd - FOUT_SEC)
+	_werk_balk_bij()
+	_flits_tonen("%s  -%d sec" % [
+		String(content().get("fout_notitie", "Opgeschreven. Dat was niets.")),
+		roundi(FOUT_SEC),
+	], UiKit.ROOD_OP_LICHT)
+	AudioDirector.play_ui(&"fout")
+	Juice.schok(0.8, 0.12)
 
 
 ## Kleurt de regel groen en geeft 'm een korte pop, op het moment dat hij
@@ -499,8 +583,15 @@ func _werk_balk_bij() -> void:
 	zet_klokbalk(_tijd / maxf(0.001, _tijd_max))
 
 
+## Alleen de klok in de status. Het aantal ingrepen stond er ook, en samen was
+## dat "30 sec · nog 3x afkappen" — breed genoeg om de titel in de kopregel tot
+## "De" af te kappen. Dat getal hoort bovendien op de knop die het beperkt.
+func _kap_label() -> String:
+	return "Afkappen (%d)" % maxi(0, _ingrepen)
+
+
 func _werk_status_bij() -> void:
-	set_status("%d sec  ·  nog %dx afkappen" % [maxi(0, ceili(_tijd)), _ingrepen])
+	set_status("%d sec" % maxi(0, ceili(_tijd)))
 
 
 func _flits_tonen(tekst: String, kleur: Color) -> void:
@@ -547,12 +638,23 @@ func _exit_tree() -> void:
 ## het begin van zo iemands beurt af: er valt niets meer af te wegen, de keuze
 ## lag al vast.
 func _qa_overweeg() -> void:
-	if _wissel or _ingrepen <= 0:
+	if _wissel:
 		return
 	var sp := _huidig()
 	if sp.is_empty():
 		return
-	if String(sp.get("id", "")) in _qa_afkap_ids:
+
+	# Eerst opschrijven, dan pas afkappen: sinds opschrijven de opgave is, wint
+	# een harnas dat alleen afkapt nooit meer. Dit tikt zodra de nuttige regel
+	# op de kaart staat, precies zoals een oplettende speler zou doen.
+	var id := String(sp.get("id", ""))
+	if bool(sp.get("belangrijk", false)) and sp.has("nuttige_regel") \
+			and int(sp["nuttige_regel"]) == _regel_nu \
+			and String(_segment_status.get(id, "")) == "open":
+		_op_opschrijven()
+		return
+
+	if _ingrepen > 0 and id in _qa_afkap_ids:
 		_op_afkappen()
 
 
