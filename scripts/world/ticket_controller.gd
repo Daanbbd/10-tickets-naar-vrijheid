@@ -262,6 +262,14 @@ func _handle_inner(t: TicketDef, via_npc: bool = false) -> void:
 				await _dialogue.play(done)
 		GameEnums.Outcome.FAIL:
 			AudioDirector.play_sfx(&"fout")
+			# De pogingenteller van de oplevering hoort hier en niet in de
+			# minigame: een minigame mag Session niet schrijven
+			# (`minigame_base.gd` regel 6-7), en FAIL is het moment waarop een
+			# poging verbruikt is. Alleen het deploy-ticket telt mee —
+			# `mg_oplevering.gd::faalt_deploy()` leest deze teller om te
+			# bepalen of de eerste mislukking nog "gratis" is.
+			if result.minigame_id == &"mg_deploy":
+				Session.add_counter(&"deploy_pogingen")
 			# Falen kost tijd, nooit voortgang — en bewust géén klokrol: die
 			# hoort bij een opgelost ticket. Een volle animatie op een mislukte
 			# poging leest als straf en botst met het faalbeleid.

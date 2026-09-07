@@ -765,8 +765,10 @@ func _live() -> void:
 	var tekst := String(uit.get("tekst", ""))
 
 	# Eén keer mag het misgaan — en dan gaat het ook echt mis. Zie de kop.
+	# De teller zelf wordt niet hier opgehoogd: een minigame mag Session lezen,
+	# nooit schrijven (`minigame_base.gd` regel 6-7). `TicketController` telt
+	# de mislukte poging op het moment dat de FAIL-uitkomst binnenkomt.
 	if faalt_deploy(score, _faal_drempel(), Session.get_counter(POGINGEN_TELLER)):
-		Session.add_counter(POGINGEN_TELLER)
 		await _pauze(0.5)
 		_wis_console()
 		_console.alignment = BoxContainer.ALIGNMENT_CENTER
