@@ -254,9 +254,25 @@ func _refresh_marker() -> void:
 ## dan het spul dat je nog nodig hebt, dan het object zelf. Zonder zijeffecten,
 ## zodat `_refresh_marker()` kan vergelijken vóór hij iets afbreekt.
 func _doel_node() -> Node2D:
-	var t: TicketDef = QuestEngine.next_hint_ticket()
-	if t == null:
+	# Na de oplevering wijst alles naar de voordeur, wat er ook nog open staat.
+	if Session.dag_klaar():
 		return registry.get_by_id(&"voordeur")
+
+	# `gekozen_ticket()` en niet `next_hint_ticket()`, en dat is het hele punt.
+	# Die tweede heeft altijd een doel: zonder keuze valt hij terug op het
+	# dichtste beschikbare ticket, en dan stond er "Summit 26 m" in beeld bij
+	# 0/10 — vóór de speler ook maar één ticket had bekeken. Daan (#9, #31):
+	# *"er is geen reden om het zelf te proberen want de game heeft al een quest
+	# gestart"* en *"ik dacht dat het bord de plek is waar ik bewust mijn
+	# volgende ticket moet kiezen; heeft de game dit nu voor me gedaan?"*
+	#
+	# De wijzer tekent ongevraagd, dus hij mag alleen laten zien waar je je op
+	# hebt vastgelegd. De hintknop (Q) houdt de volle keten en blijft dus een
+	# suggestie geven — die druk je zelf in, en dan is een antwoord geen
+	# overname. Zie `QuestEngine.gekozen_ticket()`.
+	var t: TicketDef = QuestEngine.gekozen_ticket()
+	if t == null:
+		return null
 
 	if not QuestEngine.is_own_expertise(t.id) and not Session.get_flag(QuestEngine.helper_flag(t.id)):
 		var helper := npc_layer.find_npc(QuestEngine.required_helper(t.id))

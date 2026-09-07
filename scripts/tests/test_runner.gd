@@ -2093,10 +2093,49 @@ func _test_ankers_bereikbaar() -> void:
 				"%s/%s: het anker '%s' is bij de start niet aanspreekbaar"
 					% [cid, t.code, t.anchor])
 
-	# En het allereerste doel in het bijzonder: daar plant de wijzer zich op.
+	# En het allereerste doel in het bijzonder: daar plant de wijzer zich op
+	# zodra de speler iets gekozen heeft.
 	QuestEngine.start_run(&"daan")
 	var eerste: TicketDef = QuestEngine.next_hint_ticket()
 	_ok(eerste != null, "next_hint_ticket() geeft bij de start niets")
+
+	# De scheiding tussen suggestie en keuze, en die moet hier hard staan.
+	#
+	# De wijzer in de wereld leest `gekozen_ticket()` en de hintknop
+	# `next_hint_ticket()`. Bij de start heeft de speler niets gepind en loopt
+	# er geen collega mee, dus hoort de wijzer níets te tekenen terwijl de
+	# hintknop wél een suggestie geeft. Stond dat er niet, dan wees de wijzer
+	# ongevraagd naar het dichtste ticket en was er geen keuze meer te maken —
+	# playtest 6 september, #9 en #31.
+	#
+	# Deze test bestaat omdat het harnas dit pad nooit raakt: de `Autopilot`
+	# pint zelf, dus daar is er altijd een keuze en zou een teruggekeerde
+	# wijzer niemand opvallen. Zelfde klasse blinde vlek als de
+	# `Autopilot.gevraagd()`-afslag die de vastloper verborg.
+	_ok(QuestEngine.gekozen_ticket() == null,
+		"gekozen_ticket() geeft bij de start al een doel terug, zonder dat de " +
+		"speler iets gepind heeft — dan tekent de wijzer weer ongevraagd")
+	Session.pin(eerste.id if eerste != null else &"t01")
+	_ok(QuestEngine.gekozen_ticket() != null,
+		"gekozen_ticket() geeft niets terug terwijl er wél een ticket gepind is")
+	Session.unpin()
+	_ok(QuestEngine.gekozen_ticket() == null,
+		"gekozen_ticket() blijft een doel geven na unpin()")
+
+	# En dat `_doel_node()` die functie ook echt gebruikt. De drie controles
+	# hierboven staan op `QuestEngine` en zeggen niets over wie hem aanroept:
+	# zet `main.gd` de wijzer terug op `next_hint_ticket()`, dan blijven ze
+	# alle drie groen terwijl het gedrag terug is. Nagerekend dat dat inderdaad
+	# gebeurde, dus dit is geen theoretische zorg.
+	var bron := _zonder_commentaar(FileAccess.get_file_as_string("res://scripts/world/main.gd"))
+	var doel_fn := bron.substr(bron.find("func _doel_node()"))
+	doel_fn = doel_fn.substr(0, maxi(0, doel_fn.find("\nfunc ")))
+	_ok(doel_fn != "" and "QuestEngine.gekozen_ticket()" in doel_fn,
+		"main.gd::_doel_node() leest niet QuestEngine.gekozen_ticket() — de " +
+		"wijzer wijst dan weer ongevraagd naar het dichtste ticket")
+	_ok(not ("QuestEngine.next_hint_ticket()" in doel_fn),
+		"main.gd::_doel_node() leest next_hint_ticket(); dat is de volle keten " +
+		"met de terugval op afstand, en die hoort alleen achter de hintknop")
 	if eerste != null:
 		var vw3 := (per_id.get(eerste.anchor, {}) as Dictionary).get("visible_when", {}) as Dictionary
 		_ok(Conditions.check(vw3),

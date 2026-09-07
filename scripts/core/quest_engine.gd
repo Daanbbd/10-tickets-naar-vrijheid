@@ -265,34 +265,33 @@ static func complete(id: StringName, result: MinigameResult) -> void:
 ## Je eigen keuze wint. Heb je niets gekozen, dan het eerste ticket dat je bij
 ## je hebt; heb je nog niets gevonden, dan het eerste dat er nog ligt — zo
 ## stuurt de hint je op verkenning in plaats van dat hij zwijgt.
-static func next_hint_ticket() -> TicketDef:
+## Waar je je **op vastgelegd** hebt — je gepinde ticket, of het ticket van de
+## collega die achter je aan loopt. Niets anders.
+##
+## Dit is de bron voor de wijzer in de wereld en voor de kompasstrip, en het
+## verschil met `next_hint_ticket()` hieronder is het punt. Die laatste heeft
+## altíjd een doel: heb je niets gekozen, dan valt hij terug op het dichtste
+## beschikbare ticket. Dat is goed voor de hintknop, want die druk je zelf in.
+## Voor de wijzer was het fataal, want die tekent ongevraagd — en dan is er geen
+## keuze meer te maken. Daan zei het twee keer in de playtest van 6 september:
+##
+##   #9  "de mechanic wordt uitgelegd en daarna is er geen reden om het zelf te
+##        proberen want de game heeft al een quest gestart"
+##   #31 "Ik dacht dat het bord de plek is waar ik bewust mijn volgende ticket
+##        moet kiezen; heeft de game dit nu voor me gedaan?"
+##
+## Hij had gelijk, en het sprak `docs/GAME_DESIGN.md` tegen: *"Er is dus geen
+## 'volgende ticket', alleen een volgende keuze."* Die keuze stond in de data en
+## werd door de gidslaag weggenomen.
+##
+## Een collega die meeloopt telt wél als vastgelegd. Je haalt hem niet voor
+## niets op; dat is een keuze die je met je voeten hebt gemaakt.
+static func gekozen_ticket() -> TicketDef:
 	if Session.pinned_ticket != &"" and Session.is_available(Session.pinned_ticket):
 		return GameData.ticket(Session.pinned_ticket)
-	# Na de oplevering is de dag klaar, wat er ook nog open staat: dan wijst
-	# alles naar de voordeur (zie `Session.dag_klaar()`).
 	if Session.dag_klaar():
 		return null
-	# De oplevering komt als laatste, tenzij je hem zelf pint. Zolang er ander
-	# werk open staat wijst de wijzer daarnaar, en blijft de deploycomputer een
-	# keuze op het bord in plaats van de volgende halte — hij staat vanaf 8/10
-	# open, juist zodat je kúnt kiezen om het laatste ticket te laten liggen.
-	var ander_werk := false
-	for id: StringName in GameData.ticket_ids():
-		if id != &"t10" and Session.is_available(id):
-			ander_werk = true
-			break
 
-	# Loopt er een collega achter je aan, dan is zíjn ticket waar je mee bezig
-	# bent. Zonder deze stap viel de gidslaag terug op "het dichtste ticket", en
-	# dat sprak de doelregel tegen: die leest `pinned_ticket` en zei "Nu:
-	# BBD-205", terwijl de wijzer en de hint naar BBD-201 in Summit stonden te
-	# wijzen omdat dat toevallig dichterbij lag. Twee systemen die tegelijk in
-	# beeld staan en iets anders beweren over wat je aan het doen bent.
-	#
-	# Dit werd pas zichtbaar toen BBD-201 vanaf minuut één openging (de kickoff
-	# opent nu de dag): daarvoor stond dat ticket op slot en deed het nooit mee
-	# in de afstandsvergelijking. Je haalt een collega niet voor niets op, dus
-	# dat is een sterker signaal dan afstand.
 	var mee: TicketDef = null
 	var mee_d := -1
 	for id: StringName in GameData.ticket_ids():
@@ -307,8 +306,28 @@ static func next_hint_ticket() -> TicketDef:
 		if mee == null or afst < mee_d:
 			mee = kandidaat
 			mee_d = afst
-	if mee != null:
-		return mee
+	return mee
+
+
+static func next_hint_ticket() -> TicketDef:
+	# Je eigen keuze eerst, en dat is precies wat `gekozen_ticket()` teruggeeft:
+	# je gepinde ticket, of het ticket van de collega die meeloopt. Na de
+	# oplevering is de dag klaar, wat er ook nog open staat: dan wijst alles
+	# naar de voordeur (zie `Session.dag_klaar()`).
+	var gekozen := gekozen_ticket()
+	if gekozen != null:
+		return gekozen
+	if Session.dag_klaar():
+		return null
+	# De oplevering komt als laatste, tenzij je hem zelf pint. Zolang er ander
+	# werk open staat wijst de wijzer daarnaar, en blijft de deploycomputer een
+	# keuze op het bord in plaats van de volgende halte — hij staat vanaf 8/10
+	# open, juist zodat je kúnt kiezen om het laatste ticket te laten liggen.
+	var ander_werk := false
+	for id: StringName in GameData.ticket_ids():
+		if id != &"t10" and Session.is_available(id):
+			ander_werk = true
+			break
 
 	# Het dichtstbijzijnde doel, niet het laagste ticketnummer.
 	#
