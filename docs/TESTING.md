@@ -438,16 +438,26 @@ wél binnen het gesturevenster past. Nagerekend met `performance.getEntriesByTyp
 ('resource')`: één fetch van `index.pck`, vóór de poort verschijnt, en geen
 tweede na de tik.
 
-**Diagnose.** Hang `?audio` aan de URL, dan zet de poort na de tik zijn eigen
-meting in beeld: `audio: running · 48000 Hz · worklet: true`. Godots eigen
-context zit in de moduleclosure en is van buiten niet te lezen, maar een context
-die in dezelfde tik wordt aangemaakt deelt wél het beleid van de pagina. Dat
-scheidt de twee overgebleven oorzaken als iemand alsnog niets hoort:
+**Diagnose.** Hang `?audio` aan de URL, dan wikkelt de poort tijdelijk
+`window.AudioContext` en `AudioWorklet.prototype.addModule` in en zet na de tik
+in beeld wat Godot daar zélf mee doet: `godot: running · 48000 Hz · na 4796 ms
+· worklet: ok, ok`.
+
+Dit was eerst een eigen schaduwcontext — iets dat de shell zelf aanmaakte om te
+testen of "de pagina" audio mag afspelen — en die maat bleek de verkeerde: op
+7 september gaf hij bij Daan op zijn iPhone `running`, en toch bleef het stil.
+De schaduwcontext deelt het autoplay-beleid van de pagina, maar zegt niets over
+Godots éigen context, die apart en later ontstaat (in `_godot_audio_init()`,
+tijdens `callMain()`). De wikkel hierboven vangt daarom niet een imitatie maar
+de aanroepen die Godot zelf doet: elke `new AudioContext()` en elke
+`audioWorklet.addModule()`, met hun uitkomst.
 
 | meting | wat het betekent |
 |---|---|
-| `running`, en toch stil | niet de autoplay-policy maar Godots audiopad zelf — kijk naar de AudioWorklet in de no-threads-build |
-| `suspended` | het hoofdpakket werd niet vóór de tik voorgeladen — controleer of `Promise.all(...)` in `html/shell.html` echt op `preloadFile()` wacht |
+| `godot: running` + beide worklets `ok` | het audiopad werkt tot en met de mixer; blijft het dan nog stil, kijk naar bussen/volumes (`AudioDirector`) of naar het toestel zelf |
+| `godot: running` + een worklet `FOUT: ...` | de context leeft, maar de node die het geluid mixt niet — dít is "running, en toch stil", nu met de echte foutmelding erbij in plaats van een gok |
+| `godot: suspended` | Godots eigen context is, ondanks de preload-fix, alsnog buiten het gesturevenster ontstaan — er zit dan nog een onbekende asynchrone stap tussen de tik en `_godot_audio_init()` |
+| `godot: geen AudioContext gemaakt` | de audiodriver is nooit gestart; geen autoplay-probleem meer maar een startfout — kijk in de console naar `SCRIPT ERROR` rond het moment van de tik |
 
 > **Nog open:** `assets/fonts/ark-pixel-12px-proportional-latin.ttf` is 4,75 MB
 > met 24.176 glyphs, terwijl de 10px- en 16px-snit ~0,5 MB en ~4.000 glyphs

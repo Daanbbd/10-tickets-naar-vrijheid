@@ -303,28 +303,84 @@ const engine = new Engine(GODOT_CONFIG);
 			gestart = true;
 			gate.classList.remove('visible');
 
-			// Diagnose, alleen met ?audio in de URL. Godots eigen AudioContext
-			// zit in de moduleclosure en is van buiten niet te lezen, maar een
-			// context die we hier in dezelfde tik aanmaken deelt wel het beleid
-			// van de pagina. Dat scheidt de twee mogelijke oorzaken zodra
-			// iemand meldt dat hij niets hoort: staat deze op "running" en is
-			// het toch stil, dan ligt het niet aan de autoplay-policy maar in
-			// Godots audiopad (de worklet). Staat hij op "suspended", dan is de
-			// tik niet als gesture aangekomen.
+			// Diagnose, alleen met ?audio in de URL.
+			//
+			// **7 sep, tweede ronde: een eigen schaduwcontext was de verkeerde
+			// meting.** De eerste versie hier maakte z\u00edjn eigen `AudioContext`
+			// aan om te testen of "de pagina" audio mag afspelen, en las die
+			// terug als "running" \u2014 bij Daan zowel op desktop als op zijn
+			// iPhone, n\u00e1 de preload-fix. Maar hij hoorde op zijn telefoon
+			// nog steeds niets, terwijl zijn systeemgeluid (notificaties,
+			// tabbladen) gewoon werkte. Dat betekent: de browser stond audio
+			// toe, maar Godots \u00e9igen context \u2014 een andere, die pas later in
+			// `callMain()` ontstaat \u2014 was daarmee niet aantoonbaar mee
+			// ontgrendeld. Een schaduwcontext meet het beleid van de pagina,
+			// niet wat er in Godots eigen audiopad gebeurt.
+			//
+			// Nu wordt `window.AudioContext`/`webkitAudioContext` hier tijdelijk
+			// omwikkeld, vlak v\u00f3\u00f3r `engine.start()`. Godot roept die
+			// constructor zelf aan in `_godot_audio_init()` (in `index.js`,
+			// vanuit de wasm) \u2014 dit vangt dus z\u00edjn \u00e9chte context af, niet een
+			// imitatie. De wikkel gaat er na het lezen weer af; hij verandert
+			// niets aan hoe het spel normaal draait.
+			let __godotAudioLog = null;
+			let __godotWorkletLog = null;
 			if (window.location.search.indexOf('audio') !== -1) {
 				try {
-					const Ctx = window.AudioContext || window.webkitAudioContext;
-					const probe = new Ctx();
-					probe.resume();
+					const EchteCtx = window.AudioContext || window.webkitAudioContext;
+					__godotAudioLog = [];
+					function GewikkeldeCtx(...args) {
+						const ctx = new EchteCtx(...args);
+						__godotAudioLog.push({ ctx: ctx, tMs: Math.round(performance.now()) });
+						return ctx;
+					}
+					GewikkeldeCtx.prototype = EchteCtx.prototype;
+					window.AudioContext = GewikkeldeCtx;
+					window.webkitAudioContext = GewikkeldeCtx;
+
+					// Tweede laag: laadt Godots eigen worklet-module echt? Een
+					// context die "running" meldt zegt niets over of het geluid
+					// er ook echt uit komt \u2014 de AudioWorkletNode die het
+					// daadwerkelijke mixen doet heeft zijn module nodig
+					// (`index.audio.worklet.js`), en `addModule()` kan om allerlei
+					// redenen falen zonder dat de context daar iets van laat
+					// blijken. Dit is precies het tweede rijtje uit de
+					// diagnosetabel in `docs/TESTING.md`: "running, en toch
+					// stil" wijst hierheen.
+					__godotWorkletLog = [];
+					if (typeof AudioWorklet !== 'undefined') {
+						const echtAddModule = AudioWorklet.prototype.addModule;
+						AudioWorklet.prototype.addModule = function (url, opts) {
+							const item = { url: url, tMs: Math.round(performance.now()), status: 'bezig' };
+							__godotWorkletLog.push(item);
+							return echtAddModule.call(this, url, opts).then(
+								(r) => { item.status = 'ok'; return r; },
+								(e) => { item.status = 'FOUT: ' + (e && e.message || e); throw e; },
+							);
+						};
+					}
+
 					const toon = () => {
+						window.AudioContext = EchteCtx;
+						window.webkitAudioContext = EchteCtx;
 						gate.classList.add('visible');
-						document.getElementById('gate-action').textContent = 'audio: ' + probe.state;
-						document.getElementById('gate-note').textContent = probe.sampleRate + ' Hz'
-							+ ' \u00b7 worklet: ' + (typeof AudioWorkletNode !== 'undefined');
 						gate.style.pointerEvents = 'none';
 						gate.style.background = 'transparent';
+						if (__godotAudioLog.length === 0) {
+							document.getElementById('gate-action').textContent = 'godot: geen AudioContext gemaakt';
+							document.getElementById('gate-note').textContent = 'de audiodriver is niet gestart \u2014 geen autoplay-probleem meer';
+							return;
+						}
+						const laatste = __godotAudioLog[__godotAudioLog.length - 1];
+						document.getElementById('gate-action').textContent = 'godot: ' + laatste.ctx.state
+							+ (__godotAudioLog.length > 1 ? ' (' + __godotAudioLog.length + 'x aangemaakt)' : '');
+						const workletTekst = __godotWorkletLog.length === 0
+							? 'geen worklet geladen'
+							: __godotWorkletLog.map((w) => w.status).join(', ');
+						document.getElementById('gate-note').textContent = laatste.ctx.sampleRate + ' Hz'
+							+ ' \u00b7 na ' + laatste.tMs + ' ms \u00b7 worklet: ' + workletTekst;
 					};
-					setTimeout(toon, 1500);
+					setTimeout(toon, 4000);
 				} catch (err) {
 					console.error('audio-diagnose faalde:', err);
 				}
