@@ -2,7 +2,7 @@
  "mg_user_story": {
   "type": "scope",
   "briefing": "Er passen {capaciteit} punten in de sprint en de klant moet op {tevreden_min} blij uitkomen. Van haar {wensen} wensen zijn er {zwaar} eigenlijk een project. Als ze 'een app' zegt: sorry wat.",
-  "intro": "De klant heeft {wensen} wensen. Tik een wens om hem in de sprint te zetten of er weer uit te halen. Elke wens kost punten en maakt haar blijer. Er passen {capaciteit} punten in de sprint.",
+  "intro": "De klant heeft {wensen} wensen. Jij hebt {capaciteit} punten. Tik een wens om hem in de sprint te zetten; elke wens kost punten, maar maakt de klant blijer. Succes met kiezen.",
   "capaciteit": 13,
   "tevreden_min": 10,
   "eenheid": "punten",
@@ -72,7 +72,7 @@
  "mg_planning": {
   "type": "standup",
   "briefing": "Zeven collega's in {tijd} seconden past niet. Je mag {ingrepen} keer afkappen. Niet de twee die iets melden: die moet je horen.",
-  "intro": "{sprekers} collega's, {tijd} seconden: dat past niet. Kap er {ingrepen} af. Twee collega's melden iets dat kapot is, waaronder {belangrijk}. Die twee laat je uitpraten.",
+  "intro": "{sprekers} collega's; {tijd} seconden; dat is nog nooit iemand gelukt. Kap er {ingrepen} af. Twee melden iets dat echt kapot is, waaronder {belangrijk}. Die twee laat je uitpraten.",
   "tijd": 30.0,
   "ingrepen": 3,
   "kap_regel": "Afgekapt. Hij knikt.",
@@ -103,7 +103,7 @@
     "naam": "Jonathan",
     "duur": 9.0,
     "belangrijk": true,
-    "aanwijzing": "degene die een technisch probleem meldt",
+    "aanwijzing": "de collega die over de database begint",
     "nuttige_regel": 1,
     "regels": [
      "Ik zie overal store-id based assortment staan.",
@@ -166,7 +166,7 @@
  "mg_klantfeedback": {
   "type": "choicescene",
   "briefing": "Ze gaat {rondes} keer twee dingen zeggen die niet samen kunnen. Kies wat je echt kunt bouwen. Ik zit erbij en zeg niks, dat werkt bij haar beter. Dat is wel top.",
-  "intro": "De klant zit in de entree met een uitgeprinte screenshot. Ze gaat drie keer twee dingen zeggen die niet samen kunnen. Kies telkens het antwoord dat je echt kunt bouwen.",
+  "intro": "De klant zit in de entree met een uitgeprinte screenshot. Ze gaat drie keer twee dingen zeggen die niet samen kunnen. Kies elke keer het antwoord dat je ook echt kunt bouwen.",
   "rondes": [
    {
     "prompt": "'Het moet rustiger worden. Maar het moet ook meer opvallen.'",
@@ -253,7 +253,7 @@
  "mg_frontend_fix": {
   "type": "uitlijnen",
   "briefing": "Raster van {raster} pixels, {tolerantie} pixel speling. {elementen} blokken staan scheef. manmanman.",
-  "intro": "Op de productpagina staan {elementen} blokken een paar pixels scheef. Tik een blok en sleep het tot het vastklikt op het raster.",
+  "intro": "Op de productpagina staan {elementen} blokken een paar pixels scheef. Tik een blok en sleep het tot het vastklikt op het raster. Victor ziet het verschil. Vanaf nu jij ook.",
   "tolerantie": 2,
   "raster": 4,
   "drift_sec": 8,
@@ -322,7 +322,7 @@
  "mg_backend_fix": {
   "type": "cableboard",
   "briefing": "{verbindingen} verbindingen kloppen niet, en er liggen {afleiders} draden bij die er niets mee te maken hebben. Symptoom, niet oorzaak. Best wel structureel ^.^",
-  "intro": "De webshop toont Prijs: NaN en Voorraad: null. Ergens zit een verkeerde verbinding tussen de webshop en de database. Kies welke kabel je legt.",
+  "intro": "De webshop toont Prijs: NaN en Voorraad: null. Ergens tussen de webshop en de database ligt een verkeerde verbinding. Kies welke kabel je legt. Eén ervan is de goede.",
   "nodes": [
    {
     "id": "webshop",
@@ -407,7 +407,7 @@
  "mg_cro": {
   "type": "heatmap",
   "briefing": "we zitten op {basis}{eenheid} en moeten naar {doel}{eenheid}. kijk waar ze klikken en zet de knop daar. psies.",
-  "intro": "Elke stip is een bezoeker die klikt. Sleep de knop Bestellen naar de plek met de meeste stippen voordat de ronde om is. Drie rondes van {ronde_sec} seconden.",
+  "intro": "Elke stip is iemand die klikt. Sleep de knop Bestellen naar de plek waar ze klikken, voordat de ronde om is. Drie rondes van {ronde_sec} seconden. Aanzetten en kijken, zegt Danny.",
   "basis": 1.8,
   "doel": 2.7,
   "eenheid": "%",
@@ -513,7 +513,7 @@
  "mg_abgevecht": {
   "type": "abgevecht",
   "briefing": "A en B staan allebei op {hp_a}. drie rondes om B op nul te krijgen. elke klap slaat ook terug. psies.",
-  "intro": "A en B zijn twee versies van de webshop. Drie rondes lang kies je een aanpassing voor A. Elke aanpassing doet B schade, maar kost A ook wat.",
+  "intro": "A en B zijn twee versies van de webshop. Drie rondes kies je een aanpassing voor A. Elke aanpassing raakt B, en B slaat terug. Ja, het is een A/B-test. Nee, zo werkt het niet echt.",
   "hp_a": 100,
   "hp_b": 100,
   "keuze_sec": 7,
@@ -595,7 +595,7 @@
  "mg_video": {
   "type": "pijplijn",
   "briefing": "{doel} clips, {credits} credits. Het knelpunt is {knelpunt}: daar staat de rij stil. Begin daar. Daarna zet ik er piepelienies om, dan hoeft dit nooit meer met de hand.",
-  "intro": "Zes videoclips gaan door drie stappen: Prompt, Render, Publish. Tik een clip die klaar is om hem door te schuiven. In Render is plek voor twee, en een clip die daar klaar staat te wachten kost credits.",
+  "intro": "Zes clips gaan door Prompt, Render en Publish. Tik een clip die klaar is om hem door te schuiven. In Render is plek voor twee, en een clip die daar blijft wachten kost je credits.",
   "tijd": 60.0,
   "credits": 100,
   "doel": 5,
@@ -639,7 +639,7 @@
  "mg_paarden": {
   "type": "whack",
   "briefing": "hiya,, er lopen paarden op de verdieping,, dat zijn bugs. spreek er een aan. de klantpaarden lijken erop, dat is de grap.",
-  "intro": "Door alle wijzigingen lopen er paarden op de verdieping. Dat zijn bugs. Loop naar een paard en spreek het aan. Ze staan in de gang, bij de toiletten en in Weekend.",
+  "intro": "Door alle wijzigingen lopen er paarden op de verdieping. Dat zijn bugs. Loop naar een paard en spreek het aan. Ze staan in de gang, bij de toiletten en in Weekend. Vraag niet waarom.",
   "doel": 10,
   "duur": 60,
   "spawn_start": 1.3,
@@ -652,7 +652,7 @@
  },
  "mg_deploy": {
   "type": "oplevering",
-  "intro": "Alles wat brandt komt binnen als kaartje. Elk brandje heeft één juiste handeling. Verloopt de balk, dan kost het je.",
+  "intro": "De deploy loopt, en het vuur loopt achter je aan. Elk spoedje vraagt om één van de zeven knoppen. Reageer je niet snel genoeg, dan komt het vuur dichterbij. Dus, succes.",
   "klok_seconden": 75,
   "max_zichtbaar": 3,
   "race": {
@@ -738,6 +738,61 @@
     }
    }
   ],
+  "puzzel": {
+   "na": 30,
+   "aankondiging": "Jonathan typt. Drie gesprekken tegelijk.",
+   "brandje": {
+    "id": "prijs_pdp",
+    "tekst": "Danny: prijs op de PDP klopt niet",
+    "handeling": "informeren",
+    "duur": 16,
+    "straf": {
+     "vertrouwen": 1,
+     "vuur": 3
+    }
+   },
+   "fragmenten": [
+    {
+     "id": "sap",
+     "tekst": "SAP-call: kar en order",
+     "werk": true,
+     "volgorde": 1
+    },
+    {
+     "id": "prijs",
+     "tekst": "Klantprijs: in de kar",
+     "werk": true,
+     "volgorde": 2
+    },
+    {
+     "id": "pdp",
+     "tekst": "PDP-prijs is indicatief",
+     "werk": true,
+     "volgorde": 3
+    },
+    {
+     "id": "land",
+     "tekst": "Moeder wil 1600 m2 erbij",
+     "werk": false
+    },
+    {
+     "id": "rijst",
+     "tekst": "Voetbalveld aan rijstveld",
+     "werk": false
+    },
+    {
+     "id": "cordier",
+     "tekst": "Ik stop met Cordier",
+     "werk": false
+    }
+   ],
+   "opgelost": "Geen bug. De PDP-prijs is indicatief. Dus: klant informeren.",
+   "ontknoping": "Jonathan: Ik wachtte op Claude en las mijn moeder ertussen.",
+   "mis": "Dat gaat over zijn moeder. Of over Cordier.",
+   "verlopen": "Jonathan: Ik ga er morgen naartoe kijken.",
+   "duur_na": 8,
+   "mis_vuur": 1
+  },
   "brandjes": [
    {
     "id": "kabel_b",
@@ -988,12 +1043,12 @@
     }
    }
   },
-  "klaar_als": "De klok loopt af met zo min mogelijk brandjes open. Wat blijft staan, gaat zo live."
+  "klaar_als": "Je bent op tijd klaar en het vuur heeft je niet ingehaald. Hoe verder het achterblijft, hoe beter."
  },
  "mg_urenstaat": {
   "type": "slotboard",
   "titel": "Urenstaat",
-  "intro": "Dirk wil weten waar je acht uur vandaag heen gingen. Kies de verdeling die het dichtst in de buurt komt. Er is geen goed antwoord.",
+  "intro": "Dirk wil weten waar je acht uur vandaag heen gingen. Kies de verdeling die er het dichtst bij komt. Er is geen goed antwoord, en Dirk neemt ze alle drie aan.",
   "success": "Ingediend. Dirk heeft het gezien.",
   "opties": [
    {

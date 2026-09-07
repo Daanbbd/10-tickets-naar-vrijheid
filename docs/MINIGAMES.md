@@ -287,22 +287,45 @@ drag & drop; klikken op een geplaatst kaartje haalt het terug.
 
 Drie fasen, met een `enum` + `match` in plaats van fasenummers.
 
-1. **Voorbereiden — de brandjes.** Brandjes komen binnen als kaartjes met een
-   eigen aflopende balk (6-10 s), hoogstens drie tegelijk, en sneller naarmate
-   de klok van 75 s vordert (`spawn_curve` in de data). Elk kaartje noemt in
-   Jira-Nederlands wat er brandt ("STAGING: 502 op /checkout", "Dennis:
-   statusje?", "Kabel B ligt los") en vraagt precies één van de zeven vaste
-   handelingen: `testen`, `fixen`, `scope`, `collega`, `informeren`,
-   `nakijken`, `risico`. Blus je op tijd, dan geldt het effect van die
-   handeling; laat je de balk verlopen, dan geldt de straf van het brandje. Een
-   handeling waar niets voor brandt doet niets, behalve een rode flits en een
-   knoppenslot van 0,4 s — blind rammen mag geen strategie zijn.
+1. **Voorbereiden — de race.** Bovenaan staat de straat: de deploy rijdt van
+   links naar rechts en een brandende laag zit erachter. De afstand ertussen is
+   `voorsprong`, in seconden, en dat getal **ís de score** — de drempels
+   13/9/4/0 uit `uitkomsten` betekenen letterlijk hoeveel seconden de vlammen
+   achter je zaten. Halen de vlammen je in, dan houdt het op: de knoppen vallen
+   om en je gaat live met wat er brandt.
+
+   Brandjes komen binnen als kaartjes met een eigen aflopende balk (6-10 s),
+   hoogstens drie tegelijk, en sneller naarmate de klok van 75 s vordert
+   (`spawn_curve`). Elk kaartje noemt in Jira-Nederlands wat er brandt
+   ("STAGING: 502 op /checkout", "Dennis: statusje?", "Kabel B ligt los") en
+   vraagt precies één van de zeven vaste handelingen: `testen`, `fixen`,
+   `scope`, `collega`, `informeren`, `nakijken`, `risico`. Blussen levert een
+   beetje voorsprong op; een verlopen kaartje kost `straf.vuur` (2 of 2,5 s) en
+   valt zichtbaar om; een handeling waar niets voor brandt kost `mis_straf`
+   (1 s) plus een knoppenslot van 0,4 s.
+
+   Dat laatste is een fix van 7 september: dat knoppenslot was tot dan de
+   énige prijs van een misser, en daardoor haalde blind door de zeven knoppen
+   cyclen op elk zaad dezelfde score als perfect spel. `_finale_blind_cyclen()`
+   dwingt nu af dat die route onder de faaldrempel zakt.
 
    Vier waarden vormen de toestand: `bugs` (lager is beter), `vertrouwen`,
-   `getest`, `scope`. Het aantal bugs is **onbekend** tot je test — het eerste
-   geblusde `testen`-brandje onthult het, en blind live gaan kost per bug
-   extra. Er is geen knop DEPLOYEN: de klok ís de deploy, en op nul gaat het
-   live met wat er dan nog brandt.
+   `getest`, `scope`. Ze staan niet meer op het scherm — er was negen pixels
+   speling en de straat had achtentwintig nodig — maar ze zijn niet weg: ze
+   bepalen via `start_voorsprong()` en `vuur_snelheid()` hoeveel voorsprong je
+   krijgt en hoe hard het vuur loopt. **Een slechte dag stuurt dus geen extra
+   brandjes maar snellere vlammen**, en daarmee kan een rampdag een zorgvuldige
+   dag niet meer verslaan. Er is geen knop DEPLOYEN: de klok ís de deploy.
+
+   **De ontwarring.** Op 30 seconden stuurt Jonathan een bericht waarin drie
+   gesprekken door elkaar lopen (`puzzel` in de data). Hij is niet onduidelijk;
+   élk fragment is exact. Hij zat op Claude te wachten en las ondertussen zijn
+   moeder. Er brandt dan een kaartje dat je niet kunt blussen tot je de drie
+   werk-fragmenten eruit getikt hebt; die vertellen samen dat de prijs op de
+   productpagina indicatief is, dus dat het géén bug is en de klant
+   geïnformeerd moet worden. Een ruis-fragment kost een seconde voorsprong. Het
+   knoppenraster is zolang vervangen door `ontwarring.gd` en er spawnt niets
+   bij, maar de vlammen lopen door.
 
    **De dag zaait de avond.** Een verkeerd gelegde kabel
    (`gevolg_backend_fout_gekozen`) is het allereerste kaartje; een ontevreden

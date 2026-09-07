@@ -13,11 +13,19 @@ extends MinigameBase
 ## **P5 (Fase 5).** Het werkwoord was acht handelingen met een prijskaartje op
 ## één klok: het rustigste scherm van het spel op het moment dat het het
 ## luidste hoorde te zijn (`docs/AUDIT-2026-09-05.md` deel 2, M8). Nu schreeuwt
-## alles tegelijk. Brandjes komen binnen als kaartjes met een eigen aflopende
-## balk, hoogstens drie tegelijk, en elk brandje vraagt precies één van de zeven
-## handelingen. Blussen levert het effect van die handeling op; de balk laten
-## verlopen kost de straf van het brandje. De economie (`acties`, `kost`,
-## `can_perform_action`) is weg: de schaarste is tijd, niet budget.
+## alles tegelijk. Spoedjes komen binnen als kaartjes met een eigen aflopende
+## balk, hoogstens drie tegelijk, en elk spoedje vraagt precies één van de zeven
+## handelingen.
+##
+## **Sinds 7 september is het een race** (`docs/AUDIT-2026-09-07-MINIGAMES.md`).
+## Bovenaan rijdt de deploy over de straat met het vuur erachter; de afstand
+## ertussen is `voorsprong` in seconden, en dat getal ís de score. Blussen houdt
+## je voor, een misser en een verlopen kaartje halen het vuur dichterbij, en op
+## nul houdt het op. Dat repareerde drie dingen tegelijk: blind op de zeven
+## knoppen rammen haalde dezelfde score als perfect spel, er stond nooit meer
+## dan één kaartje tegelijk, en blussen was netto winst waardoor een rampdag een
+## zorgvuldige dag kon verslaan. Een slechte dag stuurt nu geen extra spoedjes
+## maar snellere vlammen.
 ##
 ## Wat de dag besloot komt hier binnen als brandhaarden en niet alleen als
 ## startgetallen: de fout gelegde kabel is het eerste kaartje, een ontevreden
@@ -31,8 +39,10 @@ extends MinigameBase
 
 enum Fase { VOORBEREIDEN, DEPLOYEN, HERSTELLEN, KLAAR }
 
-## De vier waarden, in de leesrichting van de meterstrook. Voluit, geen
-## afkortingen: "BUGS 3 VERTR 4" las als een spreadsheet en niet als een dag.
+## De vier waarden van de dag. Ze staan sinds de race niet meer op het scherm
+## (`_bouw_kop()`): ze bepalen nu hoeveel voorsprong je krijgt en hoe hard het
+## vuur loopt. `METER_NAAM` blijft voor de payload en voor een eventuele
+## terugkeer van een cijferweergave.
 const METERS: Array[StringName] = [&"bugs", &"vertrouwen", &"getest", &"scope"]
 const METER_NAAM := {
 	&"bugs": "bugs", &"vertrouwen": "vertrouwen",
@@ -45,7 +55,7 @@ const HERSTEL_ACTIES := 2
 const POGINGEN_TELLER := &"deploy_pogingen"
 
 ## Eén kaartje, en de ruimte voor drie. De zone houdt die hoogte ook als er
-## niets brandt: kaartjes die de knoppen eronder verschuiven zijn niet te raken.
+## niets ligt: kaartjes die de knoppen eronder verschuiven zijn niet te raken.
 const KAART_H := 30.0
 const KAART_SEP := 2.0
 const BALK_H := 4.0
@@ -53,8 +63,10 @@ const BALK_H := 4.0
 const KAART_WEG := 0.25
 
 ## Hoe lang de knoppen op slot zitten na een handeling die nergens op sloeg.
-## Kort genoeg om niet als straf te voelen, lang genoeg om blind rammen op de
-## zeven knoppen onaantrekkelijk te maken.
+## Dit slot was tot 7 september de énige prijs van een misser, en het was te
+## goedkoop: blind cyclen haalde daarmee dezelfde score als perfect spel. De
+## echte prijs zit nu in `_model.mis()`, die voorsprong afhaalt; dit slot is
+## alleen nog de rem die voorkomt dat één tik er drie worden.
 const BLOKKADE := 0.4
 const MIS_FLITS := 0.2
 
@@ -110,6 +122,24 @@ var _foutbalk_label: Label = null
 var _console_paneel: PanelContainer = null
 var _console: VBoxContainer = null
 var _klok_label: Label = null
+## De straat in de kopstrook. Toont waar de deploy staat en waar het vuur staat;
+## de rekenkern zit in `BrandjesModel` en dit is puur de weergave.
+var _straat: DeployStraat = null
+## Alarm gaat aan als de vlammen dichterbij komen dan dit aantal seconden. Dan
+## flikkert de strook, wiebelen de knoppen en wordt de statusregel rood.
+const ALARM_SEC := 4.0
+var _alarm_aan: bool = false
+var _wiebel: Tween = null
+
+## De ontwarring: Jonathans appje met drie gesprekken door elkaar. Staat op de
+## plek van het knoppenraster en is er nooit tegelijk mee zichtbaar.
+var _ontwarring: Ontwarring = null
+var _grid: GridContainer = null
+## Nr van het puzzelbrandje zolang de puzzel open staat, anders -1.
+var _puzzel_nr: int = -1
+var _puzzel_gedaan: bool = false
+## De werk-fragmenten die de speler al gepakt heeft, op volgorde van `volgorde`.
+var _puzzel_gepakt: Array[int] = []
 
 
 func _on_setup() -> void:
@@ -236,49 +266,26 @@ func _bouw(c: Dictionary) -> void:
 	chrome_footer().add_child(_deploy)
 
 
-## De kop: de klok rechts, daaronder de vier meters met hun woord voluit.
+## De kop is de straat: de deploy rijdt van links naar rechts en de brandende
+## laag zit erachter. Eén strook, niets erbij.
 ##
-## Een `HFlowContainer` en geen vaste rij. De vier woorden voluit plus hun
-## getallen passen krap op één regel binnen de 192 px van de smalste telefoon,
-## en "krap" wordt "niet" zodra `vertrouwen` twee cijfers krijgt. Een vaste rij
-## zou dan afbreken tot één letter per label (zie `_vast()`) of het paneel
-## buiten het canvas duwen; deze valt netjes terug op twee regels en staat op
-## elk breder scherm (`window/stretch/aspect = "expand"`) weer op één.
-## Afkortingen waren de andere uitweg — "BUGS 3 VERTR 4" las als een spreadsheet
-## en niet als een dag, dus die niet.
+## Hier stonden de vier meters (bugs, vertrouwen, getest, scope) met hun woord
+## voluit. Die zijn weg, en dat moest ook: het scherm had nog negen pixels
+## speling (`docs/AUDIT-2026-09-07-MINIGAMES.md`), en een strook van 28 px past
+## daar alleen in als de meterstrook van 34 px hem plaatsmaakt. Het is geen
+## verlies. De meters wáren de opgave niet, ze waren de boekhouding erover;
+## sinds de race bepalen ze hoeveel voorsprong je begint met en hoe hard het
+## vuur loopt (`BrandjesModel.start_voorsprong()`), en dát is nu te zien in
+## plaats van af te lezen. De klok en de voorsprong staan als getal in de
+## statusregel eronder, waar ze als bijschrift bij de strook lezen.
 func _bouw_kop() -> void:
 	var paneel := PanelContainer.new()
 	paneel.add_theme_stylebox_override("panel", UiKit.panel_krap(UiKit.WIT, UiKit.LINE))
 	paneel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	chrome_header().add_child(paneel)
 
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 2)
-	paneel.add_child(v)
-
-	var kop := HBoxContainer.new()
-	kop.add_theme_constant_override("separation", 4)
-	v.add_child(kop)
-	kop.add_child(_vast("TOT LIVE", UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT))
-	var vulling := Control.new()
-	vulling.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	kop.add_child(vulling)
-	_klok_label = _vast("", UiKit.FS_SMALL, UiKit.ORANJE)
-	_klok_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	kop.add_child(_klok_label)
-
-	var flow := HFlowContainer.new()
-	flow.add_theme_constant_override("h_separation", 4)
-	flow.add_theme_constant_override("v_separation", 1)
-	v.add_child(flow)
-	for m: StringName in METERS:
-		var cel := HBoxContainer.new()
-		cel.add_theme_constant_override("separation", 1)
-		flow.add_child(cel)
-		cel.add_child(_vast(String(METER_NAAM[m]), UiKit.FS_SMALL, UiKit.GRIJS_OP_LICHT))
-		var w := _vast("0", UiKit.FS_SMALL, UiKit.INK)
-		cel.add_child(w)
-		_waarde[m] = w
+	_straat = DeployStraat.new()
+	paneel.add_child(_straat)
 
 
 ## Een label dat niet mag afbreken. UiKit.label() zet autowrap aan omdat een
@@ -325,6 +332,15 @@ func _bouw_knoppen(body: VBoxContainer) -> void:
 		grid.add_child(b)
 		_knoppen[id] = b
 
+	_grid = grid
+	# De ontwarring komt op dezelfde plek en neemt het raster over zolang hij
+	# open staat. Drie rijen van hoogstens 40 px tegen de vier rijen die het
+	# knoppenraster inneemt, dus dit kan er nooit ruimte bij vragen.
+	_ontwarring = Ontwarring.new()
+	_ontwarring.visible = false
+	_ontwarring.gekozen.connect(_op_fragment)
+	body.add_child(_ontwarring)
+
 
 func _keuze(id: StringName) -> Dictionary:
 	for raw: Variant in content().get("keuzes", []):
@@ -354,6 +370,49 @@ func _process(delta: float) -> void:
 	_werk_kaartjes_bij()
 	_refresh_klok()
 	_status_regel()
+	_werk_straat_bij()
+
+	var pz := content().get("puzzel", {}) as Dictionary
+	if not _puzzel_gedaan and not pz.is_empty() and _model.verstreken >= float(pz.get("na", 30.0)):
+		_open_puzzel()
+
+
+## De strook volgt het model, elke frame. `voortgang()` is waar de deploy staat,
+## `vuur_positie()` waar de voorkant van de vlammen staat; het verschil is de
+## voorsprong, en dat is precies wat de speler moet zien.
+func _werk_straat_bij() -> void:
+	if _straat == null or _model == null:
+		return
+	var dichtbij: bool = _model.voorsprong <= ALARM_SEC
+	_straat.zet(_model.voortgang(), _model.vuur_positie(), dichtbij)
+	if dichtbij != _alarm_aan:
+		_alarm_aan = dichtbij
+		_zet_wiebel(dichtbij)
+
+
+## Onder de alarmgrens wiebelen de zeven knoppen. Niet als versiering: het is de
+## enige plek waar het scherm zelf zegt "nu gaat het mis", en de speler kijkt op
+## dat moment naar de knoppen en niet naar de strook.
+##
+## `rotation` op een Button in een GridContainer mag: de container zet positie
+## en maat, niet de rotatie. `pivot_offset` in het midden, anders draait hij om
+## zijn linkerbovenhoek en schuift hij visueel weg van zijn tikdoel.
+func _zet_wiebel(aan: bool) -> void:
+	if _wiebel != null and _wiebel.is_valid():
+		_wiebel.kill()
+		_wiebel = null
+	for id: Variant in _knoppen:
+		var b := _knoppen[id] as Button
+		b.rotation = 0.0
+	if not aan or Autopilot.gevraagd():
+		return
+	_wiebel = create_tween().set_loops()
+	for id: Variant in _knoppen:
+		var b := _knoppen[id] as Button
+		b.pivot_offset = b.size * 0.5
+		_wiebel.parallel().tween_property(b, "rotation", 0.03, 0.09)
+		_wiebel.parallel().tween_property(b, "rotation", -0.03, 0.09).set_delay(0.09)
+		_wiebel.parallel().tween_property(b, "rotation", 0.0, 0.09).set_delay(0.18)
 
 
 func _verwerk(e: Dictionary) -> void:
@@ -366,10 +425,29 @@ func _verwerk(e: Dictionary) -> void:
 		BrandjesModel.Soort.VERLOPEN:
 			var b := e[&"brandje"] as Dictionary
 			_weg_kaart(int(b[&"nr"]), false)
+			# Verliep het puzzelkaartje terwijl de ontwarring nog open stond,
+			# dan sluit die en zegt Jonathan wat hij altijd zegt.
+			if int(b[&"nr"]) == _puzzel_nr:
+				_sluit_puzzel()
+				var pz := content().get("puzzel", {}) as Dictionary
+				_zeg(String(pz.get("verlopen", "")), UiKit.ROOD)
+				AudioDirector.play_ui(&"fout")
+				impact(2.0, 0.25, Haptiek.Sterkte.STOOT)
+				if _straat != null:
+					_straat.hobbel()
+				_toon_veranderd(e[&"veranderd"] as Dictionary)
+				return
 			_zeg("%s. Te laat." % String(b[&"tekst"]), UiKit.ROOD)
 			AudioDirector.play_ui(&"fout")
-			Juice.schok(2.0, 0.25)
+			# `impact()` en niet `Juice.schok()`: die laatste schudt de
+			# wereldcamera, en die zit achter het dekkende paneel van deze
+			# minigame — onzichtbaar. Zie `MinigameBase.impact()`.
+			impact(2.0, 0.25, Haptiek.Sterkte.STOOT)
+			if _straat != null:
+				_straat.hobbel()
 			_toon_veranderd(e[&"veranderd"] as Dictionary)
+		BrandjesModel.Soort.INGEHAALD:
+			_ingehaald()
 		BrandjesModel.Soort.GEBEURTENIS:
 			var g := e[&"gebeurtenis"] as Dictionary
 			_toon_veranderd(e[&"veranderd"] as Dictionary)
@@ -379,6 +457,159 @@ func _verwerk(e: Dictionary) -> void:
 				_zeg(String(g.get("tekst", "")), UiKit.ORANJE)
 		BrandjesModel.Soort.TIJD_OM:
 			_tijd_is_om()
+
+
+# --- De ontwarring: Jonathans appje --------------------------------------
+
+## Jonathan stuurt halverwege een bericht waarin drie gesprekken door elkaar
+## lopen: een bevinding over de prijzen-API, het rijstveld van zijn moeder, en
+## dat hij stopt met een klant. Hij is niet onduidelijk — élk fragment is
+## exact. Hij zat op Claude te wachten en las ondertussen zijn moeder.
+##
+## Dit is de "taak die onduidelijk wordt": er brandt een kaartje dat je niet kunt
+## blussen tot je de drie werk-fragmenten eruit getikt hebt. Die vertellen samen
+## dat de prijs op de productpagina indicatief is, dus dat het géén bug is en de
+## klant geïnformeerd moet worden — en dat is een andere knop dan waar je bij
+## "prijs klopt niet" intuïtief naar grijpt.
+##
+## De klok en de vlammen lopen door. De andere kaartjes staan stil en er spawnt
+## niets, want het raster is bezet en blussen kan toch niet.
+func _open_puzzel() -> void:
+	var pz := content().get("puzzel", {}) as Dictionary
+	if pz.is_empty() or _puzzel_gedaan or _model == null:
+		return
+	var b := (pz.get("brandje", {}) as Dictionary).duplicate(true)
+	if b.is_empty():
+		return
+	_puzzel_gedaan = true
+	_puzzel_gepakt.clear()
+
+	_puzzel_nr = _model.zet_puzzelbrandje(b)
+	if _puzzel_nr < 0:
+		return
+	_werk_kaartjes_bij()
+	_zeg(String(pz.get("aankondiging", "")), UiKit.ORANJE)
+	AudioDirector.play_ui(&"interactie")
+
+	var frag: Array[Dictionary] = []
+	for raw: Variant in pz.get("fragmenten", []):
+		frag.append((raw as Dictionary).duplicate())
+	frag.shuffle()
+	if _grid != null:
+		_grid.visible = false
+	_ontwarring.visible = true
+	_ontwarring.toon(frag)
+
+
+## Een getikt fragment. Werk-fragmenten moeten op hun eigen volgorde gepakt
+## worden; ruis kost voorsprong en blijft liggen, zodat een misser de puzzel
+## nooit onoplosbaar maakt.
+func _op_fragment(id: StringName) -> void:
+	var pz := content().get("puzzel", {}) as Dictionary
+	if _puzzel_nr < 0 or _model == null:
+		return
+	var gekozen := {}
+	for raw: Variant in pz.get("fragmenten", []):
+		var f := raw as Dictionary
+		if StringName(f.get("id", "")) == id:
+			gekozen = f
+			break
+	if gekozen.is_empty():
+		return
+
+	if not bool(gekozen.get("werk", false)):
+		_ontwarring.markeer(id, false)
+		_zeg(String(pz.get("mis", "")), UiKit.ORANJE)
+		AudioDirector.play_ui(&"fout")
+		_model.pas_vuur(-float(pz.get("mis_vuur", 1.0)))
+		impact(1.5, 0.18, Haptiek.Sterkte.TIK)
+		return
+
+	_ontwarring.markeer(id, true)
+	AudioDirector.play_ui(&"raak")
+	Haptiek.tril(Haptiek.Sterkte.TIK)
+	_puzzel_gepakt.append(int(gekozen.get("volgorde", 0)))
+	var nodig := 0
+	for raw: Variant in pz.get("fragmenten", []):
+		if bool((raw as Dictionary).get("werk", false)):
+			nodig += 1
+	if _puzzel_gepakt.size() < nodig:
+		return
+
+	# Alle drie gepakt: de opdracht is helder, en nu moet je hem nog uitvoeren.
+	# Dát is het moment waar dit voor bestaat — de instructie wordt duidelijk,
+	# jij doet de handeling.
+	_sluit_puzzel()
+	_zeg(String(pz.get("opgelost", "")), UiKit.BLUEBIRD_BRIGHT)
+	_model.verleng_puzzelbrandje(float(pz.get("duur_na", 8.0)))
+	_werk_kaartjes_bij()
+	var doel := StringName((pz.get("brandje", {}) as Dictionary).get("handeling", ""))
+	var knop := _knoppen.get(doel) as Button
+	if knop != null:
+		puls_rand(knop, 3)
+
+
+## Het eerstvolgende nog niet gepakte werk-fragment, voor de autopilot.
+func _qa_fragment() -> void:
+	var pz := content().get("puzzel", {}) as Dictionary
+	var beste := {}
+	for raw: Variant in pz.get("fragmenten", []):
+		var f := raw as Dictionary
+		if not bool(f.get("werk", false)):
+			continue
+		if int(f.get("volgorde", 0)) in _puzzel_gepakt:
+			continue
+		if beste.is_empty() or int(f.get("volgorde", 0)) < int(beste.get("volgorde", 0)):
+			beste = f
+	if not beste.is_empty():
+		_op_fragment(StringName(beste.get("id", "")))
+
+
+func _sluit_puzzel() -> void:
+	_puzzel_nr = -1
+	if _ontwarring != null:
+		_ontwarring.sluit()
+		_ontwarring.visible = false
+	if _grid != null:
+		_grid.visible = true
+
+
+## De vlammen hebben de deploy ingehaald. Dit is de faalstaat die de finale tot
+## 7 september niet had: je kon wel laag scoren, maar niet verliezen terwijl je
+## speelde. Nu houdt het op, en het houdt zichtbaar op — de knoppen vallen om,
+## want ze doen ook niets meer.
+func _ingehaald() -> void:
+	if _fase != Fase.VOORBEREIDEN:
+		return
+	_zeg("De vlammen halen je in. Je gaat live met wat er brandt.", UiKit.ROOD)
+	AudioDirector.play_ui(&"fout")
+	Juice.flits(UiKit.ROOD, 0.45, 0.2)
+	impact(4.0, 0.5, Haptiek.Sterkte.SLAG)
+	if _straat != null:
+		_straat.toon_brandt()
+	_zet_wiebel(false)
+	_laat_knoppen_omvallen()
+	_tijd_is_om()
+
+
+## Zeven knoppen die uit hun raster kantelen en grijs worden. Ze zijn op dat
+## moment toch al dood (`_zet_knoppen(false)` in `_tijd_is_om()`), en een dode
+## knop die er nog uit ziet als een knop is een knop waar je op blijft tikken.
+##
+## `rotation` en `modulate` en niet `position`: de GridContainer bezit de
+## positie en zou een verschuiving elke layout-pass terugzetten.
+func _laat_knoppen_omvallen() -> void:
+	if Autopilot.gevraagd():
+		return
+	var tw := create_tween().set_parallel(true)
+	var i := 0
+	for id: Variant in _knoppen:
+		var b := _knoppen[id] as Button
+		b.pivot_offset = Vector2(b.size.x * 0.5, b.size.y)
+		var kant := 0.15 + 0.15 * float(i % 3) / 2.0
+		tw.tween_property(b, "rotation", kant if i % 2 == 0 else -kant, 0.45)
+		tw.tween_property(b, "modulate", UiKit.GRIJS, 0.45)
+		i += 1
 
 
 func _toon_veranderd(veranderd: Dictionary) -> void:
@@ -405,7 +636,12 @@ func _op_handeling(id: StringName) -> void:
 		return
 
 	_weg_kaart(int((r[&"brandje"] as Dictionary)[&"nr"]), true)
-	AudioDirector.play_ui(&"klik")
+	# `raak` en niet `klik`: geblust en misgetikt klonken tot nu toe allebei als
+	# een knop, en dan moet je de tekstregel lezen om te weten wat er gebeurde.
+	AudioDirector.play_ui(&"raak")
+	Haptiek.tril(Haptiek.Sterkte.TIK)
+	if _straat != null:
+		_straat.hobbel(1.5)
 	_zeg(String(r[&"regel"]), UiKit.BLUEBIRD_BRIGHT)
 	# Onthullen voor het effect: zo zie je bij de eerste test het getal
 	# verschijnen dat er de hele tijd al stond.
@@ -417,9 +653,18 @@ func _op_handeling(id: StringName) -> void:
 	_werk_kaartjes_bij()
 
 
+## Een tik waar niets voor brandt. Kostte tot 7 september alleen dit
+## knoppenslot van 0,4 s, en dat was zo goedkoop dat blind door de zeven
+## knoppen cyclen op elk zaad dezelfde score haalde als perfect spel
+## (`docs/AUDIT-2026-09-07-MINIGAMES.md`). `_model.mis()` laat het nu echt
+## voorsprong kosten, dus die route zakt onder de faaldrempel.
 func _mis(id: StringName) -> void:
 	AudioDirector.play_ui(&"fout")
-	_zeg("Niets brandt daar.", UiKit.ORANJE)
+	_zeg("Daar is nu geen spoed bij.", UiKit.ORANJE)
+	_model.mis(id)
+	impact(1.5, 0.18, Haptiek.Sterkte.TIK)
+	if _straat != null:
+		_straat.hobbel(2.0)
 	_blokkade = BLOKKADE
 	_zet_knoppen(false)
 	var b := _knoppen.get(id) as Button
@@ -519,12 +764,28 @@ func _weg_kaart(nr: int, gelukt: bool) -> void:
 		paneel.add_theme_stylebox_override("panel", UiKit.panel_krap(
 			UiKit.GROEN_TINT if gelukt else UiKit.ORANJE_TINT,
 			UiKit.GROEN_OP_LICHT if gelukt else UiKit.ROOD_OP_LICHT, 2))
-	var breed := maxf(_zone.size.x, 1.0)
 	var tw := create_tween().set_parallel(true)
-	tw.tween_property(kaart, "offset_left", breed, KAART_WEG)
-	tw.tween_property(kaart, "offset_right", breed, KAART_WEG)
+	if gelukt:
+		# Geblust: naar rechts het beeld uit, zoals het altijd deed. Dat leest
+		# als "afgehandeld en weg".
+		var breed := maxf(_zone.size.x, 1.0)
+		tw.tween_property(kaart, "offset_left", breed, KAART_WEG)
+		tw.tween_property(kaart, "offset_right", breed, KAART_WEG)
+	else:
+		# Verlopen: omvallen. Een kaartje dat je liet lopen hoort niet netjes
+		# weg te schuiven alsof je iets afhandelde. De zone clipt en kaartjes
+		# negeren de muis (`_maak_kaart`), dus er steekt niets uit en er is
+		# geen tikdoel dat meekantelt.
+		kaart.pivot_offset = Vector2(0.0, KAART_H)
+		tw.tween_property(kaart, "rotation", 0.25, KAART_WEG + 0.05)
+		tw.tween_property(kaart, "offset_top", kaart.offset_top + 18.0, KAART_WEG + 0.05)
 	tw.tween_property(kaart, "modulate:a", 0.0, KAART_WEG)
-	tw.chain().tween_callback(kaart.queue_free)
+	# `is_instance_valid` in de callback: `_wis_kaarten()` kan dit kaartje
+	# ondertussen al hebben vrijgegeven (fasewissel tijdens de tween), en dan
+	# hervat deze callback op een gefreede node.
+	tw.chain().tween_callback(func() -> void:
+		if is_instance_valid(kaart):
+			kaart.queue_free())
 
 
 # --- Fase 3: herstellen ---------------------------------------------------
@@ -583,17 +844,23 @@ func _storing(tekst: String) -> void:
 	v.add_child(regel)
 
 	AudioDirector.play_ui(&"fout")
+	impact(3.0, 0.4, Haptiek.Sterkte.STOOT)
+	# Geen `await <tween>.finished` op deze twee: dat is de vastloper van dit
+	# project zodra iets die tween killt. Een gewone pauze doet hetzelfde en
+	# kan niet blijven hangen.
 	var in_tw := create_tween()
 	in_tw.tween_property(overlay, "modulate:a", 1.0, 0.1)
-	await in_tw.finished
+	await _pauze(0.1)
 	await _pauze(TIK_GEBEURTENIS + 0.6)
-	if not is_instance_valid(overlay):
-		return
-	var uit_tw := create_tween()
-	uit_tw.tween_property(overlay, "modulate:a", 0.0, 0.15)
-	await uit_tw.finished
+	# Vroeger zat hier een `return` die `gepauzeerd` op true liet staan. Dan
+	# loopt de klok nooit meer af en is de finale niet af te maken; elke route
+	# hieruit moet het model weer laten lopen.
 	if is_instance_valid(overlay):
-		overlay.queue_free()
+		var uit_tw := create_tween()
+		uit_tw.tween_property(overlay, "modulate:a", 0.0, 0.15)
+		await _pauze(0.15)
+		if is_instance_valid(overlay):
+			overlay.queue_free()
 	if _model != null:
 		_model.gepauzeerd = false
 
@@ -635,6 +902,7 @@ func _deployen() -> void:
 	# geforceerd, en een bevroren tijd op het scherm zou allebei ontkennen.
 	if _klok_label != null:
 		_klok_label.text = ""
+	_zet_wiebel(false)
 	_wis_kaarten()
 	_zet_knoppen(false)
 	set_status("deployen")
@@ -756,7 +1024,7 @@ func _live() -> void:
 	# betaald wordt. Anders leest een lage score als pech in plaats van als de
 	# prijs voor niet-kijken — en dan leert de speler er niets van.
 	if not bool(_model.bekend.get(&"bugs", false)):
-		_console_regel("ONGETEST — elke bug telt dubbel", UiKit.ROOD, UiKit.FS_SMALL)
+		_console_regel("ONGETEST. Elke bug telt dubbel.", UiKit.ROOD, UiKit.FS_SMALL)
 		await _pauze(0.7)
 
 	var score := _score()
@@ -776,7 +1044,7 @@ func _live() -> void:
 		_console_regel(_foutcode, UiKit.ROOD, UiKit.FS_SMALL)
 		_console_regel("Het staat niet live. Dat hoorde iedereen.", UiKit.WIT, UiKit.FS_SMALL)
 		AudioDirector.play_ui(&"fout")
-		Juice.schok(3.0, 0.4)
+		impact(3.0, 0.4, Haptiek.Sterkte.SLAG)
 		await _pauze(1.8)
 		await finish_with_banner(false, "ROLLBACK", score, {
 			&"score": score,
@@ -842,8 +1110,13 @@ func _uitkomst(score: int) -> Dictionary:
 
 # --- Vormgeving -----------------------------------------------------------
 
+## Sinds de meters van het scherm zijn (zie `_bouw_kop()`) is `_waarde` leeg en
+## doet dit stil niets. De functie blijft staan omdat `_toon_veranderd()` hem
+## op elke handeling aanroept en de toestand zelf nog wél bestaat: hij zaait de
+## voorsprong en de vuursnelheid. Zou er ooit weer een cijferweergave komen,
+## dan hangt hij hier.
 func _refresh() -> void:
-	if _model == null:
+	if _model == null or _waarde.is_empty():
 		return
 	for m: StringName in METERS:
 		var l := _waarde[m] as Label
@@ -909,16 +1182,19 @@ func _zeg(tekst: String, kleur: Color) -> void:
 	_regel.add_theme_color_override("font_color", kleur)
 
 
+## Links de klok, rechts de voorsprong. Die twee stonden in de kopstrook tot de
+## straat daar kwam; als getal horen ze nu naast elkaar direct onder de strook,
+## waar ze eraan aflezen wat de strook laat voelen. De strook draagt het gevoel,
+## het getal draagt de precisie: zeventien seconden voorsprong is op 168 px maar
+## achtendertig pixels, en dat verschil moet je kunnen náslaan.
 func _status_regel() -> void:
 	if _fase == Fase.HERSTELLEN:
 		set_status("nog %d handelingen" % _acties if _acties != 1 else "nog 1 handeling")
 		return
 	if _model == null:
 		return
-	match _model.zichtbaar.size():
-		0: set_status("het is even stil")
-		1: set_status("1 brandje")
-		_: set_status("%d brandjes tegelijk" % _model.zichtbaar.size())
+	var s := int(ceil(_model.klok))
+	set_status("%d:%02d  ·  %d s voorsprong" % [s / 60, s % 60, maxi(0, floori(_model.voorsprong))])
 
 
 func _refresh_klok() -> void:
@@ -962,6 +1238,12 @@ func qa_solve() -> void:
 		return
 	match _fase:
 		Fase.VOORBEREIDEN:
+			# Staat de ontwarring open, dan is dát de opgave: per aanroep één
+			# werk-fragment, in de volgorde die het bericht zelf aangeeft. De
+			# QA-route loopt zo langs de echte winroute en niet eromheen.
+			if _puzzel_nr >= 0:
+				_qa_fragment()
+				return
 			var b := _model.kortste() if _model != null else {}
 			if not b.is_empty():
 				_op_handeling(StringName(b[&"handeling"]))

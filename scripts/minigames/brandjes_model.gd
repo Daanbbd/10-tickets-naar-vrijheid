@@ -75,6 +75,9 @@ var ingehaald: bool = false
 var snelheid_vuur: float = 0.0
 ## De klok waarmee gestart is (vóór het aftellen), voor `voortgang()`.
 var klok_totaal: float = 75.0
+## Staat de ontwarring van Jonathan open? Dan spawnt er niets bij en is het
+## puzzelbrandje niet te blussen. Zie `zet_puzzelbrandje()`.
+var puzzel_open: bool = false
 
 var _keuzes: Dictionary = {}
 var _spawn_curve: Array = []
@@ -257,6 +260,11 @@ func tik(delta: float) -> Array[Dictionary]:
 
 
 func _spawn(uit: Array[Dictionary]) -> void:
+	# Tijdens de ontwarring komt er niets bij: het knoppenraster is bezet door
+	# de puzzel, dus een nieuw kaartje zou aftikken zonder dat de speler het
+	# kán blussen. De klok en de vlammen lopen wél door.
+	if puzzel_open:
+		return
 	while (verstreken >= _volgende_spawn and not rij.is_empty()
 			and zichtbaar.size() < max_zichtbaar):
 		var b: Dictionary = rij.pop_front()
@@ -341,10 +349,39 @@ func blus(handeling: StringName) -> Dictionary:
 
 
 ## De index in `zichtbaar` van het brandje dat deze handeling zou doven, of -1.
+## Zet het puzzelbrandje van Jonathan neer en geeft zijn `nr` terug, of -1 als
+## er geen plek is. Het staat er wél op het scherm maar is `verborgen`, dus
+## `doel_index()` slaat het over: je kunt het niet blussen tot de speler het
+## bericht ontward heeft. Dat is de hele opgave — de handeling is bekend, de
+## instructie nog niet.
+func zet_puzzelbrandje(b: Dictionary) -> int:
+	if zichtbaar.size() >= max_zichtbaar:
+		# Geen plek: het puzzelbrandje wringt zichzelf niet naar binnen, want
+		# dan verdringt hij een kaartje dat al aftikt.
+		return -1
+	var nieuw := _maak(b)
+	nieuw[&"verborgen"] = true
+	zichtbaar.append(nieuw)
+	puzzel_open = true
+	return int(nieuw[&"nr"])
+
+
+## Ontward: het kaartje wordt gewoon blusbaar en krijgt verse tijd, want de
+## seconden die het ontwarren kostte mogen niet ook nog de balk opeten.
+func verleng_puzzelbrandje(sec: float) -> void:
+	puzzel_open = false
+	for b: Dictionary in zichtbaar:
+		if bool(b.get(&"verborgen", false)):
+			b.erase(&"verborgen")
+			b[&"resterend"] = maxf(sec, float(b[&"resterend"]))
+
+
 func doel_index(handeling: StringName) -> int:
 	var beste := -1
 	for i: int in zichtbaar.size():
 		if StringName(zichtbaar[i][&"handeling"]) != handeling:
+			continue
+		if bool(zichtbaar[i].get(&"verborgen", false)):
 			continue
 		if beste < 0 or float(zichtbaar[i][&"resterend"]) < float(zichtbaar[beste][&"resterend"]):
 			beste = i

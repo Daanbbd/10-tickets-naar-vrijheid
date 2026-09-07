@@ -41,7 +41,24 @@ Kort, droog, direct. Geen opsmuk, geen verkooppraatje.
 - Getallen komen uit de data via `{plaatshouder}` en `Briefing.vul()`, nooit
   hardgecodeerd in de zin.
 - Een briefing is een persoon die praat, in zijn stem en met zijn tics. Een
-  intro is het spel dat praat: neutraal, kort, zonder tics.
+  intro is het spel dat praat: kort, zonder tics, maar **niet neutraal**. De
+  verteller heeft dit al vaker zien mislukken en geniet er licht van. Hij legt
+  de opgave uit en zet er dan iets achter: "dat is nog nooit iemand gelukt,
+  dus, succes", "Eén ervan is de goede", "Vraag niet waarom". Geen grappen die
+  de uitleg in de weg zitten, wel een houding.
+- **Vaktermen zijn geen fout.** Deploy, sprint, scope, render, credits: zo heet
+  het op dit kantoor, dus zo heet het in het spel. Wat wél fout is, is een
+  Engelse zin met Nederlandse woorden. "Verloopt de balk, dan kost het je" zegt
+  niemand; dat is *if the bar runs out, it costs you*. Zet een persoon of een
+  gebeurtenis vooraan, niet een zelfstandig naamwoord: niet "blussen houdt je
+  voorsprong" maar "blus je het, dan blijf je voor". Niet "een clip die klaar
+  staat te wachten kost credits" maar "een clip die blijft wachten kost je
+  credits".
+- Zeg "spoedje", niet "brandje", voor iets dat nu aandacht vraagt. Dat is wat
+  je op een kantoor zegt.
+- Een tekst die door de tekenteller komt, is niet goedgekeurd. De tests meten
+  lengte en em-dashes; ze horen geen Nederlands. Lees elke regel één keer hardop
+  voor: zou iemand dit zo zeggen?
 - Lengtes die de suite bewaakt: intro ≤ 220 tekens, "Klaar als" ≤ 120,
   briefing ≤ 220, en nergens een em-dash (`_test_schrijfstijl_geen_emdash`).
 

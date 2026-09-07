@@ -6409,7 +6409,7 @@ func _test_finale_regels_passen() -> void:
 	# `mg_oplevering.gd` en dus ook hier: wie daar een zin herschrijft, schrijft
 	# hem hier mee. Constantes ervan maken zou de scene onleesbaarder maken dan
 	# deze herhaling kost.
-	teksten.append("Niets brandt daar.")
+	teksten.append("Daar is nu geen spoed bij.")
 	teksten.append("De tijd is om. Je gaat nu live met wat er ligt.")
 	teksten.append("Twee handelingen. Daarna zet je hem live, wat je ook doet.")
 	teksten.append("Er komt zo iets binnen. Blus het met de juiste handeling.")
@@ -6591,6 +6591,45 @@ func _test_schrijfstijl_geen_emdash() -> void:
 	for k: Variant in TraitModifier.VOORDEEL.keys():
 		var v := String(TraitModifier.VOORDEEL[k])
 		_ok(not v.contains(EMDASH), "TraitModifier.VOORDEEL['%s'] bevat een em-dash: %s" % [k, v])
+
+	_test_schrijfstijl_geen_vertaald_engels()
+
+
+## Constructies die niemand in het Nederlands zegt.
+##
+## De em-dash-test hierboven en de tekenbudgetten meten vorm, geen taal, en
+## daardoor stond er maanden "Verloopt de balk, dan kost het je" in de finale:
+## binnen budget, geen em-dash, groen, en toch een Engelse zin met Nederlandse
+## woorden (*if the bar runs out, it costs you*). Dit is de verbodslijst die dat
+## tegenhoudt. Vaktermen staan er bewust níet op: deploy, sprint, scope, render
+## en credits zijn wat er op dit kantoor gezegd wordt (`docs/SCHRIJFSTIJL.md`).
+##
+## Alleen de stem van het spel wordt gescand (`intro`, `klaar_als`), niet de
+## briefings: een personage mag wel krom praten, dat is dan zijn stem.
+func _test_schrijfstijl_geen_vertaald_engels() -> void:
+	const VERBODEN: Array[String] = [
+		"kost het je",       # it costs you
+		"kost je punten",    # idem, met lijdend voorwerp
+		"kost het",
+		"maakt het je",      # it makes it ... for you
+		"naar live",         # to live
+		"haalt live",
+		"klaar staat te wachten",
+		"een brandende laag",
+	]
+	for id: String in MinigameContent.all_ids():
+		var c := MinigameContent.get_config(StringName(id))
+		for veld: String in ["intro", "klaar_als"]:
+			var t := String(c.get(veld, "")).to_lower()
+			if t.is_empty():
+				continue
+			for slecht: String in VERBODEN:
+				_ok(not t.contains(slecht),
+					"%s/%s: '%s' is vertaald Engels, geen Nederlands: %s"
+						% [id, veld, slecht, t])
+			# "brandje" is de interne naam; op het scherm heet het een spoedje.
+			_ok(not t.contains("brandje"),
+				"%s/%s: zeg 'spoedje', niet 'brandje': %s" % [id, veld, t])
 
 
 ## De stand-up legt zichzelf uit (labels, geen briefing-only aanwijzing) en
