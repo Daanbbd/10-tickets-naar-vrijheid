@@ -5432,8 +5432,9 @@ func _test_minigames_passen() -> void:
 		await get_tree().process_frame
 		_meet_schermvulling(mg, String(mg_id))
 		_meet_horizontale_overloop(mg, String(mg_id))
-		if mg_id == &"mg_deploy":
+		if mg_id in [&"mg_deploy", &"mg_frontend_fix"]:
 			_meet_past_zonder_scroll(mg, String(mg_id))
+		if mg_id == &"mg_deploy":
 			await _meet_drie_kaartjes(mg)
 		mg.queue_free()
 		await get_tree().process_frame
@@ -6667,9 +6668,40 @@ static func _zonder_commentaar(src: String) -> String:
 	return "\n".join(uit)
 
 
-## Gereserveerde haak voor de taak "Uitlijnen: knoppen weg, vel groter,
-## reviews/aanbevolen erbij" (plan `feedback-op-uitlijnen-de-zippy-anchor.md`,
-## deel 2). Wordt door die taak volledig ingevuld; tot die tijd een no-op zodat
-## de aanroep hierboven al kan bestaan zonder de suite te breken.
+## BBD-204 · `mg_uitlijnen`: de richtingsknoppen zijn weg, slepen is de enige
+## route. Dit bewijst dat er geen knoppenraster meer gebouwd wordt (alleen
+## "Klaar" en "Stoppen" staan er nog), dat de zeven elementen van de
+## productpagina (met reviews en aanbevolen) allemaal geladen zijn, en dat elk
+## blok — met zijn scheve beginpositie inbegrepen — binnen het vel past.
 func _test_uitlijnen_zonder_pijlen() -> void:
-	pass
+	_kop("uitlijnen: geen pijlknoppen meer, alleen slepen")
+
+	var packed: PackedScene = load("res://scenes/minigames/mg_uitlijnen.tscn")
+	var mg: MinigameBase = packed.instantiate() as MinigameBase
+	mg.minigame_id = &"mg_frontend_fix"
+	add_child(mg)
+	mg.setup({})
+
+	var teksten: Dictionary = {}
+	for c: Control in _controls(mg):
+		if c is Button:
+			teksten[(c as Button).text] = true
+	_ok(teksten.size() == 2 and teksten.has("Klaar") and teksten.has("Stoppen"),
+		"mg_frontend_fix: knoppen zijn %s, verwacht precies Klaar en Stoppen" % [teksten.keys()])
+
+	var volgorde: Array = mg.get(&"_volgorde")
+	_ok(volgorde.size() == 7, "mg_frontend_fix: %d elementen geladen, verwacht 7" % volgorde.size())
+
+	var vel := mg.get(&"_vel") as Control
+	var blokken: Dictionary = mg.get(&"_blokken")
+	var vel_rect := Rect2(Vector2.ZERO, vel.custom_minimum_size)
+	for id: Variant in blokken:
+		var blok: Object = blokken[id]
+		var thuis: Vector2 = blok.get("thuis")
+		var start: Vector2 = blok.get("start")
+		var maat: Vector2 = blok.get("maat")
+		var r := Rect2(thuis + start, maat)
+		_ok(vel_rect.encloses(r),
+			"%s: %s past niet binnen het vel %s" % [id, r, vel_rect])
+
+	mg.queue_free()

@@ -253,7 +253,7 @@
  "mg_frontend_fix": {
   "type": "uitlijnen",
   "briefing": "Raster van {raster} pixels, {tolerantie} pixel speling. {elementen} blokken staan scheef. manmanman.",
-  "intro": "Vijf blokken van de productpagina staan een paar pixels scheef. Tik een blok en schuif het met de pijltjes tot het vastklikt op het raster. Slepen mag ook.",
+  "intro": "Op de productpagina staan {elementen} blokken een paar pixels scheef. Tik een blok en sleep het tot het vastklikt op het raster.",
   "tolerantie": 2,
   "raster": 4,
   "drift_sec": 8,
@@ -297,11 +297,27 @@
      4,
      -8
     ]
+   },
+   {
+    "id": "reviews",
+    "label": "Reviews",
+    "afwijking": [
+     -4,
+     8
+    ]
+   },
+   {
+    "id": "aanbevolen",
+    "label": "Aanbevolen",
+    "afwijking": [
+     8,
+     -4
+    ]
    }
   ],
   "success": "Alles staat op het raster. Victor kijkt er even naar en zegt: de uitlijning is nog wat meer uitgelijnd.",
   "failure": "Het staat scheef. Niet erg scheef. Precies zo scheef dat je het blijft zien.",
-  "klaar_als": "Alle vijf blokken zitten vast op het raster. Druk dan op \"Klaar\"."
+  "klaar_als": "Alle {elementen} blokken zitten vast op het raster. Druk dan op \"Klaar\"."
  },
  "mg_backend_fix": {
   "type": "cableboard",

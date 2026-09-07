@@ -1,19 +1,16 @@
 extends MinigameBase
 ## Uitlijnen — BBD-204, de frontendfix van Victor.
 ##
-## De enige minigame die over positie gaat in plaats van over een keuze. Vijf
+## De enige minigame die over positie gaat in plaats van over een keuze. Zeven
 ## blokken van een productpagina staan een paar pixels naast hun plek en het
 ## raster eronder is de waarheid waar je naartoe werkt. Vervang alle blokken
 ## door grijze vlakken en je ziet nog steeds dat dit iets anders is dan de rest.
 ##
-## Slepen is de hoofdroute: een vinger op een blok van zestien pixels is groter
+## Slepen is de enige route: een vinger op een blok van zestien pixels is groter
 ## dan de fout die je herstelt, dus vrij pixel-voor-pixel schuiven zou nooit
 ## precies uitkomen. `_op_sleep()` rondt daarom bij elke beweging af op de
 ## dichtstbijzijnde rasterstap — de precisie zit in het slepen zelf, niet in
-## een aparte "vastklik"-actie erna. De vier richtingsknoppen blijven bestaan
-## als secundaire invoer: één knop is één rasterstap, handig voor de laatste
-## correctie of voor wie niet kan slepen, maar niet meer de manier waarop je
-## deze minigame speelt.
+## een aparte "vastklik"-actie erna.
 ##
 ## De stapgrootte (4, `raster` in de data) en elke `afwijking` moeten dezelfde
 ## rest delen — in de praktijk: elke afwijking is een veelvoud van het raster —
@@ -34,21 +31,18 @@ extends MinigameBase
 ## het vel valt. Anders begint de puzzel met een blok dat half buiten de pagina
 ## hangt, en daar is geen rasterlijn meer om tegen te vergelijken.
 const VORM: Dictionary = {
-	&"logo": Rect2(12, 12, 40, 20),
-	&"nav": Rect2(60, 12, 92, 20),
-	&"hero": Rect2(12, 44, 140, 76),
-	&"prijs": Rect2(12, 140, 60, 24),
-	&"knop": Rect2(80, 140, 72, 24),
+	&"logo":       Rect2(12, 12, 40, 20),
+	&"nav":        Rect2(60, 12, 92, 20),
+	&"hero":       Rect2(12, 44, 140, 76),
+	&"prijs":      Rect2(12, 132, 60, 24),
+	&"knop":       Rect2(80, 132, 72, 24),
+	&"reviews":    Rect2(12, 168, 140, 24),
+	&"aanbevolen": Rect2(12, 204, 140, 24),
 }
 
-## Zo groot als er in portret overblijft naast de kop, de intro en de
-## richtingsknoppen. Groter kan niet, kleiner hoeft niet: hoe meer rasterlijnen
-## er naast een blok staan, hoe beter je ziet dat het scheef hangt.
-const VEL_MAAT: Vector2 = Vector2(164, 180)
-
-## Duimmaat, geen designkeuze: 34x30 canvaspixels is op een telefoon ruim een
-## centimeter, en daaronder wordt een richtingsknop een mikpunt.
-const PIJL_MAAT: Vector2 = Vector2(34, 30)
+## Zo groot als er in portret overblijft naast kop, statusregel, Klaar en
+## Stoppen — groter dan dit en de eindbanner duwt het vel de scroll in.
+const VEL_MAAT: Vector2 = Vector2(164, 240)
 
 
 ## Eén blok van de pagina. Kent zijn eigen nulpunt en de stappen die de speler
@@ -84,7 +78,7 @@ class Blok extends Panel:
 		_tint = tint
 		# Het vel vangt alle tikken zelf op. Dan loopt een sleep door als de
 		# vinger het blok verlaat, en staat de hittest op één plek in plaats van
-		# in vijf losse controls.
+		# in zeven losse controls.
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		custom_minimum_size = maat
 		size = maat
@@ -217,7 +211,6 @@ var _blokken: Dictionary = {}        ## StringName -> Blok
 var _keuze: StringName = &""
 
 var _vel: Vel = null
-var _pijlen: Array[Button] = []
 var _klaar: Button = null
 
 var _sleept: bool = false
@@ -272,7 +265,7 @@ func _on_setup() -> void:
 	kader.add_child(_vel)
 
 	# Onbekende id's onder elkaar: de finale mag deze mechaniek met andere
-	# elementen hergebruiken. De vijf van BBD-204 hebben een eigen vorm, want
+	# elementen hergebruiken. De zeven van BBD-204 hebben een eigen vorm, want
 	# die moeten samen als een productpagina lezen.
 	var vrije_y := 12.0
 	for raw: Variant in c.get("elementen", []):
@@ -314,7 +307,7 @@ static func _afwijking(e: Dictionary) -> Vector2:
 
 
 ## Papierkleur per element, zodat de pagina als een pagina leest en niet als
-## vijf identieke vakken. GROEN_TINT staat er bewust niet tussen: groen is hier
+## zeven identieke vakken. GROEN_TINT staat er bewust niet tussen: groen is hier
 ## de kleur van "staat op zijn plek".
 static func _tint(id: StringName) -> Color:
 	match id:
@@ -326,55 +319,19 @@ static func _tint(id: StringName) -> Color:
 			return UiKit.POSTIT
 		&"knop":
 			return UiKit.ORANJE_TINT
+		&"reviews":
+			return UiKit.ROZE_TINT
+		&"aanbevolen":
+			return UiKit.PAPIER
 	return UiKit.PANEL
 
 
-## De vier richtingsknoppen en Klaar horen buiten de scroll. Dit is de
-## besturing, en besturing die wegscrolt op het moment dat je hem nodig hebt is
-## geen besturing. Het vel erboven past er in portret naast.
+## Klaar hoort buiten de scroll: besturing die wegscrolt op het moment dat je
+## hem nodig hebt is geen besturing. Het vel erboven past er in portret naast.
 func _bouw_voet(body: VBoxContainer) -> void:
-	var voet := VBoxContainer.new()
-	voet.add_theme_constant_override("separation", 2)
-
-	# Als een kruis en niet als een rijtje: bij een puzzel over richting hoort
-	# een knop op de kant waar hij het blok heen duwt.
-	var pad := GridContainer.new()
-	pad.columns = 3
-	pad.add_theme_constant_override("h_separation", 2)
-	pad.add_theme_constant_override("v_separation", 2)
-	pad.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	voet.add_child(pad)
-	pad.add_child(_gat())
-	pad.add_child(_pijl("▲", Vector2i(0, -1)))
-	pad.add_child(_gat())
-	pad.add_child(_pijl("◀", Vector2i(-1, 0)))
-	pad.add_child(_pijl("▼", Vector2i(0, 1)))
-	pad.add_child(_pijl("▶", Vector2i(1, 0)))
-
 	_klaar = UiKit.knop_primair("Klaar", UiKit.FS_BODY)
 	_klaar.pressed.connect(_afronden)
-	voet.add_child(_klaar)
-
-	chrome_footer().add_child(voet)
-
-
-func _pijl(teken: String, richting: Vector2i) -> Button:
-	var b := UiKit.button(teken, UiKit.FS_BODY)
-	b.custom_minimum_size = PIJL_MAAT
-	# Zonder selectie doen deze knoppen niets, en dat moet je aan de knop zien.
-	# De uitgeschakelde staat komt uit UiKit.button(), dus hier staat hij niet.
-	# Een focusrand van 2 px vreet een knop van 34 px op, en tikken hoeft geen focus.
-	b.focus_mode = Control.FOCUS_NONE
-	b.pressed.connect(_verschuif.bind(richting))
-	_pijlen.append(b)
-	return b
-
-
-static func _gat() -> Control:
-	var c := Control.new()
-	c.custom_minimum_size = PIJL_MAAT
-	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return c
+	chrome_footer().add_child(_klaar)
 
 
 # --- Verschuiven ----------------------------------------------------------
@@ -383,7 +340,9 @@ func _gekozen() -> Blok:
 	return _blokken.get(_keuze, null) as Blok
 
 
-## Eén tik is één rasterstap op het geselecteerde blok.
+## Eén tik is één rasterstap op het geselecteerde blok. Sinds deze taak is dit
+## alleen nog de route van `qa_solve()` — de UI-knoppen die dit aanriepen zijn
+## weg, maar de methode zelf moet blijven bestaan en werken.
 func _verschuif(richting: Vector2i) -> void:
 	var blok := _gekozen()
 	if blok != null:
@@ -428,8 +387,9 @@ func _plaats(blok: Blok, snappend: bool) -> void:
 
 func _op_aanraking(punt: Vector2) -> void:
 	var blok := _raak(punt)
-	# Naast een blok laat de selectie staan. Een misser midden in een reeks
-	# tikken zou anders de knoppen onder je duim uitschakelen.
+	# Naast een blok laat de selectie staan: de statusregel moet het gekozen
+	# blok blijven noemen, en een misser midden in het slepen mag de keuze
+	# niet wissen.
 	if blok == null:
 		return
 	_kies(blok.elem_id)
@@ -501,8 +461,6 @@ func _op_raster_aantal() -> int:
 
 func _werk_bij() -> void:
 	var blok := _gekozen()
-	for b: Button in _pijlen:
-		b.disabled = blok == null
 	set_status("%s  ·  %d/%d op raster" % [
 		blok.naam if blok != null else "Kies een blok",
 		_op_raster_aantal(), _volgorde.size()])

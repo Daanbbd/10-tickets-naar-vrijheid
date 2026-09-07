@@ -189,9 +189,9 @@ zit (`PAPIER`, `WIT`, een post-it). Een label rechtstreeks op de chrome hoort
 `BLUEBIRD_INK` — die drie verdwijnen daar in de achtergrond.
 
 Eén blauwe `UiKit.knop_primair()` per scherm, en die hoort in
-`chrome_footer()`. Alles wat secundair is — Stoppen, richtingsknoppen,
-keuzerijen — houdt de gewone knopstijl. `mg_whack` heeft er bewust nul: daar
-*is* de keuze de handeling.
+`chrome_footer()`. Alles wat secundair is — Stoppen, keuzerijen — houdt de
+gewone knopstijl. `mg_whack` heeft er bewust nul: daar *is* de keuze de
+handeling.
 
 ESC breekt af. Afbreken laat het ticket op ACTIVE staan; opnieuw praten is
 opnieuw proberen. Falen kost nooit voortgang.
@@ -230,13 +230,11 @@ alleen voor bepaalde personages bestaan. Elke ronde loopt onder een klok: zij
 wacht `ronde_sec` seconden en typt daarna door.
 
 **Uitlijnen** (BBD-204) — een nagebouwde productpagina op zichtbaar ruitpapier,
-vijf blokken van hun raster af. Tik een blok, verschuif het met vier
-richtingsknoppen (slepen mag ook, maar de knoppen volstaan op zichzelf — met
-een duim is een blok van 16 px geen doel). Binnen `tolerantie` klikt een blok
-vast. De afwijkingen zijn geen veelvouden van `raster`, dus tolerantie is
-noodzakelijk in plaats van vriendelijk en `perfect` is onbereikbaar. P3: geen
-harde klok — wel de build drift, elke `drift_sec` (8s) schuift een blok dat nog
-niet vast staat een pixel verder scheef, met een teller "Victor kijkt mee".
+zeven blokken (logo, navigatie, hero, prijs, bestelknop, reviews, aanbevolen)
+van hun raster af. Tik een blok en sleep het; binnen `tolerantie` klikt een
+blok vast. P3: geen harde klok — wel de build drift, elke `drift_sec` (8s)
+schuift een blok dat nog niet vast staat een pixel verder scheef, met een
+teller "Victor kijkt mee".
 
 **CableBoard** (BBD-205) — kies welke kabel je legt. Fout gelegd kost een
 kwartier en een vonk, en daarna kies je opnieuw uit de kabels die nog liggen.
