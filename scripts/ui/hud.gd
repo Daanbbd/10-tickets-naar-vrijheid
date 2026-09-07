@@ -183,6 +183,10 @@ var _toasts: VBoxContainer
 ## De hint blijft staan tot je hem weglegt, dus er kan er maar één zijn.
 var _hint_briefje: PanelContainer = null
 var _board: Control
+
+## Houdt deze HUD een invoerslot vast voor het openstaande bord? Zie
+## `_zet_bord_zichtbaar()`.
+var _bord_slot: bool = false
 var _bord: Scrumbord
 ## De besturingsuitleg: een modaal venster met één knop. `_card_root` is de
 ## schermvullende laag die de tik opvangt, `_card_dim` de verduistering
@@ -599,15 +603,8 @@ func _build_board(root: Control) -> void:
 ## Twee gedaanten die niet bestonden is erger dan één die dat wel doet — en er is
 ## niets dat de close-up nu nog anders zou moeten doen.
 func toggle_board() -> void:
-	_board.visible = not _board.visible
 	AudioDirector.play_ui(&"klik")
-	if not _board.visible:
-		return
-	_fill_board()
-	# Openen ís lezen: hier zie je de briefjes staan. Dit is het enige wat de
-	# badge op ▤ weer op nul zet.
-	QuestEngine.markeer_bord_gelezen()
-	_bijwerk_badge()
+	_zet_bord_zichtbaar(not _board.visible)
 
 
 ## Het bord expliciet open of dicht zetten, in plaats van `toggle_board()`'s
@@ -617,12 +614,52 @@ func toggle_board() -> void:
 ## toegelicht zijn — een toggle zou daar per stap moeten weten in welke staat
 ## hij al zat.
 func zet_bord(zichtbaar: bool) -> void:
-	_board.visible = zichtbaar
-	if not zichtbaar:
+	_zet_bord_zichtbaar(zichtbaar)
+
+
+## De enige plek die het bord open of dicht zet, en de enige die zijn
+## invoerslot beheert.
+##
+## Het bord is schermvullend met een dimmer van 0,78, maar het zette géén slot.
+## `mouse_filter = STOP` op het paneel dekt muisgebeurtenissen, en toch raakte
+## één tik zowel een knop op het bord als het object erachter — de wereld leest
+## aanrakingen langs een eigen route. Een slot is het enige dat daar
+## onafhankelijk van is, en `Session` telt sloten, dus dit componeert met de
+## dialoog of de cutscene die er misschien al een heeft (de intro opent het bord
+## terwijl de invoer al op slot staat).
+##
+## `_bord_slot` en niet vertrouwen op `visible`: raakt de HUD weg terwijl het
+## bord open staat, dan moet `_exit_tree()` het slot alsnog teruggeven, anders
+## is de volgende scene onbestuurbaar.
+func _zet_bord_zichtbaar(zichtbaar: bool) -> void:
+	if _board.visible == zichtbaar:
 		return
-	_fill_board()
-	QuestEngine.markeer_bord_gelezen()
-	_bijwerk_badge()
+	_board.visible = zichtbaar
+	if zichtbaar:
+		if not _bord_slot:
+			_bord_slot = true
+			Session.lock_input()
+		_fill_board()
+		# Openen ís lezen: hier zie je de briefjes staan. Dit is het enige wat
+		# de badge op ▤ weer op nul zet.
+		QuestEngine.markeer_bord_gelezen()
+		_bijwerk_badge()
+		return
+	if _bord_slot:
+		_bord_slot = false
+		Session.unlock_input()
+
+
+## Het slot van een openstaand bord teruggeven als deze HUD verdwijnt.
+##
+## `Session.reset_input_lock()` bij een scenewissel vangt dit ook op, maar niet
+## als de HUD om een andere reden uit de boom gaat — en een achtergebleven slot
+## is een onbestuurbaar spel zonder foutmelding. Dat is dezelfde klasse fout als
+## de vier invoersloten uit de overdracht van 6 september.
+func _exit_tree() -> void:
+	if _bord_slot:
+		_bord_slot = false
+		Session.unlock_input()
 
 
 ## Eén briefje laten landen op een bord dat al open staat (zie `zet_bord()`).
