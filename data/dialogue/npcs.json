@@ -48,10 +48,10 @@
       "when": {
        "min_tickets_done": 4
       },
-      "text": "De helft. Ik heb de rest alvast nagelopen en grof geschat. Hoe staat het bij jou?"
+      "text": "De helft. De rest heb ik doorgenomen, staat allemaal in het bord. Hoe staat het bij jou?"
      },
      {
-      "text": "Ik heb de issues alvast nagelopen. Verder heb ik niks nodig. Hoe staat het bij jou?"
+      "text": "Bij mij is alles afgevinkt. Verder heb ik niks nodig. Hoe staat het bij jou?"
      }
     ],
     "choices": [
@@ -1811,7 +1811,7 @@
        ],
        "overwerk": true
       },
-      "text": "Er staat nu {geboekt} geboekt en je hebt {gewerkt} gewerkt. Dat verschil kan ik niet boeken. Ik laat het even zo."
+      "text": "Je hebt er {gewerkt} op zitten. Dat verschil kan ik niet boeken. Ik laat het even zo."
      },
      {
       "when": {
@@ -1825,10 +1825,10 @@
       "when": {
        "overwerk": true
       },
-      "text": "Er staat vandaag {geboekt} geboekt, terwijl de verwachting rond de {gewerkt} ligt. Je bent nu over je dag heen. Ik noteer het alleen."
+      "text": "Je bent over je dag heen: {gewerkt} gewerkt, {geboekt} geboekt. Ik noteer het alleen."
      },
      {
-      "text": "Er staat vandaag tot nu toe {geboekt} geboekt, terwijl de verwachting rond de {gewerkt} ligt. Zou je je uren aanvullen als er nog wat mist?"
+      "text": "Er staat tot nu toe {geboekt} geboekt en we rekenen op {budget}. Zou je je uren aanvullen als er nog wat mist?"
      }
     ],
     "next": "waarom"
