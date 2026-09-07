@@ -655,7 +655,19 @@
   "intro": "Alles wat brandt komt binnen als kaartje. Elk brandje heeft één juiste handeling. Verloopt de balk, dan kost het je.",
   "klok_seconden": 75,
   "max_zichtbaar": 3,
-  "spawn_curve": [[0, 9], [25, 7], [50, 5]],
+  "race": {
+   "basis": 14,
+   "per_punt": 0.4,
+   "min_start": 4,
+   "max_voorsprong": 20,
+   "drift_basis": 0.04,
+   "per_bug": 0.008,
+   "blus_winst": 0.3,
+   "mis_straf": 1,
+   "herstel_winst": 1.5,
+   "herstel_straf": 1
+  },
+  "spawn_curve": [[0, 6], [25, 4.5], [50, 3.5]],
   "start": {
    "bugs": 3,
    "vertrouwen": 4,
@@ -733,7 +745,8 @@
     "handeling": "fixen",
     "duur": 6,
     "straf": {
-     "bugs": 1
+     "bugs": 1,
+     "vuur": 2.5
     },
     "when": {
      "flags_all": [
@@ -748,7 +761,8 @@
     "handeling": "fixen",
     "duur": 8,
     "straf": {
-     "bugs": 1
+     "bugs": 1,
+     "vuur": 2.5
     }
    },
    {
@@ -757,7 +771,8 @@
     "handeling": "fixen",
     "duur": 8,
     "straf": {
-     "bugs": 1
+     "bugs": 1,
+     "vuur": 2.5
     }
    },
    {
@@ -766,7 +781,8 @@
     "handeling": "informeren",
     "duur": 9,
     "straf": {
-     "vertrouwen": -1
+     "vertrouwen": -1,
+     "vuur": 2
     }
    },
    {
@@ -775,7 +791,8 @@
     "handeling": "informeren",
     "duur": 8,
     "straf": {
-     "vertrouwen": -1
+     "vertrouwen": -1,
+     "vuur": 2
     },
     "dubbel": {
      "flags_all": [
@@ -789,7 +806,8 @@
     "handeling": "informeren",
     "duur": 8,
     "straf": {
-     "vertrouwen": -1
+     "vertrouwen": -1,
+     "vuur": 2
     }
    },
    {
@@ -798,7 +816,8 @@
     "handeling": "testen",
     "duur": 9,
     "straf": {
-     "bugs": 1
+     "bugs": 1,
+     "vuur": 2.5
     }
    },
    {
@@ -807,7 +826,8 @@
     "handeling": "testen",
     "duur": 9,
     "straf": {
-     "bugs": 1
+     "bugs": 1,
+     "vuur": 2.5
     }
    },
    {
@@ -816,7 +836,8 @@
     "handeling": "nakijken",
     "duur": 10,
     "straf": {
-     "bugs": 1
+     "bugs": 1,
+     "vuur": 2.5
     }
    },
    {
@@ -825,7 +846,8 @@
     "handeling": "nakijken",
     "duur": 9,
     "straf": {
-     "bugs": 1
+     "bugs": 1,
+     "vuur": 2.5
     }
    },
    {
@@ -834,7 +856,8 @@
     "handeling": "scope",
     "duur": 8,
     "straf": {
-     "vertrouwen": -1
+     "vertrouwen": -1,
+     "vuur": 2
     }
    },
    {
@@ -843,7 +866,8 @@
     "handeling": "scope",
     "duur": 7,
     "straf": {
-     "vertrouwen": -1
+     "vertrouwen": -1,
+     "vuur": 2
     }
    },
    {
@@ -852,7 +876,8 @@
     "handeling": "collega",
     "duur": 9,
     "straf": {
-     "bugs": 1
+     "bugs": 1,
+     "vuur": 2.5
     }
    },
    {
@@ -861,7 +886,8 @@
     "handeling": "risico",
     "duur": 7,
     "straf": {
-     "bugs": 1
+     "bugs": 1,
+     "vuur": 2.5
     }
    }
   ],
@@ -871,8 +897,9 @@
    "handeling": "scope",
    "duur": 8,
    "straf": {
-    "bugs": 1
-   }
+    "bugs": 1,
+     "vuur": 2.5
+    }
   },
   "gebeurtenissen": [
    {

@@ -39,7 +39,7 @@ const NIET_AF_MAX := 2
 
 ## Wat `tik()` terugmeldt. De scene vertaalt dit naar kaartjes, geluid en
 ## flitsen; het model tekent zelf niets.
-enum Soort { SPAWN, VERLOPEN, GEBEURTENIS, TIJD_OM }
+enum Soort { SPAWN, VERLOPEN, GEBEURTENIS, TIJD_OM, INGEHAALD }
 
 
 var toestand: Dictionary = {}
@@ -65,13 +65,31 @@ var max_zichtbaar: int = 3
 ## onderbreking maar een straf voor het lezen ervan.
 var gepauzeerd: bool = false
 
+## Seconden tussen de deploy en het vuur erachter. Dit ís de score: hoeveel
+## voorsprong je bij het fluitsignaal nog over had.
+var voorsprong: float = 0.0
+## Waar wordt sinds wanneer het vuur je heeft ingehaald (`voorsprong <= 0`).
+var ingehaald: bool = false
+## Hoeveel seconden voorsprong het vuur per seconde opeet, los van wat de
+## speler doet — de achtergrondtrek van de avond.
+var snelheid_vuur: float = 0.0
+## De klok waarmee gestart is (vóór het aftellen), voor `voortgang()`.
+var klok_totaal: float = 75.0
+
 var _keuzes: Dictionary = {}
 var _spawn_curve: Array = []
 var _gebeurtenissen: Array = []
 var _gebeurtenis: int = 0
 var _volgende_spawn: float = 0.0
 var _tijd_om_gemeld: bool = false
+var _ingehaald_gemeld: bool = false
 var _teller: int = 0
+
+## Uit het `race`-blok bewaard, want `pas_vuur()` en `mis()` hebben ze telkens
+## weer nodig en `inhoud` zelf is na `_init` niet meer voorhanden.
+var _max_voorsprong: float = 20.0
+var _mis_straf: float = 1.0
+var _blus_winst: float = 0.3
 
 
 ## `inhoud` is het `mg_deploy`-blok uit `data/minigame_content.json`, `start` de
@@ -93,7 +111,36 @@ func _init(inhoud: Dictionary, start: Dictionary, vlaggen: Dictionary,
 	_gebeurtenissen = inhoud.get("gebeurtenissen", []) as Array
 	max_zichtbaar = maxi(1, int(inhoud.get("max_zichtbaar", 3)))
 	klok = maxf(1.0, float(inhoud.get("klok_seconden", 75)))
+	klok_totaal = klok
+
+	var race := inhoud.get("race", {}) as Dictionary
+	voorsprong = start_voorsprong(start, race)
+	snelheid_vuur = vuur_snelheid(start, race)
+	_max_voorsprong = float(race.get("max_voorsprong", 20.0))
+	_mis_straf = float(race.get("mis_straf", 1.0))
+	_blus_winst = float(race.get("blus_winst", 0.3))
+
 	_bouw_rij(inhoud, vlaggen, niet_af, zaad)
+
+
+## De voorsprong (in seconden) waarmee de avond begint. Statisch, zodat de
+## kalibratie hem kaal kan doorrekenen zonder een model te bouwen — net als
+## `mg_oplevering.faalt_deploy()`.
+static func start_voorsprong(start: Dictionary, race: Dictionary) -> float:
+	var dagscore := Gevolgen.oplevering_score(start, int(start.get("bugs", 0)), true)
+	var basis := float(race.get("basis", 14.0))
+	var per_punt := float(race.get("per_punt", 0.4))
+	var min_start := float(race.get("min_start", 4.0))
+	var max_voorsprong := float(race.get("max_voorsprong", 20.0))
+	return clampf(basis + per_punt * dagscore, min_start, max_voorsprong)
+
+
+## Hoeveel seconden voorsprong het vuur per seconde opeet, los van blussen of
+## verlopen. Meer bugs bij de start: een snellere achtervolging.
+static func vuur_snelheid(start: Dictionary, race: Dictionary) -> float:
+	var drift_basis := float(race.get("drift_basis", 0.04))
+	var per_bug := float(race.get("per_bug", 0.008))
+	return drift_basis + per_bug * int(start.get("bugs", 0))
 
 
 # --- De rij ----------------------------------------------------------------
@@ -192,6 +239,11 @@ func tik(delta: float) -> Array[Dictionary]:
 	if gepauzeerd or _tijd_om_gemeld:
 		return uit
 
+	pas_vuur(-snelheid_vuur * delta)
+	if ingehaald and not _ingehaald_gemeld:
+		_ingehaald_gemeld = true
+		uit.append({&"soort": Soort.INGEHAALD})
+
 	_spawn(uit)
 	_vuur_gebeurtenissen(uit)
 	_tel_af(delta, uit)
@@ -248,7 +300,9 @@ func _tel_af(delta: float, uit: Array[Dictionary]) -> void:
 			weg.append(b)
 	for b: Dictionary in weg:
 		zichtbaar.erase(b)
-		var veranderd := pas_effect(b[&"straf"] as Dictionary)
+		var straf := b[&"straf"] as Dictionary
+		pas_vuur(-float(straf.get("vuur", 0.0)))
+		var veranderd := pas_effect(straf)
 		uit.append({&"soort": Soort.VERLOPEN, &"brandje": b, &"veranderd": veranderd})
 
 
@@ -269,6 +323,7 @@ func blus(handeling: StringName) -> Dictionary:
 	var b: Dictionary = zichtbaar[i]
 	zichtbaar.remove_at(i)
 	gedaan.append(String(handeling))
+	pas_vuur(_blus_winst)
 
 	var keuze := _keuzes.get(handeling, {}) as Dictionary
 	var onthuld := &""
@@ -281,6 +336,7 @@ func blus(handeling: StringName) -> Dictionary:
 		&"regel": String(keuze.get("regel", "")),
 		&"onthuld": onthuld,
 		&"veranderd": pas_effect(keuze.get("effect", {}) as Dictionary),
+		&"vuur": _blus_winst,
 	}
 
 
@@ -325,10 +381,45 @@ func pas_effect(effect: Dictionary) -> Dictionary:
 	return uit
 
 
+# --- De race --------------------------------------------------------------
+
+## Hoever de avond is, 0..1. Voor de scene: waar de deploy op de straat staat.
+func voortgang() -> float:
+	return clampf(verstreken / klok_totaal, 0.0, 1.0)
+
+
+## Waar het vuur op de straat staat, 0..1, altijd achter of op de deploy.
+func vuur_positie() -> float:
+	return maxf(0.0, voortgang() - voorsprong / klok_totaal)
+
+
+## De enige plek waar `voorsprong` verandert en waar `ingehaald` gezet wordt.
+## `seconden` is positief voor winst (blussen), negatief voor verlies (de
+## achtergrondtrek van `snelheid_vuur`, of de straf van een verlopen brandje).
+func pas_vuur(seconden: float) -> void:
+	voorsprong = clampf(voorsprong + seconden, 0.0, _max_voorsprong)
+	if voorsprong <= 0.0:
+		ingehaald = true
+
+
+## Een misser: de speler tikte een handeling waar niets op brandde. Vult
+## `gedaan` niet aan — er is niets gedaan — maar kost wel voorsprong, anders is
+## blind raak tikken zonder nadeel.
+func mis(handeling: StringName) -> Dictionary:
+	pas_vuur(-_mis_straf)
+	return {&"vuur": -_mis_straf}
+
+
+## Of de avond voorbij is, hoe dan ook: de klok liep af, of het vuur haalde je
+## in.
+func klaar() -> bool:
+	return tijd_om() or ingehaald
+
+
 # --- Uitkomst --------------------------------------------------------------
 
 func score() -> int:
-	return Gevolgen.oplevering_score(toestand, start_bugs, bool(bekend.get(&"bugs", false)))
+	return maxi(0, floori(voorsprong))
 
 
 func tijd_om() -> bool:

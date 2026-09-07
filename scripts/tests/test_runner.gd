@@ -6259,8 +6259,13 @@ func _test_finale_brandjes() -> void:
 		var straf := b.get("straf", {}) as Dictionary
 		_ok(not straf.is_empty(), "mg_deploy/%s: geen straf, dus verlopen kost niets" % bid)
 		for sk: Variant in straf:
-			_ok(String(sk) in ["bugs", "vertrouwen", "getest", "scope"],
+			_ok(String(sk) in ["bugs", "vertrouwen", "getest", "scope", "vuur"],
 				"mg_deploy/%s: straf op onbekende waarde '%s'" % [bid, sk])
+		# `vuur` is de straf die sinds de race-vorm echt telt: zoveel seconden
+		# voorsprong kost het als dit kaartje verloopt. Zonder die sleutel is
+		# een verlopen brandje gratis en is niets doen een geldige strategie.
+		_ok(float(straf.get("vuur", 0.0)) > 0.0,
+			"mg_deploy/%s: geen straf.vuur, dus verlopen kost geen voorsprong" % bid)
 		# De `when` van een brandje moet in de smalle grammatica passen die
 		# `BrandjesModel.mag()` kent; de rest van `Conditions` leest Session en
 		# is hier dus niet door te rekenen.
@@ -6311,6 +6316,36 @@ func _test_finale_brandjes() -> void:
 	var niks := _finale_niets_doen(c, zorgvuldig, 42)
 	_ok(niks < faal,
 		"niets doen op een zorgvuldige dag haalt %d en de eerste deploy faalt pas onder %d" % [niks, faal])
+
+	# Het gat dat de audit van 7 september vond: blind door de zeven knoppen
+	# cyclen kostte alleen een knoppenslot en haalde op vijf zaden dezelfde
+	# score als perfect spel. Sinds een misser voorsprong kost, hoort deze
+	# route onder de faaldrempel te zakken.
+	for zaad: int in [1, 7, 42, 1234, 99991]:
+		var blind := _finale_blind_cyclen(c, zorgvuldig, zaad)
+		_ok(blind < faal,
+			"blind door de knoppen cyclen haalt %d op zaad %d en faalt pas onder %d"
+				% [blind, zaad, faal])
+
+	# Het race-blok is de rekenkern van de finale: zonder deze sleutels valt
+	# `BrandjesModel` terug op zijn standaarden en is de data niet meer de
+	# waarheid over de balans.
+	var race := c.get("race", {}) as Dictionary
+	for sleutel: String in ["basis", "per_punt", "min_start", "max_voorsprong",
+			"drift_basis", "per_bug", "blus_winst", "mis_straf"]:
+		_ok(race.has(sleutel) and float(race[sleutel]) > 0.0,
+			"mg_deploy/race: '%s' ontbreekt of is niet positief" % sleutel)
+	_ok(float(race.get("max_voorsprong", 0.0)) >= float(top),
+		"mg_deploy/race: max_voorsprong %s ligt onder de VLEKKELOOS-drempel %d, dus de top is onbereikbaar"
+			% [race.get("max_voorsprong", 0.0), top])
+	# Géén eis dat `min_start` onder de faaldrempel ligt: dat is de voorsprong
+	# waarmee de avond begínt, niet de score waarmee hij eindigt. De drift en
+	# elk verlopen kaartje eten die voorsprong op, dus "begint met vier
+	# seconden" betekent niet "haalt vier". Dat de slechtste route echt faalt,
+	# wordt hierboven getest met niets doen en met blind cyclen.
+	_ok(float(race.get("min_start", 0.0)) < float(race.get("max_voorsprong", 0.0)),
+		"mg_deploy/race: min_start %s ligt niet onder max_voorsprong %s"
+			% [race.get("min_start", 0.0), race.get("max_voorsprong", 0.0)])
 
 	# De rampdag zoals hij er in het spel echt uitziet: de losse kabel vooraan,
 	# een klant die twee keer belt en twee tickets die nooit afkwamen. Meer
@@ -6395,7 +6430,9 @@ func _test_finale_regels_passen() -> void:
 ## loze handeling, want `blus()` op een handeling die niemand vraagt doet niets.
 func _finale_perfect(c: Dictionary, start: Dictionary, zaad: int) -> int:
 	var m := BrandjesModel.new(c, start, {}, [] as Array[String], zaad)
-	while not m.tijd_om():
+	# `klaar()` en niet `tijd_om()`: sinds de race-vorm eindigt de avond ook als
+	# de vlammen de deploy inhalen, en dan hoeft er niets meer geblust.
+	while not m.klaar():
 		m.tik(_FINALE_STAP)
 		var b := m.kortste()
 		if not b.is_empty():
@@ -6406,8 +6443,29 @@ func _finale_perfect(c: Dictionary, start: Dictionary, zaad: int) -> int:
 ## Dezelfde avond, maar de speler kijkt ernaar. Alles verloopt.
 func _finale_niets_doen(c: Dictionary, start: Dictionary, zaad: int) -> int:
 	var m := BrandjesModel.new(c, start, {}, [] as Array[String], zaad)
-	while not m.tijd_om():
+	while not m.klaar():
 		m.tik(_FINALE_STAP)
+	return m.score()
+
+
+## Zeven keer blind op een knop rammen, rondgaand. Kostte vóór de race-vorm
+## alleen een knoppenslot van 0,4 s en haalde daarmee op elk zaad dezelfde
+## score als perfect spel (`docs/AUDIT-2026-09-07-MINIGAMES.md`). Een misser
+## kost nu voorsprong, dus dit hoort onder de faaldrempel te zakken.
+func _finale_blind_cyclen(c: Dictionary, start: Dictionary, zaad: int) -> int:
+	var m := BrandjesModel.new(c, start, {}, [] as Array[String], zaad)
+	var i := 0
+	var volgende := 0.0
+	while not m.klaar():
+		m.tik(_FINALE_STAP)
+		if m.verstreken >= volgende:
+			var h: StringName = BrandjesModel.HANDELINGEN[i % BrandjesModel.HANDELINGEN.size()]
+			if m.doel_index(h) >= 0:
+				m.blus(h)
+			else:
+				m.mis(h)
+			i += 1
+			volgende = m.verstreken + 0.4
 	return m.score()
 
 
