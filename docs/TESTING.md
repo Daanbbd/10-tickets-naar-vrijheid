@@ -459,6 +459,44 @@ de aanroepen die Godot zelf doet: elke `new AudioContext()` en elke
 | `godot: suspended` | Godots eigen context is, ondanks de preload-fix, alsnog buiten het gesturevenster ontstaan — er zit dan nog een onbekende asynchrone stap tussen de tik en `_godot_audio_init()` |
 | `godot: geen AudioContext gemaakt` | de audiodriver is nooit gestart; geen autoplay-probleem meer maar een startfout — kijk in de console naar `SCRIPT ERROR` rond het moment van de tik |
 
+### De echte oorzaak van de stilte op web (7 sep, opgelost)
+
+Bovenstaande diagnose was nodig om het ballonnetje "running, en toch stil" op
+te prikken, en dat bracht de echte bug boven: `AudioDirector._maak_muziekbus()`
+maakte de `"Muziek"`-bus aan tijdens `_ready()` met `AudioServer.add_bus()`.
+Op de webexport bleek dat niet betrouwbaar — de bus die de rest van de klasse
+als vanzelfsprekend aannam, bestond op het moment dat er muziek op werd
+afgespeeld soms gewoon niet. Elke `AudioStreamPlayer` die naar
+`MUZIEKBUS` (`&"Muziek"`) routeert speelt dan in het niets: geen foutmelding,
+geen gecrashte context, gewoon een speler die "speelt" tegen een bus die niet
+bestaat.
+
+Het bewijs kwam van twee kanten tegelijk:
+
+- **Web:** `?audio` liet een kerngezonde WebAudio-graaf zien — context
+  `running`, beide worklets `ok`, `GainNode(gain=1)+AudioWorkletNode →
+  destination` — en tóch duizenden audiochunks met piekwaarde exact `0.0000`.
+  De graaf was gezond tot en met de uitvoer; er kwam alleen nooit een sample in.
+- **Native/editor:** Daan zag in de editor de harde bevestiging —
+  `ERROR: servers/audio/audio_server.cpp:1004 - Index p_bus = 1 is out of
+  bounds (buses.size() = 1)` — iets sprak bus-index 1 aan terwijl er op dat
+  moment maar één bus bestond (Master). Hij loste het zelf op door de bus met
+  de hand in de Audio-tab van de editor aan te maken in plaats van in code, en
+  had toen wél geluid.
+
+**De fix:** de `"Muziek"`-bus en zijn laagdoorlaatfilter staan nu in
+`default_bus_layout.tres` (projectroot), geladen door de engine vóórdat er één
+regel GDScript draait — op elk platform, dus ook web. `_maak_muziekbus()` zoekt
+'m alleen nog op met `AudioServer.get_bus_index(MUZIEKBUS)` en het filter met
+`AudioServer.get_bus_effect()` op type, met een `push_warning()`-terugval (zelf
+aanmaken) voor een context zonder die resource geladen. Bevestigd werkend door
+Daan zelf, zowel lokaal als op gh-pages.
+
+**Als je ooit een nieuwe bus nodig hebt:** maak 'm in de editor (Audio-tab
+onderin), sla `default_bus_layout.tres` op, en zoek 'm in code op met
+`AudioServer.get_bus_index(...)`. Nooit `AudioServer.add_bus()` tijdens
+`_ready()` voor iets dat blijvend moet bestaan — dat is precies deze bug.
+
 > **Nog open:** `assets/fonts/ark-pixel-12px-proportional-latin.ttf` is 4,75 MB
 > met 24.176 glyphs, terwijl de 10px- en 16px-snit ~0,5 MB en ~4.000 glyphs
 > hebben. Dat is de volledige CJK-uitlevering onder een `-latin`-naam, precies
