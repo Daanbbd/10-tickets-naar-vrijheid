@@ -257,6 +257,7 @@
   "intro": "Op de productpagina staan {elementen} blokken een paar pixels scheef. Tik een blok en sleep het tot het vastklikt op het raster. Victor ziet het verschil. Vanaf nu jij ook.",
   "tolerantie": 2,
   "raster": 4,
+  "klok_sec": 45,
   "drift_sec": 8,
   "elementen": [
    {

@@ -40,9 +40,13 @@ const VORM: Dictionary = {
 	&"aanbevolen": Rect2(12, 204, 140, 24),
 }
 
-## Zo groot als er in portret overblijft naast kop, statusregel, Klaar en
-## Stoppen — groter dan dit en de eindbanner duwt het vel de scroll in.
-const VEL_MAAT: Vector2 = Vector2(164, 240)
+## Zo groot als er in portret overblijft naast kop, statusregel, klokbalk,
+## Klaar en Stoppen. Groter dan dit en de eindbanner duwt het vel de scroll in:
+## op 240 (voordat de klok erbij kwam) verdwenen Reviews en Aanbevolen achter
+## een scrollbalk zodra de uitslagbanner verscheen. De klokbalk is 7 px plus
+## 3 px separatie, dus die twaalf gaan er hier af — en 228 blijft een veelvoud
+## van het raster van 4, waar de vormen op uitgetekend zijn.
+const VEL_MAAT: Vector2 = Vector2(164, 228)
 
 
 ## Eén blok van de pagina. Kent zijn eigen nulpunt en de stappen die de speler
@@ -227,6 +231,12 @@ const DRIFT_SCHUD_PX := 2.0
 const DRIFT_SCHUD_TIJD := 0.15
 
 var _drift_sec: float = 8.0
+## De rondeklok. Loopt zolang de drift loopt; op nul rondt hij af met wat er
+## dan op het raster staat.
+var _klok_sec: float = 45.0
+var _klok_t: float = 45.0
+var _klok_verlopen: bool = false
+
 var _drift_t: float = 0.0
 var _drift_actief: bool = false
 var _drift_toegevoegd: Dictionary = {}   ## StringName -> Vector2, drift tot nu toe per as
@@ -288,6 +298,19 @@ func _on_setup() -> void:
 		return
 
 	_bouw_voet(body)
+
+	# De klok. Deze minigame was de enige zonder, en Daan zei daar in de
+	# playtest van 6 september iets over (#13): *"Ik mis ook urgentie als
+	# speler hier, kan er zo lang over doen als ik wil."* Zijn broertjes hadden
+	# er allemaal een — Dennis wacht 45 s bij de scope, de stand-up loopt op
+	# 30 s — en dit is dezelfde balk uit de basisklasse.
+	#
+	# Op nul rondt hij af met wat er dan op het raster staat. Geen extra straf:
+	# de drift is de straf, en die heeft de speler dan al zien gebeuren.
+	_klok_sec = maxf(5.0, float(c.get("klok_sec", 45.0)))
+	_klok_t = _klok_sec
+	chrome_header().add_child(bouw_klokbalk())
+
 	_werk_bij()
 
 	# De eerste 0,6 s: een pulserende rand rond het meest scheve blok, zodat
@@ -460,10 +483,11 @@ func _op_raster_aantal() -> int:
 
 
 func _werk_bij() -> void:
-	var blok := _gekozen()
-	set_status("%s  ·  %d/%d op raster" % [
-		blok.naam if blok != null else "Kies een blok",
-		_op_raster_aantal(), _volgorde.size()])
+	# Kort houden: de kopregel deelt zijn breedte met de titel, en
+	# "Bestelknop · 7/7 op raster · 45 s" kapte die af. De naam van het blok
+	# staat al op het blok zelf en op de rand die eromheen pulseert.
+	set_status("%d/%d op raster  ·  %d s" % [
+		_op_raster_aantal(), _volgorde.size(), maxi(0, ceili(_klok_t))])
 	_werk_drift_teller_bij()
 
 
@@ -497,6 +521,15 @@ func _werk_drift_teller_bij() -> void:
 func _process(delta: float) -> void:
 	if not _drift_actief:
 		return
+
+	_klok_t -= delta
+	zet_klokbalk(_klok_t / maxf(0.001, _klok_sec))
+	_werk_bij()
+	if _klok_t <= 0.0 and not _klok_verlopen:
+		_klok_verlopen = true
+		_afronden()
+		return
+
 	_drift_t += delta
 	if _drift_t >= _drift_sec:
 		_drift_t -= _drift_sec
