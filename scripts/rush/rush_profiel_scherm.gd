@@ -190,6 +190,7 @@ func _bouw() -> void:
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.scroll_deadzone = 6
+	RushVeeg.koppel(_scroll)
 	_dunne_balk(_scroll.get_v_scroll_bar())
 	kol.add_child(_scroll)
 	var inhoud := VBoxContainer.new()
