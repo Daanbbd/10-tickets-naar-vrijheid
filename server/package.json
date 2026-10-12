@@ -1,0 +1,9 @@
+{
+  "name": "tickets-scorebord",
+  "private": true,
+  "type": "module",
+  "description": "Het online scorebord van 10 Tickets naar Vrijheid (Cloudflare Worker). Geen dependencies.",
+  "scripts": {
+    "test": "node --test test.mjs"
+  }
+}
