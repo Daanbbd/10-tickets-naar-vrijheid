@@ -30,7 +30,7 @@ func _ready() -> void:
 	_inhoud.add_theme_constant_override(&"margin_top", 14)
 	_inhoud.add_theme_constant_override(&"margin_bottom", 12)
 	AudioDirector.stop_music(0.3)
-	AudioDirector.set_base(&"intro", 0.6)
+	RushKlank.muziek(&"rush_menu", &"intro", 0.6)
 	_titel()
 
 
@@ -154,7 +154,7 @@ func _portretknop(id: StringName) -> Control:
 	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(band)
 	b.pressed.connect(func() -> void:
-		AudioDirector.play_ui(&"klik")
+		RushKlank.ui(&"rush_knop")
 		Haptiek.tril(Haptiek.Sterkte.TIK)
 		_gekozen = id
 		_toon_kies())
@@ -211,7 +211,7 @@ func _dagknop(i: int, is_volgende: bool) -> Control:
 	b.add_child(st)
 	b.resized.connect(func() -> void: st.size = b.size)
 	b.pressed.connect(func() -> void:
-		AudioDirector.play_ui(&"klik")
+		RushKlank.ui(&"rush_knop")
 		RushSave.dag = i
 		get_tree().change_scene_to_file(GAME))
 	return b
@@ -289,5 +289,5 @@ func _knop(t: String, primair: bool) -> Button:
 	b.add_theme_color_override(&"font_color", Color.WHITE)
 	b.add_theme_color_override(&"font_hover_color", Color.WHITE)
 	b.add_theme_color_override(&"font_pressed_color", Color.WHITE)
-	b.pressed.connect(func() -> void: AudioDirector.play_ui(&"klik"))
+	b.pressed.connect(func() -> void: RushKlank.ui(&"rush_knop"))
 	return b

@@ -91,7 +91,7 @@ func _ready() -> void:
 	_brand_timer = randf_range(16.0, 24.0)
 
 	AudioDirector.stop_music(0.4)
-	AudioDirector.set_base(StringName(dag["muziek"]), 0.8)
+	RushKlank.muziek(StringName(dag["track"]), StringName(dag["muziek"]), 0.8)
 	hud.zet(dag["kort"], 0, minuut)
 	if bot:
 		_begin()
@@ -254,7 +254,7 @@ func _tik(p: Vector2) -> void:
 
 
 func _plan(actie: Dictionary) -> void:
-	AudioDirector.play_sfx(&"klik", 0.1, -8.0)
+	RushKlank.sfx(&"rush_tik", &"klik", 0.1, -8.0)
 	Haptiek.tril(Haptiek.Sterkte.TIK)
 	if wachtrij.size() >= WACHTRIJ_MAX:
 		wachtrij.pop_back()
@@ -325,13 +325,13 @@ func _pak_van_bord(slot: int, t: RushTicket) -> void:
 		return
 	if not speler.vrije_hand():
 		_ballon_speler("Handen vol!")
-		AudioDirector.play_sfx(&"fout", 0.05, -6.0)
+		RushKlank.sfx(&"rush_fout", &"fout", 0.05, -6.0)
 		return
 	bord[slot] = null
 	t.staat = RushTicket.Staat.HAND
 	t.scale = Vector2(1.5, 1.5)
 	speler.handen.append(t)
-	AudioDirector.play_sfx(&"pak")
+	RushKlank.sfx(&"rush_pak", &"pak")
 	Haptiek.tril(Haptiek.Sterkte.STOOT)
 	hud.meld("%s · %s" % [t.code(), t.titel], 2.6)
 
@@ -357,11 +357,11 @@ func _bij_werker(w: RushWorker) -> void:
 			speler.handen.append(klaar_t)
 			klaar_t.staat = RushTicket.Staat.KLAAR
 			klaar_t.scale = Vector2(1.5, 1.5)
-			AudioDirector.play_sfx(&"pak")
+			RushKlank.sfx(&"rush_pak", &"pak")
 			Haptiek.tril(Haptiek.Sterkte.STOOT)
 		else:
 			_ballon_speler("Handen vol!")
-			AudioDirector.play_sfx(&"fout", 0.05, -6.0)
+			RushKlank.sfx(&"rush_fout", &"fout", 0.05, -6.0)
 	elif w.ticket != null:
 		RushPop.ballon_op(veld, w.hoofd(), "Ik ben al bezig!", 1.3)
 	elif open != null:
@@ -371,7 +371,7 @@ func _bij_werker(w: RushWorker) -> void:
 		if k != null:
 			RushPop.ballon_op(veld, w.hoofd(), "Ik doe %s, geen %s." % [
 				RushData.VAK_NAAM[w.vak], RushData.VAK_NAAM[k.vak]], 1.8)
-			AudioDirector.play_sfx(&"fout", 0.05, -4.0)
+			RushKlank.sfx(&"rush_fout", &"fout", 0.05, -4.0)
 			Haptiek.tril(Haptiek.Sterkte.SLAG)
 	else:
 		RushPop.ballon_op(veld, w.hoofd(), "Niks voor mij?", 1.2)
@@ -380,7 +380,7 @@ func _bij_werker(w: RushWorker) -> void:
 func _geef(w: RushWorker, t: RushTicket) -> void:
 	speler.handen.erase(t)
 	w.geef(t)
-	AudioDirector.play_sfx(&"interactie", 0.08)
+	RushKlank.sfx(&"rush_geef", &"interactie", 0.08)
 	Haptiek.tril(Haptiek.Sterkte.STOOT)
 	if randf() < 0.45 and RushData.ONTVANG.has(w.persoon):
 		RushPop.ballon_op(veld, w.hoofd(), RushData.kies(RushData.ONTVANG[w.persoon]), 1.6)
@@ -390,11 +390,11 @@ func _zelf_doen(t: RushTicket) -> void:
 	var kleur: Color = RushData.VAK_KLEUR[t.vak]
 	speler.start_bezig(RushData.ZELF_WERKTIJD, kleur.lightened(0.25))
 	t.staat = RushTicket.Staat.WERK
-	AudioDirector.play_sfx(&"interactie", 0.08)
+	RushKlank.sfx(&"rush_geef", &"interactie", 0.08)
 	_na_bezig = func() -> void:
 		t.staat = RushTicket.Staat.KLAAR
 		t.geduld = maxf(t.geduld, 0.6)
-		AudioDirector.play_sfx(&"ticket_klaar")
+		RushKlank.sfx(&"rush_klaar", &"ticket_klaar")
 		_ballon_speler("Zelf gedaan.")
 
 
@@ -402,7 +402,7 @@ func _bij_server() -> void:
 	speler.kijk(&"up")
 	if kantoor.brand:
 		speler.start_bezig(1.1, Color("#ffd23f"))
-		AudioDirector.play_sfx(&"genereren", 0.05)
+		RushKlank.sfx(&"rush_blus", &"genereren", 0.05)
 		_ballon_speler("Blussen!")
 		_na_bezig = func() -> void:
 			kantoor.brand = false
@@ -423,7 +423,7 @@ func _deploy() -> void:
 			_ballon_speler("Niks om live te zetten.")
 		else:
 			_ballon_speler("Eerst laten maken!")
-			AudioDirector.play_sfx(&"fout", 0.05, -6.0)
+			RushKlank.sfx(&"rush_fout", &"fout", 0.05, -6.0)
 		return
 	for t: RushTicket in klaar_t:
 		speler.handen.erase(t)
@@ -431,7 +431,7 @@ func _deploy() -> void:
 		geleverd += 1
 	kantoor.flits_server()
 	_reeks += klaar_t.size()
-	AudioDirector.play_sfx_toon(&"deploy_ok", 1.0 + minf(_reeks - 1, 8) * 0.06)
+	RushKlank.toon(&"rush_deploy", &"deploy_ok", 1.0 + minf(_reeks - 1, 8) * 0.06)
 	if _reeks >= 3:
 		RushPop.getal_op(veld, speler.position + Vector2(0, -52), "Reeks %d!" % _reeks, Color("#8fd3ff"))
 	Haptiek.tril(Haptiek.Sterkte.GELUKT)
@@ -442,10 +442,13 @@ func _deploy() -> void:
 		minuut = maxf(RushData.START_MIN, minuut - 10.0)
 		hud.klok_puls()
 		RushPop.getal_op(veld, srv + Vector2(-30, -60), "Dubbel! -10 min", Color("#ffd23f"))
+		RushKlank.sfx(&"rush_dubbel", &"", 0.0, -2.0)
 	_schok = maxf(_schok, 1.5)
 	hud.zet(dag["kort"], geleverd, minuut)
 	if geleverd >= RushData.DOEL:
 		_dag_klaar()
+	elif geleverd == RushData.DOEL - 1:
+		hud.meld("Nog één! Dan mag je naar huis.", 2.5)
 
 
 func _bij_koffie() -> void:
@@ -454,7 +457,7 @@ func _bij_koffie() -> void:
 		_ballon_speler("Hij loopt nog door...")
 		return
 	speler.start_bezig(0.6, Color("#c08552"))
-	AudioDirector.play_sfx(&"koffie")
+	RushKlank.sfx(&"rush_koffie", &"koffie")
 	_na_bezig = func() -> void:
 		speler.boost = 9.0
 		_koffie_cd = 22.0
@@ -482,6 +485,7 @@ func _process(delta: float) -> void:
 	minuut += float(dag["minuten_per_sec"]) * delta
 	if was < RushData.EIND_MIN and minuut >= RushData.EIND_MIN:
 		hud.meld("17:00. Iedereen gaat naar huis. Behalve jij.", 3.5)
+		RushKlank.sfx(&"rush_vijf", &"deur", 0.0)
 		hud.klok_puls()
 	speler.tik(delta)
 	if speler.bezig <= 0.0 and _na_bezig.is_valid():
@@ -563,11 +567,11 @@ func _spawn(slot: int) -> void:
 	tickets.append(t)
 	bord[slot] = t
 	gespawnd += 1
-	AudioDirector.play_sfx(&"mg_intro", 0.1, -10.0)
+	RushKlank.sfx(&"rush_nieuw", &"mg_intro", 0.1, -8.0)
 	if not _tutorial:
 		hud.meld("Nieuw: %s" % titel, 1.8)
 	if vak == RushData.Vak.KLANT and randf() < 0.6:
-		AudioDirector.play_sfx(&"hinnik", 0.1, -6.0)
+		RushKlank.sfx(&"rush_hinnik", &"hinnik", 0.1, -6.0)
 
 
 func _werk_geduld(delta: float) -> void:
@@ -596,7 +600,7 @@ func _belt(t: RushTicket) -> void:
 	minuut += RushData.BEL_BOETE_MIN
 	hud.klok_puls()
 	hud.bel(RushData.kies(RushData.KLANT_BELT))
-	AudioDirector.play_sfx(&"hinnik")
+	RushKlank.sfx(&"rush_bel", &"hinnik")
 	Haptiek.tril(Haptiek.Sterkte.SLAG)
 	_schok = maxf(_schok, 2.5)
 	var p := t.position if t.visible else speler.position + Vector2(0, -40)
@@ -604,7 +608,7 @@ func _belt(t: RushTicket) -> void:
 
 
 func _op_werker_klaar(w: RushWorker) -> void:
-	AudioDirector.play_sfx(&"ticket_klaar", 0.05, -3.0)
+	RushKlank.sfx(&"rush_klaar", &"ticket_klaar", 0.05, -3.0)
 	if randf() < 0.35 and RushData.KLAAR.has(w.persoon):
 		RushPop.ballon_op(veld, w.hoofd() + Vector2(0, -8), RushData.kies(RushData.KLAAR[w.persoon]), 1.3)
 
@@ -649,7 +653,7 @@ func _start_kletsen() -> void:
 		if w != _prater and is_equal_approx(w.position.y, _prater.position.y):
 			w.stilgelegd = true
 	hud.meld("%s houdt een stand-up en zijn rij ligt stil. Tik hem: afkappen!" % _prater.naam, 3.5)
-	AudioDirector.play_sfx(&"mg_intro", 0.0, -4.0)
+	RushKlank.sfx(&"rush_nieuw", &"mg_intro", 0.0, -4.0)
 
 
 func _kap_af() -> void:
@@ -657,7 +661,7 @@ func _kap_af() -> void:
 		return
 	RushPop.ballon_op(veld, _prater.hoofd(), "...oké.", 1.2)
 	_ballon_speler("Dank je! Volgende!")
-	AudioDirector.play_sfx(&"raak")
+	RushKlank.sfx(&"rush_afkappen", &"raak")
 	Haptiek.tril(Haptiek.Sterkte.STOOT)
 	_stop_kletsen()
 
@@ -695,7 +699,7 @@ func _start_dirk() -> void:
 	_dirk_pad = PackedVector2Array()
 	_dirk_herbereken = 0.0
 	kantoor.deur_open = true
-	AudioDirector.play_sfx(&"deur")
+	RushKlank.sfx(&"rush_dirk", &"deur")
 	RushPop.ballon_op(veld, _dirk.position + Vector2(0, -40), "Heb je even?", 1.5)
 	hud.meld("Dirk wil je uren. Tik hem weg voor hij je te pakken heeft!", 3.0)
 
@@ -763,7 +767,7 @@ func _dirk_vangt() -> void:
 	speler.pad = PackedVector2Array()
 	speler.start_bezig(2.4, Color("#8a93a8"))
 	RushPop.ballon_op(veld, _dirk.position + Vector2(0, -40), RushData.kies(RushData.DIRK), 2.2)
-	AudioDirector.play_sfx(&"fout")
+	RushKlank.sfx(&"rush_bots", &"fout")
 	Haptiek.tril(Haptiek.Sterkte.SLAG)
 	_na_bezig = func() -> void:
 		_ballon_speler("Ja, Dirk.")
@@ -776,7 +780,7 @@ func _stuur_dirk_weg() -> void:
 	_dirk_pad = PackedVector2Array()
 	RushPop.ballon_op(veld, _dirk.position + Vector2(0, -40), "Oké, straks!", 1.2)
 	_ballon_speler("Straks, Dirk!")
-	AudioDirector.play_sfx(&"raak")
+	RushKlank.sfx(&"rush_weg", &"raak")
 	Haptiek.tril(Haptiek.Sterkte.STOOT)
 
 
@@ -788,7 +792,7 @@ func _werk_brand(delta: float) -> void:
 	_brand_timer -= delta
 	if _brand_timer <= 0.0:
 		kantoor.brand = true
-		AudioDirector.play_sfx(&"fout")
+		RushKlank.sfx(&"rush_brand", &"fout")
 		_schok = maxf(_schok, 2.0)
 		hud.meld("De server staat in brand! Eerst blussen.", 3.0)
 
@@ -804,10 +808,10 @@ func _dag_klaar() -> void:
 	var sterren := RushData.sterren_voor(minuut)
 	if not bot:
 		RushSave.noteer(dag_index, sterren)
-	AudioDirector.set_layer(&"overwinning", &"overwinning", 0.3)
+	RushKlank.laag(&"overwinning", &"rush_uitslag", &"overwinning", 0.3)
 	hud.meld("10/10. Naar huis!", 10.0)
 	kantoor.deur_open = true
-	AudioDirector.play_sfx(&"deur")
+	RushKlank.sfx(&"rush_deur", &"deur")
 	_ballon_speler("Vrijheid!")
 	speler.pad = _pad_naar(kantoor.deur_punt())
 	speler.pad.append(kantoor.deur_punt() + Vector2(0, 16))

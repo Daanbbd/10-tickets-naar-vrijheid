@@ -162,7 +162,7 @@ const DAGEN := [
 		"vakken": [Vak.FE, Vak.BE],
 		"interval": 7.5, "geduld": 34.0, "minuten_per_sec": 3.4,
 		"koffie": false, "kletsen": false, "dirk": false, "brand": false,
-		"muziek": &"mg_planning",
+		"muziek": &"mg_planning", "track": &"rush_ma",
 	},
 	{
 		"naam": "Dinsdag", "kort": "DI",
@@ -170,7 +170,7 @@ const DAGEN := [
 		"vakken": [Vak.FE, Vak.BE, Vak.DATA],
 		"interval": 6.6, "geduld": 30.0, "minuten_per_sec": 3.4,
 		"koffie": true, "kletsen": false, "dirk": false, "brand": false,
-		"muziek": &"mg_cro",
+		"muziek": &"mg_cro", "track": &"rush_di",
 	},
 	{
 		"naam": "Woensdag", "kort": "WO",
@@ -178,7 +178,7 @@ const DAGEN := [
 		"vakken": [Vak.FE, Vak.BE, Vak.DATA, Vak.KLANT],
 		"interval": 6.0, "geduld": 28.0, "minuten_per_sec": 3.5,
 		"koffie": true, "kletsen": true, "dirk": false, "brand": false,
-		"muziek": &"mg_user_story",
+		"muziek": &"mg_user_story", "track": &"rush_wo",
 	},
 	{
 		"naam": "Donderdag", "kort": "DO",
@@ -186,7 +186,7 @@ const DAGEN := [
 		"vakken": [Vak.FE, Vak.BE, Vak.DATA, Vak.KLANT, Vak.SCOPE],
 		"interval": 5.6, "geduld": 26.0, "minuten_per_sec": 3.6,
 		"koffie": true, "kletsen": true, "dirk": true, "brand": false,
-		"muziek": &"mg_abgevecht",
+		"muziek": &"mg_abgevecht", "track": &"rush_do",
 	},
 	{
 		"naam": "Vrijdag", "kort": "VR",
@@ -194,7 +194,7 @@ const DAGEN := [
 		"vakken": [Vak.FE, Vak.BE, Vak.DATA, Vak.KLANT, Vak.SCOPE],
 		"interval": 5.2, "geduld": 25.0, "minuten_per_sec": 3.6,
 		"koffie": true, "kletsen": true, "dirk": true, "brand": true,
-		"muziek": &"mg_deploy",
+		"muziek": &"mg_deploy", "track": &"rush_vr",
 	},
 ]
 

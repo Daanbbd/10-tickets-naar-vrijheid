@@ -29,6 +29,7 @@ var _was_weg := false
 var _hint_vast := ""
 var _hint_tijd := 0.0
 var _klok_puls := 0.0
+var _pip_puls := 0.0
 
 
 func _ready() -> void:
@@ -145,6 +146,9 @@ func _process(delta: float) -> void:
 		_hint_tijd -= delta
 		if _hint_tijd <= 0.0:
 			_hint.text = _hint_vast
+	if _pip_puls > 0.0:
+		_pip_puls = maxf(0.0, _pip_puls - delta * 2.5)
+		_pips.queue_redraw()
 	if _klok_puls > 0.0:
 		_klok_puls = maxf(0.0, _klok_puls - delta * 2.0)
 		_klok.scale = Vector2.ONE * (1.0 + _klok_puls * 0.25)
@@ -154,6 +158,7 @@ func _process(delta: float) -> void:
 func zet(dagkort: String, geleverd: int, minuut: float) -> void:
 	_dag.text = dagkort
 	if geleverd != _geleverd:
+		_pip_puls = 1.0 if geleverd > _geleverd else 0.0
 		_geleverd = geleverd
 		_pips.queue_redraw()
 	_klok.text = RushData.klok(minuut)
@@ -207,6 +212,10 @@ func _teken_pips() -> void:
 	for i: int in RushData.DOEL:
 		var r := Rect2(i * 7, 0, 5, 6)
 		if i < _geleverd:
+			if i == _geleverd - 1 and _pip_puls > 0.0:
+				r = r.grow(_pip_puls * 2.0)
+				_pips.draw_rect(r, Color("#3fd27f").lerp(Color.WHITE, _pip_puls * 0.6))
+				continue
 			_pips.draw_rect(r, Color("#3fd27f"))
 		else:
 			_pips.draw_rect(r, Color("#2a3042"))
@@ -256,8 +265,17 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 	kol.add_child(UiKit.spacer(4))
 	var sterrij := Control.new()
 	sterrij.custom_minimum_size = Vector2(0, 22)
+	sterrij.set_meta(&"te_zien", 0.0)
 	sterrij.draw.connect(func() -> void: _teken_sterren(sterrij, sterren))
 	kol.add_child(sterrij)
+	# De sterren komen één voor één, met een tikje: dat is het moment van de dag.
+	var tw := sterrij.create_tween()
+	tw.tween_interval(0.35)
+	for i: int in sterren:
+		tw.tween_callback(func() -> void: RushKlank.sfx(&"rush_ster", &"pak", 0.0, -2.0))
+		tw.tween_method(func(v: float) -> void:
+			sterrij.set_meta(&"te_zien", v)
+			sterrij.queue_redraw(), float(i), float(i + 1), 0.28)
 	kol.add_child(UiKit.spacer(2))
 	kol.add_child(_lbl("Naar huis om %s" % RushData.klok(minuut), 12, Color.WHITE, true))
 	var regel := "Ze heeft niet gebeld." if gebeld == 0 else (
@@ -324,9 +342,15 @@ func _appje(tekst: String, minuut: float) -> Control:
 
 func _teken_sterren(c: Control, n: int) -> void:
 	var midden := c.size.x / 2.0
+	var te_zien: float = c.get_meta(&"te_zien", 3.0)
 	for i: int in 3:
 		var p := Vector2(midden + (i - 1) * 24, 11)
-		_ster(c, p, 9.0, Color("#ffd23f") if i < n else Color("#3a4156"))
+		_ster(c, p, 9.0, Color("#3a4156"))
+		if i < n and te_zien > i:
+			# Even te groot, dan op maat: een stempel.
+			var f := clampf(te_zien - i, 0.0, 1.0)
+			var r := 9.0 * (1.0 + 0.6 * sin(f * PI) * (1.0 - f) + 0.0) if f < 1.0 else 9.0
+			_ster(c, p, r, Color("#ffd23f"))
 
 
 func _ster(c: Control, p: Vector2, r: float, k: Color) -> void:
@@ -452,7 +476,7 @@ func _knop(t: String, primair: bool) -> Button:
 	b.add_theme_color_override(&"font_color", Color.WHITE)
 	b.add_theme_color_override(&"font_hover_color", Color.WHITE)
 	b.add_theme_color_override(&"font_pressed_color", Color.WHITE)
-	b.pressed.connect(func() -> void: AudioDirector.play_ui(&"klik"))
+	b.pressed.connect(func() -> void: RushKlank.ui(&"rush_knop"))
 	return b
 
 
