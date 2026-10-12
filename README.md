@@ -1,54 +1,76 @@
 # 10 Tickets naar Vrijheid
 
-Een Nederlandstalige top-down pixel-art comedy adventure op één verdieping van
-Bluebird Day. Je kiest één collega, lost tien tickets op rond een webshop voor
-paardensupplementen, en mag pas naar buiten bij 10/10.
+Een snelle tik-game in het kantoor van Bluebird Day. De webshop voor
+paardensupplementen moet vrijdag live, en de klant heeft het al aan de
+dierenarts verteld. Tickets komen binnen op het bord; jij rent ze naar de
+collega van het juiste vak, haalt ze op als ze klaar zijn en zet ze live op de
+server. Tien live, dan mag je naar huis.
 
-Godot 4.7.2 · GDScript · ~25 minuten speeltijd.
+Godot 4.7.2 · GDScript · portret, gemaakt voor de telefoon · vijf dagen van
+een paar minuten.
 
 ## Spelen
 
 **In de browser: https://daanbbd.github.io/10-tickets-naar-vrijheid/**
 
-Werkt op desktop en op een telefoon; op een aanraakscherm verschijnt de
-duimbesturing. Bijwerken na een wijziging gaat met `tools/deploy_web.sh`.
+Alles gaat met tikken (of klikken):
 
-## Lokaal spelen
+- **Tik op een ticket** op het bord: je loopt erheen en pakt het. Je kunt er
+  twee tegelijk dragen.
+- **Tik op een collega**: je brengt het ticket. Bureaus die het kunnen
+  aannemen lichten op in de kleur van het ticket. Is iemand klaar (groen
+  vinkje), tik hem dan nog een keer om het op te halen.
+- **Tik op de server**: alles wat klaar is gaat live. Twee tegelijk scheelt
+  tien minuten.
+- Tikken stapelt: tik drie dingen achter elkaar en je doet ze op volgorde
+  (de nummertjes laten zien waar je heen gaat). Tik op de vloer om gewoon
+  ergens heen te lopen.
 
-Open het project in Godot en druk op play, of vanaf de command line:
+Je kiest wie je bent. **Je eigen vak doe je zelf**, aan je eigen bureau: dat
+is sneller, maar je staat zolang stil.
+
+Laat je een ticket te lang liggen, dan **belt De Klant**, en dat kost je
+twintig minuten. Voor 17:00 thuis is drie sterren.
+
+**De week:** maandag frontend en backend · dinsdag Danny en de koffie
+(even sneller lopen) · woensdag Willem, en Jonathan die een stand-up begint
+(zijn rij ligt stil tot je hem afkapt) · donderdag Daan, en Dirk die je uren
+wil (tik hem weg voor hij je te pakken heeft) · vrijdag de livegang, met een
+server die soms in brand vliegt.
+
+Lokaal: open het project in Godot en druk op play, of
+`/Applications/Godot.app/Contents/MacOS/Godot --path .`. De voortgang staat in
+`user://rush.json`.
+
+## Waar het zit
+
+| | |
+|---|---|
+| `scripts/rush/rush_data.gd` | vakken, collega's, tickettitels, de vijf dagen en hun balans |
+| `scripts/rush/rush_game.gd` | de spellus: bord, collega's, server, klant, Jonathan, Dirk, brand |
+| `scripts/rush/rush_kantoor.gd` | de vloer van één scherm en wat erop staat |
+| `scripts/rush/rush_hud.gd` | klok, tien vakjes, hintregel, intro- en uitslagscherm, pauze |
+| `scripts/rush/rush_menu.gd` | titel, wie ben jij, de week |
+| `scripts/rush/rush_klank.gd` | alle geluid van de rush op één plek |
+
+Het oude avontuur (rondlopen over de hele verdieping, dialogen, minigames)
+staat er nog en is bereikbaar via de oude QA-vlaggen (`--speler=`,
+`--minigame=`, `--scherm=`). De personages, sprites, portretten, de vloer en
+de AudioDirector komen daar vandaan.
+
+## De rush testen
 
 ```bash
-/Applications/Godot.app/Contents/MacOS/Godot --path .
+tools/rush_balans.sh
 ```
 
-**Besturing (toetsenbord)** — WASD of pijltjes lopen · Shift rennen · **E**
-praten, onderzoeken, gebruiken · **TAB** je tickets · **Q** hint · **ESC**
-pauzemenu, en een minigame afbreken.
+laat een bot elke dag spelen met vijf personages en print de eindtijden.
+Eén dag los: `Godot --headless --path . -- --rush-bot --dag=3 --speler=victor --tempo=10`.
+Met `--echt` (en zonder `--headless`) tikt de bot via echte invoergebeurtenissen,
+en met `--blijf` stopt hij niet aan het eind, voor schoten met
+`tools/qa_shot.py los <sec> --rush-bot --blijf ...`.
 
-**Besturing (telefoon)** — zet je duim ergens in de onderste tweederde van het
-scherm en er komt een joystick op, links of rechts; ver uitduwen is rennen ·
-tik op een object om ermee te doen wat er bij staat · **▤** je tickets · **?**
-hint · **☰** pauze. Die drie knoppen staan linksonder en zijn de enige plek
-waar geen joystick opkomt.
-
-Met een muis komt er geen joystick op — daar loop je met WASD en klik je op een
-object waar je naast staat.
-
-Je krijgt deze uitleg ook in het spel: één scherm na je personagekeuze, met de
-besturing van het apparaat waar je op speelt. Later nog eens nodig? **F1**.
-
-Je dag wordt bij elk opgelost ticket bewaard, en ook als je de app wegdrukt.
-**Doorgaan** op het titelscherm zet je terug waar je gebleven was.
-
-De dag begint bij de kickoff: BBD-201 ("Wat moeten we eigenlijk bouwen?") staat
-open zodra je binnenkomt, samen met drie andere tickets, en haar feedback en de
-AI-video komen daar pas achteraan. De rest komt vrij door werk af te maken. Je vindt ze door rond te lopen, en je kiest op het bord welke je als
-eerste doet. Tien tickets, tien verschillende opgaven — geen twee delen een
-mechaniek. Wat je onderweg besluit komt terug:
-in wat je collega's zeggen, in wat De Klant je stuurt, en in hoe zwaar de
-oplevering begint.
-
-## Testen
+## Testen (het oude avontuur)
 
 ```bash
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --scene res://tests/test_runner.tscn
