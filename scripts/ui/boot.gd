@@ -5,6 +5,9 @@ extends Node
 ## QA-sneltoets: start met `-- --speler=daan [--ticket=t05]` om het titelscherm
 ## en de karakterselectie over te slaan. Alleen bedoeld voor testen.
 
+const RUSH_MENU := "res://scenes/rush/rush_menu.tscn"
+const RUSH_GAME := "res://scenes/rush/rush_game.tscn"
+
 @onready var _status: Label = $Center/Status
 
 
@@ -17,6 +20,12 @@ func _ready() -> void:
 		return
 
 	var args := _user_args()
+	# De kantoor-rush is het spel. `--rush`/`--rush-bot` starten meteen een dag
+	# (zie RushGame._lees_qa_vlaggen); de oude avontuur-QA-vlaggen hieronder
+	# werken nog voor wie de oude code wil bekijken.
+	if args.has("rush") or args.has("rush-bot"):
+		get_tree().change_scene_to_file(RUSH_GAME)
+		return
 	if args.has("minigame"):
 		_quick_minigame(StringName(args["minigame"]), StringName(args.get("speler", "daan")),
 			int(args.get("gedaan", 0)))
@@ -40,7 +49,7 @@ func _ready() -> void:
 
 	_status.text = "Laden..."
 	await get_tree().create_timer(0.2).timeout
-	Shell.goto_title()
+	get_tree().change_scene_to_file(RUSH_MENU)
 
 
 func _quickstart(character_id: StringName, up_to_ticket: String) -> void:
