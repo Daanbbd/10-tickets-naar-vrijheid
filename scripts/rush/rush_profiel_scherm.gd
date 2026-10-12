@@ -106,6 +106,11 @@ func _process(delta: float) -> void:
 ## Begin bij wat er al is, zodat dit scherm ook "aanpassen" is.
 func _neem_over() -> void:
 	_naam = RushProfiel.naam
+	if _naam == "" and OS.has_feature("web"):
+		# Sommige ingebouwde browsers (Slack, Teams) blokkeren `prompt()`. Met
+		# een voorgestelde naam kun je dan toch opslaan; wie wel kan typen,
+		# overschrijft hem.
+		_naam = "Collega %d" % randi_range(10, 99)
 	_rol = RushProfiel.rol
 	_look = CharacterSprites.normaliseer_look(RushProfiel.look)
 	_kleuren = STANDAARD_KLEUREN.duplicate()
