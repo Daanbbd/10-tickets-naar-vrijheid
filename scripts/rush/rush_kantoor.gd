@@ -33,6 +33,8 @@ const PLANT_RECT := Rect2(80, 196, 32, 26)
 var brand := false
 var koffie_klaar := true
 var deur_open := false
+## Je hebt iets in je handen dat live kan.
+var server_gloed := false
 var _tijd := 0.0
 var _server_flits := 0.0
 
@@ -184,6 +186,9 @@ func _server() -> void:
 	var r := SERVER_RECT
 	draw_rect(Rect2(r.position + Vector2(-2, r.size.y - 4), Vector2(r.size.x + 4, 6)), Color(0, 0, 0, 0.3))
 	draw_texture(SERVER, r.position)
+	if server_gloed and not brand:
+		var a := 0.4 + 0.35 * sin(_tijd * 8.0)
+		draw_rect(r.grow(2), Color(0.25, 0.85, 0.5, a), false, 2.0)
 	if _server_flits > 0.0:
 		draw_rect(r, Color(0.4, 1.0, 0.6, _server_flits * 0.45))
 	# Bordje erboven: hier gaat het live.

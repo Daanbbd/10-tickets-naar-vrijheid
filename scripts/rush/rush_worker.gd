@@ -20,6 +20,8 @@ var is_klaar := false
 ## Jonathan in de stand-up: hij praat, en zijn rij staat stil.
 var praat := false
 var stilgelegd := false
+## Je houdt een ticket vast dat hier terecht kan: het bureau licht op.
+var gloed := false
 
 var sprite: AnimatedSprite2D
 var _tijd: float = 0.0
@@ -65,6 +67,7 @@ func geef(t: RushTicket) -> void:
 	t.werker = self
 	voortgang = 0.0
 	is_klaar = false
+	_hop = 0.6
 	queue_redraw()
 
 
@@ -92,7 +95,8 @@ func tik(delta: float, werktijd: float) -> void:
 			klaar.emit(self)
 	if sprite.visible:
 		var bezig := ticket != null and not is_klaar and not stilgelegd and not praat
-		sprite.position.y = -8 - (absf(sin(_tijd * 14.0)) * 1.0 if bezig else 0.0)
+		sprite.position.y = -8 - (absf(sin(_tijd * 14.0)) * 1.0 if bezig else 0.0) \
+			- sin(_hop * PI) * 3.0
 		if praat:
 			if sprite.animation != &"talk_down":
 				sprite.play(&"talk_down")
@@ -107,6 +111,9 @@ func _draw() -> void:
 	if not sprite.visible:
 		draw_rect(Rect2(-6, -22, 12, 10), Color("#2a2d38"))
 		draw_rect(Rect2(-5, -21, 10, 4), Color("#3b4050"))
+	if gloed:
+		var a := 0.45 + 0.35 * sin(_tijd * 8.0)
+		draw_rect(Rect2(-19, -16, 38, 18), Color(kleur.r, kleur.g, kleur.b, a), false, 2.0)
 	# Bureaublad, voorkant en schaduw.
 	draw_rect(Rect2(-17, -13, 34, 14), Color(0, 0, 0, 0.22))
 	draw_rect(Rect2(-16, -14, 32, 9), Color("#e9e6dc"))

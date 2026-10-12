@@ -126,6 +126,15 @@ const KLANT_BELT := [
 	"Mijn paard wordt er onrustig van.",
 ]
 
+## Wat ze aan het eind van elke dag appt. Samen vormen ze de week.
+const KLANT_AVOND := [
+	"Super!! Kan het paard op de homepage iets meer naar links?",
+	"Mijn neef zegt dat het sneller kan. Hij is veertien.",
+	"Ik heb jullie aanbevolen bij de hoefsmid!",
+	"Morgen live toch? Ik heb al taart besteld. Met een paard erop.",
+	"HIJ STAAT LIVE!!! Mijn paard heeft al besteld. Jullie zijn helden.",
+]
+
 ## Jonathan in de stand-up. Hij praat tot iemand hem afkapt.
 const KLETS := [
 	"Even over de architectuur...",

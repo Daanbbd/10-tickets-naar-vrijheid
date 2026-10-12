@@ -214,6 +214,20 @@ func play_sfx(cue: StringName, pitch_jitter: float = 0.06, volume_db: float = 0.
 	p.play()
 
 
+## Zelfde als `play_sfx`, maar op een gekozen toonhoogte: een reeks deploys
+## klimt zo hoorbaar op.
+func play_sfx_toon(cue: StringName, toon: float, volume_db: float = 0.0) -> void:
+	var stream := _load_audio("%s/%s" % [SFX_DIR, cue])
+	if stream == null:
+		return
+	var p := _sfx[_next_voice]
+	_next_voice = (_next_voice + 1) % VOICES
+	p.stream = stream
+	p.pitch_scale = toon
+	p.volume_db = volume_db + linear_to_db(maxf(0.001, sfx_volume * master_volume))
+	p.play()
+
+
 ## SFX die hoorbaar moet blijven ongeacht `get_tree().paused` — een klik in het
 ## pauzemenu dat de tree zelf net pauzeerde, bijvoorbeeld. Sinds F5-a pauzeert
 ## een gewone minigame de tree niet meer, dus `storing()` en

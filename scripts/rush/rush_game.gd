@@ -64,8 +64,14 @@ var _rimpels: Array[Dictionary] = []
 var _tijd := 0.0
 var _tutorial := false
 var _laatste_hint := ""
+## Deploys achter elkaar zonder dat ze belt. Elke deploy klinkt een tikje hoger.
+var _reeks := 0
 
 var bot := false
+## QA: de bot speelt, maar het spel stopt niet aan het eind (voor schoten).
+var bot_blijf := false
+## QA: de bot tikt via echte invoergebeurtenissen.
+var bot_echt := false
 
 
 func _ready() -> void:
@@ -98,6 +104,10 @@ func _lees_qa_vlaggen() -> void:
 	for a: String in OS.get_cmdline_user_args():
 		if a == "--rush-bot":
 			bot = true
+		elif a == "--blijf":
+			bot_blijf = true
+		elif a == "--echt":
+			bot_echt = true
 		elif a.begins_with("--dag="):
 			dag_index = clampi(int(a.get_slice("=", 1)) - 1, 0, 4)
 			dag = RushData.DAGEN[dag_index]
@@ -110,6 +120,7 @@ func _lees_qa_vlaggen() -> void:
 
 func _begin() -> void:
 	fase = Fase.SPEL
+	hud.mag_pauzeren = true
 	_spawn_timer = 0.6
 	if _tutorial:
 		hud.hint_vast("Er komt een ticket binnen...")
@@ -197,11 +208,13 @@ func _pas_layout() -> void:
 # --- Invoer -------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
-	if fase != Fase.SPEL or bot:
+	if fase != Fase.SPEL or (bot and not bot_echt):
 		return
 	var mb := event as InputEventMouseButton
 	if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
-		_tik(veld.get_local_mouse_position())
+		# De positie van de gebeurtenis zelf, niet die van de cursor: bij een
+		# tik is er geen cursor, en een geparste gebeurtenis verplaatst hem niet.
+		_tik(veld.get_global_transform_with_canvas().affine_inverse() * mb.position)
 		get_viewport().set_input_as_handled()
 
 
@@ -316,6 +329,7 @@ func _pak_van_bord(slot: int, t: RushTicket) -> void:
 		return
 	bord[slot] = null
 	t.staat = RushTicket.Staat.HAND
+	t.scale = Vector2(1.5, 1.5)
 	speler.handen.append(t)
 	AudioDirector.play_sfx(&"pak")
 	Haptiek.tril(Haptiek.Sterkte.STOOT)
@@ -342,6 +356,7 @@ func _bij_werker(w: RushWorker) -> void:
 				_geef(w, open)
 			speler.handen.append(klaar_t)
 			klaar_t.staat = RushTicket.Staat.KLAAR
+			klaar_t.scale = Vector2(1.5, 1.5)
 			AudioDirector.play_sfx(&"pak")
 			Haptiek.tril(Haptiek.Sterkte.STOOT)
 		else:
@@ -415,7 +430,10 @@ func _deploy() -> void:
 		t.staat = RushTicket.Staat.LIVE
 		geleverd += 1
 	kantoor.flits_server()
-	AudioDirector.play_sfx(&"deploy_ok")
+	_reeks += klaar_t.size()
+	AudioDirector.play_sfx_toon(&"deploy_ok", 1.0 + minf(_reeks - 1, 8) * 0.06)
+	if _reeks >= 3:
+		RushPop.getal_op(veld, speler.position + Vector2(0, -52), "Reeks %d!" % _reeks, Color("#8fd3ff"))
 	Haptiek.tril(Haptiek.Sterkte.GELUKT)
 	var srv := RushKantoor.SERVER_RECT.get_center()
 	RushPop.confetti(veld, srv + Vector2(0, -20), 14 + 8 * klaar_t.size())
@@ -476,7 +494,13 @@ func _process(delta: float) -> void:
 		_volgende_actie()
 
 	var werktijd := RushData.WERKTIJD
+	var heeft_klaar := false
+	for h: RushTicket in speler.handen:
+		if h.staat == RushTicket.Staat.KLAAR:
+			heeft_klaar = true
+	kantoor.server_gloed = heeft_klaar
 	for w: RushWorker in werkers:
+		w.gloed = (w.vrij() or w.is_eigen or w.is_klaar) and _in_hand(w.vak, false) != null
 		w.tik(delta, werktijd)
 
 	_werk_spawn(delta)
@@ -568,6 +592,7 @@ func _belt(t: RushTicket) -> void:
 	t.gebeld += 1
 	t.geduld = 1.0
 	gebeld += 1
+	_reeks = 0
 	minuut += RushData.BEL_BOETE_MIN
 	hud.klok_puls()
 	hud.bel(RushData.kies(RushData.KLANT_BELT))
@@ -772,6 +797,7 @@ func _werk_brand(delta: float) -> void:
 
 func _dag_klaar() -> void:
 	fase = Fase.KLAAR
+	hud.mag_pauzeren = false
 	wachtrij.clear()
 	huidige = {}
 	_stop_kletsen()
@@ -786,7 +812,7 @@ func _dag_klaar() -> void:
 	speler.pad = _pad_naar(kantoor.deur_punt())
 	speler.pad.append(kantoor.deur_punt() + Vector2(0, 16))
 	RushPop.confetti(veld, speler.position + Vector2(0, -30), 30)
-	if bot:
+	if bot and not bot_blijf:
 		print("RUSH-BOT dag=%d speler=%s klaar=%s sterren=%d gebeld=%d" % [
 			dag_index + 1, speler_id, RushData.klok(minuut), sterren, gebeld])
 		get_tree().quit()
@@ -888,6 +914,7 @@ func _beweeg_kaartjes(delta: float) -> void:
 				if idx >= 0:
 					doel = speler.position + speler.hand_positie(idx)
 					t.visible = true
+					t.scale = t.scale.lerp(Vector2.ONE, k * 0.6)
 				elif t.werker != null:
 					doel = (t.werker as RushWorker).position + Vector2(-11, -10)
 					if t.position.distance_to(doel) < 2.0:
@@ -961,9 +988,9 @@ func _bot_kies() -> void:
 	if not wachtrij.is_empty() or not huidige.is_empty():
 		return
 	if _dirk_staat == Dirk.KOMT:
-		_stuur_dirk_weg()
+		_bot_tik(_dirk.position + Vector2(0, -16))
 	if _prater != null:
-		_plan({"soort": "werker", "werker": _prater, "punt": _prater.benader_punt()})
+		_bot_tik(_prater.position + Vector2(0, -24))
 		return
 	var klaar_n := 0
 	for t: RushTicket in speler.handen:
@@ -972,16 +999,16 @@ func _bot_kies() -> void:
 	# Afgewerkt werk ophalen.
 	for w: RushWorker in werkers:
 		if w.is_klaar and (speler.vrije_hand() or _in_hand(w.vak, false) != null):
-			_plan({"soort": "werker", "werker": w, "punt": w.benader_punt()})
+			_bot_tik(w.position + Vector2(0, -24))
 			return
 	if klaar_n > 0 and (not speler.vrije_hand() or _eerste_open() == null):
-		_plan({"soort": "server", "punt": kantoor.server_benader()})
+		_bot_tik(RushKantoor.SERVER_RECT.get_center())
 		return
 	var open := _eerste_open()
 	if open != null:
 		for w: RushWorker in werkers:
 			if w.vak == open.vak and (w.vrij() or w.is_eigen):
-				_plan({"soort": "werker", "werker": w, "punt": w.benader_punt()})
+				_bot_tik(w.position + Vector2(0, -24))
 				return
 	if speler.vrije_hand():
 		var beste := -1
@@ -989,10 +1016,27 @@ func _bot_kies() -> void:
 			if bord[i] != null and (beste < 0 or (bord[i] as RushTicket).geduld < (bord[beste] as RushTicket).geduld):
 				beste = i
 		if beste >= 0:
-			_plan({"soort": "bord", "slot": beste, "ticket": bord[beste], "punt": kantoor.slot_benader(beste)})
+			_bot_tik(kantoor.slot_positie(beste))
 			return
 	if klaar_n > 0:
-		_plan({"soort": "server", "punt": kantoor.server_benader()})
+		_bot_tik(RushKantoor.SERVER_RECT.get_center())
 		return
 	if bool(dag["koffie"]) and _koffie_cd <= 0.0:
-		_plan({"soort": "koffie", "punt": kantoor.koffie_benader()})
+		_bot_tik(RushKantoor.KOFFIE_RECT.get_center())
+
+
+## De bot tikt zoals een duim: met `--echt` via een echte muisgebeurtenis door
+## de hele invoerketen, anders rechtstreeks op dezelfde raakvlakken.
+func _bot_tik(p: Vector2) -> void:
+	if not bot_echt:
+		_tik(p)
+		return
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = true
+	# Vensterpixels: Godot rekent de gebeurtenis zelf terug naar het canvas.
+	ev.position = get_viewport().get_final_transform() * (veld.get_global_transform_with_canvas() * p)
+	Input.parse_input_event(ev)
+	var los := ev.duplicate() as InputEventMouseButton
+	los.pressed = false
+	Input.parse_input_event(los)

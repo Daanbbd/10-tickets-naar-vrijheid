@@ -22,6 +22,10 @@ var _overlay: Control = null
 var _pauze: Control = null
 
 var _geleverd := 0
+## Het spel zet dit aan zolang er gespeeld wordt; dan opent het pauzemenu
+## vanzelf als je terugkomt uit een andere app.
+var mag_pauzeren := false
+var _was_weg := false
 var _hint_vast := ""
 var _hint_tijd := 0.0
 var _klok_puls := 0.0
@@ -130,6 +134,13 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	# Shell zet max_fps op 1 zolang de app op de achtergrond staat.
+	if Engine.max_fps == 1:
+		_was_weg = true
+	elif _was_weg:
+		_was_weg = false
+		if mag_pauzeren:
+			_open_pauze()
 	if _hint_tijd > 0.0:
 		_hint_tijd -= delta
 		if _hint_tijd <= 0.0:
@@ -234,6 +245,8 @@ func toon_intro(dag_index: int, dag: Dictionary, speler: StringName) -> void:
 func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, laatste: bool) -> void:
 	var paneel := _maak_overlay(0.6)
 	var kol := paneel.get_child(0) as VBoxContainer
+	kol.add_child(_appje(RushData.KLANT_AVOND[dag_index], minuut))
+	kol.add_child(UiKit.spacer(4))
 	if laatste:
 		kol.add_child(_lbl("VRIJHEID!", 20, Color("#3fd27f"), true))
 		kol.add_child(_lbl("De webshop staat live.", 10, Color("#d6dbe8"), true))
@@ -252,6 +265,9 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 	kol.add_child(_lbl(regel, 10, Color("#8a93a8"), true))
 	if sterren < 3:
 		kol.add_child(_lbl("Drie sterren: thuis voor 17:00.", 10, Color("#8a93a8"), true))
+	if laatste:
+		kol.add_child(UiKit.spacer(2))
+		kol.add_child(_lbl("Sprint 14: %d van de 15 sterren." % RushSave.totaal(), 12, Color("#ffd23f"), true))
 	kol.add_child(UiKit.spacer(8))
 	if not laatste:
 		var verder := _knop("Volgende dag", true)
@@ -276,6 +292,34 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 			get_tree().create_timer(0.6, true).timeout.connect(func() -> void:
 				if is_instance_valid(k):
 					(k as Button).disabled = false)
+
+
+## Haar berichtje van die avond, als telefoonmelding.
+func _appje(tekst: String, minuut: float) -> Control:
+	var p := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("#fff7e8")
+	sb.border_color = Color("#3fd27f")
+	sb.set_border_width_all(1)
+	sb.border_width_left = 3
+	sb.content_margin_left = 6
+	sb.content_margin_right = 6
+	sb.content_margin_top = 3
+	sb.content_margin_bottom = 4
+	p.add_theme_stylebox_override(&"panel", sb)
+	var kol := VBoxContainer.new()
+	kol.add_theme_constant_override(&"separation", 0)
+	p.add_child(kol)
+	var rij := HBoxContainer.new()
+	kol.add_child(rij)
+	var wie := _lbl("Manege De Vrije Teugel", 10, Color("#1d7a52"))
+	wie.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rij.add_child(wie)
+	rij.add_child(_lbl(RushData.klok(minuut + 37.0), 10, Color("#8a8a8a")))
+	var t := _lbl(tekst, 10, Color("#242424"))
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	kol.add_child(t)
+	return p
 
 
 func _teken_sterren(c: Control, n: int) -> void:

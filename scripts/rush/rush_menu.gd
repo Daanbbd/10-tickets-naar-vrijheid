@@ -62,6 +62,8 @@ func _titel() -> void:
 	kol.add_child(sub)
 	kol.add_child(_vul())
 	var sterren := RushSave.totaal()
+	if RushSave.sterren[RushSave.sterren.size() - 1] > 0:
+		kol.add_child(_lbl("De webshop staat live. Weekend!", 10, Color("#3fd27f"), true))
 	if sterren > 0:
 		kol.add_child(_lbl("%d van 15 sterren" % sterren, 10, Color("#ffd23f"), true))
 	var spelen := _knop("Spelen", true)
