@@ -1,0 +1,79 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="GDScript" id="GDScript_eregalerij_test"]
+script/source = "extends Control
+## Testscene voor de eregalerij en de deelkaart, met nep-regels. Raakt de echte
+## save niet: `_geladen` staat aan, dus RushSave leest of schrijft niets.
+##
+##   --dag=N        open op deze dag (0 = maandag; woensdag is leeg)
+##   --kaart=<map>  schrijf daar ook een paar deelkaarten als PNG
+
+
+func _ready() -> void:
+	RushSave._geladen = true
+	RushSave.scores.clear()
+	var mensen := [\"victor\", \"jonathan\", \"danny\", \"bastiaan\", \"koen\", \"willem\", \"daan\", \"victor\", \"koen\"]
+	var tijden := [14 * 60 + 52, 16 * 60 + 41, 16 * 60 + 58, 17 * 60 + 12, 17 * 60 + 40,
+		18 * 60 + 3, 18 * 60 + 29, 18 * 60 + 55, 19 * 60 + 41]
+	var gebeld := [1, 0, 2, 3, 1, 6, 2, 4, 5]
+	var ontsnap := [9.4, 14.2, -1.0, 17.8, 21.0, -1.0, 15.5, 30.2, -1.0]
+	for i: int in mensen.size():
+		RushSave.scores.append(_regel(0, mensen[i], tijden[i], gebeld[i], ontsnap[i]))
+	# Een eigen profiel met een veel te lange naam en zonder portretcode.
+	var lang := _regel(0, \"zelf\", 19 * 60 + 59, 3, -1.0)
+	lang[\"naam\"] = \"Bartholomeus van Lindenboom\"
+	lang[\"rol\"] = \"Senior Principal Lead Architect\"
+	RushSave.scores.append(lang)
+	RushSave.scores.append(_regel(1, \"danny\", 16 * 60 + 5, 0, 12.0))
+	RushSave.scores.append(_regel(1, \"willem\", 17 * 60 + 30, 2, 18.4))
+	RushSave.scores.append(_regel(4, \"koen\", 17 * 60 + 2, 1, 11.0))
+	RushSave.dag = 0
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with(\"--dag=\"):
+			RushSave.dag = int(a.get_slice(\"=\", 1))
+		elif a.begins_with(\"--kaart=\"):
+			_schrijf_kaarten(a.get_slice(\"=\", 1))
+	_open()
+
+
+func _open() -> void:
+	var g := RushEregalerij.new()
+	add_child(g)
+	g.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	g.terug.connect(func() -> void:
+		print(\"EREGALERIJ terug\")
+		g.queue_free()
+		_open.call_deferred())
+
+
+func _regel(dag: int, wie: String, minuut: float, gebeld: int, ontsnap: float) -> Dictionary:
+	var def: CharacterDef = GameData.character(StringName(wie))
+	var code := \"\"
+	if def != null and def.portrait != \"\" and ResourceLoader.exists(def.portrait):
+		code = RushPixel.naar_code((load(def.portrait) as Texture2D).get_image())
+	return {\"dag\": dag, \"naam\": def.name if def != null else wie.capitalize(), \"wie\": wie,
+		\"rol\": def.role if def != null else \"\", \"minuut\": minuut,
+		\"sterren\": RushData.sterren_voor(minuut), \"gebeld\": gebeld, \"ontsnap\": ontsnap,
+		\"portret\": code}
+
+
+func _schrijf_kaarten(map: String) -> void:
+	var lijst := RushSave.scores_van(0)
+	var keuze := [lijst[0], lijst[1], lijst[5], lijst[9], RushSave.scores_van(4)[0]]
+	for i: int in keuze.size():
+		var img := RushDeelkaart.maak(keuze[i])
+		img.save_png(map.path_join(\"kaart_%d.png\" % i))
+		var groot := img.duplicate() as Image
+		groot.resize(img.get_width() * RushDeelkaart.SCHAAL, img.get_height() * RushDeelkaart.SCHAAL,
+			Image.INTERPOLATE_NEAREST)
+		groot.save_png(map.path_join(\"kaart_%d_4x.png\" % i))
+	print(\"DEELKAART %d kaarten in %s\" % [keuze.size(), map])
+"
+
+[node name="RushEregalerijTest" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_eregalerij_test")

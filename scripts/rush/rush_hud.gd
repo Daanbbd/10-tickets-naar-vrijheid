@@ -307,21 +307,58 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 		var verder := _knop("Naar het weekend", true)
 		verder.pressed.connect(func() -> void: naar_menu.emit())
 		kol.add_child(verder)
+	# Delen gaat via een plaatje dat je zelf ergens neerzet; online alleen als
+	# het scorebord aanstaat. Samen op één rij, en "Nog een keer" en "Menu" ook:
+	# zo kost delen geen hoogte en past het voller paneel (vrijdag, minder dan
+	# drie sterren, een plek) nog op 192x416.
+	var deelrij := HBoxContainer.new()
+	deelrij.add_theme_constant_override(&"separation", 3)
+	var deel := _knop("Deel je score", false)
+	deel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	deel.add_theme_color_override(&"font_color", Color("#ffd23f"))
+	deel.add_theme_color_override(&"font_hover_color", Color("#ffd23f"))
+	deel.pressed.connect(func() -> void: RushDeelkaart.deel(_laatste_regel))
+	deelrij.add_child(deel)
+	var online: Object = RushOnline
+	if RushOnline.actief() and online.has_method(&"stuur") and not score.is_empty():
+		var zet := _knop("Zet online", false)
+		zet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		zet.pressed.connect(func() -> void:
+			zet.disabled = true
+			zet.text = "Even..."
+			var uit: Variant = await online.call(&"stuur", self, _laatste_regel)
+			if not is_instance_valid(zet):
+				return
+			var online_plek := int(uit) if uit is int or uit is float else 0
+			zet.text = "Online #%d" % online_plek if online_plek > 0 else "Niet gelukt"
+			if online_plek <= 0:
+				zet.disabled = false)
+		deelrij.add_child(zet)
+	kol.add_child(deelrij)
+	# Op vrijdag is er geen "Menu" en wel een regel meer tekst: dan past
+	# "Nog een keer" naast het delen.
+	var onderrij := deelrij
+	if not laatste or deelrij.get_child_count() > 1:
+		onderrij = HBoxContainer.new()
+		onderrij.add_theme_constant_override(&"separation", 3)
+		kol.add_child(onderrij)
 	var nog := _knop("Nog een keer", false)
+	nog.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	nog.pressed.connect(func() -> void: opnieuw.emit())
-	kol.add_child(nog)
+	onderrij.add_child(nog)
 	if not laatste:
 		var menu := _knop("Menu", false)
+		menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		menu.pressed.connect(func() -> void: naar_menu.emit())
-		kol.add_child(menu)
+		onderrij.add_child(menu)
 	# Even wachten voor de knoppen reageren: wie nog aan het tikken was,
 	# drukt anders per ongeluk op "Nog een keer".
-	for k: Node in kol.get_children():
-		if k is Button:
-			(k as Button).disabled = true
-			get_tree().create_timer(0.6, true).timeout.connect(func() -> void:
-				if is_instance_valid(k):
-					(k as Button).disabled = false)
+	for n: Node in kol.find_children("*", "Button", true, false):
+		var k := n as Button
+		k.disabled = true
+		get_tree().create_timer(0.6, true).timeout.connect(func() -> void:
+			if is_instance_valid(k):
+				k.disabled = false)
 
 
 ## Haar berichtje van die avond, als telefoonmelding.
