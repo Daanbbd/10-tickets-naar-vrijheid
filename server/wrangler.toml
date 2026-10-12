@@ -1,0 +1,21 @@
+# Het scorebord van 10 Tickets naar Vrijheid. Uitleg en deploy-stappen: README.md.
+
+name = "tickets-scorebord"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+# Een adres van de vorm https://tickets-scorebord.<jouw-naam>.workers.dev
+workers_dev = true
+
+# De opslag. Maak hem met `npx wrangler kv namespace create SCORES` en zet de id
+# die dat geeft hieronder. Zolang hier de plaatshouder staat, weigert
+# `wrangler deploy` te deployen; dat is de bedoeling.
+[[kv_namespaces]]
+binding = "SCORES"
+id = "VERVANG_MET_DE_ID_VAN_JE_KV_NAMESPACE"
+
+# Privacy: geen logs, geen sporen. De code gebruikt ook geen console.*.
+logpush = false
+
+[observability]
+enabled = false
