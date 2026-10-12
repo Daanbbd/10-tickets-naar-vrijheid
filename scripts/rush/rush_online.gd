@@ -77,7 +77,9 @@ static func stuur(ouder: Node, regel: Dictionary) -> int:
 ## Wist al jouw regels van de server, op alle dagen. True als dat gelukt is.
 ## (De lokale eregalerij blijft; die wis je los in `RushSave`.)
 static func wis(ouder: Node) -> bool:
-	var antw: Dictionary = await _vraag(ouder, HTTPClient.METHOD_DELETE, "/scores",
+	# POST naar /scores/wis in plaats van DELETE: op het web gaat een body bij
+	# DELETE niet altijd mee.
+	var antw: Dictionary = await _vraag(ouder, HTTPClient.METHOD_POST, "/scores/wis",
 		{"sleutel": RushSave.geef_sleutel()})
 	return antw["status"] == 200
 

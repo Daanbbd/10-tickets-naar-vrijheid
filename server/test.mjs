@@ -357,6 +357,18 @@ test("DELETE met een onbekende sleutel is gewoon 0 verwijderd", async () => {
   assert.equal((await haal(env, 1)).json.scores.length, 1);
 });
 
+test("POST /scores/wis doet hetzelfde als DELETE /scores", async () => {
+  const env = nieuweOmgeving();
+  await post(env, geldig({ dag: 1, sleutel: sleutel(1) }));
+  await post(env, geldig({ dag: 1, sleutel: sleutel(2), naam: "Ander", minuut: 1200 }));
+  const r = await vraag(env, "POST", "/scores/wis", { sleutel: sleutel(1) });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json, { verwijderd: 1 });
+  assert.equal((await haal(env, 1)).json.scores.length, 1);
+  assert.equal((await vraag(env, "GET", "/scores/wis")).status, 405);
+  assert.equal((await vraag(env, "POST", "/scores/wis", { sleutel: "abc" })).status, 400);
+});
+
 // ---- Sprints en bewaartermijn -----------------------------------------------
 
 test("een nieuwe maand begint met een leeg bord", async () => {

@@ -110,7 +110,9 @@ tijd een snellere `ontsnap`); anders blijft je oude regel staan en hoor je
 de plek daarvan.
 
 **`DELETE /scores`** met `{"sleutel": "…32 hex…"}`: antwoord
-`{"verwijderd": 4}`.
+`{"verwijderd": 4}`. `POST /scores/wis` met dezelfde body doet precies
+hetzelfde; die gebruikt het spel, omdat Godot op het web bij DELETE niet altijd
+een body meestuurt.
 
 | veld      | regel                                                               |
 |-----------|---------------------------------------------------------------------|

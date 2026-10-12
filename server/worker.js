@@ -340,6 +340,19 @@ export async function verwerk(request, env, nu = () => new Date()) {
   if (origin !== null && !TOEGESTANE_ORIGINS.includes(origin)) return fout(403, "origin", null);
 
   const url = new URL(request.url);
+  // `POST /scores/wis` doet hetzelfde als `DELETE /scores`: niet elke
+  // HTTP-client (Godot op het web) stuurt een body mee bij DELETE.
+  if (url.pathname === "/scores/wis") {
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: { "Cache-Control": "no-store", ...corsHeaders(origin) } });
+    }
+    if (request.method !== "POST") return fout(405, "methode", origin, { Allow: "POST, OPTIONS" });
+    try {
+      return await wisScores(request, env, nu(), origin);
+    } catch {
+      return fout(500, "er ging iets mis", origin);
+    }
+  }
   if (url.pathname !== "/scores") return fout(404, "onbekend", origin);
 
   if (request.method === "OPTIONS") {
