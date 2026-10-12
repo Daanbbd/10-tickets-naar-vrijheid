@@ -9,6 +9,9 @@ signal klaar(worker: RushWorker)
 
 var persoon: StringName = &""
 var vak: int = RushData.Vak.FE
+## Alle vakken die hier gedaan worden. Eén, behalve aan het bureau van een
+## zelfgemaakt personage met een rol die er twee doet (Developer).
+var vakken: Array = []
 var naam: String = ""
 var is_eigen := false
 ## Alleen op de dag dat zijn vak meedoet; anders zit hij met iets anders bezig.
@@ -30,10 +33,16 @@ var _hop: float = 0.0
 
 func setup(id: StringName, eigen: bool) -> void:
 	persoon = id
-	vak = RushData.vak_van(id)
 	is_eigen = eigen
+	if id == RushProfiel.ID:
+		vakken = RushProfiel.vakken().duplicate()
+		naam = RushProfiel.naam
+	else:
+		vakken = [RushData.vak_van(id)]
+	vak = vakken[0]
 	var def: CharacterDef = GameData.character(id)
-	naam = def.name if def != null else String(id).capitalize()
+	if id != RushProfiel.ID:
+		naam = def.name if def != null else String(id).capitalize()
 
 	sprite = AnimatedSprite2D.new()
 	sprite.show_behind_parent = true
@@ -47,6 +56,17 @@ func setup(id: StringName, eigen: bool) -> void:
 		sprite.frame = randi() % 3
 	else:
 		sprite.visible = false
+
+
+func doet(v: int) -> bool:
+	return v in vakken
+
+
+func vak_naam() -> String:
+	var namen: Array[String] = []
+	for v: int in vakken:
+		namen.append(RushData.VAK_NAAM[v])
+	return " en ".join(namen)
 
 
 func benader_punt() -> Vector2:
@@ -119,8 +139,11 @@ func _draw() -> void:
 	draw_rect(Rect2(-16, -14, 32, 9), Color("#e9e6dc"))
 	draw_rect(Rect2(-16, -5, 32, 5), Color("#b9b4a6"))
 	draw_rect(Rect2(-16, -14, 32, 14), Color("#5d5a52"), false, 1.0)
-	# Naamplaatje in de vakkleur.
-	draw_rect(Rect2(-9, -4, 18, 3), kleur if actief else kleur.lerp(Color("#8a8a8a"), 0.6))
+	# Naamplaatje in de vakkleur; bij twee vakken half om half.
+	var deel := 18.0 / vakken.size()
+	for i: int in vakken.size():
+		var k: Color = RushData.VAK_KLEUR[vakken[i]]
+		draw_rect(Rect2(-9 + i * deel, -4, deel, 3), k if actief else k.lerp(Color("#8a8a8a"), 0.6))
 	# Monitor: achterkant, je kijkt over de schouder van de collega.
 	draw_rect(Rect2(-7, -20, 14, 8), Color("#23262f"))
 	draw_rect(Rect2(-6, -19, 12, 6), Color("#3a3f4d"))

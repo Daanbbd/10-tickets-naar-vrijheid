@@ -72,6 +72,9 @@ var _reeks := 0
 ## in tekstballonnen gezegd wordt blijft echt toevallig.
 var _rng := RandomNumberGenerator.new()
 
+## Het voordeel van je rol, als je een zelfgemaakt personage speelt.
+var _rol := -1
+
 var bot := false
 ## QA: de bot speelt, maar het spel stopt niet aan het eind (voor schoten).
 var bot_blijf := false
@@ -87,6 +90,10 @@ func _ready() -> void:
 	_tutorial = dag_index == 0
 	_lees_qa_vlaggen()
 	_rng.seed = hash("sprint14-dag%d" % dag_index)
+	if speler_id == RushProfiel.ID:
+		if not RushProfiel.bestaat():
+			_testprofiel()
+		_rol = RushProfiel.rol
 
 	_bouw()
 	_pas_layout()
@@ -158,6 +165,17 @@ func _bouw() -> void:
 		w.klaar.connect(_op_werker_klaar)
 		werkers.append(w)
 		sloten += 1
+	if speler_id == RushProfiel.ID:
+		# Een zelfgemaakt personage krijgt een eigen achtste bureau; de zeven
+		# vaste collega's blijven allemaal zitten.
+		var eigen := RushWorker.new()
+		eigen.position = RushKantoor.EIGEN_BUREAU
+		mensen.add_child(eigen)
+		eigen.setup(RushProfiel.ID, true)
+		eigen.actief = true
+		eigen.klaar.connect(_op_werker_klaar)
+		werkers.append(eigen)
+		kantoor.zonder_plant = true
 
 	speler = RushPlayer.new()
 	speler.position = Vector2(96, 290)
@@ -232,6 +250,10 @@ func _tik(p: Vector2) -> void:
 		if Rect2(_dirk.position + Vector2(-12, -38), Vector2(24, 44)).has_point(p):
 			_stuur_dirk_weg()
 			return
+
+	if _rol == RushProfiel.Rol.CONSULTANT and _prater != null and _prater.hit(p):
+		_kap_af()
+		return
 
 	for i: int in bord.size():
 		var t: RushTicket = bord[i]
@@ -347,7 +369,7 @@ func _bij_werker(w: RushWorker) -> void:
 	if w == _prater:
 		_kap_af()
 
-	var open := _in_hand(w.vak, false)
+	var open := _in_hand_voor(w)
 	if w.is_eigen:
 		if open != null:
 			_zelf_doen(open)
@@ -376,7 +398,7 @@ func _bij_werker(w: RushWorker) -> void:
 		var k := _eerste_open()
 		if k != null:
 			RushPop.ballon_op(veld, w.hoofd(), "Ik doe %s, geen %s." % [
-				RushData.VAK_NAAM[w.vak], RushData.VAK_NAAM[k.vak]], 1.8)
+				w.vak_naam(), RushData.VAK_NAAM[k.vak]], 1.8)
 			RushKlank.sfx(&"rush_fout", &"fout", 0.05, -4.0)
 			Haptiek.tril(Haptiek.Sterkte.SLAG)
 	else:
@@ -407,7 +429,7 @@ func _zelf_doen(t: RushTicket) -> void:
 func _bij_server() -> void:
 	speler.kijk(&"up")
 	if kantoor.brand:
-		speler.start_bezig(1.1, Color("#ffd23f"))
+		speler.start_bezig(0.15 if _rol == RushProfiel.Rol.OPERATIONS else 1.1, Color("#ffd23f"))
 		RushKlank.sfx(&"rush_blus", &"genereren", 0.05)
 		_ballon_speler("Blussen!")
 		_na_bezig = func() -> void:
@@ -445,9 +467,10 @@ func _deploy() -> void:
 	RushPop.confetti(veld, srv + Vector2(0, -20), 14 + 8 * klaar_t.size())
 	RushPop.getal_op(veld, srv + Vector2(0, -44), "+%d live" % klaar_t.size(), Color("#3fd27f"))
 	if klaar_t.size() >= 2:
-		minuut = maxf(RushData.START_MIN, minuut - 10.0)
+		var bonus := 15.0 if _rol == RushProfiel.Rol.OPERATIONS else 10.0
+		minuut = maxf(RushData.START_MIN, minuut - bonus)
 		hud.klok_puls()
-		RushPop.getal_op(veld, srv + Vector2(-30, -60), "Dubbel! -10 min", Color("#ffd23f"))
+		RushPop.getal_op(veld, srv + Vector2(-30, -60), "Dubbel! -%d min" % int(bonus), Color("#ffd23f"))
 		RushKlank.sfx(&"rush_dubbel", &"", 0.0, -2.0)
 	_schok = maxf(_schok, 1.5)
 	hud.zet(dag["kort"], geleverd, minuut)
@@ -510,8 +533,11 @@ func _process(delta: float) -> void:
 			heeft_klaar = true
 	kantoor.server_gloed = heeft_klaar
 	for w: RushWorker in werkers:
-		w.gloed = (w.vrij() or w.is_eigen or w.is_klaar) and _in_hand(w.vak, false) != null
-		w.tik(delta, werktijd)
+		w.gloed = (w.vrij() or w.is_eigen or w.is_klaar) and _in_hand_voor(w) != null
+		var tijd := werktijd
+		if _rol == RushProfiel.Rol.DESIGN and w.doet(RushData.Vak.FE):
+			tijd *= 0.75
+		w.tik(delta, tijd)
 
 	_werk_spawn(delta)
 	_werk_geduld(delta)
@@ -581,7 +607,7 @@ func _spawn(slot: int) -> void:
 
 
 func _werk_geduld(delta: float) -> void:
-	var geduld: float = dag["geduld"]
+	var geduld: float = dag["geduld"] * (1.25 if _rol == RushProfiel.Rol.SUPPORT else 1.0)
 	for t: RushTicket in tickets:
 		var snelheid := 0.0
 		if t.staat == RushTicket.Staat.BORD:
@@ -603,14 +629,15 @@ func _belt(t: RushTicket) -> void:
 	t.geduld = 1.0
 	gebeld += 1
 	_reeks = 0
-	minuut += RushData.BEL_BOETE_MIN
+	var boete := RushData.BEL_BOETE_MIN / 2 if _rol == RushProfiel.Rol.SALES else RushData.BEL_BOETE_MIN
+	minuut += boete
 	hud.klok_puls()
-	hud.bel(RushData.kies(RushData.KLANT_BELT))
+	hud.bel(RushData.kies(RushData.KLANT_BELT), boete)
 	RushKlank.sfx(&"rush_bel", &"hinnik")
 	Haptiek.tril(Haptiek.Sterkte.SLAG)
 	_schok = maxf(_schok, 2.5)
 	var p := t.position if t.visible else speler.position + Vector2(0, -40)
-	RushPop.getal_op(veld, p + Vector2(0, -10), "+%d min" % RushData.BEL_BOETE_MIN, Color("#ff6b7a"))
+	RushPop.getal_op(veld, p + Vector2(0, -10), "+%d min" % boete, Color("#ff6b7a"))
 
 
 func _op_werker_klaar(w: RushWorker) -> void:
@@ -875,6 +902,16 @@ func _score_regel(sterren: int) -> Dictionary:
 		"ontsnap": -1.0, "portret": code}
 
 
+## QA: `--speler=eigen` zonder profiel; dan een testpersoon, niet bewaard.
+func _testprofiel() -> void:
+	RushProfiel.naam = "Test"
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--rol="):
+			RushProfiel.rol = clampi(int(a.get_slice("=", 1)), 0, RushProfiel.Rol.size() - 1) as RushProfiel.Rol
+	RushProfiel.look = {&"body": &"slank", &"hair": &"krullen", &"outfit": &"hoodie"}
+	RushProfiel.kleuren = {&"shirt": Color("#e5484d"), &"hair": Color("#2b1d14")}
+
+
 func _opnieuw() -> void:
 	AudioDirector.clear_layer(&"overwinning", 0.2)
 	RushSave.dag = dag_index
@@ -919,7 +956,7 @@ func _tutorial_doel() -> Dictionary:
 	var open := _eerste_open()
 	if open != null:
 		for w: RushWorker in werkers:
-			if w.vak == open.vak and (w.vrij() or w.is_eigen):
+			if w.doet(open.vak) and (w.vrij() or w.is_eigen):
 				var wie := "je eigen bureau" if w.is_eigen else w.naam
 				return {"p": w.hoofd() + Vector2(0, -6), "tekst": "%s is %s. Breng het naar %s." % [
 					open.code(), RushData.VAK_NAAM[open.vak], wie]}
@@ -937,6 +974,14 @@ func _tutorial_doel() -> Dictionary:
 func _in_hand(vak: int, klaar: bool) -> RushTicket:
 	for t: RushTicket in speler.handen:
 		if t.vak == vak and (t.staat == RushTicket.Staat.KLAAR) == klaar:
+			return t
+	return null
+
+
+## Het eerste open ticket in je handen dat deze werker kan doen.
+func _in_hand_voor(w: RushWorker) -> RushTicket:
+	for t: RushTicket in speler.handen:
+		if t.staat == RushTicket.Staat.HAND and w.doet(t.vak):
 			return t
 	return null
 
@@ -1052,7 +1097,7 @@ func _bot_kies() -> void:
 			klaar_n += 1
 	# Afgewerkt werk ophalen.
 	for w: RushWorker in werkers:
-		if w.is_klaar and (speler.vrije_hand() or _in_hand(w.vak, false) != null):
+		if w.is_klaar and (speler.vrije_hand() or _in_hand_voor(w) != null):
 			_bot_tik(w.position + Vector2(0, -24))
 			return
 	if klaar_n > 0 and (not speler.vrije_hand() or _eerste_open() == null):
@@ -1061,7 +1106,7 @@ func _bot_kies() -> void:
 	var open := _eerste_open()
 	if open != null:
 		for w: RushWorker in werkers:
-			if w.vak == open.vak and (w.vrij() or w.is_eigen):
+			if w.doet(open.vak) and (w.vrij() or w.is_eigen):
 				_bot_tik(w.position + Vector2(0, -24))
 				return
 	if speler.vrije_hand():

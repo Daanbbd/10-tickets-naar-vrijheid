@@ -17,6 +17,7 @@ var _pips: Control
 var _hint: Label
 var _bel: PanelContainer
 var _bel_tekst: Label
+var _bel_boete: Label
 var _bel_tween: Tween
 var _overlay: Control = null
 var _pauze: Control = null
@@ -130,7 +131,8 @@ func _ready() -> void:
 	var wie := _lbl("Manege De Vrije Teugel", 10, Color("#9c3945"))
 	wie.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rij.add_child(wie)
-	rij.add_child(_lbl("+%d min" % RushData.BEL_BOETE_MIN, 10, Color("#e5484d")))
+	_bel_boete = _lbl("+%d min" % RushData.BEL_BOETE_MIN, 10, Color("#e5484d"))
+	rij.add_child(_bel_boete)
 	_bel_tekst = _lbl("", 10, Color("#242424"))
 	_bel_tekst.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	kol.add_child(_bel_tekst)
@@ -189,8 +191,9 @@ func meld(t: String, duur: float = 2.2) -> void:
 	_hint_tijd = duur
 
 
-func bel(t: String) -> void:
+func bel(t: String, boete: int = RushData.BEL_BOETE_MIN) -> void:
 	_bel_tekst.text = "\"%s\"" % t
+	_bel_boete.text = "+%d min" % boete
 	if _bel_tween != null and _bel_tween.is_valid():
 		_bel_tween.kill()
 	# Van onderen omhoog, net boven de hintregel. Bovenin zou hij het bord
@@ -235,13 +238,22 @@ func toon_intro(dag_index: int, dag: Dictionary, speler: StringName) -> void:
 	var nieuw := _lbl(String(dag["nieuw"]), 10, Color("#d6dbe8"), true)
 	nieuw.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	kol.add_child(nieuw)
-	var eigen_vak := RushData.vak_van(speler)
-	if eigen_vak in dag["vakken"]:
+	var eigen_vakken: Array = RushProfiel.vakken() if speler == RushProfiel.ID else [RushData.vak_van(speler)]
+	var mee: Array[String] = []
+	for v: int in eigen_vakken:
+		if v in dag["vakken"]:
+			mee.append(RushData.VAK_NAAM[v])
+	if not mee.is_empty():
 		kol.add_child(UiKit.spacer(2))
-		var zelf := _lbl("%s is jouw vak: dat doe je zelf, aan je eigen bureau." %
-			RushData.VAK_NAAM[eigen_vak], 10, RushData.VAK_KLEUR[eigen_vak].lightened(0.3), true)
+		var kleur: Color = RushData.VAK_KLEUR[eigen_vakken[0]]
+		var zelf := _lbl("%s doe je zelf, aan je eigen bureau." % " en ".join(mee), 10,
+			kleur.lightened(0.3), true)
 		zelf.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		kol.add_child(zelf)
+	if speler == RushProfiel.ID:
+		var voordeel := _lbl(RushProfiel.ROL_VOORDEEL[RushProfiel.rol], 10, Color("#ffd23f"), true)
+		voordeel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		kol.add_child(voordeel)
 	kol.add_child(UiKit.spacer(6))
 	kol.add_child(_lbl("10 tickets live, dan mag je naar huis.", 10, Color("#8a93a8"), true))
 	kol.add_child(_lbl("Voor 17:00 is drie sterren.", 10, Color("#8a93a8"), true))

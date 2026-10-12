@@ -22,6 +22,8 @@ const BUREAUS: Array[Vector2] = [
 	Vector2(32, 160), Vector2(96, 160), Vector2(160, 160),
 	Vector2(32, 224),
 ]
+## Het bureau van een zelfgemaakt personage, op de plek van de plant.
+const EIGEN_BUREAU := Vector2(96, 224)
 
 const BORD_RECT := Rect2(20, 5, 152, 40)
 const BORD_SLOTS := 6
@@ -31,6 +33,9 @@ const DEUR_RECT := Rect2(16, 336, 32, 16)
 const PLANT_RECT := Rect2(80, 196, 32, 26)
 
 var brand := false
+## Er staat een achtste bureau (van een zelfgemaakt personage) waar anders
+## de plant staat.
+var zonder_plant := false
 var koffie_klaar := true
 var deur_open := false
 ## Je hebt iets in je handen dat live kan.
@@ -88,7 +93,8 @@ func _draw() -> void:
 	_muren()
 	_bord()
 	_koffie()
-	_plant()
+	if not zonder_plant:
+		_plant()
 	_server()
 
 

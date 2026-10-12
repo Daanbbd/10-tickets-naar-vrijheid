@@ -26,6 +26,10 @@ func setup(id: StringName) -> void:
 	sprite = AnimatedSprite2D.new()
 	sprite.offset = Vector2(0, -16)
 	add_child(sprite)
+	if id == RushProfiel.ID:
+		sprite.sprite_frames = RushProfiel.frames()
+		sprite.play(&"idle_down")
+		return
 	var def: CharacterDef = GameData.character(id)
 	if def != null:
 		sprite.sprite_frames = CharacterSprites.frames_for(

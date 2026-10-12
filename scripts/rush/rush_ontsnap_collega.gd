@@ -70,6 +70,8 @@ func setup(id: StringName, g: Gedrag, vrij: Callable) -> void:
 
 ## Het loopje van iemand, speelbaar personage of niet.
 static func frames_voor(id: StringName) -> SpriteFrames:
+	if id == RushProfiel.ID:
+		return RushProfiel.frames()
 	var c: CharacterDef = GameData.character(id)
 	if c != null:
 		return CharacterSprites.frames_for(c.look, c.color, c.skin, c.hair, c.pants, c.accent)
