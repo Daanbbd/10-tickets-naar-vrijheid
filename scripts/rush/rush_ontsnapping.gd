@@ -149,6 +149,12 @@ var _stap_timer := 0.0
 var _muziek := false
 var _bot_pad: Array[Vector2i] = []
 var _bot_klok := 0.0
+## Hoe lang je al niet naar links bent gekomen, en hoe lang het spel nog
+## voor je stuurt. Wie niet doorheeft dat je moet slepen, staat anders
+## eindeloos tegen een bureau te lopen terwijl het vuur nadert.
+var _vast := 0.0
+var _hulp := 0.0
+var _vast_gezegd := false
 
 
 func _ready() -> void:
@@ -788,8 +794,9 @@ func _stap(delta: float) -> void:
 func _ren(delta: float) -> void:
 	seconden += delta
 	_tijd_lbl.text = _tekst_tijd(seconden)
-	if bot:
+	if bot or _hulp > 0.0:
 		_bot_stuur(delta)
+		_hulp = maxf(0.0, _hulp - delta)
 	else:
 		_toetsen()
 	_boost = maxf(0.0, _boost - delta)
@@ -822,6 +829,16 @@ func _beweeg(delta: float) -> void:
 	if not is_zero_approx(dy):
 		_stap_y(dy)
 	var d := _speler.position - oud
+	if d.x > -0.05 * delta * 60.0:
+		_vast += delta
+		if _vast > 1.0 and not _vast_gezegd:
+			_vast_gezegd = true
+			RushOntsnapBallon.zeg(_speler, "Sleep omhoog of omlaag!", 1.4)
+		if _vast > 1.8:
+			_vast = 0.0
+			_hulp = 1.2
+	else:
+		_vast = 0.0
 	_animeer(d)
 	_beweegt = d.length() > 0.05
 	if _beweegt:

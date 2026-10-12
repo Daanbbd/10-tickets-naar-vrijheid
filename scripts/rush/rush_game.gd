@@ -808,7 +808,6 @@ func _dag_klaar() -> void:
 	var sterren := RushData.sterren_voor(minuut)
 	if not bot:
 		RushSave.noteer(dag_index, sterren)
-	RushKlank.laag(&"overwinning", &"rush_uitslag", &"overwinning", 0.3)
 	hud.meld("10/10. Naar huis!", 10.0)
 	kantoor.deur_open = true
 	RushKlank.sfx(&"rush_deur", &"deur")
@@ -821,8 +820,27 @@ func _dag_klaar() -> void:
 			dag_index + 1, speler_id, RushData.klok(minuut), sterren, gebeld])
 		get_tree().quit()
 		return
-	await get_tree().create_timer(1.8).timeout
-	hud.toon_resultaat(dag_index, minuut, sterren, gebeld, dag_index == RushData.DAGEN.size() - 1)
+	await get_tree().create_timer(1.4).timeout
+
+	# En dan naar buiten, door het echte kantoor, met het vuur op je hielen.
+	var ontsnap_sec := -1.0
+	var record := false
+	if not bot or bot_blijf:
+		var o := RushOntsnapping.new()
+		o.bot = bot
+		add_child(o)
+		o.start(speler_id, dag_index)
+		var uit: Array = await o.klaar
+		o.queue_free()
+		if bot:
+			print("RUSH-ONTSNAP sec=%.1f gebotst=%d" % [float(uit[0]), int(uit[1])])
+			get_tree().quit()
+		if not bool(uit[2]):
+			ontsnap_sec = float(uit[0])
+			record = RushSave.noteer_ontsnapping(dag_index, ontsnap_sec)
+	RushKlank.laag(&"overwinning", &"rush_uitslag", &"overwinning", 0.3)
+	hud.toon_resultaat(dag_index, minuut, sterren, gebeld, dag_index == RushData.DAGEN.size() - 1,
+		ontsnap_sec, record)
 
 
 func _opnieuw() -> void:

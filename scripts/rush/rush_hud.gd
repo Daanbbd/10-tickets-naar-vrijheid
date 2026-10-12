@@ -251,7 +251,8 @@ func toon_intro(dag_index: int, dag: Dictionary, speler: StringName) -> void:
 	kol.add_child(knop)
 
 
-func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, laatste: bool) -> void:
+func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, laatste: bool,
+		ontsnap_sec: float = -1.0, record: bool = false) -> void:
 	var paneel := _maak_overlay(0.6)
 	var kol := paneel.get_child(0) as VBoxContainer
 	kol.add_child(_appje(RushData.KLANT_AVOND[dag_index], minuut))
@@ -281,6 +282,10 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 	var regel := "Ze heeft niet gebeld." if gebeld == 0 else (
 		"Ze belde 1 keer." if gebeld == 1 else "Ze belde %d keer." % gebeld)
 	kol.add_child(_lbl(regel, 10, Color("#8a93a8"), true))
+	if ontsnap_sec >= 0.0:
+		var t := "Ontsnapt in %.1f s" % ontsnap_sec
+		kol.add_child(_lbl(t + ("  · record!" if record else ""), 10,
+			Color("#ff9f43") if record else Color("#8a93a8"), true))
 	if sterren < 3:
 		kol.add_child(_lbl("Drie sterren: thuis voor 17:00.", 10, Color("#8a93a8"), true))
 	if laatste:
