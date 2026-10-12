@@ -13,7 +13,7 @@ static var ontsnapping: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0]
 ## De eregalerij van dit apparaat, zoals op een arcadekast: per dag de beste
 ## tien, van iedereen die hier gespeeld heeft. Een regel is
 ## {dag, naam, wie, rol, minuut, sterren, gebeld, ontsnap, portret}; `portret`
-## is het 32x40-pixelportret als base64-PNG, of leeg.
+## is een RushPixel-code (1280 tekens), of leeg.
 static var scores: Array[Dictionary] = []
 const SCORES_PER_DAG := 10
 ## Willekeurig, alleen op dit apparaat: bewijst bij een online scorebord dat

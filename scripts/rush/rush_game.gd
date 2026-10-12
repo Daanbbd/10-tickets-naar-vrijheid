@@ -852,7 +852,8 @@ func _dag_klaar() -> void:
 		ontsnap_sec, record, plek, regel)
 
 
-## Eén regel voor de eregalerij: wie, wanneer klaar, en het pixelportret.
+## Eén regel voor de eregalerij: wie, wanneer klaar, en het pixelportret als
+## RushPixel-code.
 func _score_regel(sterren: int) -> Dictionary:
 	var naam := String(speler_id).capitalize()
 	var rol := ""
@@ -868,12 +869,10 @@ func _score_regel(sterren: int) -> Dictionary:
 			rol = def.role
 			if def.portrait != "" and ResourceLoader.exists(def.portrait):
 				portret = (load(def.portrait) as Texture2D).get_image()
-	var b64 := ""
-	if portret != null and not portret.is_empty():
-		b64 = Marshalls.raw_to_base64(portret.save_png_to_buffer())
+	var code := RushPixel.naar_code(portret) if portret != null else ""
 	return {"dag": dag_index, "naam": naam, "wie": String(speler_id), "rol": rol,
 		"minuut": snappedf(minuut, 0.1), "sterren": sterren, "gebeld": gebeld,
-		"ontsnap": -1.0, "portret": b64}
+		"ontsnap": -1.0, "portret": code}
 
 
 func _opnieuw() -> void:

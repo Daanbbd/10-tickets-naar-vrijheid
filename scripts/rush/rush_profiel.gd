@@ -48,7 +48,7 @@ static var rol: Rol = Rol.DEVELOPER
 static var look: Dictionary = {}
 ## Kleuren als Color: skin, hair, shirt, pants, accent.
 static var kleuren: Dictionary = {}
-## 32x40, RGBA8, al in het palet. Leeg als je nog geen portret hebt.
+## 32x40, RGBA8, in het palet van RushPixel. Null als je nog geen portret hebt.
 static var portret: Image = null
 
 
@@ -78,9 +78,7 @@ static func naar_dict() -> Dictionary:
 	var l := {}
 	for sleutel: Variant in look:
 		l[String(sleutel)] = String(look[sleutel])
-	var p := ""
-	if portret != null and not portret.is_empty():
-		p = Marshalls.raw_to_base64(portret.save_png_to_buffer())
+	var p := RushPixel.naar_code(portret) if portret != null else ""
 	return {"naam": naam, "rol": int(rol), "look": l, "kleuren": k, "portret": p}
 
 
@@ -98,13 +96,7 @@ static func van_dict(d: Dictionary) -> void:
 		for sleutel: Variant in k:
 			kleuren[StringName(String(sleutel))] = Color.from_string(String(k[sleutel]), Color.WHITE)
 	portret = null
-	var p := String(d.get("portret", ""))
-	if p != "":
-		var img := Image.new()
-		if img.load_png_from_buffer(Marshalls.base64_to_raw(p)) == OK \
-				and img.get_size() == PORTRET:
-			img.convert(Image.FORMAT_RGBA8)
-			portret = img
+	portret = RushPixel.van_code(String(d.get("portret", "")))
 
 
 static func _kleur(sleutel: StringName, standaard: String) -> Color:
