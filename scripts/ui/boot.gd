@@ -23,6 +23,9 @@ func _ready() -> void:
 	# De kantoor-rush is het spel. `--rush`/`--rush-bot` starten meteen een dag
 	# (zie RushGame._lees_qa_vlaggen); de oude avontuur-QA-vlaggen hieronder
 	# werken nog voor wie de oude code wil bekijken.
+	if args.has("rush-ontsnap"):
+		get_tree().change_scene_to_file("res://scenes/rush/rush_ontsnapping.tscn")
+		return
 	if args.has("rush") or args.has("rush-bot"):
 		get_tree().change_scene_to_file(RUSH_GAME)
 		return
