@@ -780,7 +780,8 @@ def _opruimen():
     houden = set(MUSIC)
     for f in sorted(os.listdir(MUS)):
         stam, ext = os.path.splitext(f)
-        if ext in (".ogg", ".wav") and stam not in houden:
+        # rush_* komt uit gen_rush_audio.py en is niet van dit script.
+        if ext in (".ogg", ".wav") and stam not in houden and not stam.startswith("rush_"):
             for p in (os.path.join(MUS, f), os.path.join(MUS, f + ".import")):
                 if os.path.exists(p):
                     os.remove(p)

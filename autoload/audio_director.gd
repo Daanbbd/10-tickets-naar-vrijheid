@@ -29,6 +29,7 @@ const LAGEN: Array[StringName] = [&"basis", &"gesprek", &"minigame", &"overwinni
 const LOOP_START: Dictionary = {
 	&"intro": 2.88,          # na de opgaande greep
 	&"overwinning": 5.44,    # na de cadens, in de vamp
+	&"rush_uitslag": 6.0,    # na drie maten fanfare (gen_rush_audio.py)
 }
 
 var _actief: AudioStreamPlayer      # speelt nu
