@@ -77,6 +77,9 @@ func _titel() -> void:
 		var wissel := _knop("Wie ben jij?", false)
 		wissel.pressed.connect(_kies)
 		kol.add_child(wissel)
+	var eer := _knop("Eregalerij", false)
+	eer.pressed.connect(_open_eregalerij)
+	kol.add_child(eer)
 	kol.add_child(UiKit.spacer(4))
 	kol.add_child(_lbl("Een spel over een werkweek bij Bluebird Day", 10, Color("#5a6278"), true))
 
@@ -103,8 +106,12 @@ func _toon_kies() -> void:
 	kol.add_child(midden)
 	for id: StringName in RushData.BUREAU_VOLGORDE:
 		raster.add_child(_portretknop(id))
+	raster.add_child(_eigen_knop())
 
 	kol.add_child(UiKit.spacer(6))
+	if _gekozen == RushProfiel.ID:
+		_toon_eigen_info(kol)
+		return
 	var def: CharacterDef = GameData.character(_gekozen)
 	var vak := RushData.vak_van(_gekozen)
 	var kleur: Color = RushData.VAK_KLEUR[vak]
@@ -125,6 +132,93 @@ func _toon_kies() -> void:
 	var terug := _knop("Terug", false)
 	terug.pressed.connect(_titel)
 	kol.add_child(terug)
+
+
+## Het achtste vakje: jezelf. Zonder profiel opent het de maker.
+func _eigen_knop() -> Control:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(40, 52)
+	var gekozen := _gekozen == RushProfiel.ID
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("#22304f") if gekozen else Color("#1f2433")
+	sb.border_color = Color("#ffd23f") if gekozen else Color("#4a5677")
+	sb.set_border_width_all(2 if gekozen else 1)
+	for s: String in ["normal", "hover", "pressed"]:
+		b.add_theme_stylebox_override(s, sb)
+	var tex := RushProfiel.portret_textuur() if RushProfiel.bestaat() else null
+	if tex != null:
+		var foto := TextureRect.new()
+		foto.texture = tex
+		foto.position = Vector2(4, 3)
+		foto.size = Vector2(32, 40)
+		foto.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(foto)
+	else:
+		var plus := _lbl("+" if not RushProfiel.bestaat() else "?", 20, Color("#ffd23f"), true)
+		plus.position = Vector2(0, 8)
+		plus.size = Vector2(40, 30)
+		b.add_child(plus)
+	var onder := _lbl("JIJ", 10, Color("#ffd23f"), true)
+	onder.position = Vector2(0, 40)
+	onder.size = Vector2(40, 12)
+	b.add_child(onder)
+	b.pressed.connect(func() -> void:
+		RushKlank.ui(&"rush_knop")
+		if RushProfiel.bestaat():
+			_gekozen = RushProfiel.ID
+			_toon_kies()
+		else:
+			_open_profielmaker())
+	return b
+
+
+func _toon_eigen_info(kol: VBoxContainer) -> void:
+	var kleur := Color("#ffd23f")
+	kol.add_child(_lbl(RushProfiel.naam, 16, Color.WHITE, true))
+	kol.add_child(_lbl(RushProfiel.ROL_NAAM[RushProfiel.rol], 12, kleur, true))
+	var vak_namen: Array[String] = []
+	for v: int in RushProfiel.vakken():
+		vak_namen.append(RushData.VAK_NAAM[v])
+	kol.add_child(_lbl("Jouw vak: %s" % " en ".join(vak_namen), 10, Color("#b0b4c2"), true))
+	var voordeel := _lbl(RushProfiel.ROL_VOORDEEL[RushProfiel.rol], 10, Color("#f4a259"), true)
+	voordeel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	kol.add_child(voordeel)
+	kol.add_child(_vul())
+	var ok := _knop("Dit ben ik", true)
+	ok.pressed.connect(func() -> void:
+		RushSave.karakter = RushProfiel.ID
+		RushSave.bewaar()
+		_week())
+	kol.add_child(ok)
+	var pas := _knop("Aanpassen", false)
+	pas.pressed.connect(_open_profielmaker)
+	kol.add_child(pas)
+	var terug := _knop("Terug", false)
+	terug.pressed.connect(_titel)
+	kol.add_child(terug)
+
+
+## Volledig scherm over het menu; als hij klaar is, terug naar de keuze.
+func _open_profielmaker() -> void:
+	var maker := RushProfielScherm.new()
+	add_child(maker)
+	maker.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	maker.klaar.connect(func(opgeslagen: bool) -> void:
+		maker.queue_free()
+		if opgeslagen:
+			RushSave.bewaar()
+			_gekozen = RushProfiel.ID
+		elif not RushProfiel.bestaat() and _gekozen == RushProfiel.ID:
+			_gekozen = &"victor"
+		_toon_kies())
+
+
+func _open_eregalerij() -> void:
+	var g := RushEregalerij.new()
+	add_child(g)
+	g.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	g.terug.connect(func() -> void: g.queue_free())
 
 
 func _portretknop(id: StringName) -> Control:
@@ -167,7 +261,8 @@ func _week() -> void:
 	var kol := _leeg()
 	kol.add_child(_lbl("SPRINT 14", 20, Color("#3a86ff"), true))
 	var def: CharacterDef = GameData.character(RushSave.karakter)
-	kol.add_child(_lbl("Jij bent %s. Tien tickets per dag." % (def.name if def != null else "?"), 10, Color("#b0b4c2"), true))
+	var wie := RushProfiel.naam if RushSave.karakter == RushProfiel.ID else (def.name if def != null else "?")
+	kol.add_child(_lbl("Jij bent %s. Tien tickets per dag." % wie, 10, Color("#b0b4c2"), true))
 	kol.add_child(UiKit.spacer(6))
 	var open := RushSave.open_dag()
 	for i: int in RushData.DAGEN.size():

@@ -26,6 +26,8 @@ var _geleverd := 0
 ## vanzelf als je terugkomt uit een andere app.
 var mag_pauzeren := false
 var _was_weg := false
+## De regel van de dag die net gespeeld is, voor de deelkaart.
+var _laatste_regel: Dictionary = {}
 var _hint_vast := ""
 var _hint_tijd := 0.0
 var _klok_puls := 0.0
@@ -252,7 +254,9 @@ func toon_intro(dag_index: int, dag: Dictionary, speler: StringName) -> void:
 
 
 func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, laatste: bool,
-		ontsnap_sec: float = -1.0, record: bool = false) -> void:
+		ontsnap_sec: float = -1.0, record: bool = false, plek: int = 0,
+		score: Dictionary = {}) -> void:
+	_laatste_regel = score
 	var paneel := _maak_overlay(0.6)
 	var kol := paneel.get_child(0) as VBoxContainer
 	kol.add_child(_appje(RushData.KLANT_AVOND[dag_index], minuut))
@@ -291,6 +295,9 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 	if laatste:
 		kol.add_child(UiKit.spacer(2))
 		kol.add_child(_lbl("Sprint 14: %d van de 15 sterren." % RushSave.totaal(), 12, Color("#ffd23f"), true))
+	if plek > 0:
+		kol.add_child(_lbl("#%d in de eregalerij van %s" % [plek, String(RushData.DAGEN[dag_index]["naam"]).to_lower()],
+			10, Color("#ffd23f") if plek == 1 else Color("#8fb3ff"), true))
 	kol.add_child(UiKit.spacer(8))
 	if not laatste:
 		var verder := _knop("Volgende dag", true)

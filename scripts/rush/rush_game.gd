@@ -67,6 +67,11 @@ var _laatste_hint := ""
 ## Deploys achter elkaar zonder dat ze belt. Elke deploy klinkt een tikje hoger.
 var _reeks := 0
 
+## De dag ligt vast: iedereen krijgt dezelfde tickets op dezelfde momenten,
+## zodat scores in de eregalerij eerlijk te vergelijken zijn. Alleen wat er
+## in tekstballonnen gezegd wordt blijft echt toevallig.
+var _rng := RandomNumberGenerator.new()
+
 var bot := false
 ## QA: de bot speelt, maar het spel stopt niet aan het eind (voor schoten).
 var bot_blijf := false
@@ -81,14 +86,15 @@ func _ready() -> void:
 	speler_id = RushSave.karakter if RushSave.karakter != &"" else &"daan"
 	_tutorial = dag_index == 0
 	_lees_qa_vlaggen()
+	_rng.seed = hash("sprint14-dag%d" % dag_index)
 
 	_bouw()
 	_pas_layout()
 	get_viewport().size_changed.connect(_pas_layout)
 
-	_klets_timer = randf_range(14.0, 20.0)
-	_dirk_timer = randf_range(12.0, 18.0)
-	_brand_timer = randf_range(16.0, 24.0)
+	_klets_timer = _rng.randf_range(14.0, 20.0)
+	_dirk_timer = _rng.randf_range(12.0, 18.0)
+	_brand_timer = _rng.randf_range(16.0, 24.0)
 
 	AudioDirector.stop_music(0.4)
 	RushKlank.muziek(StringName(dag["track"]), StringName(dag["muziek"]), 0.8)
@@ -406,7 +412,7 @@ func _bij_server() -> void:
 		_ballon_speler("Blussen!")
 		_na_bezig = func() -> void:
 			kantoor.brand = false
-			_brand_timer = randf_range(20.0, 30.0)
+			_brand_timer = _rng.randf_range(20.0, 30.0)
 			hud.meld("Brand geblust. Deployen maar.")
 			_deploy()
 		return
@@ -533,7 +539,7 @@ func _werk_spawn(delta: float) -> void:
 	if _tutorial and gespawnd == 1:
 		# Op maandag eerst rustig: het eerste ticket mag je in je eentje leren.
 		interval = 9.0
-	_spawn_timer = interval * randf_range(0.7, 1.25)
+	_spawn_timer = interval * _rng.randf_range(0.7, 1.25)
 
 
 func _spawn(slot: int) -> void:
@@ -545,7 +551,7 @@ func _spawn(slot: int) -> void:
 		var kandidaten: Array = vakken.duplicate()
 		if _recent_vakken.size() >= 2 and _recent_vakken[-1] == _recent_vakken[-2]:
 			kandidaten.erase(_recent_vakken[-1])
-		vak = kandidaten[randi() % kandidaten.size()]
+		vak = kandidaten[_rng.randi() % kandidaten.size()]
 	_recent_vakken.append(vak)
 
 	var t := RushTicket.new()
@@ -553,11 +559,11 @@ func _spawn(slot: int) -> void:
 	t.nummer = nummer
 	nummer += 1
 	var titels: Array = RushData.TITELS[vak]
-	var titel := RushData.kies(titels)
+	var titel: String = titels[_rng.randi() % titels.size()]
 	for poging: int in 4:
 		if not titel in _recent_titels:
 			break
-		titel = RushData.kies(titels)
+		titel = titels[_rng.randi() % titels.size()]
 	_recent_titels.append(titel)
 	if _recent_titels.size() > 8:
 		_recent_titels.pop_front()
@@ -672,7 +678,7 @@ func _stop_kletsen() -> void:
 	for w: RushWorker in werkers:
 		w.stilgelegd = false
 	_prater = null
-	_klets_timer = randf_range(20.0, 30.0)
+	_klets_timer = _rng.randf_range(20.0, 30.0)
 
 
 # --- Dirk wil je uren -----------------------------------------------------------
@@ -725,7 +731,7 @@ func _werk_dirk(delta: float) -> void:
 				_dirk.visible = false
 				_dirk_staat = Dirk.WEG
 				kantoor.deur_open = fase == Fase.KLAAR
-				_dirk_timer = randf_range(22.0, 32.0)
+				_dirk_timer = _rng.randf_range(22.0, 32.0)
 		Dirk.PRAAT:
 			_dirk.play(&"talk_up" if speler.position.y < _dirk.position.y else &"talk_down")
 
@@ -806,6 +812,7 @@ func _dag_klaar() -> void:
 	huidige = {}
 	_stop_kletsen()
 	var sterren := RushData.sterren_voor(minuut)
+	var regel := _score_regel(sterren)
 	if not bot:
 		RushSave.noteer(dag_index, sterren)
 	hud.meld("10/10. Naar huis!", 10.0)
@@ -838,9 +845,35 @@ func _dag_klaar() -> void:
 		if not bool(uit[2]):
 			ontsnap_sec = float(uit[0])
 			record = RushSave.noteer_ontsnapping(dag_index, ontsnap_sec)
+	regel["ontsnap"] = ontsnap_sec
+	var plek := 0 if bot else RushSave.noteer_score(regel)
 	RushKlank.laag(&"overwinning", &"rush_uitslag", &"overwinning", 0.3)
 	hud.toon_resultaat(dag_index, minuut, sterren, gebeld, dag_index == RushData.DAGEN.size() - 1,
-		ontsnap_sec, record)
+		ontsnap_sec, record, plek, regel)
+
+
+## Eén regel voor de eregalerij: wie, wanneer klaar, en het pixelportret.
+func _score_regel(sterren: int) -> Dictionary:
+	var naam := String(speler_id).capitalize()
+	var rol := ""
+	var portret: Image = null
+	if speler_id == RushProfiel.ID:
+		naam = RushProfiel.naam
+		rol = RushProfiel.ROL_NAAM[RushProfiel.rol]
+		portret = RushProfiel.portret
+	else:
+		var def: CharacterDef = GameData.character(speler_id)
+		if def != null:
+			naam = def.name
+			rol = def.role
+			if def.portrait != "" and ResourceLoader.exists(def.portrait):
+				portret = (load(def.portrait) as Texture2D).get_image()
+	var b64 := ""
+	if portret != null and not portret.is_empty():
+		b64 = Marshalls.raw_to_base64(portret.save_png_to_buffer())
+	return {"dag": dag_index, "naam": naam, "wie": String(speler_id), "rol": rol,
+		"minuut": snappedf(minuut, 0.1), "sterren": sterren, "gebeld": gebeld,
+		"ontsnap": -1.0, "portret": b64}
 
 
 func _opnieuw() -> void:
