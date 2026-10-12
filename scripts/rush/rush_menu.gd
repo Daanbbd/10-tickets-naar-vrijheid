@@ -336,7 +336,7 @@ func _teken_deco() -> void:
 		var x := fmod(i * 47.0 + sin(_tijd * 0.5 + i) * 6.0, s.x)
 		var y := s.y + 20 - f * (s.y + 40)
 		var k: Color = kleuren[i % kleuren.size()]
-		var a := 0.22
+		var a := 0.12
 		_deco.draw_rect(Rect2(x, y, 12, 14), Color(0.98, 0.97, 0.94, a))
 		_deco.draw_rect(Rect2(x, y, 12, 4), Color(k.r, k.g, k.b, a))
 	_deco.draw_texture(PAARD, Vector2(s.x - 40, s.y - 44 + sin(_tijd * 2.0) * 2.0), Color(1, 1, 1, 0.5))
