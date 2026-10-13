@@ -11,6 +11,7 @@ enum Gedrag {
 	STAAN,     ## staat waar hij staat
 	STAPPEN,   ## ziet je aankomen en stapt je pad in
 	IJSBEREN,  ## loopt aan de telefoon heen en weer
+	KRING,     ## staat in de stand-up; die bepaalt waar hij staat
 }
 
 ## Halve maat van het raakvlak rond de voeten, gelijk aan dat van de speler.
@@ -42,6 +43,8 @@ var gedrag := Gedrag.STAAN
 var snelheid := 50.0
 var opmerk := OPMERK
 var gesproken := false
+## Zijn raakvlak. In de stand-up staan ze schouder aan schouder, dus hoger.
+var half := HALF
 var sprite: AnimatedSprite2D
 
 ## Mag ik hier staan? Komt van de ontsnapping, die de vloer kent.
@@ -51,6 +54,7 @@ var _van := 0.0
 var _tot := 0.0
 var _gestapt := false
 var _gegroet := false
+var _vervaag: Tween
 
 
 func setup(id: StringName, g: Gedrag, vrij: Callable) -> void:
@@ -95,7 +99,7 @@ func zin() -> String:
 
 
 func tik(delta: float, speler: Vector2) -> void:
-	if gesproken:
+	if gesproken or gedrag == Gedrag.KRING:
 		return
 	var voor := position.x < speler.x
 	var afstand := speler.x - position.x
@@ -132,10 +136,10 @@ func _loop(delta: float) -> void:
 	sprite.play(&"walk_down" if dy > 0.0 else &"walk_up")
 
 
-func raakt(p: Vector2, half: Vector2) -> bool:
+func raakt(p: Vector2, h: Vector2) -> bool:
 	if gesproken:
 		return false
-	return absf(p.x - position.x) < HALF.x + half.x and absf(p.y - position.y) < HALF.y + half.y
+	return absf(p.x - position.x) < half.x + h.x and absf(p.y - position.y) < half.y + h.y
 
 
 ## Waar hij straks staat: voor de bot, die er omheen moet.
@@ -143,13 +147,23 @@ func straks_y() -> float:
 	return _doel_y
 
 
-## Hij heeft je. Geeft terug wat hij zegt.
-func heeft_je() -> String:
+## Hij heeft je. Geeft terug wat hij zegt (leeg als `zeg` uit staat: in de
+## stand-up praat de leider).
+func heeft_je(zeg: bool = true) -> String:
 	gesproken = true
-	var z := zin()
-	RushOntsnapBallon.zeg(self, z, 1.6)
+	var z := zin() if zeg else ""
+	if zeg:
+		RushOntsnapBallon.zeg(self, z, 1.6)
 	sprite.play(&"talk_right")
-	var tw := create_tween()
-	tw.tween_interval(1.0)
-	tw.tween_property(sprite, ^"modulate:a", 0.5, 0.4)
+	_vervaag = create_tween()
+	_vervaag.tween_interval(1.0)
+	_vervaag.tween_property(sprite, ^"modulate:a", 0.5, 0.4)
 	return z
+
+
+## Weer als nieuw: de stand-up verkast en begint opnieuw.
+func herstel() -> void:
+	if _vervaag != null and _vervaag.is_valid():
+		_vervaag.kill()
+	gesproken = false
+	sprite.modulate = Color.WHITE

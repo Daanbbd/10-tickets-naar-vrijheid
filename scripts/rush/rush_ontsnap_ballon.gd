@@ -69,6 +69,16 @@ func _draw() -> void:
 	# Een klein sprongetje bij binnenkomst, net als bij `RushPop`.
 	y -= sin(minf(_t * 7.0, 1.0) * PI) * 3.0
 	alpha *= minf(_t * 12.0, 1.0)
+	# Binnen het scherm houden: wie aan de rand staat te praten, wordt anders
+	# half afgeknipt. Alleen de ballon schuift; het puntje blijft bij wie praat.
+	var scherm := get_global_transform_with_canvas().origin.x
+	var breed := get_viewport_rect().size.x
+	var links := scherm + x - 3.0
+	var rechts := scherm + x + maat.x + 3.0
+	if links < 2.0:
+		x += roundf(2.0 - links)
+	elif rechts > breed - 2.0:
+		x -= roundf(rechts - (breed - 2.0))
 	var r := Rect2(x - 3, y - 11, maat.x + 6, 12)
 	draw_rect(Rect2(r.position + Vector2(1, 1), r.size), Color(0, 0, 0, 0.3 * alpha))
 	draw_rect(r, Color(1, 1, 1, alpha))

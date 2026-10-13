@@ -11,8 +11,14 @@ extends Node2D
 ## Je loopt vanzelf naar links. Jij stuurt alleen omhoog en omlaag, met één
 ## duim. Achter je staat het kantoor in brand: een vuurfront rukt van rechts
 ## op en jaagt je naar de deur. Collega's staan in de weg of stappen je pad in
-## ("Heb je even?"), en Dirk rent vóór het vuur uit, nog steeds achter je uren
-## aan.
+## ("Heb je even?").
+##
+## Elke dag van de week is een andere ontsnapping, met een eigen startplek en
+## een eigen twist (`RushOntsnapDag`): maandag de gewone weg, dinsdag een
+## stand-up dwars door de gang (`RushOntsnapStandup`), woensdag Dirk vlak
+## achter je (`RushOntsnapDirk`), donderdag gouden spoedtickets op riskante
+## plekken, en vrijdag alles tegelijk plus een plafond dat naar beneden komt
+## (`RushOntsnapPlafond`).
 ##
 ## Hangt bovenop de rush als kind van RushGame (eigen CanvasLayers, boven de
 ## rush-HUD op 10), of draait los als scene-root via `--rush-ontsnap`.
@@ -40,12 +46,16 @@ const HOEK := 6.0
 const BOOST := 1.5
 const BOOST_DUUR := 2.5
 const BOTS_STIL := 0.8
-const DIRK_STIL := 1.2
-## Na zijn praatje blijft Dirk nog even tevreden staan; anders heeft hij je
-## meteen weer.
-const DIRK_RUST := 1.4
+## Hoe lang Dirk je vasthoudt. Daarna blijft hij nog even tevreden staan
+## (`RushOntsnapDirk.RUST`): anders heeft hij je meteen weer.
+const DIRK_STIL := 1.5
 const TICKET_BONUS := 1.0
-## Het vuur begint even na de start, net buiten beeld.
+## Een gouden spoedticket is meer waard dan een gewoon kaartje, want het ligt
+## altijd ergens waar het pakken iets kan kosten.
+const SPOED_BONUS := 1.5
+## Een plafondplaat op je hoofd: even knipperen.
+const PLAFOND_STIL := 0.7
+## Het vuur begint even na de start.
 const VUUR_START := 0.8
 ## Wat het kost als het vuur je inhaalt: tijd erbij, kuchen, en dan ben je er
 ## net uit en houdt het vuur even in. Geen game over: het moet een rush
@@ -53,15 +63,13 @@ const VUUR_START := 0.8
 const VUUR_BOETE := 2.0
 const VUUR_KUCH := 0.6
 const VUUR_ADEM := 1.2
-const UITLEG_DUUR := 1.5
+## Dag, titel en twist lezen kost even; tikken sluit hem eerder.
+const UITLEG_DUUR := 2.6
 
-## Rechts op De Werkvloer, schuin onder het bureau van Team 1.
-const START := Vector2i(67, 19)
-## Dirk komt uit Weekend, door de glazen deur rechts.
-const DIRK_SPOOR: Array[Vector2i] = [Vector2i(70, 12), Vector2i(68, 12), Vector2i(68, 19)]
-## De enige binnendeur die openstaat: van De Werkvloer naar de entree. De
+## De binnendeur die altijd openstaat: van De Werkvloer naar de entree. De
 ## rest zit dicht, want wie naar links rent en een kamer in schiet komt er
-## nooit meer uit.
+## nooit meer uit. Vrijdag gaan de deuren van Weekend erbij open
+## (`RushOntsnapDag.deuren`): daar begin je dan.
 const OPEN_DEUREN: Array[Vector2i] = [Vector2i(9, 19), Vector2i(9, 20)]
 
 const BALK := 28
@@ -75,6 +83,8 @@ const KOLLEGAS: Array[StringName] = [
 var speler_id: StringName = &"daan"
 var dag_index := 0
 var bot := false
+## Wat vandaag anders is: startplek, vuur, collega's, Dirk en de twist.
+var _dag: RushOntsnapDag
 var fase := Fase.WACHT
 var seconden := 0.0
 ## Elke keer dat iemand je ophoudt, Dirk je vangt of het vuur je inhaalt.
@@ -98,8 +108,15 @@ var _onder: Node2D
 var _boven: Node2D
 var _speler: Node2D
 var _speler_sprite: AnimatedSprite2D
-var _dirk: Node2D
-var _dirk_sprite: AnimatedSprite2D
+var _dirk: RushOntsnapDirk
+## Hoe vaak Dirk je al had: de eerste keer zegt hij altijd hetzelfde.
+var _dirk_had := 0
+var _standup: RushOntsnapStandup
+var _plafond: RushOntsnapPlafond
+var _plaat_klok := 2.5
+## Net geraakt (door een plaat of het vuur): de volgende platen mikken even
+## niet op jou. Eén plaat is pech, drie achter elkaar is pesten.
+var _plaat_rust := 0.0
 var _collegas: Array[RushOntsnapCollega] = []
 var _oppak: Array[Dictionary] = []
 
@@ -112,6 +129,9 @@ var _pijlen: Control
 
 var _doel_y := 0.0
 var _stil := 0.0
+## Net weer los: heel even kan niemand je opnieuw pakken. Anders houdt de een
+## je vast tot de ander je heeft, en kom je nooit meer weg.
+var _genade := 0.0
 var _boost := 0.0
 var _sleept := false
 var _toets := false
@@ -119,6 +139,8 @@ var _anker_vinger := 0.0
 var _anker_doel := 0.0
 var _schok := 0.0
 var _cam_x := 0.0
+## Waar je op het scherm staat, van links (zie `RushOntsnapDag.camera`).
+var _cam_anker := 0.66
 var _vp := Vector2(192, 416)
 var _tijd := 0.0
 var _fase_t := 0.0
@@ -126,11 +148,8 @@ var _start_x := 0.0
 var _uit_x := 0.0
 var _kijk := &"left"
 
+## Waar je gelopen hebt: Dirk loopt het na.
 var _spoor := PackedVector2Array()
-var _dirk_i := 0
-var _dirk_wacht := 0.0
-var _dirk_snelheid := 0.0
-var _dirk_actief := false
 
 var _vuur: Node2D
 var _vuur_actief := false
@@ -183,6 +202,8 @@ func start(id: StringName, dag: int) -> void:
 		await ready
 	speler_id = id
 	dag_index = clampi(dag, 0, 4)
+	_dag = RushOntsnapDag.voor(dag_index)
+	_cam_anker = _dag.camera
 	if not _builder.load_floor():
 		push_error("RushOntsnapping: geen vloer, dan ook geen ontsnapping")
 		_einde(true)
@@ -221,7 +242,7 @@ func _bouw_dicht() -> void:
 			var dicht := _builder.is_solid(t)
 			if ch == "V":
 				dicht = false
-			elif ch == "D" and not t in OPEN_DEUREN:
+			elif ch == "D" and not (t in OPEN_DEUREN or t in _dag.deuren):
 				dicht = true
 			_dicht[y * _breed + x] = 1 if dicht else 0
 	_sluit_doodlopers()
@@ -324,12 +345,21 @@ func _bouw_wereld() -> void:
 	var dak := HokjeDak.new()
 	_dingen.add_child(dak)
 	dak.setup(_builder)
+	# In het avontuur hangt het dak boven alles, want je kon erin. Hier kom je
+	# er nooit in, maar loop je er wel vlak onderlangs (de smalle gang van
+	# dinsdag en donderdag): dan hoort je hoofd ervóór te staan, niet eronder.
+	dak.z_index = 0
 
 	# Het vuur over alles heen, maar onder de ballonnen en de getallen.
 	_vuur = Node2D.new()
 	_vuur.z_index = 25
 	_vuur.draw.connect(_teken_vuur)
 	_wereld.add_child(_vuur)
+
+	if _dag.plafond:
+		_plafond = RushOntsnapPlafond.new()
+		_plafond.valt.connect(_plaat_valt)
+		_wereld.add_child(_plafond)
 
 	_boven = Node2D.new()
 	_boven.z_index = 30
@@ -365,7 +395,7 @@ func _zet_props() -> void:
 
 func _bouw_speler() -> void:
 	_speler = Node2D.new()
-	_speler.position = _midden(START)
+	_speler.position = _midden(_dag.start)
 	_dingen.add_child(_speler)
 	_speler_sprite = AnimatedSprite2D.new()
 	_speler_sprite.offset = Vector2(0, -16)
@@ -380,45 +410,49 @@ func _bouw_speler() -> void:
 
 
 func _bouw_dirk() -> void:
-	_dirk = Node2D.new()
-	_dirk.visible = false
+	_vuur_snelheid = SNELHEID * _dag.vuur
+	if _dag.dirk == RushOntsnapDag.Dirk.GEEN:
+		return
+	_dirk = RushOntsnapDirk.new()
 	_dingen.add_child(_dirk)
-	_dirk_sprite = AnimatedSprite2D.new()
-	_dirk_sprite.offset = Vector2(0, -16)
-	_dirk_sprite.position = Vector2(0, 3)
-	_dirk_sprite.sprite_frames = RushOntsnapCollega.frames_voor(&"dirk")
-	_dirk.add_child(_dirk_sprite)
-	# Zijn eigen stukje spoor, van de Weekend-deur naar jouw startplek. Daarna
-	# loopt hij precies jouw voetstappen na: door dezelfde gaten, dus nooit
-	# door een bureau heen.
+	_dirk.setup(_vrij)
+	_dirk.duik = _dag.duik
+	if _dag.dirk != RushOntsnapDag.Dirk.HIELEN:
+		return
+	# Hij stond al bij je bureau: een paar tegels rechts van je, met een eigen
+	# stukje spoor naar jou toe. Daarna loopt hij precies jouw voetstappen na.
 	var weg := PackedVector2Array()
-	for t: Vector2i in DIRK_SPOOR:
+	var t := _dag.start
+	for i: int in 3:
+		if _dicht_op(t + Vector2i.RIGHT):
+			break
+		t += Vector2i.RIGHT
+	while t.x > _dag.start.x:
 		weg.append(_midden(t))
-	_dirk.position = weg[0]
-	weg.remove_at(0)
+		t += Vector2i.LEFT
 	weg.append_array(_spoor)
 	_spoor = weg
-	# Op maandag sjokt hij, op vrijdag zit hij je echt op de hielen.
-	_dirk_snelheid = SNELHEID * (0.62 + 0.07 * dag_index)
-	# Het vuur versnelt een tikje per dag, maar blijft trager dan jij: wie
-	# doorloopt, loopt ervan weg.
-	_vuur_snelheid = SNELHEID * (0.62 + 0.06 * dag_index)
+	_dirk.verschijn_achter(_spoor, 0, "")
 
 
 # --- Collega's, koffie en kaartjes ------------------------------------------------
 
 ## De kortste weg naar buiten met alleen links, omhoog en omlaag. Leeg als
-## er geen is. `mijd` zijn tegels die de bot liever niet neemt.
-func _zoek_pad(van: Vector2i, mijd: Dictionary) -> Array[Vector2i]:
+## er geen is. `mijd` zijn tegels die de bot liever niet neemt. Met `naar`
+## zoekt hij de weg naar die ene tegel in plaats van naar de voordeur.
+func _zoek_pad(van: Vector2i, mijd: Dictionary, naar := Vector2i(-1, -1)) -> Array[Vector2i]:
 	var vorige := {van: van}
 	var rij: Array[Vector2i] = [van]
 	var doel := Vector2i(-1, -1)
 	while not rij.is_empty():
 		var t: Vector2i = rij.pop_front()
-		if _builder.char_at(t) == "V":
+		if t == naar or (naar.x < 0 and _builder.char_at(t) == "V"):
 			doel = t
 			break
-		for d: Vector2i in [Vector2i.LEFT, Vector2i.UP, Vector2i.DOWN]:
+		# Eerst omhoog en omlaag: van alle even korte wegen wint zo die waarop
+		# je zo vroeg mogelijk opzij stuurt. Opzij gaat tijdens het rennen
+		# vanzelf mee; wie te laat stuurt, loopt ergens tegenaan.
+		for d: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT]:
 			var n := t + d
 			if vorige.has(n) or _dicht_op(n) or mijd.has(n):
 				continue
@@ -437,31 +471,73 @@ func _zoek_pad(van: Vector2i, mijd: Dictionary) -> Array[Vector2i]:
 
 
 func _zet_obstakels() -> void:
-	var route := _zoek_pad(START, {})
+	var route := _zoek_pad(_dag.start, {})
 	if route.is_empty():
-		push_error("RushOntsnapping: geen weg van het bureau naar de deur")
+		push_error("RushOntsnapping: geen weg van de start naar de deur")
 		return
-	var aantal: int = [3, 4, 5, 6, 7][dag_index]
-	var gedragen := _gedragen(aantal)
 	var mensen: Array[StringName] = []
 	for k: StringName in KOLLEGAS:
 		if k != speler_id:
 			mensen.append(k)
 	mensen.shuffle()
 	var bezet: Array[int] = []
-	for i: int in mini(aantal, mensen.size()):
-		var x := roundi(lerpf(START.x - 8.0, 13.0, (i + 0.5) / aantal))
-		var t := _route_op(route, x)
-		bezet.append(t.x)
-		_zet_collega(mensen[i], gedragen[i], t)
+	if not _dag.standup.is_empty():
+		_zet_standup(mensen)
+	elif not _dag.vaste.is_empty():
+		for i: int in _dag.vaste.size():
+			var v: Dictionary = _dag.vaste[i]
+			var t: Vector2i = v["t"]
+			_zet_collega(mensen[i % mensen.size()], v["g"], t, t)
+			bezet.append(t.x)
+	else:
+		var aantal := _dag.collegas
+		var gedragen := _gedragen(aantal)
+		for i: int in mini(aantal, mensen.size()):
+			var x := roundi(lerpf(_dag.start.x - 8.0, 13.0, (i + 0.5) / aantal))
+			var t := _route_op(route, x)
+			bezet.append(t.x)
+			_zet_collega(mensen[i], gedragen[i], t)
 	_zet_oppak(route, bezet)
 
 
+## De stand-up: iedereen die er vandaag is, met Jonathan als leider (en Koen
+## als jij Jonathan bent). Ze beginnen bij het eerste station; de stand-up
+## zelf bepaalt waar ze staan.
+func _zet_standup(mensen: Array[StringName]) -> void:
+	var baas_id := &"koen" if speler_id == &"jonathan" else &"jonathan"
+	var leden: Array[RushOntsnapCollega] = []
+	var baas: RushOntsnapCollega = null
+	for id: StringName in mensen:
+		var c := RushOntsnapCollega.new()
+		c.position = _midden(_dag.standup[0])
+		_dingen.add_child(c)
+		c.setup(id, RushOntsnapCollega.Gedrag.KRING, _vrij)
+		c.half = RushOntsnapStandup.HALF
+		leden.append(c)
+		_collegas.append(c)
+		if id == baas_id:
+			baas = c
+	if baas == null and not leden.is_empty():
+		baas = leden[0]
+	_standup = RushOntsnapStandup.new()
+	_standup.setup(leden, baas, _dag.standup, func(t: Vector2i) -> bool: return not _dicht_op(t), _hoog,
+		_speler.position.y)
+	_standup.verhuist.connect(_standup_verhuist)
+
+
+## Je bent erdoor; de stand-up loopt mee naar voren. Even in beeld zeggen,
+## vlak achter je, want daar stonden ze.
+func _standup_verhuist(p: Vector2, zin: String) -> void:
+	var b := UiKit.FONT_10.get_string_size(zin, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+	var x := clampf(p.x, _cam_x + b / 2.0 + 4.0, _cam_x + _vp.x - b / 2.0 - 4.0)
+	RushOntsnapBallon.getal(_boven, Vector2(x, p.y - 34.0), zin, Color("#8fb3ff"))
+
+
 ## Welke soorten collega's er vandaag staan. Maandag staan ze vooral stil;
-## vrijdag stapt de helft je pad in.
+## vrijdag stapt het merendeel je pad in.
 func _gedragen(aantal: int) -> Array[RushOntsnapCollega.Gedrag]:
-	var stappers: int = [1, 1, 2, 2, 3][dag_index]
-	var ijsberen: int = [0, 1, 1, 2, 2][dag_index]
+	var stappers := _dag.stappers
+	var ijsberen := _dag.ijsberen
 	var uit: Array[RushOntsnapCollega.Gedrag] = []
 	for i: int in aantal:
 		if i < stappers:
@@ -489,10 +565,14 @@ func _route_op(route: Array[Vector2i], x: int) -> Vector2i:
 	return beste
 
 
-func _zet_collega(id: StringName, g: RushOntsnapCollega.Gedrag, t: Vector2i) -> void:
+## `vast`: precies op deze tegel, in plaats van naast de route.
+func _zet_collega(id: StringName, g: RushOntsnapCollega.Gedrag, t: Vector2i, vast := Vector2i(-1, -1)) -> void:
 	var plek := t
 	var baan := Vector2i.ZERO
-	if g == RushOntsnapCollega.Gedrag.STAPPEN:
+	if vast.x >= 0:
+		if g == RushOntsnapCollega.Gedrag.IJSBEREN:
+			baan = _kolom_baan(t)
+	elif g == RushOntsnapCollega.Gedrag.STAPPEN:
 		# Twee of drie rijen naast de route, zodat hij erin kan stappen.
 		plek = _naast(t, [3, -3, 2, -2])
 		if plek == t:
@@ -505,10 +585,10 @@ func _zet_collega(id: StringName, g: RushOntsnapCollega.Gedrag, t: Vector2i) -> 
 	c.position = _midden(plek)
 	_dingen.add_child(c)
 	c.setup(id, g, _vrij)
-	c.snelheid = 42.0 + 8.0 * dag_index
-	c.opmerk = RushOntsnapCollega.OPMERK + 8.0 * dag_index
+	c.snelheid = _dag.stap_snel
+	c.opmerk = RushOntsnapCollega.OPMERK + _dag.opmerk
 	if g == RushOntsnapCollega.Gedrag.IJSBEREN:
-		c.snelheid = 26.0 + 4.0 * dag_index
+		c.snelheid = 26.0 + 0.15 * _dag.stap_snel
 		c.zet_baan(_midden(Vector2i(t.x, baan.x)).y, _midden(Vector2i(t.x, baan.y)).y)
 	_collegas.append(c)
 
@@ -538,12 +618,23 @@ func _kolom_baan(t: Vector2i) -> Vector2i:
 
 
 ## Koffie en kaartjes op de route, niet in de kolom van een collega: wie
-## koffie pakt hoort niet meteen tegen iemand op te lopen.
+## koffie pakt hoort niet meteen tegen iemand op te lopen. Om en om, gelijk
+## verdeeld over de weg. De gouden spoedtickets liggen juist wél op riskante
+## plekken, en die staan per dag vast (`RushOntsnapDag.spoed`).
 func _zet_oppak(route: Array[Vector2i], bezet: Array[int]) -> void:
-	var plekken := {0.2: "ticket", 0.33: "koffie", 0.47: "ticket", 0.6: "koffie",
-		0.74: "ticket", 0.86: "koffie", 0.95: "ticket"}
-	for f: float in plekken:
-		var x := roundi(lerpf(START.x - 4.0, 4.0, f))
+	var soorten: Array[String] = []
+	var k := _dag.koffie
+	var tk := _dag.kaartjes
+	while k > 0 or tk > 0:
+		if tk > 0:
+			soorten.append("ticket")
+			tk -= 1
+		if k > 0:
+			soorten.append("koffie")
+			k -= 1
+	for i: int in soorten.size():
+		var f := lerpf(0.2, 0.95, float(i) / maxf(1.0, soorten.size() - 1.0))
+		var x := roundi(lerpf(_dag.start.x - 4.0, 4.0, f))
 		for poging: int in 4:
 			var vrij := true
 			for b: int in bezet:
@@ -553,10 +644,22 @@ func _zet_oppak(route: Array[Vector2i], bezet: Array[int]) -> void:
 				break
 			x -= 1
 		var t := _route_op(route, x)
-		if plekken[f] == "ticket":
+		if soorten[i] == "ticket":
 			# Een rij ernaast: een kaartje pak je met een klein stuurtje.
 			t = _naast(t, [1, -1])
-		_oppak.append({"p": _midden(t), "soort": plekken[f], "weg": false})
+		_oppak.append({"p": _midden(t), "soort": soorten[i], "weg": false})
+	for t: Vector2i in _dag.spoed:
+		if _dicht_op(t):
+			push_warning("RushOntsnapping: spoedticket op een dichte tegel %s" % t)
+			continue
+		# Hetzelfde gouden kaartje dat klopt als op het bord.
+		var kaart := RushTicket.new()
+		kaart.spoed = true
+		kaart.staat = RushTicket.Staat.WERK
+		kaart.vak = randi() % RushData.VAK_KLEUR.size()
+		kaart.position = _midden(t) + Vector2(0, -6)
+		_boven.add_child(kaart)
+		_oppak.append({"p": _midden(t), "soort": "spoed", "weg": false, "kaart": kaart})
 
 
 # --- De UI ---------------------------------------------------------------------------
@@ -640,8 +743,12 @@ func _bouw_uitleg() -> void:
 	_uitleg.add_child(midden)
 	midden.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	# Boven de route, in de gang: zo zie je jezelf en de eerste collega nog.
-	midden.offset_top = BALK + 70
-	midden.offset_bottom = BALK + 150
+	# Boven de route, zodat je jezelf en wat eraan komt nog ziet. Begin je
+	# bovenin (donderdag), dan eronder.
+	_vp = get_viewport().get_visible_rect().size
+	var boven := _dag.start.y < 13
+	midden.offset_top = BALK + (230 if boven else 60)
+	midden.offset_bottom = midden.offset_top + 100
 	var paneel := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color("#141824", 0.94)
@@ -657,11 +764,23 @@ func _bouw_uitleg() -> void:
 	var kol := VBoxContainer.new()
 	kol.add_theme_constant_override(&"separation", 2)
 	paneel.add_child(kol)
-	var t1 := _lbl("Sleep om te sturen.", 12, Color.WHITE)
+	# Drie regels: welke dag het is, wat er vandaag anders is, en hoe je stuurt.
+	# Op een smal toestel valt de titel terug op de kleinere snit.
+	var ruimte := minf(_vp.x - 36.0, 176.0)
+	var kop := "%s · %s" % [_dag.naam, _dag.titel]
+	var maat := 12 if UiKit.FONT_12.get_string_size(kop, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x <= ruimte else 10
+	var t0 := _lbl(kop, maat, Color("#8fb3ff"))
+	t0.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t0.autowrap_mode = TextServer.AUTOWRAP_OFF
+	kol.add_child(t0)
+	var t1 := _lbl(_dag.regel, 10, Color("#ff8a3d"))
 	t1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t1.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	t1.custom_minimum_size.x = ruimte
 	kol.add_child(t1)
-	var t2 := _lbl("Brand! Naar de uitgang!", 12, Color("#ff8a3d"))
+	var t2 := _lbl("Sleep om te sturen.", 10, Color.WHITE)
 	t2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t2.autowrap_mode = TextServer.AUTOWRAP_OFF
 	kol.add_child(t2)
 	_pijlen = Control.new()
 	_pijlen.custom_minimum_size = Vector2(0, 14)
@@ -750,6 +869,12 @@ func _sluit_uitleg() -> void:
 		return
 	fase = Fase.REN
 	_fase_t = 0.0
+	if _dag.plafond:
+		# Vrijdag: het brandalarm, want nu brandt écht alles.
+		AudioDirector.play_sfx(&"rush_brand", 0.02, -4.0)
+	if _dirk != null and _dirk.actief():
+		RushOntsnapBallon.zeg(_dirk, "Uren al geboekt?", 1.6)
+		AudioDirector.play_sfx(&"rush_dirk", 0.05, -2.0)
 	var tw := _uitleg.create_tween()
 	tw.tween_property(_uitleg, ^"modulate:a", 0.0, 0.2)
 	tw.tween_callback(_uitleg.hide)
@@ -800,18 +925,24 @@ func _ren(delta: float) -> void:
 	else:
 		_toetsen()
 	_boost = maxf(0.0, _boost - delta)
+	_genade = maxf(0.0, _genade - delta)
 	if _stil > 0.0:
 		_stil -= delta
-		if _stil <= 0.0 and _kijk == &"right":
-			RushOntsnapBallon.zeg(_speler, "Ja, Dirk.", 0.9)
+		if _stil <= 0.0:
+			_genade = 0.4
+			if _kijk == &"right":
+				RushOntsnapBallon.zeg(_speler, "Ja, Dirk.", 0.9)
 	else:
 		_beweeg(delta)
+	if _standup != null:
+		_standup.tik(delta, _speler.position)
 	for c: RushOntsnapCollega in _collegas:
 		c.tik(delta, _speler.position)
-		if _stil <= 0.0 and c.raakt(_speler.position, HALF):
+		if _stil <= 0.0 and _genade <= 0.0 and c.raakt(_speler.position, HALF):
 			_bots(c)
 	_werk_vuur(delta)
 	_werk_dirk(delta)
+	_werk_plafond(delta)
 	_werk_oppak()
 	if _speler.position.x - HALF.x < T:
 		_buiten()
@@ -899,7 +1030,13 @@ func _animeer(d: Vector2) -> void:
 func _bots(c: RushOntsnapCollega) -> void:
 	gebotst += 1
 	_stil = BOTS_STIL
-	c.heeft_je()
+	if c.gedrag == RushOntsnapCollega.Gedrag.KRING:
+		# De stand-up trekt je erbij, en dat duurt.
+		_stil = RushOntsnapStandup.STIL
+		_standup.heeft_je(c)
+		AudioDirector.play_sfx(&"rush_afkappen", 0.05, -4.0)
+	else:
+		c.heeft_je()
 	_speler_sprite.play(&"idle_left")
 	_flits(Color(1.0, 0.6, 0.6))
 	RushOntsnapBallon.getal(_boven, _speler.position + Vector2(12, -18), "oef!", Color("#ff6b7a"))
@@ -918,76 +1055,123 @@ func _flits(k: Color) -> void:
 # --- Dirk ---------------------------------------------------------------------------
 
 func _werk_dirk(delta: float) -> void:
-	if not _dirk_actief:
-		if _fase_t < 1.2:
-			return
-		_dirk_actief = true
-		_dirk.visible = true
-		RushOntsnapBallon.zeg(_dirk, "Brand! Uren al geboekt?", 1.8)
-		AudioDirector.play_sfx(&"rush_dirk", 0.05, -4.0)
-	if _dirk_wacht > 0.0:
-		_dirk_wacht -= delta
-		_dirk_sprite.play(&"talk_left" if _dirk_wacht > DIRK_RUST else &"idle_left")
-		_dirk_voor_vuur()
+	if _dirk == null:
 		return
-	var oud := _dirk.position
-	var stap := _dirk_snelheid * delta
-	while stap > 0.0 and _dirk_i < _spoor.size():
-		var naar := _spoor[_dirk_i] - _dirk.position
-		if naar.length() <= stap:
-			_dirk.position = _spoor[_dirk_i]
-			stap -= naar.length()
-			_dirk_i += 1
-		else:
-			_dirk.position += naar.normalized() * stap
-			stap = 0.0
-	_dirk_voor_vuur()
-	_dirk_loopje(_dirk.position - oud)
-	if _stil <= 0.0 and _dirk.position.distance_to(_speler.position) < 9.0:
+	if not _dirk.actief():
+		if _dag.dirk == RushOntsnapDag.Dirk.HALVERWEGE and _voortgang(_speler.position.x) >= 0.45:
+			_dirk_halverwege()
+		return
+	var vuur := _vuur_x if _vuur_actief else INF
+	if _dirk.tik(delta, _speler.position, _spoor, _stil > 0.0 or _genade > 0.0, vuur, _cam_x + _vp.x):
 		_dirk_vangt()
+	# Zit hij achter je aan, dan schuift het beeld een stukje op: je moet hem
+	# kunnen zien aankomen.
+	var jaagt := _dirk.position.x > _speler.position.x and _dirk.staat != RushOntsnapDirk.Staat.TEGEMOET
+	var anker := minf(_dag.camera, 0.56) if jaagt else _dag.camera
+	_cam_anker = lerpf(_cam_anker, anker, 1.0 - exp(-delta * 2.0))
 
 
-## Dirk rent vóór het vuur uit, over jouw spoor. Uren boeken gaat voor, maar
-## verbranden doet hij niet.
-func _dirk_voor_vuur() -> void:
-	while _vuur_actief and _dirk_i < _spoor.size() and _dirk.position.x > _vuur_x - 30.0:
-		_dirk.position = _spoor[_dirk_i]
-		_dirk_i += 1
-		_dirk_wacht = minf(_dirk_wacht, DIRK_RUST)
-
-
-func _dirk_loopje(v: Vector2) -> void:
-	var anim := &"idle_left"
-	if v.length() > 0.01:
-		if absf(v.x) > absf(v.y):
-			anim = &"walk_left" if v.x < 0.0 else &"walk_right"
-		else:
-			anim = &"walk_down" if v.y > 0.0 else &"walk_up"
-	if _dirk_sprite.animation != anim:
-		_dirk_sprite.play(anim)
+## Vrijdag, halverwege: Dirk duikt op. De ene keer komt hij je van voren
+## tegemoet, de andere keer rent hij je van achteren op.
+func _dirk_halverwege() -> void:
+	if randf() < 0.5:
+		# Van voren: net buiten beeld links, op de weg die jij zou nemen.
+		var pad := _zoek_pad(_tegel(_speler.position), {})
+		var x := _speler.position.x - _vp.x * _cam_anker - 18.0
+		var plek := Vector2.ZERO
+		for t: Vector2i in pad:
+			if _midden(t).x <= x and not _iemand_bij(_midden(t), 28.0):
+				plek = _midden(t)
+				break
+		if plek != Vector2.ZERO and plek.x > 12.0 * T:
+			_dirk.verschijn_voor(plek, "UREN!")
+			return
+	# Van achteren: een eind terug op je spoor, net buiten beeld rechts.
+	var i := _spoor.size() - 1
+	var a := 0.0
+	while i > 0 and a < 90.0:
+		a += _spoor[i].distance_to(_spoor[i - 1])
+		i -= 1
+	_dirk.verschijn_achter(_spoor, i, "UREN! Wacht!")
 
 
 func _dirk_vangt() -> void:
 	gebotst += 1
 	_stil = DIRK_STIL
-	_dirk_wacht = DIRK_STIL + DIRK_RUST
 	_kijk = &"right"
 	_speler_sprite.play(&"idle_right")
 	_flits(Color(0.75, 0.8, 1.0))
-	RushOntsnapBallon.zeg(_dirk, RushData.kies(RushData.DIRK), 1.8)
+	_dirk.praat("Uren al geboekt?" if _dirk_had == 0 else RushData.kies(RushData.DIRK))
+	_dirk_had += 1
 	RushOntsnapBallon.getal(_boven, _speler.position + Vector2(-14, -18), "Dirk!", Color("#ff6b7a"))
 	AudioDirector.play_sfx(&"rush_dirk")
 	Haptiek.tril(Haptiek.Sterkte.SLAG)
 	_schok = maxf(_schok, 3.0)
 
 
+# --- Het plafond (vrijdag) -------------------------------------------------------
+
+## Om de anderhalve à twee seconden komt er een plaat naar beneden, vlak voor
+## je uit: waar je over `AANLOOP` seconden ongeveer bent, in jouw rij of een
+## ernaast. Nooit waar je er niet omheen kunt, en niet meer in de entree.
+func _werk_plafond(delta: float) -> void:
+	if _plafond == null or _fase_t < 2.5:
+		return
+	_plaat_rust = maxf(0.0, _plaat_rust - delta)
+	_plaat_klok -= delta
+	if _plaat_klok > 0.0:
+		return
+	_plaat_klok = randf_range(1.1, 1.9)
+	var x := _speler.position.x - SNELHEID * RushOntsnapPlafond.AANLOOP - randf_range(0.0, 28.0)
+	var tx := floori(x / T)
+	if tx <= 11:
+		return
+	var ty := _tegel(_speler.position).y
+	var rijen: Array[int] = [0, 0, 1, -1]
+	if _plaat_rust > 0.0 or _stil > 0.0:
+		rijen = [2, -2, 3, -3]
+	rijen.shuffle()
+	rijen.append_array([1, -1, 2, -2])
+	for d: int in rijen:
+		var t := Vector2i(tx, ty + d)
+		if _dicht_op(t):
+			continue
+		if _dicht_op(t + Vector2i.UP) and _dicht_op(t + Vector2i.DOWN):
+			continue
+		_plafond.laat_vallen(_midden(t))
+		AudioDirector.play_sfx(&"rush_weg", 0.1, -10.0)
+		return
+
+
+func _plaat_valt(p: Vector2) -> void:
+	if fase != Fase.REN:
+		return
+	var d := _speler.position - p
+	if absf(d.x) < 8.0 + HALF.x and absf(d.y) < 8.0 + HALF.y and _stil <= 0.0 and _genade <= 0.0:
+		gebotst += 1
+		_stil = PLAFOND_STIL
+		_speler_sprite.play(&"idle_left")
+		_flits(Color(1.0, 0.55, 0.25))
+		RushOntsnapBallon.zeg(_speler, "Au! Heet!", 0.9)
+		_plaat_rust = 2.5
+		RushOntsnapBallon.getal(_boven, _speler.position + Vector2(12, -18), "au!", Color("#ff8a3d"))
+		AudioDirector.play_sfx(&"rush_bots")
+		Haptiek.tril(Haptiek.Sterkte.SLAG)
+		_schok = maxf(_schok, 3.0)
+		_stof_wolk(p, 8)
+	elif d.length() < 90.0:
+		AudioDirector.play_sfx(&"rush_bots", 0.1, -9.0)
+		_schok = maxf(_schok, 1.2)
+		_stof_wolk(p, 5)
+
+
 # --- Het vuur -------------------------------------------------------------------------
 
-## Hoe ver het vuur hooguit achter je zit: net over de rechterrand van het
+## Hoe ver het vuur hooguit achter je zit: rond de rechterrand van het
 ## scherm, zodat je de gloed altijd ziet en de vlammen zodra je treuzelt.
 ## Op vrijdag zit het dichter op je huid.
 func _vuur_gat() -> float:
-	return maxf(60.0, _vp.x * 0.34 + 44.0 - 6.0 * dag_index)
+	return _dag.vuur_gat
 
 
 func _werk_vuur(delta: float) -> void:
@@ -995,7 +1179,7 @@ func _werk_vuur(delta: float) -> void:
 		if _fase_t < VUUR_START:
 			return
 		_vuur_actief = true
-		_vuur_x = _speler.position.x + _vuur_gat() + 40.0
+		_vuur_x = _speler.position.x + _dag.vuur_begin
 	if _vuur_adem > 0.0:
 		_vuur_adem -= delta
 	else:
@@ -1017,6 +1201,11 @@ func _vuur_raakt() -> void:
 	_stil = VUUR_KUCH
 	_vuur_x = _speler.position.x + _vuur_gat()
 	_vuur_adem = VUUR_ADEM
+	# Elke keer dat het je inhaalt, zakt het een tikje in. Wie goed loopt
+	# merkt er niets van; wie blijft haken, raakt niet in een spiraal van
+	# steeds weer verbranden waar hij nooit meer uitkomt.
+	_vuur_snelheid = maxf(SNELHEID * 0.6, _vuur_snelheid * 0.95)
+	_plaat_rust = 2.5
 	_speler_sprite.play(&"idle_left")
 	_speler_sprite.modulate = Color(0.3, 0.27, 0.27)
 	var tw := _speler_sprite.create_tween()
@@ -1163,21 +1352,41 @@ func _teken_kooltjes(van: float, tot: float, boven: float, onder: float, tq: flo
 
 func _werk_oppak() -> void:
 	for o: Dictionary in _oppak:
+		if o.has("kaart"):
+			var p: Vector2 = o["p"]
+			(o["kaart"] as Node2D).position = (p + Vector2(0, -7 + sin(_tijd * 4.0 + p.x * 0.1) * 1.5)).round()
 		if not o["weg"] and (o["p"] as Vector2).x > _vuur_x - 4.0:
 			# Verbrand. Jammer van de koffie.
-			o["weg"] = true
+			_weg(o)
 		if o["weg"] or (o["p"] as Vector2).distance_to(_speler.position) > 11.0:
 			continue
-		o["weg"] = true
+		_weg(o)
 		if o["soort"] == "koffie":
 			_boost = BOOST_DUUR
 			RushOntsnapBallon.getal(_boven, o["p"] + Vector2(0, -10), "Koffie!", Color("#ffd27a"))
 			AudioDirector.play_sfx(&"rush_koffie")
+			if _dirk != null and _dirk.position.distance_to(_speler.position) < 160.0:
+				_dirk.koffie()
+		elif o["soort"] == "spoed":
+			seconden = maxf(0.0, seconden - SPOED_BONUS)
+			RushOntsnapBallon.getal(_boven, o["p"] + Vector2(0, -14), "SPOED! -1,5s", Color("#ffd23f"))
+			RushPop.confetti(_boven, o["p"] + Vector2(0, -8), 14)
+			AudioDirector.play_sfx(&"rush_ster", 0.04)
+			Haptiek.tril(Haptiek.Sterkte.GELUKT)
+			_schok = maxf(_schok, 1.0)
+			continue
 		else:
 			seconden = maxf(0.0, seconden - TICKET_BONUS)
 			RushOntsnapBallon.getal(_boven, o["p"] + Vector2(0, -10), "-1 s", Color("#3fd27f"))
 			AudioDirector.play_sfx(&"rush_ster", 0.08)
 		Haptiek.tril(Haptiek.Sterkte.TIK)
+
+
+func _weg(o: Dictionary) -> void:
+	o["weg"] = true
+	if o.has("kaart"):
+		(o["kaart"] as Node).queue_free()
+		o.erase("kaart")
 
 
 # --- Naar buiten ----------------------------------------------------------------------
@@ -1191,7 +1400,7 @@ func _buiten() -> void:
 	var deur := Vector2(T, _speler.position.y)
 	RushPop.confetti(_boven, deur + Vector2(4, -20), 36)
 	RushPop.confetti(_boven, deur + Vector2(30, -24), 24)
-	if _dirk_actief:
+	if _dirk != null and _dirk.actief():
 		RushOntsnapBallon.zeg(_dirk, "Dan morgen!", 1.8)
 	_toon_vrijheid()
 
@@ -1201,8 +1410,8 @@ func _naar_buiten(delta: float) -> void:
 	_speler.position.x -= SNELHEID * 0.8 * delta
 	_speler_sprite.play(&"walk_left")
 	_speler_sprite.modulate.a = clampf(1.0 - _fase_t / 0.6, 0.0, 1.0)
-	if _dirk_actief:
-		_dirk_sprite.play(&"idle_left")
+	if _dirk != null and _dirk.actief():
+		_dirk.sprite.play(&"idle_left")
 	if _fase_t >= 2.0:
 		_einde(false)
 
@@ -1284,7 +1493,7 @@ func _tekst_tijd(s: float) -> String:
 func _pas_camera(delta: float, meteen: bool) -> void:
 	_vp = get_viewport().get_visible_rect().size
 	var breed := float(_breed * T)
-	var doel := clampf(_speler.position.x - _vp.x * 0.66, 0.0, maxf(0.0, breed - _vp.x))
+	var doel := clampf(_speler.position.x - _vp.x * _cam_anker, 0.0, maxf(0.0, breed - _vp.x))
 	if breed < _vp.x:
 		doel = -(_vp.x - breed) / 2.0
 	_cam_x = doel if meteen else lerpf(_cam_x, doel, 1.0 - exp(-delta * 10.0))
@@ -1319,8 +1528,10 @@ func _teken_onder() -> void:
 	# Schaduwen onder iedereen, en stof achter je hakken.
 	for c: RushOntsnapCollega in _collegas:
 		_onder.draw_rect(Rect2(c.position + Vector2(-6, 2), Vector2(12, 3)), Color(0, 0, 0, 0.22))
-	if _dirk.visible:
+	if _dirk != null and _dirk.visible:
 		_onder.draw_rect(Rect2(_dirk.position + Vector2(-6, 2), Vector2(12, 3)), Color(0, 0, 0, 0.22))
+		if _dirk.duikt_of_loert():
+			_teken_duiklijn()
 	if fase != Fase.BUITEN:
 		_onder.draw_rect(Rect2(_speler.position + Vector2(-6, 2), Vector2(12, 3)), Color(0, 0, 0, 0.28))
 	for s: Dictionary in _stofjes:
@@ -1347,6 +1558,8 @@ func _teken_boven() -> void:
 	_teken_uitgang()
 	if fase == Fase.BUITEN:
 		_teken_licht()
+	_teken_standup_bord()
+	_teken_dirk_teken()
 	_teken_dirk_wijzer()
 
 
@@ -1355,6 +1568,12 @@ func _teken_oppak(o: Dictionary) -> void:
 	var bob := sin(_tijd * 4.0 + p.x * 0.1) * 1.5
 	_boven.draw_rect(Rect2(p + Vector2(-4, 4), Vector2(8, 2)), Color(0, 0, 0, 0.2))
 	var q := p + Vector2(0, -4 + bob)
+	if o["soort"] == "spoed":
+		# Het kaartje tekent zichzelf (`RushTicket`); hier alleen het deinen
+		# en een gouden glans op de vloer, zodat je hem van ver ziet liggen.
+		var a := 0.18 + 0.12 * sin(_tijd * 9.0)
+		_boven.draw_rect(Rect2(p + Vector2(-8, 2), Vector2(16, 5)), Color(1.0, 0.82, 0.25, a))
+		return
 	if o["soort"] == "koffie":
 		# Een bekertje met een oor en een sliertje stoom.
 		_boven.draw_rect(Rect2(q + Vector2(-3, -3), Vector2(6, 7)), Color("#f4f5f7"))
@@ -1426,26 +1645,95 @@ func _pijltjes(p: Vector2, puls: float) -> void:
 			q + Vector2(0, 0), q + Vector2(4, -4), q + Vector2(4, 4)]), k)
 
 
-## Staat Dirk rechts buiten beeld, dan een rood labeltje aan de rand: je
-## voelt hem aankomen voordat je hem ziet.
+## Staat Dirk buiten beeld, dan een rood labeltje aan de rand: je voelt hem
+## aankomen voordat je hem ziet. Rechts als hij je achternazit, links als
+## hij je van voren tegemoetkomt.
 func _teken_dirk_wijzer() -> void:
-	if not _dirk_actief or fase != Fase.REN:
+	if _dirk == null or not _dirk.actief() or fase != Fase.REN:
 		return
 	var rand := _cam_x + _vp.x
-	if _dirk.position.x < rand - 4.0:
-		return
-	if _dirk.position.x > rand + 200.0:
-		return
-	var dichtbij := clampf(1.0 - (_dirk.position.x - rand) / 160.0, 0.3, 1.0)
-	var puls := 0.75 + 0.25 * sin(_tijd * 10.0) if dichtbij > 0.7 else 1.0
+	var links := _cam_x
 	var y := clampf(_dirk.position.y - 22.0, T * 2.0, (_hoog - 2) * T)
-	var r := Rect2(rand - 30.0, y - 6.0, 28.0, 12.0)
-	var k := Color("#e5484d", dichtbij * puls)
-	_boven.draw_rect(r, k)
-	_boven.draw_colored_polygon(PackedVector2Array([
-		Vector2(rand - 2.0, y - 5.0), Vector2(rand + 2.0, y), Vector2(rand - 2.0, y + 5.0)]), k)
-	_boven.draw_string(UiKit.FONT_10, Vector2(r.position.x + 4.0, y + 4.0), "DIRK",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1, 1, 1, dichtbij))
+	if _dirk.position.x > rand - 4.0 and _dirk.position.x < rand + 200.0:
+		var dichtbij := clampf(1.0 - (_dirk.position.x - rand) / 160.0, 0.3, 1.0)
+		var puls := 0.75 + 0.25 * sin(_tijd * 10.0) if dichtbij > 0.7 else 1.0
+		var r := Rect2(rand - 30.0, y - 6.0, 28.0, 12.0)
+		var k := Color("#e5484d", dichtbij * puls)
+		_boven.draw_rect(r, k)
+		_boven.draw_colored_polygon(PackedVector2Array([
+			Vector2(rand - 2.0, y - 5.0), Vector2(rand + 2.0, y), Vector2(rand - 2.0, y + 5.0)]), k)
+		_boven.draw_string(UiKit.FONT_10, Vector2(r.position.x + 4.0, y + 4.0), "DIRK",
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1, 1, 1, dichtbij))
+	elif _dirk.position.x < links + 4.0 and _dirk.position.x > links - 200.0:
+		var puls := 0.75 + 0.25 * sin(_tijd * 10.0)
+		var r := Rect2(links + 2.0, y - 6.0, 28.0, 12.0)
+		var k := Color("#e5484d", puls)
+		_boven.draw_rect(r, k)
+		_boven.draw_colored_polygon(PackedVector2Array([
+			Vector2(links + 2.0, y - 5.0), Vector2(links - 2.0, y), Vector2(links + 2.0, y + 5.0)]), k)
+		_boven.draw_string(UiKit.FONT_10, Vector2(r.position.x + 4.0, y + 4.0), "DIRK",
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+
+
+## In beeld: een rood naamkaartje boven zijn hoofd, de eerste seconden en
+## telkens als hij gaat duiken. Niet iedereen kent Dirk van gezicht, en
+## vandaag moet je weten wie er achter je zit.
+func _teken_dirk_teken() -> void:
+	if _dirk == null or not _dirk.actief() or fase != Fase.REN:
+		return
+	var p := _dirk.position + Vector2(0, -38)
+	if _dirk.staat == RushOntsnapDirk.Staat.LOERT or _dirk.staat == RushOntsnapDirk.Staat.DUIKT:
+		# Een uitroepteken dat trilt.
+		var s := roundf(sin(_tijd * 40.0))
+		var k := Color("#e5484d")
+		_boven.draw_rect(Rect2(p + Vector2(-2 + s, -8), Vector2(4, 8)), k)
+		_boven.draw_rect(Rect2(p + Vector2(-2 + s, 2), Vector2(4, 3)), k)
+		_boven.draw_rect(Rect2(p + Vector2(-1 + s, -7), Vector2(2, 6)), Color.WHITE)
+		_boven.draw_rect(Rect2(p + Vector2(-1 + s, 3), Vector2(2, 1)), Color.WHITE)
+		return
+	if _dirk.sinds > 3.5:
+		return
+	var b := UiKit.FONT_10.get_string_size("DIRK", HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+	var r := Rect2(p.x - b / 2.0 - 3.0, p.y - 4.0, b + 6.0, 11.0)
+	_boven.draw_rect(r, Color("#e5484d"))
+	_boven.draw_string(UiKit.FONT_10, Vector2(r.position.x + 3.0, p.y + 5.0), "DIRK",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+
+
+## De rode streep van een duik: door de rij waar hij doorheen gaat, met
+## pijltjes naar links. Eerst flauw, dan steeds feller tot hij gaat.
+func _teken_duiklijn() -> void:
+	var y := roundf(_dirk.lijn_y)
+	var x1 := _dirk.position.x - 6.0
+	var x0 := x1 - 150.0
+	var f := 1.0 if _dirk.staat == RushOntsnapDirk.Staat.DUIKT else _dirk.loer
+	var puls := 0.7 + 0.3 * sin(_tijd * lerpf(12.0, 30.0, f))
+	_onder.draw_rect(Rect2(x0, y - 5.0, x1 - x0, 10.0), Color(0.9, 0.15, 0.15, (0.12 + 0.2 * f) * puls))
+	_onder.draw_rect(Rect2(x0, y - 1.0, x1 - x0, 2.0), Color(1.0, 0.3, 0.3, (0.35 + 0.4 * f) * puls))
+	var schuif := fmod(_tijd * 60.0, 12.0)
+	var x := x1 - schuif
+	while x > x0 + 4.0:
+		_onder.draw_colored_polygon(PackedVector2Array([
+			Vector2(x - 4.0, y), Vector2(x, y - 3.0), Vector2(x, y + 3.0)]), Color(1, 0.85, 0.85, 0.6 * f * puls))
+		x -= 12.0
+
+
+## Een bordje boven de stand-up, zodat je in één oogopslag ziet wat die rij
+## mensen daar doet.
+func _teken_standup_bord() -> void:
+	if _standup == null or not _standup.actief or fase != Fase.REN:
+		return
+	var sl := _standup.slots()
+	if sl.is_empty():
+		return
+	var tekst := "STAND-UP"
+	var b := UiKit.FONT_10.get_string_size(tekst, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+	var p := Vector2(roundf(_standup.x), roundf(sl[0] - 44.0))
+	var r := Rect2(p.x - b / 2.0 - 3.0, p.y - 5.0, b + 6.0, 11.0)
+	_boven.draw_rect(Rect2(r.position + Vector2(1, 1), r.size), Color(0, 0, 0, 0.3))
+	_boven.draw_rect(r, Color("#3a86ff"))
+	_boven.draw_string(UiKit.FONT_10, Vector2(r.position.x + 3.0, p.y + 4.0), tekst,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
 
 
 ## De voortgangsbalk loopt van rechts naar links, net als jij: de deur zit
@@ -1465,7 +1753,7 @@ func _teken_balk() -> void:
 	# De deur.
 	_balk.draw_rect(Rect2(0, 0, 5, h), Color("#bfe3a8"))
 	_balk.draw_rect(Rect2(0, 0, 5, h), Color("#1d7a52"), false, 1.0)
-	if _dirk_actief:
+	if _dirk != null and _dirk.actief():
 		var dx := w - _voortgang(_dirk.position.x) * (w - 6.0)
 		_balk.draw_rect(Rect2(dx - 1.5, 1, 3, h - 2), Color("#e5484d"))
 	_balk.draw_rect(Rect2(x - 2, 0, 4, h), Color.WHITE)
@@ -1477,16 +1765,16 @@ func _voortgang(px: float) -> float:
 
 # --- Bot: stuurt zelf, voor tests ----------------------------------------------------
 
-## Zoekt elke vijfde seconde de kortste weg naar de deur om de collega's heen,
-## en stuurt naar de rij waar de volgende stap naar links begint.
+## Zoekt een paar keer per seconde de kortste weg naar de deur om alles heen
+## wat hem kan ophouden, en stuurt naar de rij waar de volgende stap naar
+## links begint. Het vangnet (`_hulp`) gebruikt hem ook: wie vastzit, wordt
+## even net zo slim gestuurd.
 func _bot_stuur(delta: float) -> void:
 	_bot_klok -= delta
 	var hier := _tegel(_speler.position)
 	if _bot_klok <= 0.0 or _bot_pad.is_empty():
-		_bot_klok = 0.2
-		_bot_pad = _zoek_pad(hier, _bot_mijd(hier))
-		if _bot_pad.is_empty():
-			_bot_pad = _zoek_pad(hier, {})
+		_bot_klok = 0.15
+		_bot_pad = _bot_route(hier)
 	if _bot_pad.is_empty():
 		return
 	var rij := _bot_pad[0].y
@@ -1495,22 +1783,157 @@ func _bot_stuur(delta: float) -> void:
 			rij = _bot_pad[i - 1].y
 			break
 	_doel_y = _midden(Vector2i(hier.x, rij)).y
+	_bot_standup_fijn()
 
 
-## De tegels rond collega's die nog iets willen, plus een kolom ervoor zodat
-## de bot op tijd uitwijkt.
-func _bot_mijd(hier: Vector2i) -> Dictionary:
-	var mijd := {}
+## De weg om alles heen. Lukt dat niet, dan steeds minder kieskeurig: eerst
+## zonder vooruit te kijken naar de stand-up, dan dwars door iedereen heen.
+## Ligt er een spoedticket vlak bij de weg, en kost het weinig, dan erlangs.
+func _bot_route(hier: Vector2i) -> Array[Vector2i]:
+	var mijd := _bot_mijd(hier, true)
+	var pad := _zoek_pad(hier, mijd)
+	if pad.is_empty():
+		mijd = _bot_mijd(hier, false)
+		pad = _zoek_pad(hier, mijd)
+	if pad.is_empty():
+		return _zoek_pad(hier, {})
+	# Het vuur te dichtbij: geen omwegen.
+	if _vuur_actief and _vuur_x - _speler.position.x < 40.0:
+		return pad
+	var beste := pad
+	for o: Dictionary in _oppak:
+		if o["weg"] or o["soort"] != "spoed":
+			continue
+		var t := _tegel(o["p"])
+		if t.x > hier.x or hier.x - t.x > 9 or not _spoed_veilig(o["p"]):
+			continue
+		# De marge rond collega's is voor het uitwijken; een kaartje vlak
+		# naast iemand mag hij wel pakken, als hij er maar niet tegenaan loopt.
+		var m2 := mijd.duplicate()
+		m2.erase(t)
+		var heen := _zoek_pad(hier, m2, t)
+		if heen.is_empty():
+			continue
+		var verder := _zoek_pad(t, mijd)
+		if verder.is_empty():
+			continue
+		heen.pop_back()
+		heen.append_array(verder)
+		if heen.size() <= pad.size() + 6 and (beste == pad or heen.size() < beste.size()):
+			beste = heen
+	return beste
+
+
+## Staat er al een collega binnen `r` px? Dan zet je daar niemand anders
+## neer: twee mensen op één plek, met twee ballonnen door elkaar, leest niemand.
+func _iemand_bij(p: Vector2, r: float) -> bool:
+	for c: RushOntsnapCollega in _collegas:
+		if not c.gesproken and c.position.distance_to(p) < r:
+			return true
+	return false
+
+
+## Kun je hier staan zonder dat iemand je heeft?
+func _spoed_veilig(p: Vector2) -> bool:
 	for c: RushOntsnapCollega in _collegas:
 		if c.gesproken:
+			continue
+		if absf(c.position.x - p.x) < c.half.x + HALF.x + 3.0 \
+				and absf(minf(absf(c.position.y - p.y), absf(c.straks_y() - p.y))) < c.half.y + HALF.y + 3.0:
+			return false
+	return true
+
+
+## Tegels waar de bot liever niet komt: rond collega's die nog iets willen
+## (plus een kolom ervoor, zodat hij op tijd uitwijkt), de stand-up zoals
+## die er staat als hij er aankomt, de rij waar Dirk doorheen gaat duiken, en
+## de schaduw van een vallende plaat.
+func _bot_mijd(hier: Vector2i, vooruit: bool) -> Dictionary:
+	var mijd := {}
+	for c: RushOntsnapCollega in _collegas:
+		if c.gesproken or c.gedrag == RushOntsnapCollega.Gedrag.KRING:
 			continue
 		var y0 := minf(c.position.y, c.straks_y()) - HALF.y * 2.0
 		var y1 := maxf(c.position.y, c.straks_y()) + HALF.y * 2.0
 		var x0 := c.position.x - HALF.x * 2.0
 		var x1 := c.position.x + HALF.x * 2.0 + T
-		for ty: int in range(floori(y0 / T), floori(y1 / T) + 1):
-			for tx: int in range(floori(x0 / T), floori(x1 / T) + 1):
+		_mijd_vak(mijd, hier, x0, x1, y0, y1)
+	if _standup != null and _standup.actief and _speler.position.x > _standup.x - 2.0 * HALF.x - 2.0:
+		var sx := _standup.x
+		var t0 := 0.0
+		var t1 := 0.0
+		var vries := 0.0
+		if vooruit:
+			var v := _bot_standup_tijden()
+			vries = v.x
+			t0 = v.y
+			t1 = v.z
+			sx = v.w
+		# De kolommen waar je de muur raakt: midden van de tegel binnen 16 px
+		# van de muur, en rechts wat ruimer, want het midden van de kring
+		# staat een stapje naar voren.
+		var kx0 := floori((sx - 16.0 - T / 2.0) / T) + 1
+		var kx1 := ceili((sx + 22.0 - T / 2.0) / T) - 1
+		for ty: int in _hoog:
+			if _standup.ruimte(_midden(Vector2i(0, ty)).y, t0, t1, vries) >= RushOntsnapStandup.HALF.y + HALF.y + 1.0:
+				continue
+			for tx: int in range(kx0, kx1 + 1):
 				var t := Vector2i(tx, ty)
 				if t != hier:
 					mijd[t] = true
+	if _dirk != null and _dirk.actief():
+		if _dirk.duikt_of_loert():
+			var y := _dirk.lijn_y
+			_mijd_vak(mijd, hier, _speler.position.x - 70.0, _dirk.position.x, y - 13.0, y + 13.0)
+		elif _dirk.staat == RushOntsnapDirk.Staat.TEGEMOET:
+			var p := _dirk.position
+			_mijd_vak(mijd, hier, p.x - 3.0 * HALF.x, p.x + 2.0 * HALF.x + T, p.y - 22.0, p.y + 22.0)
+	if _plafond != null:
+		for p: Vector2 in _plafond.dreigend():
+			_mijd_vak(mijd, hier, p.x - T, p.x + T, p.y - 2.0, p.y + 2.0)
 	return mijd
+
+
+func _mijd_vak(mijd: Dictionary, hier: Vector2i, x0: float, x1: float, y0: float, y1: float) -> void:
+	for ty: int in range(floori(y0 / T), floori(y1 / T) + 1):
+		for tx: int in range(floori(x0 / T), floori(x1 / T) + 1):
+			var t := Vector2i(tx, ty)
+			if t != hier:
+				mijd[t] = true
+
+
+## Wanneer de stand-up stilvalt, wanneer je hem raakt en weer voorbij bent,
+## en waar hij dan staat: (stil, raak, voorbij, x).
+func _bot_standup_tijden() -> Vector4:
+	var v := _standup.vooruit(_speler.position.x, SNELHEID)
+	var t0 := maxf(0.0, (_speler.position.x - v.y - 2.0 * HALF.x) / SNELHEID)
+	var t1 := t0 + (4.0 * HALF.x + 4.0) / SNELHEID + 0.12
+	return Vector4(v.x, t0, t1, v.y)
+
+
+## Vlak voor de stand-up: niet het midden van de tegel, maar precies de
+## hoogte waar het verst van iedereen af blijft als je erdoor gaat. Binnen
+## de rij die de route koos, en alleen waar je ook echt tot voorbij de muur
+## kunt lopen.
+func _bot_standup_fijn() -> void:
+	if _standup == null or not _standup.actief:
+		return
+	var dx := _speler.position.x - _standup.x
+	if dx < 0.0 or dx > 56.0:
+		return
+	var v := _bot_standup_tijden()
+	var vries := v.x
+	var t0 := v.y
+	var t1 := v.z
+	var rij := floorf(_doel_y / T) * T
+	var beste := _doel_y
+	var ruim := _standup.ruimte(beste, t0, t1, vries)
+	var y := rij + HALF.y
+	while y <= rij + T - HALF.y:
+		var r := _standup.ruimte(y, t0, t1, vries)
+		if r > ruim + 0.5 and _vrij(Vector2(_standup.x - 2.0 * HALF.x, y)) \
+				and _vrij(Vector2(_standup.x + 2.0 * HALF.x, y)):
+			ruim = r
+			beste = y
+		y += 2.0
+	_doel_y = beste
