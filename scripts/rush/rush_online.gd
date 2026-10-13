@@ -19,7 +19,7 @@ extends RefCounted
 
 ## Het adres van de Worker, zonder slash aan het eind: bijvoorbeeld
 ## "https://tickets-scorebord.jouwnaam.workers.dev". Leeg is uit.
-const ADRES := ""
+const ADRES := "https://tickets-scorebord.tickets-scorebord.workers.dev"
 
 ## Seconden voordat we opgeven. Het scorebord mag het spel nooit ophouden.
 const TIJD_MAX := 6.0
