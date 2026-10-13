@@ -43,6 +43,9 @@ var gedrag := Gedrag.STAAN
 var snelheid := 50.0
 var opmerk := OPMERK
 var gesproken := false
+## Waar jij heen rent: -1 naar links, +1 naar rechts. Hij kijkt jou aan, dus
+## de andere kant op.
+var richting := -1
 ## Zijn raakvlak. In de stand-up staan ze schouder aan schouder, dus hoger.
 var half := HALF
 var sprite: AnimatedSprite2D
@@ -67,7 +70,7 @@ func setup(id: StringName, g: Gedrag, vrij: Callable) -> void:
 	sprite.position = Vector2(0, 3)
 	add_child(sprite)
 	sprite.sprite_frames = frames_voor(id)
-	sprite.play(&"idle_right")
+	sprite.play(_kijk(&"idle"))
 	# Niet allemaal tegelijk ademen.
 	sprite.frame = randi() % 2
 
@@ -101,8 +104,8 @@ func zin() -> String:
 func tik(delta: float, speler: Vector2) -> void:
 	if gesproken or gedrag == Gedrag.KRING:
 		return
-	var voor := position.x < speler.x
-	var afstand := speler.x - position.x
+	var afstand := (position.x - speler.x) * richting
+	var voor := afstand > 0.0
 	if voor and afstand < opmerk + 50.0 and not _gegroet and gedrag != Gedrag.STAPPEN:
 		_gegroet = true
 		RushOntsnapBallon.zeg(self, zin(), 1.6)
@@ -118,22 +121,27 @@ func tik(delta: float, speler: Vector2) -> void:
 				_doel_y = _van if is_equal_approx(_doel_y, _tot) else _tot
 			_loop(delta)
 		_:
-			sprite.play(&"idle_right")
+			sprite.play(_kijk(&"idle"))
 
 
 func _loop(delta: float) -> void:
 	var dy := clampf(_doel_y - position.y, -snelheid * delta, snelheid * delta)
 	if absf(dy) < 0.01:
-		sprite.play(&"idle_right")
+		sprite.play(_kijk(&"idle"))
 		return
 	var nieuw := position + Vector2(0, dy)
 	if not _vrij.call(nieuw):
 		# Tegen een bureau aan: daar blijft hij staan.
 		_doel_y = position.y
-		sprite.play(&"idle_right")
+		sprite.play(_kijk(&"idle"))
 		return
 	position = nieuw
 	sprite.play(&"walk_down" if dy > 0.0 else &"walk_up")
+
+
+## Naar jou toe gekeerd: `idle` wordt `idle_right` als je van rechts komt.
+func _kijk(anim: StringName) -> StringName:
+	return StringName("%s_%s" % [anim, "right" if richting < 0 else "left"])
 
 
 func raakt(p: Vector2, h: Vector2) -> bool:
@@ -154,7 +162,7 @@ func heeft_je(zeg: bool = true) -> String:
 	var z := zin() if zeg else ""
 	if zeg:
 		RushOntsnapBallon.zeg(self, z, 1.6)
-	sprite.play(&"talk_right")
+	sprite.play(_kijk(&"talk"))
 	_vervaag = create_tween()
 	_vervaag.tween_interval(1.0)
 	_vervaag.tween_property(sprite, ^"modulate:a", 0.5, 0.4)

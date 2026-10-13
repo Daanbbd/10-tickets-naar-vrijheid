@@ -6,7 +6,8 @@ extends RefCounted
 ## vond. Dus elke dag begint ergens anders in het echte kantoor en heeft één
 ## ding dat hem anders maakt: maandag leer je sturen, dinsdag staat de
 ## stand-up in de weg, woensdag zit Dirk je op de hielen, donderdag liggen er
-## spoedtickets op riskante plekken en vrijdag brandt alles tegelijk.
+## spoedtickets op riskante plekken en vrijdag is de finale: alles brandt, en
+## je moet eerst nog terug naar Weekend om de laptop met de deploy te redden.
 ##
 ## De ontsnapping leest alleen deze waarden. Zo staat de hele week op één
 ## plek, en hoeft niemand door de code te zoeken waar vrijdag sneller is.
@@ -24,6 +25,16 @@ var titel := ""
 var regel := ""
 ## Waar je begint, in tegels van `floor.json`.
 var start := Vector2i.ZERO
+## Waar je heen rent: -1 naar links (de voordeur), +1 naar rechts. Beweging,
+## camera, vuur, pijltjes, voortgangsbalk en de bot lezen allemaal hierop.
+var richting := -1
+## Waar dit deel ophoudt, in tegels. Leeg: bij de voordeur, en dan ben je
+## buiten. Anders pak je daar iets op en gaat het verder met `verder`.
+var doel := Rect2i()
+## Het volgende deel van de rit (vrijdag: eerst naar de laptop, dan naar huis).
+var verder: RushOntsnapDag = null
+## Waar de laptop ligt, als je die vandaag moet redden.
+var laptop := Vector2i(-1, -1)
 ## Binnendeuren die vandaag openstaan, bovenop die naar de entree.
 var deuren: Array[Vector2i] = []
 ## Het vuurfront: snelheid als deel van de jouwe, hoe ver het hooguit achter je
@@ -130,28 +141,51 @@ static func voor(dag: int) -> RushOntsnapDag:
 			d.kaartjes = 0
 			d.camera = 0.7
 		4:
-			# Helemaal rechts bovenin Weekend: de langste weg, en eerst nog
-			# omlaag naar de glazen deuren. Snel vuur, Dirk die halverwege
-			# opduikt, collega's die je overal in de weg stappen en een plafond
-			# dat naar beneden komt. Koffie is er nog één; kaartjes zijn al
-			# verbrand.
+			# De finale, heen en terug. Eerst vanaf je bureau, links op De
+			# Werkvloer, met het vuur van links naar rechts: de laptop met de
+			# deploy ligt nog in Weekend. Aan de kop van je bureaublok, dus je
+			# moet meteen kiezen: boven langs of onder langs het raam. En bij
+			# het volgende blok weer.
 			d.naam = "VRIJDAG"
-			d.titel = "Alles brandt"
-			d.regel = "Snel vuur, en kijk uit voor het plafond!"
-			d.start = Vector2i(78, 2)
-			d.deuren = [Vector2i(69, 11), Vector2i(69, 12), Vector2i(69, 13), Vector2i(69, 14)]
-			d.vuur = 0.88
-			d.vuur_gat = 84.0
-			d.vuur_begin = 110.0
-			d.collegas = 7
-			d.stappers = 5
-			d.ijsberen = 1
-			d.stap_snel = 70.0
-			d.opmerk = 30.0
-			d.dirk = Dirk.HALVERWEGE
-			d.duik = Vector2(2.8, 4.4)
-			d.plafond = true
-			d.koffie = 1
-			d.kaartjes = 0
+			d.titel = "De finale"
+			d.regel = "Red eerst de laptop, dan naar buiten!"
+			d.start = Vector2i(14, 19)
+			d.richting = 1
+			# Op het bureau rechtsboven in Weekend; je pakt hem van de twee
+			# rijen erboven. Daar kom je alleen via de kolom links van het
+			# bureau.
+			d.laptop = Vector2i(77, 4)
+			d.doel = Rect2i(76, 2, 3, 2)
+			_vrijdag(d)
 			d.camera = 0.62
+			# Dan alles brandt: terug naar de voordeur, de langste weg. Snel
+			# vuur, Dirk die halverwege opduikt, collega's die je overal in de
+			# weg stappen en een plafond dat naar beneden komt.
+			var t := RushOntsnapDag.new()
+			t.naam = d.naam
+			t.titel = d.titel
+			t.regel = d.regel
+			t.start = Vector2i(77, 3)
+			_vrijdag(t)
+			t.dirk = Dirk.HALVERWEGE
+			t.duik = Vector2(2.8, 4.4)
+			t.camera = 0.62
+			d.verder = t
 	return d
+
+
+## Wat beide helften van vrijdag delen. Koffie is er nog één per keer;
+## kaartjes zijn al verbrand.
+static func _vrijdag(d: RushOntsnapDag) -> void:
+	d.deuren = [Vector2i(69, 11), Vector2i(69, 12), Vector2i(69, 13), Vector2i(69, 14)]
+	d.vuur = 0.88
+	d.vuur_gat = 84.0
+	d.vuur_begin = 110.0
+	d.collegas = 7
+	d.stappers = 5
+	d.ijsberen = 1
+	d.stap_snel = 70.0
+	d.opmerk = 30.0
+	d.plafond = true
+	d.koffie = 1
+	d.kaartjes = 0
