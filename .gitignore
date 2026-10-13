@@ -26,3 +26,6 @@ __pycache__/
 
 # Gevendorde skills-bundel met eigen .git — geen onderdeel van dit project
 GD-Agentic-Skills/
+
+# Wrangler-cache van de Worker
+server/.wrangler/

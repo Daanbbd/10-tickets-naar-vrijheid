@@ -64,6 +64,10 @@ var _rimpels: Array[Dictionary] = []
 var _tijd := 0.0
 var _tutorial := false
 var _laatste_hint := ""
+## Gestapelde stops die net gepland zijn: een badge die even opveert.
+var _plop: Array[Dictionary] = []
+## De tip over stapelen is al eens gegeven (deze dag).
+var _stapel_tip := false
 ## Deploys achter elkaar zonder dat ze belt. Elke deploy klinkt een tikje hoger.
 var _reeks := 0
 ## Punten die je onderweg verdient: reeksen, spoed, dubbel.
@@ -269,19 +273,34 @@ func _tik(p: Vector2) -> void:
 	for i: int in bord.size():
 		var t: RushTicket = bord[i]
 		if t != null and Rect2(kantoor.slot_positie(i) - Vector2(10, 11), Vector2(20, 24)).has_point(p):
-			_plan({"soort": "bord", "slot": i, "ticket": t, "punt": kantoor.slot_benader(i)})
+			_plan({"soort": "bord", "slot": i, "ticket": t, "punt": kantoor.slot_benader(i),
+				"doel": kantoor.slot_positie(i) + Vector2(7, -9)})
 			return
 
 	for w: RushWorker in werkers:
 		if w.hit(p):
-			_plan({"soort": "werker", "werker": w, "punt": w.benader_punt()})
+			_plan({"soort": "werker", "werker": w, "punt": w.benader_punt(),
+				"doel": w.hoofd() + Vector2(-12, 6)})
 			return
 
 	if RushKantoor.SERVER_RECT.grow(6).has_point(p):
-		_plan({"soort": "server", "punt": kantoor.server_benader()})
+		_plan({"soort": "server", "punt": kantoor.server_benader(),
+			"doel": RushKantoor.SERVER_RECT.position + Vector2(-4, -16)})
 		return
 	if bool(dag["koffie"]) and RushKantoor.KOFFIE_RECT.grow(4).has_point(p):
-		_plan({"soort": "koffie", "punt": kantoor.koffie_benader()})
+		_plan({"soort": "koffie", "punt": kantoor.koffie_benader(),
+			"doel": RushKantoor.KOFFIE_RECT.position + Vector2(2, -4)})
+		return
+
+	# Op jezelf tikken: alles stoppen. Na de doelen, want je staat vaak vlak
+	# voor een bureau en dan bedoel je de collega.
+	if speler.hit(p) and (not wachtrij.is_empty() or not huidige.is_empty()):
+		wachtrij.clear()
+		huidige = {}
+		speler.pad = PackedVector2Array()
+		_ballon_speler("Stop!")
+		RushKlank.sfx(&"rush_weg", &"klik", 0.05, -6.0)
+		Haptiek.tril(Haptiek.Sterkte.STOOT)
 		return
 
 	var tegel := Vector2i(floori(p.x / RushKantoor.T), floori(p.y / RushKantoor.T))
@@ -293,12 +312,49 @@ func _tik(p: Vector2) -> void:
 
 
 func _plan(actie: Dictionary) -> void:
+	# Staat dit doel al gepland? Dan is deze tik "toch niet": eruit ermee. Ook
+	# als je er al heen loopt.
+	if _zelfde(actie, huidige):
+		huidige = {}
+		speler.pad = PackedVector2Array()
+		_geschrapt(actie)
+		_volgende_actie()
+		return
+	for i: int in wachtrij.size():
+		if _zelfde(actie, wachtrij[i]):
+			wachtrij.remove_at(i)
+			_geschrapt(actie)
+			return
 	RushKlank.sfx(&"rush_tik", &"klik", 0.1, -8.0)
 	Haptiek.tril(Haptiek.Sterkte.TIK)
 	if wachtrij.size() >= WACHTRIJ_MAX:
 		wachtrij.pop_back()
 	wachtrij.append(actie)
+	if actie.has("doel"):
+		_plop.append({"p": actie["doel"], "t": 0.0})
+	# De eerste keer dat je iets stapelt: zeggen dat het kan, en hoe je het
+	# weer weghaalt.
+	if not _stapel_tip and (wachtrij.size() + (0 if huidige.is_empty() else 1)) >= 2:
+		_stapel_tip = true
+		hud.meld("Gestapeld! Nog eens tikken haalt hem eruit, op jezelf tikken stopt alles.", 3.5)
 	_volgende_actie()
+
+
+func _zelfde(a: Dictionary, b: Dictionary) -> bool:
+	if a.is_empty() or b.is_empty() or a["soort"] != b["soort"]:
+		return false
+	match String(a["soort"]):
+		"bord": return a["ticket"] == b["ticket"]
+		"werker": return a["werker"] == b["werker"]
+		"server", "koffie": return true
+	return false
+
+
+func _geschrapt(actie: Dictionary) -> void:
+	RushKlank.sfx(&"rush_weg", &"klik", 0.1, -8.0)
+	Haptiek.tril(Haptiek.Sterkte.TIK)
+	if actie.has("doel"):
+		RushPop.getal_op(veld, actie["doel"] + Vector2(0, 4), "x", Color("#ff8a95"))
 
 
 func _volgende_actie() -> void:
@@ -1093,7 +1149,24 @@ func _beweeg_kaartjes(delta: float) -> void:
 		t.position = t.position.lerp(doel, k)
 
 
+func _stippellijn(a: Vector2, b: Vector2, verschuif: float, k: Color) -> void:
+	var lengte := a.distance_to(b)
+	if lengte < 1.0:
+		return
+	var richting := (b - a) / lengte
+	var d := verschuif
+	while d < lengte:
+		var e := minf(d + 3.0, lengte)
+		markers.draw_line(a + richting * d, a + richting * e, Color(0, 0, 0, 0.35 * k.a), 3.0)
+		markers.draw_line(a + richting * d, a + richting * e, k, 1.5)
+		d += 6.0
+
+
 func _werk_rimpels(delta: float) -> void:
+	for i: int in range(_plop.size() - 1, -1, -1):
+		_plop[i]["t"] = float(_plop[i]["t"]) + delta
+		if float(_plop[i]["t"]) > 0.25:
+			_plop.remove_at(i)
 	for i: int in range(_rimpels.size() - 1, -1, -1):
 		_rimpels[i]["t"] = float(_rimpels[i]["t"]) + delta
 		if float(_rimpels[i]["t"]) > 0.35:
@@ -1121,18 +1194,32 @@ func _daglicht(m: float) -> Color:
 
 
 func _teken_markers() -> void:
-	# Waar je naartoe gaat: genummerde stippen.
-	var doelen: Array[Vector2] = []
+	# De route: een stippellijn van jou langs elke geplande stop, en op elk
+	# doel een genummerde badge. Zo zie je dat tikken stapelt, en waar je
+	# straks langs komt.
+	var acties: Array[Dictionary] = []
 	if not huidige.is_empty():
-		doelen.append(huidige["punt"])
-	for a: Dictionary in wachtrij:
-		doelen.append(a["punt"])
-	for i: int in doelen.size():
-		var p := doelen[i] + Vector2(0, 2)
-		markers.draw_circle(p, 4.0, Color(0.23, 0.53, 1.0, 0.85))
-		markers.draw_circle(p, 4.0, Color(1, 1, 1, 0.9), false, 1.0)
+		acties.append(huidige)
+	acties.append_array(wachtrij)
+	var van := speler.position + Vector2(0, -2)
+	var mars := fmod(_tijd * 14.0, 6.0)
+	for i: int in acties.size():
+		var naar: Vector2 = acties[i]["punt"]
+		_stippellijn(van, naar, mars, Color(1.0, 0.86, 0.35, 0.95) if i == 0 else Color(0.6, 0.8, 1.0, 0.9))
+		van = naar
+	for i: int in acties.size():
+		var a := acties[i]
+		var p: Vector2 = a.get("doel", a["punt"])
+		var schaal := 1.0
+		for pl: Dictionary in _plop:
+			if (pl["p"] as Vector2).is_equal_approx(p):
+				schaal = 1.0 + 0.6 * (1.0 - float(pl["t"]) / 0.25)
+		var straal := 5.0 * schaal
+		markers.draw_circle(p + Vector2(1, 1), straal, Color(0, 0, 0, 0.35))
+		markers.draw_circle(p, straal, Color("#3a86ff") if i > 0 else Color("#ffd23f"))
+		markers.draw_circle(p, straal, Color.WHITE, false, 1.0)
 		markers.draw_string(UiKit.FONT_10, p + Vector2(-2.5, 3.5), str(i + 1),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#141824") if i == 0 else Color.WHITE)
 	for r: Dictionary in _rimpels:
 		var f := float(r["t"]) / 0.35
 		markers.draw_arc(r["p"], 3.0 + f * 9.0, 0, TAU, 16, Color(1, 1, 1, 0.8 * (1.0 - f)), 1.0)

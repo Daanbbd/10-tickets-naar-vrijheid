@@ -300,6 +300,7 @@ func toon_uitleg(daarna: Callable = Callable()) -> void:
 	kol.add_child(_stap(_icoon_ticket(), "Tik een ticket op het bord."))
 	kol.add_child(_stap(_icoon_collega(), "Tik de collega met dezelfde kleur."))
 	kol.add_child(_stap(_icoon_server(), "Klaar? Ophalen en naar de server."))
+	kol.add_child(_lbl("Tik gerust vooruit: je doet het op volgorde. Nog eens tikken schrapt.", 10, Color("#8fb3ff"), true))
 	kol.add_child(UiKit.spacer(2))
 	kol.add_child(_lbl("Tien live voor 17:00 = drie sterren.", 10, Color("#ffd23f"), true))
 	kol.add_child(_lbl("Laat je ze wachten, dan belt de klant.", 10, Color("#ff8a95"), true))
