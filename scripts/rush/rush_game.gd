@@ -990,6 +990,11 @@ func _score_regel(sterren: int) -> Dictionary:
 			rol = def.role
 			if def.portrait != "" and ResourceLoader.exists(def.portrait):
 				portret = (load(def.portrait) as Texture2D).get_image()
+	# Op het scorebord sta jij, met je eigen naam en foto, ook als je een vaste
+	# collega speelde. Het personage blijft als rol zichtbaar.
+	if RushProfiel.heeft_identiteit():
+		naam = RushProfiel.naam
+		portret = RushProfiel.portret
 	var code := RushPixel.naar_code(portret) if portret != null else ""
 	return {"dag": dag_index, "sprint": RushData.sprint_id(), "punten": 0,
 		"naam": naam, "wie": String(speler_id), "rol": rol,

@@ -162,8 +162,15 @@ func _opslaan_en_annuleren(scherm: RushProfielScherm) -> void:
 	s.klaar.emit(false)
 	_ok(RushProfiel.naar_dict() == voor, "annuleren veranderde het profiel")
 	s._naam = "Nieuw"
+	s._uit_foto = false
+	s._opslaan()
+	_ok(uitkomst == [false], "opslaan zonder foto mag niet: %s" % [uitkomst])
+	var klein := (load("res://assets/sprites/portraits/victor.png") as Texture2D).get_image()
+	klein.convert(Image.FORMAT_RGBA8)
+	s._op_foto(klein)
 	s._opslaan()
 	_ok(uitkomst == [false, true], "klaar kwam niet als verwacht: %s" % [uitkomst])
+	_ok(RushProfiel.uit_foto and RushProfiel.heeft_identiteit(), "na een foto heb je een identiteit")
 	_ok(RushProfiel.naam == "Nieuw" and RushProfiel.rol == RushProfiel.Rol.SALES, "opslaan zette naam/rol niet")
 	_ok(RushProfiel.portret != null and RushProfiel.portret.get_size() == Vector2i(32, 40), "opslaan zonder portret")
 	s.queue_free()

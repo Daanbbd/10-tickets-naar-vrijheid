@@ -50,10 +50,19 @@ static var look: Dictionary = {}
 static var kleuren: Dictionary = {}
 ## 32x40, RGBA8, in het palet van RushPixel. Null als je nog geen portret hebt.
 static var portret: Image = null
+## Komt het portret uit een echte foto? Een poppetje-portret van vroeger telt
+## niet: dan vraagt het spel alsnog om een selfie.
+static var uit_foto := false
 
 
 static func bestaat() -> bool:
 	return naam.strip_edges() != ""
+
+
+## Naam en eigen foto: dat vraagt het spel aan iedereen, welk personage je
+## ook speelt. Het scorebord toont altijd jou.
+static func heeft_identiteit() -> bool:
+	return bestaat() and uit_foto and portret != null and not portret.is_empty()
 
 
 static func vakken() -> Array:
@@ -79,7 +88,7 @@ static func naar_dict() -> Dictionary:
 	for sleutel: Variant in look:
 		l[String(sleutel)] = String(look[sleutel])
 	var p := RushPixel.naar_code(portret) if portret != null else ""
-	return {"naam": naam, "rol": int(rol), "look": l, "kleuren": k, "portret": p}
+	return {"naam": naam, "rol": int(rol), "look": l, "kleuren": k, "portret": p, "foto": uit_foto}
 
 
 static func van_dict(d: Dictionary) -> void:
@@ -97,6 +106,7 @@ static func van_dict(d: Dictionary) -> void:
 			kleuren[StringName(String(sleutel))] = Color.from_string(String(k[sleutel]), Color.WHITE)
 	portret = null
 	portret = RushPixel.van_code(String(d.get("portret", "")))
+	uit_foto = bool(d.get("foto", false)) and portret != null
 
 
 static func _kleur(sleutel: StringName, standaard: String) -> Color:

@@ -27,8 +27,12 @@ func _ready() -> void:
 		b.mouse_filter = Control.MOUSE_FILTER_PASS
 		b.pressed.connect(func() -> void: _getikt += 1)
 		kol.add_child(b)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	# Wachten tot de lijst opgemeten is: anders valt er nog niets te scrollen.
+	for i: int in 60:
+		await get_tree().process_frame
+		var balk := scroll.get_v_scroll_bar()
+		if balk.max_value - balk.page > 100.0:
+			break
 
 	# 1. Gewoon tikken.
 	await _druk(Vector2(96, 20), true)

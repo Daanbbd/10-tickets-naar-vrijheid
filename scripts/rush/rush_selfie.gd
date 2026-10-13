@@ -45,6 +45,8 @@ const FOTO_PALET: Array[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1
 ## wordt zodra niemand het vasthoudt, en dan komt het antwoord nooit aan.
 var _js_terug: JavaScriptObject = null
 var _dialoog: FileDialog = null
+## Welke knoppen een browserknopje boven zich hebben: id -> {knop, camera, knip}.
+var _dekken: Dictionary = {}
 
 
 # --- Kiezen ---------------------------------------------------------------------
@@ -54,24 +56,47 @@ static func op_web() -> bool:
 	return OS.has_feature("web")
 
 
-## Roep dit aan op `button_down`, niet op `pressed`.
+## Legt een onzichtbaar, echt bestandsknopje van de browser precies over
+## `knop`, zodat één tik meteen de camera of de fotokiezer opent.
 ##
-## Een browser opent een bestandskiezer alleen vanuit een echte aanraking. Godot
-## verwerkt een tik pas een frame later in zijn eigen lus, en dan is die
-## aanraking voorbij: een `click()` vanuit `pressed` wordt op iOS stil genegeerd.
-## Daarom wapent het indrukken de browser, en opent de browser de kiezer zelf
-## bij het loslaten, in zijn eigen `pointerup`. Dat is wél een echte aanraking.
-func wapen(camera: bool) -> void:
-	if not op_web():
-		return
-	if not _installeer_js():
-		geen_foto.emit()
+## Een browser opent een bestandskiezer alleen vanuit een echte aanraking, en
+## Godot verwerkt een tik pas in zijn volgende beeld, als die aanraking al
+## voorbij is. Eerder "wapende" het indrukken de browser en opende het loslaten
+## de kiezer; maar dat loslaten was vaak al gebeurd voordat Godot het
+## indrukken zag, en dan moest je twee keer tikken. Met een echt
+## `<input type=file>` boven op de knop raakt je vinger de browser zelf.
+## `knip` is de scrollbak waar de knop in zit: buiten die rand doet het
+## knopje niets.
+func dek(knop: Control, camera: bool, knip: Control = null) -> void:
+	if not op_web() or not _installeer_js():
 		return
 	if _js_terug == null:
 		_js_terug = JavaScriptBridge.create_callback(_op_js_foto)
+	_dekken["camera" if camera else "kies"] = {"knop": knop, "camera": camera, "knip": knip}
+
+
+func _process(_delta: float) -> void:
+	if _dekken.is_empty():
+		return
 	var rs := JavaScriptBridge.get_interface("rushSelfie")
-	if rs != null:
-		rs.call("wapen", camera, _js_terug)
+	if rs == null:
+		return
+	var vp := get_viewport().get_visible_rect().size
+	for id: String in _dekken:
+		var d: Dictionary = _dekken[id]
+		var knop: Control = d["knop"]
+		if not is_instance_valid(knop) or not knop.is_visible_in_tree():
+			rs.call("weg", id)
+			continue
+		var r := knop.get_global_rect()
+		var knip: Control = d["knip"]
+		if knip != null and is_instance_valid(knip):
+			r = r.intersection(knip.get_global_rect())
+		if r.size.x < 4.0 or r.size.y < 4.0:
+			rs.call("weg", id)
+			continue
+		rs.call("dek", id, r.position.x, r.position.y, r.size.x, r.size.y, vp.x, vp.y,
+			bool(d["camera"]), _js_terug)
 
 
 ## Desktop: een gewone bestandskiezer. De foto wordt hier verkleind en meteen
@@ -368,21 +393,10 @@ const JS := """
 (function () {
 	if (window.rushSelfie) { return; }
 	var B = __B__, H = __H__, BREED = __BREED__, BOVEN = __BOVEN__;
-	var st = { gewapend: false, camera: false, terug: null, input: null, x: 0, y: 0 };
-
-	function ruimInput() {
-		var i = st.input;
-		st.input = null;
-		if (!i) { return; }
-		i.onchange = null;
-		i.oncancel = null;
-		try { i.value = ''; } catch (e) {}
-		if (i.parentNode) { i.parentNode.removeChild(i); }
-	}
+	var st = { terug: null, knoppen: {} };
 
 	function klaar(b64) {
 		var t = st.terug;
-		ruimInput();
 		if (t) { t(b64); }
 	}
 
@@ -445,44 +459,55 @@ const JS := """
 		img.src = url;
 	}
 
-	// Waar de vinger neerkwam. Wie over de knop heen scrollt, wapent hem ook;
-	// die bedoelde geen camera.
-	function neer(e) { st.x = e.clientX; st.y = e.clientY; }
-
-	function plek(e) {
-		var t = e.changedTouches && e.changedTouches[0];
-		return t ? { x: t.clientX, y: t.clientY } : { x: e.clientX, y: e.clientY };
-	}
-
-	function open(e) {
-		if (!st.gewapend) { return; }
-		st.gewapend = false;
-		var p = plek(e);
-		if (Math.abs(p.x - st.x) + Math.abs(p.y - st.y) > 24) { return; }
-		ruimInput();
+	// Per knop een echt bestandsknopje, onzichtbaar boven op de plek van de
+	// Godot-knop. Een tik erop is een echte aanraking, dus de kiezer opent meteen.
+	function maak(camera) {
 		var i = document.createElement('input');
 		i.type = 'file';
 		i.accept = 'image/*';
-		if (st.camera) { i.setAttribute('capture', 'user'); }
-		i.style.display = 'none';
+		if (camera) { i.setAttribute('capture', 'user'); }
+		var s = i.style;
+		s.position = 'fixed'; s.opacity = '0'; s.zIndex = '2147483000';
+		s.margin = '0'; s.padding = '0'; s.border = '0'; s.cursor = 'pointer';
+		s.fontSize = '16px'; s.display = 'none';
 		i.onchange = function () {
 			var f = i.files && i.files[0];
 			if (f) { lees(f); } else { klaar(''); }
+			// Leeg, zodat dezelfde foto nog eens kiezen ook een change geeft.
+			try { i.value = ''; } catch (e) {}
 		};
-		i.oncancel = function () { klaar(''); };
 		document.body.appendChild(i);
-		st.input = i;
-		i.click();
+		return i;
 	}
 
-	// Het loslaten van de vinger is een echte aanraking; daarin mag de kiezer open.
-	document.addEventListener('pointerdown', neer, true);
-	document.addEventListener('pointerup', open, true);
-	document.addEventListener('touchend', open, true);
-
 	window.rushSelfie = {
-		wapen: function (camera, terug) { st.camera = !!camera; st.terug = terug; st.gewapend = true; },
-		ruim: function () { st.gewapend = false; st.terug = null; ruimInput(); }
+		dek: function (id, x, y, w, h, vw, vh, camera, terug) {
+			st.terug = terug;
+			var i = st.knoppen[id];
+			if (!i) { i = maak(camera); st.knoppen[id] = i; }
+			var c = document.getElementById('canvas') || document.querySelector('canvas');
+			if (!c) { return; }
+			var r = c.getBoundingClientRect();
+			var sx = r.width / vw, sy = r.height / vh;
+			i.style.left = (r.left + x * sx) + 'px';
+			i.style.top = (r.top + y * sy) + 'px';
+			i.style.width = (w * sx) + 'px';
+			i.style.height = (h * sy) + 'px';
+			i.style.display = 'block';
+		},
+		weg: function (id) {
+			var i = st.knoppen[id];
+			if (i) { i.style.display = 'none'; }
+		},
+		ruim: function () {
+			for (var id in st.knoppen) {
+				var i = st.knoppen[id];
+				i.onchange = null;
+				if (i.parentNode) { i.parentNode.removeChild(i); }
+			}
+			st.knoppen = {};
+			st.terug = null;
+		}
 	};
 })();
 """

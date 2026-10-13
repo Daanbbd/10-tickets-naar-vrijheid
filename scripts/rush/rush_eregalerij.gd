@@ -64,15 +64,9 @@ func _ready() -> void:
 	_onder_titel = _lbl("", 10, GRIJS, true)
 	kol.add_child(_onder_titel)
 
-	if RushOnline.actief():
-		var bron := HBoxContainer.new()
-		bron.add_theme_constant_override(&"separation", 2)
-		for i: int in 2:
-			var b := _tab(["HIER", "ONLINE"][i])
-			b.pressed.connect(func() -> void: _kies_bron(i == 1))
-			bron.add_child(b)
-			_bronknoppen.append(b)
-		kol.add_child(bron)
+	# Geen keuze tussen "hier" en "online": staat het online bord aan, dan is
+	# dat de eregalerij. Zonder verbinding valt hij terug op dit apparaat.
+	_online = RushOnline.actief()
 
 	var dagen := HBoxContainer.new()
 	dagen.add_theme_constant_override(&"separation", 2)
@@ -131,10 +125,11 @@ func _toon() -> void:
 		_zet_tab(_dagknoppen[i], i == _dag)
 	for i: int in _bronknoppen.size():
 		_zet_tab(_bronknoppen[i], (i == 1) == _online)
-	_onder_titel.text = ("Sprint %d · iedereen online" if _online else "Sprint %d · dit apparaat") % RushData.sprint_nummer()
+	_onder_titel.text = ("Sprint %d · iedereen" if _online else "Sprint %d · dit apparaat") % RushData.sprint_nummer()
 	_vraag += 1
 	if _online and _kan_online(&"haal"):
 		_toon_online(_vraag)
+		return
 	else:
 		_vul(RushSave.scores_van(_dag), false)
 
@@ -156,6 +151,11 @@ func _toon_online(nummer: int) -> void:
 		for r: Variant in uit:
 			if r is Dictionary:
 				regels.append(r)
+	# Niets online (of geen verbinding), maar wel iets op dit apparaat: dan dat.
+	if regels.is_empty() and not RushSave.scores_van(_dag).is_empty():
+		_onder_titel.text = "Sprint %d · dit apparaat" % RushData.sprint_nummer()
+		_vul(RushSave.scores_van(_dag), false)
+		return
 	_vul(regels, true)
 
 

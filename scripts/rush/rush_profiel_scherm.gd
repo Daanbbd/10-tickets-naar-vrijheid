@@ -59,6 +59,11 @@ const PRIVACY := "Je foto blijft op je telefoon. Alleen het pixelplaatje wordt b
 const LOOP_RICHTINGEN: Array[StringName] = [&"walk_down", &"walk_right", &"walk_up", &"walk_left"]
 
 # De kopie waar je op werkt.
+## Alleen bijnaam en foto: wie je bent, los van welk personage je speelt.
+## Dat vraagt het spel aan iedereen, ook wie een vaste collega speelt, zodat
+## het scorebord jouw gezicht laat zien. Zet dit vóór `add_child`.
+var alleen_wie := false
+
 var _naam := ""
 var _rol: RushProfiel.Rol = RushProfiel.Rol.DEVELOPER
 var _look: Dictionary = {}
@@ -123,7 +128,7 @@ func _neem_over() -> void:
 	else:
 		_portret = oud.duplicate() as Image
 		# Was het oude portret je poppetje, dan blijft het dat volgen.
-		_uit_foto = _portret.get_data() != _figuurportret().get_data()
+		_uit_foto = RushProfiel.uit_foto
 
 
 func _frames() -> SpriteFrames:
@@ -145,7 +150,8 @@ func _ververs() -> void:
 	_figuur.sprite_frames = _frames()
 	_figuur.play(anim if _figuur.sprite_frames.has_animation(anim) else &"walk_down")
 	var n := schoon(_naam, true)
-	_wie.text = "%s · %s" % [n if n != "" else "Nog naamloos", RushProfiel.ROL_NAAM[_rol]]
+	_wie.text = (n if n != "" else "Nog naamloos") if alleen_wie else \
+		"%s · %s" % [n if n != "" else "Nog naamloos", RushProfiel.ROL_NAAM[_rol]]
 	if _naam_knop != null:
 		_naam_knop.text = n if n != "" else "Tik voor je bijnaam"
 		_naam_knop.add_theme_color_override(&"font_color", Color.WHITE if n != "" else Color("#8a93a8"))
@@ -154,9 +160,11 @@ func _ververs() -> void:
 		_naam_veld.text = _naam
 	for i: int in _rol_knoppen.size():
 		_stijl_keuze(_rol_knoppen[i], i == int(_rol))
-	_voordeel.text = RushProfiel.ROL_VOORDEEL[_rol]
+	if _voordeel != null:
+		_voordeel.text = RushProfiel.ROL_VOORDEEL[_rol]
 	for slot: StringName in VOLGORDE:
-		(_blader_waarde[slot] as Label).text = _variantnaam(_look.get(slot, &""))
+		if _blader_waarde.has(slot):
+			(_blader_waarde[slot] as Label).text = _variantnaam(_look.get(slot, &""))
 	for sleutel: StringName in _stalen:
 		var knoppen: Dictionary = _stalen[sleutel]
 		for c: Color in knoppen:
@@ -181,7 +189,9 @@ func _bouw() -> void:
 	kol.add_theme_constant_override(&"separation", 4)
 	marge.add_child(kol)
 
-	kol.add_child(_lbl("JEZELF MAKEN", 16, Color("#3a86ff"), true))
+	kol.add_child(_lbl("WIE BEN JIJ?" if alleen_wie else "JEZELF MAKEN", 16, Color("#3a86ff"), true))
+	if alleen_wie:
+		kol.add_child(_lbl("Je naam en gezicht op het scorebord.", 10, Color("#b0b4c2"), true))
 	kol.add_child(_voorbeeld())
 	_wie = _lbl("", 10, Color("#ffd23f"), true)
 	kol.add_child(_wie)
@@ -198,10 +208,13 @@ func _bouw() -> void:
 	inhoud.add_theme_constant_override(&"separation", 4)
 	_scroll.add_child(inhoud)
 	_bouw_naam(inhoud)
-	_bouw_rol(inhoud)
-	_bouw_foto(inhoud)
-	_bouw_uiterlijk(inhoud)
-	_bouw_kleuren(inhoud)
+	if alleen_wie:
+		_bouw_foto(inhoud)
+	else:
+		_bouw_rol(inhoud)
+		_bouw_foto(inhoud)
+		_bouw_uiterlijk(inhoud)
+		_bouw_kleuren(inhoud)
 	inhoud.add_child(UiKit.spacer(4))
 
 	var balk := HBoxContainer.new()
@@ -249,6 +262,9 @@ func _voorbeeld() -> Control:
 	_figuur.play(&"walk_down")
 	podium.add_child(_figuur)
 	rij.add_child(podium)
+	# Wie alleen zichzelf invult, speelt misschien een vaste collega: dan zegt
+	# een poppetje niets.
+	podium.visible = not alleen_wie
 	return rij
 
 
@@ -324,25 +340,20 @@ func _bouw_rol(kol: VBoxContainer) -> void:
 
 func _bouw_foto(kol: VBoxContainer) -> void:
 	kol.add_child(_kop("PORTRET"))
+	# Altijd je eigen gezicht: geen "zonder foto". Het scorebord is leuker met
+	# echte koppen, ook als je een vaste collega speelt.
 	if RushSelfie.op_web() and Invoer.is_telefoon():
 		var selfie := _knop("Maak een selfie", true)
-		selfie.button_down.connect(_selfie.wapen.bind(true))
+		_selfie.dek(selfie, true, _scroll)
 		_in_scroll(selfie)
 		kol.add_child(selfie)
-	var kies := _knop("Kies foto", false)
+	var kies := _knop("Kies foto", not (RushSelfie.op_web() and Invoer.is_telefoon()))
 	if RushSelfie.op_web():
-		kies.button_down.connect(_selfie.wapen.bind(false))
+		_selfie.dek(kies, false, _scroll)
 	else:
 		kies.pressed.connect(_selfie.kies_bestand)
 	_in_scroll(kies)
 	kol.add_child(kies)
-	var zonder := _knop("Zonder foto", false)
-	zonder.pressed.connect(func() -> void:
-		_uit_foto = false
-		_zeg("Je portret is nu je poppetje.")
-		_ververs())
-	_in_scroll(zonder)
-	kol.add_child(zonder)
 	kol.add_child(_lbl(PRIVACY, 10, Color("#b0b4c2"), true))
 	_status = _lbl("", 10, Color("#3fd27f"), true)
 	kol.add_child(_status)
@@ -448,6 +459,7 @@ static func dichtstbij(c: Color, uit: Array) -> Color:
 
 func _zeg(t: String) -> void:
 	_status.text = t
+	_status.add_theme_color_override(&"font_color", Color("#3fd27f"))
 
 
 # --- Opslaan --------------------------------------------------------------------
@@ -464,11 +476,18 @@ func _opslaan() -> void:
 			_wie.text = "Kies eerst een bijnaam"
 			return
 		n = schoon(_naam, true)
+	if not _uit_foto:
+		_zeg("Eerst een foto: die komt op het scorebord.")
+		_status.add_theme_color_override(&"font_color", Color("#ff8a95"))
+		_scroll.scroll_vertical = 0
+		return
 	RushProfiel.naam = n
-	RushProfiel.rol = _rol
-	RushProfiel.look = _look.duplicate()
-	RushProfiel.kleuren = _kleuren.duplicate()
 	RushProfiel.portret = _portret.duplicate() as Image
+	RushProfiel.uit_foto = true
+	if not alleen_wie:
+		RushProfiel.rol = _rol
+		RushProfiel.look = _look.duplicate()
+		RushProfiel.kleuren = _kleuren.duplicate()
 	klaar.emit(true)
 
 

@@ -120,13 +120,15 @@ func _titel() -> void:
 		kol.add_child(_lbl("%d van 15 sterren" % sterren, 10, Color("#ffd23f"), true))
 	var spelen := _knop("Spelen", true)
 	spelen.pressed.connect(func() -> void:
-		if RushSave.karakter == &"":
+		if not RushProfiel.heeft_identiteit():
+			_open_profielmaker(true)
+		elif RushSave.karakter == &"":
 			_kies()
 		else:
 			_week())
 	kol.add_child(spelen)
 	if RushSave.karakter != &"":
-		var wissel := _knop("Wie ben jij?", false)
+		var wissel := _knop("Wie speel je?", false)
 		wissel.pressed.connect(_kies)
 		kol.add_child(wissel)
 	var eer := _knop("Eregalerij", false)
@@ -145,7 +147,8 @@ func _kies() -> void:
 
 func _toon_kies() -> void:
 	var kol := _leeg()
-	kol.add_child(_lbl("WIE BEN JIJ?", 20, Color("#3a86ff"), true))
+	kol.add_child(_lbl("WIE SPEEL JE?", 20, Color("#3a86ff"), true))
+	kol.add_child(_jij_rij())
 	kol.add_child(_lbl("Jouw eigen vak doe je zelf. De rest breng je rond.", 10, Color("#b0b4c2"), true))
 	kol.add_child(UiKit.spacer(4))
 
@@ -184,6 +187,36 @@ func _toon_kies() -> void:
 	var terug := _knop("Terug", false)
 	terug.pressed.connect(_titel)
 	kol.add_child(terug)
+
+
+## Bovenaan: jij, met je foto. Welk personage je ook kiest, op het scorebord
+## sta jij.
+func _jij_rij() -> Control:
+	var rij := HBoxContainer.new()
+	rij.alignment = BoxContainer.ALIGNMENT_CENTER
+	rij.add_theme_constant_override(&"separation", 6)
+	var tex := RushProfiel.portret_textuur()
+	if tex != null:
+		var foto := TextureRect.new()
+		foto.texture = tex
+		foto.custom_minimum_size = Vector2(16, 20)
+		foto.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		foto.stretch_mode = TextureRect.STRETCH_SCALE
+		foto.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		rij.add_child(foto)
+	rij.add_child(_lbl("Jij: %s" % RushProfiel.naam, 10, Color("#ffd23f")))
+	var pas := Button.new()
+	pas.text = "wijzig"
+	pas.focus_mode = Control.FOCUS_NONE
+	pas.flat = true
+	pas.add_theme_font_override(&"font", UiKit.FONT_10)
+	pas.add_theme_font_size_override(&"font_size", 10)
+	pas.add_theme_color_override(&"font_color", Color("#8fb3ff"))
+	pas.pressed.connect(func() -> void:
+		RushKlank.ui(&"rush_knop")
+		_open_profielmaker(true))
+	rij.add_child(pas)
+	return rij
 
 
 ## Het achtste vakje: jezelf. Zonder profiel opent het de maker.
@@ -252,12 +285,21 @@ func _toon_eigen_info(kol: VBoxContainer) -> void:
 
 
 ## Volledig scherm over het menu; als hij klaar is, terug naar de keuze.
-func _open_profielmaker() -> void:
+func _open_profielmaker(alleen_wie: bool = false) -> void:
 	var maker := RushProfielScherm.new()
+	maker.alleen_wie = alleen_wie
 	add_child(maker)
 	maker.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	maker.klaar.connect(func(opgeslagen: bool) -> void:
 		maker.queue_free()
+		if alleen_wie:
+			if opgeslagen:
+				RushSave.bewaar()
+				if RushSave.karakter == &"":
+					_kies()
+				else:
+					_week()
+			return
 		if opgeslagen:
 			RushSave.bewaar()
 			_gekozen = RushProfiel.ID
@@ -310,6 +352,10 @@ func _portretknop(id: StringName) -> Control:
 # --- De week --------------------------------------------------------------------
 
 func _week() -> void:
+	# Niemand de week in zonder naam en eigen foto: het scorebord toont jou.
+	if not RushProfiel.heeft_identiteit():
+		_open_profielmaker(true)
+		return
 	var kol := _leeg()
 	kol.add_child(_lbl("SPRINT %d" % RushData.sprint_nummer(), 20, Color("#3a86ff"), true))
 	var def: CharacterDef = GameData.character(RushSave.karakter)
