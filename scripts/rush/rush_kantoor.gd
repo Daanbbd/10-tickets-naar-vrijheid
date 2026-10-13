@@ -107,13 +107,17 @@ func _vloer() -> void:
 		for x: int in KOLOMMEN:
 			var v := absi((x * 73856093) ^ (y * 19349663)) % 3
 			_tegel([0, 47, 48][v], Vector2(x * T, y * T))
-	# Het blauwe kleed van Bluebird Day, met de vogel erop.
-	var kleed := Rect2(54, 252, 80, 64)
-	draw_rect(kleed, Color("#2f4fd6", 0.22))
-	draw_rect(kleed.grow(-3), Color("#2f4fd6", 0.12))
-	draw_rect(kleed, Color("#243cec", 0.35), false, 1.0)
-	_vogel(kleed.get_center() + Vector2(0, -6), Color("#243cec", 0.35))
-	_kleine_tekst("BLUEBIRD DAY", kleed.get_center() + Vector2(-27, 18), Color("#243cec", 0.4))
+	# De mat bij de server, met het echte woordmerk erop: "Bluebird Day." in
+	# vet zwart. Vet doordat de pixelletters twee keer naast elkaar staan.
+	var mat := Rect2(48, 268, 96, 34)
+	draw_rect(Rect2(mat.position + Vector2(1, 2), mat.size), Color(0, 0, 0, 0.18))
+	draw_rect(mat, Color("#f4f4f2"))
+	draw_rect(mat.grow(-2), Color("#e9e9e6"), false, 1.0)
+	var merk := "Bluebird Day."
+	var maat := UiKit.FONT_12.get_string_size(merk, HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
+	var p := Vector2(roundf(mat.get_center().x - (maat.x + 1.0) / 2.0), mat.get_center().y + 4.0)
+	for dx: float in [0.0, 1.0]:
+		draw_string(UiKit.FONT_12, p + Vector2(dx, 0), merk, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#141414"))
 	# Lounge linksonder: bank en een plant, waar niemand ooit zit.
 	draw_rect(Rect2(6, 262, 34, 6), Color("#3a4a6a"))
 	draw_rect(Rect2(6, 268, 34, 10), Color("#4c6190"))
@@ -209,14 +213,6 @@ func _server() -> void:
 			var k := Color("#ffd23f").lerp(Color("#e5484d"), f)
 			k.a = 1.0 - f * 0.8
 			draw_circle(Vector2(x, y), 3.5 * (1.0 - f * 0.6), k)
-
-
-func _vogel(c: Vector2, k: Color) -> void:
-	# Een vogeltje in een paar vlakken: lijf, vleugel, snavel.
-	draw_circle(c, 6.0, k)
-	draw_colored_polygon(PackedVector2Array([c + Vector2(-2, -2), c + Vector2(-12, -8), c + Vector2(-4, 3)]), k)
-	draw_colored_polygon(PackedVector2Array([c + Vector2(5, -2), c + Vector2(10, 0), c + Vector2(5, 2)]), k)
-	draw_colored_polygon(PackedVector2Array([c + Vector2(-5, 3), c + Vector2(-11, 7), c + Vector2(-3, 6)]), k)
 
 
 func _kleine_tekst(t: String, p: Vector2, k: Color) -> void:

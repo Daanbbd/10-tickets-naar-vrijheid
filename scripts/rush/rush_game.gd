@@ -109,8 +109,14 @@ func _ready() -> void:
 	if bot:
 		_begin()
 	else:
-		hud.toon_intro(dag_index, dag, speler_id)
 		hud.start.connect(_begin, CONNECT_ONE_SHOT)
+		if not RushSave.uitleg_gezien:
+			hud.toon_uitleg(func() -> void:
+				RushSave.uitleg_gezien = true
+				RushSave.bewaar()
+				hud.toon_intro(dag_index, dag, speler_id))
+		else:
+			hud.toon_intro(dag_index, dag, speler_id)
 
 
 func _lees_qa_vlaggen() -> void:
@@ -453,17 +459,27 @@ func _deploy() -> void:
 			_ballon_speler("Eerst laten maken!")
 			RushKlank.sfx(&"rush_fout", &"fout", 0.05, -6.0)
 		return
+	var srv := RushKantoor.SERVER_RECT.get_center()
+	var spoed_n := 0
 	for t: RushTicket in klaar_t:
 		speler.handen.erase(t)
 		t.staat = RushTicket.Staat.LIVE
 		geleverd += 1
+		if t.spoed:
+			spoed_n += 1
 	kantoor.flits_server()
 	_reeks += klaar_t.size()
 	RushKlank.toon(&"rush_deploy", &"deploy_ok", 1.0 + minf(_reeks - 1, 8) * 0.06)
-	if _reeks >= 3:
-		RushPop.getal_op(veld, speler.position + Vector2(0, -52), "Reeks %d!" % _reeks, Color("#8fd3ff"))
+	for drempel: int in RushData.REEKS_ROEP:
+		if _reeks - klaar_t.size() < drempel and _reeks >= drempel:
+			RushPop.getal_op(veld, speler.position + Vector2(0, -56), "%s (%d)" % [RushData.REEKS_ROEP[drempel], _reeks], Color("#8fd3ff"))
+			_schok = maxf(_schok, 2.5)
+	if spoed_n > 0:
+		minuut = maxf(RushData.START_MIN, minuut - RushData.SPOED_BONUS_MIN * spoed_n)
+		hud.klok_puls()
+		RushPop.getal_op(veld, srv + Vector2(-26, -76), "SPOED! -%d min" % (RushData.SPOED_BONUS_MIN * spoed_n), Color("#ffd23f"))
+		RushPop.confetti(veld, srv + Vector2(0, -30), 24)
 	Haptiek.tril(Haptiek.Sterkte.GELUKT)
-	var srv := RushKantoor.SERVER_RECT.get_center()
 	RushPop.confetti(veld, srv + Vector2(0, -20), 14 + 8 * klaar_t.size())
 	RushPop.getal_op(veld, srv + Vector2(0, -44), "+%d live" % klaar_t.size(), Color("#3fd27f"))
 	if klaar_t.size() >= 2:
@@ -594,13 +610,19 @@ func _spawn(slot: int) -> void:
 	if _recent_titels.size() > 8:
 		_recent_titels.pop_front()
 	t.titel = titel
+	t.spoed = _rng.randf() < float(dag.get("spoed", 0.0)) and gespawnd >= 2
+	if t.spoed:
+		t.titel = "SPOED: " + titel
 	t.position = kantoor.slot_positie(slot) + Vector2(0, -40)
 	kaartjes.add_child(t)
 	tickets.append(t)
 	bord[slot] = t
 	gespawnd += 1
 	RushKlank.sfx(&"rush_nieuw", &"mg_intro", 0.1, -8.0)
-	if not _tutorial:
+	if t.spoed:
+		hud.meld("SPOED: %s. Snel live = 15 min terug!" % titel, 2.6)
+		RushKlank.sfx(&"rush_bel", &"hinnik", 0.1, -8.0)
+	elif not _tutorial:
 		hud.meld("Nieuw: %s" % titel, 1.8)
 	if vak == RushData.Vak.KLANT and randf() < 0.6:
 		RushKlank.sfx(&"rush_hinnik", &"hinnik", 0.1, -6.0)
@@ -619,6 +641,8 @@ func _werk_geduld(delta: float) -> void:
 			continue
 		if _tutorial and geleverd == 0:
 			snelheid *= 0.35
+		if t.spoed:
+			snelheid *= RushData.SPOED_HAAST
 		t.geduld -= delta * snelheid / (geduld * pow(0.85, t.gebeld))
 		if t.geduld <= 0.0:
 			_belt(t)
@@ -868,7 +892,6 @@ func _dag_klaar() -> void:
 		o.queue_free()
 		if bot:
 			print("RUSH-ONTSNAP sec=%.1f gebotst=%d" % [float(uit[0]), int(uit[1])])
-			get_tree().quit()
 		if not bool(uit[2]):
 			ontsnap_sec = float(uit[0])
 			record = RushSave.noteer_ontsnapping(dag_index, ontsnap_sec)

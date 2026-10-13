@@ -12,7 +12,7 @@ WIE=("${@:-victor danny daan jonathan willem}")
 for d in 1 2 3 4 5; do
 	for s in ${WIE[@]}; do
 		"$GODOT" --headless --path . --quit-after 40000 -- --rush-bot --dag=$d --speler=$s --tempo=10 2>&1 \
-			| grep -E "RUSH-BOT|SCRIPT ERROR" &
+			| grep --line-buffered -m1 -E "RUSH-BOT|SCRIPT ERROR" &
 	done
 	wait
 done

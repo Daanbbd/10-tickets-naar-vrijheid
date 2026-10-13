@@ -42,8 +42,8 @@ const BUREAU_VOLGORDE: Array[StringName] = [
 
 ## Hoe lang een collega over een ticket doet, en hoe snel je het zelf doet als
 ## het jouw vak is (dan sta je wel stil aan je eigen bureau).
-const WERKTIJD := 4.6
-const ZELF_WERKTIJD := 2.2
+const WERKTIJD := 3.9
+const ZELF_WERKTIJD := 1.8
 
 const TITELS := {
 	Vak.FE: [
@@ -158,45 +158,53 @@ const DIRK := [
 const DAGEN := [
 	{
 		"naam": "Maandag", "kort": "MA",
-		"nieuw": "Breng elk ticket naar de juiste collega. Klaar? Naar de server.",
-		"vakken": [Vak.FE, Vak.BE],
-		"interval": 7.5, "geduld": 34.0, "minuten_per_sec": 3.4,
-		"koffie": false, "kletsen": false, "dirk": false, "brand": false,
+		"nieuw": "Frontend, backend en data. Koffie maakt je sneller.",
+		"vakken": [Vak.FE, Vak.BE, Vak.DATA],
+		"interval": 5.0, "geduld": 36.0, "minuten_per_sec": 3.9,
+		"koffie": true, "kletsen": false, "dirk": false, "brand": false, "spoed": 0.0,
 		"muziek": &"mg_planning", "track": &"rush_ma",
 	},
 	{
 		"naam": "Dinsdag", "kort": "DI",
-		"nieuw": "Danny doet data. En de koffie werkt weer: even sneller lopen.",
-		"vakken": [Vak.FE, Vak.BE, Vak.DATA],
-		"interval": 6.6, "geduld": 30.0, "minuten_per_sec": 3.4,
-		"koffie": true, "kletsen": false, "dirk": false, "brand": false,
+		"nieuw": "Willem doet de klant. Jonathan praat: kap hem af!",
+		"vakken": [Vak.FE, Vak.BE, Vak.DATA, Vak.KLANT],
+		"interval": 4.7, "geduld": 33.0, "minuten_per_sec": 4.0,
+		"koffie": true, "kletsen": true, "dirk": false, "brand": false, "spoed": 0.0,
 		"muziek": &"mg_cro", "track": &"rush_di",
 	},
 	{
 		"naam": "Woensdag", "kort": "WO",
-		"nieuw": "Willem doet de klant. En Jonathan begint te praten. Kap hem af.",
-		"vakken": [Vak.FE, Vak.BE, Vak.DATA, Vak.KLANT],
-		"interval": 6.0, "geduld": 28.0, "minuten_per_sec": 3.5,
-		"koffie": true, "kletsen": true, "dirk": false, "brand": false,
+		"nieuw": "Daan doet scope. Dirk wil je uren: tik hem weg!",
+		"vakken": [Vak.FE, Vak.BE, Vak.DATA, Vak.KLANT, Vak.SCOPE],
+		"interval": 4.5, "geduld": 31.0, "minuten_per_sec": 4.0,
+		"koffie": true, "kletsen": true, "dirk": true, "brand": false, "spoed": 0.0,
 		"muziek": &"mg_user_story", "track": &"rush_wo",
 	},
 	{
 		"naam": "Donderdag", "kort": "DO",
-		"nieuw": "Daan bewaakt de scope. En Dirk wil je uren. Tik hem weg.",
+		"nieuw": "Gouden spoedtickets: snel live = 15 minuten terug.",
 		"vakken": [Vak.FE, Vak.BE, Vak.DATA, Vak.KLANT, Vak.SCOPE],
-		"interval": 5.6, "geduld": 26.0, "minuten_per_sec": 3.6,
-		"koffie": true, "kletsen": true, "dirk": true, "brand": false,
+		"interval": 4.3, "geduld": 29.0, "minuten_per_sec": 4.1,
+		"koffie": true, "kletsen": true, "dirk": true, "brand": false, "spoed": 0.25,
 		"muziek": &"mg_abgevecht", "track": &"rush_do",
 	},
 	{
 		"naam": "Vrijdag", "kort": "VR",
-		"nieuw": "Livegang. De server vliegt soms in brand: blussen, dan deployen.",
+		"nieuw": "Livegang. De server vliegt in brand: eerst blussen.",
 		"vakken": [Vak.FE, Vak.BE, Vak.DATA, Vak.KLANT, Vak.SCOPE],
-		"interval": 5.2, "geduld": 25.0, "minuten_per_sec": 3.6,
-		"koffie": true, "kletsen": true, "dirk": true, "brand": true,
+		"interval": 4.1, "geduld": 28.0, "minuten_per_sec": 4.2,
+		"koffie": true, "kletsen": true, "dirk": true, "brand": true, "spoed": 0.3,
 		"muziek": &"mg_deploy", "track": &"rush_vr",
 	},
 ]
+
+## Wat het oplevert als je een gouden spoedticket live zet.
+const SPOED_BONUS_MIN := 15
+## Hoeveel sneller ze op een spoedticket ongeduldig wordt.
+const SPOED_HAAST := 1.6
+
+## Wat er in beeld springt bij een reeks deploys zonder dat ze belde.
+const REEKS_ROEP := {3: "Lekker bezig!", 5: "On fire!", 8: "Niet te stoppen!", 12: "Legendarisch!"}
 
 const DOEL := 10
 const START_MIN := 9 * 60

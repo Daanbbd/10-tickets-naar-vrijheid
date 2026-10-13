@@ -313,8 +313,8 @@ func _dagknop(i: int, is_volgende: bool) -> Control:
 
 
 func _dag_samenvatting(i: int) -> String:
-	return ["Frontend en backend", "+ Danny en koffie", "+ Willem en de stand-up",
-		"+ Daan en Dirk", "Livegang"][i]
+	return ["Frontend, backend, data", "+ Willem en Jonathan", "+ Daan en Dirk",
+		"+ gouden spoedtickets", "Livegang, met brand"][i]
 
 
 func _ster(c: Control, p: Vector2, r: float, k: Color) -> void:

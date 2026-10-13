@@ -28,13 +28,15 @@ var geduld: float = 1.0
 ## Hoe vaak ze al over dit ticket gebeld heeft; elke keer raakt ze sneller op.
 var gebeld: int = 0
 var werker: Node = null
+## Goud: ze wil het nú. Raakt sneller op, levert tijd op als het live gaat.
+var spoed := false
 
 var _wiebel: float = 0.0
 
 
 func _process(delta: float) -> void:
 	_wiebel += delta
-	if staat == Staat.BORD or staat == Staat.KLAAR:
+	if staat == Staat.BORD or staat == Staat.KLAAR or spoed:
 		queue_redraw()
 
 
@@ -44,9 +46,13 @@ func _draw() -> void:
 	if staat == Staat.BORD and geduld < 0.3:
 		o.x += sin(_wiebel * 40.0) * 1.0
 
+	if spoed and staat != Staat.LIVE:
+		# Een gouden gloed die klopt, zodat je hem tussen de rest ziet liggen.
+		var a := 0.5 + 0.4 * sin(_wiebel * 9.0)
+		draw_rect(Rect2(o - Vector2(2, 2), Vector2(B + 4, H + 4)), Color(1.0, 0.82, 0.25, a))
 	# Schaduw, papier, kleurband, rand.
 	draw_rect(Rect2(o + Vector2(1, 1), Vector2(B, H)), Color(0, 0, 0, 0.28))
-	draw_rect(Rect2(o, Vector2(B, H)), Color("#fbf8ef"))
+	draw_rect(Rect2(o, Vector2(B, H)), Color("#fff3c4") if spoed else Color("#fbf8ef"))
 	draw_rect(Rect2(o, Vector2(B, 4)), kleur)
 	draw_rect(Rect2(o, Vector2(B, H)), kleur.darkened(0.45), false, 1.0)
 

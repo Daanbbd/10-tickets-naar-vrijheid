@@ -5,7 +5,7 @@ extends Node2D
 
 signal aangekomen
 
-const SNELHEID := 66.0
+const SNELHEID := 76.0
 const HANDEN := 2
 
 var sprite: AnimatedSprite2D

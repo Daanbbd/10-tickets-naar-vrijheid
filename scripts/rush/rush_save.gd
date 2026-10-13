@@ -19,6 +19,8 @@ const SCORES_PER_DAG := 10
 ## Willekeurig, alleen op dit apparaat: bewijst bij een online scorebord dat
 ## een score van jou is, zodat je hem zelf kunt wissen. Geen account.
 static var sleutel := ""
+## Heeft deze speler "Zo werkt het" al gezien? Dan komt het niet meer vanzelf.
+static var uitleg_gezien := false
 
 ## De dag die nu gespeeld wordt; gezet door het menu, gelezen door het spel.
 static var dag: int = 0
@@ -51,6 +53,7 @@ static func laad() -> void:
 			if r is Dictionary:
 				scores.append(r)
 	sleutel = String(d.get("sleutel", ""))
+	uitleg_gezien = bool(d.get("uitleg_gezien", false))
 	var o: Variant = d.get("ontsnapping", [])
 	if o is Array:
 		for i: int in mini(o.size(), ontsnapping.size()):
@@ -63,7 +66,7 @@ static func bewaar() -> void:
 		return
 	f.store_string(JSON.stringify({"karakter": String(karakter), "sterren": sterren,
 		"ontsnapping": ontsnapping, "profiel": RushProfiel.naar_dict(), "scores": scores,
-		"sleutel": sleutel}))
+		"sleutel": sleutel, "uitleg_gezien": uitleg_gezien}))
 
 
 ## Zet een gespeelde dag in de eregalerij. Geeft de plek terug (1 is de

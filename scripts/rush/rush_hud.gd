@@ -64,8 +64,8 @@ func _ready() -> void:
 	_klok = _lbl("09:00", 16, Color.WHITE)
 	_klok.anchor_left = 1.0
 	_klok.anchor_right = 1.0
-	_klok.offset_left = -84
-	_klok.offset_right = -32
+	_klok.offset_left = -106
+	_klok.offset_right = -54
 	_klok.offset_top = 4
 	_klok.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	boven.add_child(_klok)
@@ -86,6 +86,25 @@ func _ready() -> void:
 	pauze.offset_bottom = 25
 	pauze.pressed.connect(_open_pauze)
 	boven.add_child(pauze)
+
+	var hulp := Button.new()
+	hulp.text = "?"
+	hulp.focus_mode = Control.FOCUS_NONE
+	hulp.add_theme_font_override(&"font", UiKit.FONT_12)
+	hulp.add_theme_font_size_override(&"font_size", 12)
+	hulp.add_theme_stylebox_override(&"normal", _vlak(Color("#2a3042")))
+	hulp.add_theme_stylebox_override(&"hover", _vlak(Color("#36405a")))
+	hulp.add_theme_stylebox_override(&"pressed", _vlak(Color("#4a5677")))
+	hulp.anchor_left = 1.0
+	hulp.anchor_right = 1.0
+	hulp.offset_left = -50
+	hulp.offset_right = -30
+	hulp.offset_top = 3
+	hulp.offset_bottom = 25
+	hulp.pressed.connect(func() -> void:
+		if _overlay == null and _pauze == null:
+			toon_uitleg())
+	boven.add_child(hulp)
 
 	# Onderbalk met de hint.
 	var onder := ColorRect.new()
@@ -135,6 +154,8 @@ func _ready() -> void:
 	rij.add_child(_bel_boete)
 	_bel_tekst = _lbl("", 10, Color("#242424"))
 	_bel_tekst.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_bel_tekst.max_lines_visible = 2
+	_bel_tekst.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	kol.add_child(_bel_tekst)
 
 
@@ -198,10 +219,12 @@ func bel(t: String, boete: int = RushData.BEL_BOETE_MIN) -> void:
 		_bel_tween.kill()
 	# Van onderen omhoog, net boven de hintregel. Bovenin zou hij het bord
 	# afdekken, en dat is precies waar je op dat moment naar moet kijken.
+	# Een vaste maat. Een afbrekend label rekent zijn hoogte uit bij de breedte
+	# die het op dat moment heeft, en vóór de eerste layout is dat nul: dan
+	# wordt elke letter een regel en de melding een wit scherm met een rode
+	# rand. Daarom ook maximaal twee regels.
 	var vp := get_viewport().get_visible_rect().size
-	_bel.size = Vector2(vp.x - 12.0, 0.0)
-	_bel.reset_size()
-	_bel.size.x = vp.x - 12.0
+	_bel.size = Vector2(vp.x - 12.0, 38.0)
 	_bel.visible = true
 	_bel.position = Vector2(6.0, vp.y + 4.0)
 	var doel := vp.y - ONDER - _bel.size.y - 4.0
@@ -235,34 +258,93 @@ func toon_intro(dag_index: int, dag: Dictionary, speler: StringName) -> void:
 	kol.add_child(_lbl("DAG %d VAN 5" % (dag_index + 1), 10, Color("#8fb3ff"), true))
 	kol.add_child(_lbl(String(dag["naam"]).to_upper(), 20, Color.WHITE, true))
 	kol.add_child(UiKit.spacer(4))
-	var nieuw := _lbl(String(dag["nieuw"]), 10, Color("#d6dbe8"), true)
-	nieuw.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	kol.add_child(nieuw)
+	kol.add_child(_lbl(String(dag["nieuw"]), 12, Color("#ffd23f"), true))
 	var eigen_vakken: Array = RushProfiel.vakken() if speler == RushProfiel.ID else [RushData.vak_van(speler)]
 	var mee: Array[String] = []
 	for v: int in eigen_vakken:
 		if v in dag["vakken"]:
 			mee.append(RushData.VAK_NAAM[v])
 	if not mee.is_empty():
-		kol.add_child(UiKit.spacer(2))
 		var kleur: Color = RushData.VAK_KLEUR[eigen_vakken[0]]
-		var zelf := _lbl("%s doe je zelf, aan je eigen bureau." % " en ".join(mee), 10,
-			kleur.lightened(0.3), true)
-		zelf.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		kol.add_child(zelf)
+		kol.add_child(_lbl("%s doe je zelf." % " en ".join(mee), 10, kleur.lightened(0.3), true))
 	if speler == RushProfiel.ID:
-		var voordeel := _lbl(RushProfiel.ROL_VOORDEEL[RushProfiel.rol], 10, Color("#ffd23f"), true)
-		voordeel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		kol.add_child(voordeel)
-	kol.add_child(UiKit.spacer(6))
-	kol.add_child(_lbl("10 tickets live, dan mag je naar huis.", 10, Color("#8a93a8"), true))
-	kol.add_child(_lbl("Voor 17:00 is drie sterren.", 10, Color("#8a93a8"), true))
+		kol.add_child(_lbl(RushProfiel.ROL_VOORDEEL[RushProfiel.rol], 10, Color("#8a93a8"), true))
 	kol.add_child(UiKit.spacer(8))
 	var knop := _knop("Aan de slag", true)
 	knop.pressed.connect(func() -> void:
 		_sluit_overlay()
 		start.emit())
 	kol.add_child(knop)
+
+
+## Zo werkt het: drie stappen met de plaatjes uit het spel zelf. Komt de
+## eerste keer vanzelf, en daarna achter de ?-knop.
+func toon_uitleg(daarna: Callable = Callable()) -> void:
+	var was_gepauzeerd := get_tree().paused
+	get_tree().paused = true
+	var paneel := _maak_overlay(0.7, true)
+	var laag := paneel.get_parent().get_parent()
+	var kol := paneel.get_child(0) as VBoxContainer
+	kol.add_theme_constant_override(&"separation", 6)
+	kol.add_child(_lbl("ZO WERKT HET", 16, Color("#3a86ff"), true))
+	kol.add_child(_stap(_icoon_ticket(), "Tik een ticket op het bord."))
+	kol.add_child(_stap(_icoon_collega(), "Tik de collega met dezelfde kleur."))
+	kol.add_child(_stap(_icoon_server(), "Klaar? Ophalen en naar de server."))
+	kol.add_child(UiKit.spacer(2))
+	kol.add_child(_lbl("Tien live voor 17:00 = drie sterren.", 10, Color("#ffd23f"), true))
+	kol.add_child(_lbl("Laat je ze wachten, dan belt de klant.", 10, Color("#ff8a95"), true))
+	kol.add_child(UiKit.spacer(4))
+	var knop := _knop("Snap ik", true)
+	knop.pressed.connect(func() -> void:
+		laag.queue_free()
+		get_tree().paused = was_gepauzeerd
+		if daarna.is_valid():
+			daarna.call())
+	kol.add_child(knop)
+
+
+func _stap(icoon: Control, tekst: String) -> Control:
+	var rij := HBoxContainer.new()
+	rij.add_theme_constant_override(&"separation", 6)
+	icoon.custom_minimum_size = Vector2(30, 32)
+	rij.add_child(icoon)
+	var l := _lbl(tekst, 10, Color.WHITE)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.custom_minimum_size = Vector2(110, 0)
+	rij.add_child(l)
+	return rij
+
+
+func _icoon_ticket() -> Control:
+	var c := Control.new()
+	c.draw.connect(func() -> void:
+		var o := Vector2(9, 8)
+		var k: Color = RushData.VAK_KLEUR[RushData.Vak.FE]
+		c.draw_rect(Rect2(o + Vector2(1, 1), Vector2(12, 14)), Color(0, 0, 0, 0.4))
+		c.draw_rect(Rect2(o, Vector2(12, 14)), Color("#fbf8ef"))
+		c.draw_rect(Rect2(o, Vector2(12, 4)), k)
+		c.draw_rect(Rect2(o + Vector2(3, 7), Vector2(6, 1)), k.darkened(0.3))
+		c.draw_rect(Rect2(o + Vector2(3, 10), Vector2(4, 1)), k.darkened(0.3)))
+	return c
+
+
+func _icoon_collega() -> Control:
+	var c := Control.new()
+	var foto: Texture2D = load("res://assets/sprites/portraits/victor.png")
+	c.draw.connect(func() -> void:
+		c.draw_texture_rect(foto, Rect2(5, 0, 20, 25), false)
+		c.draw_rect(Rect2(5, 26, 20, 3), RushData.VAK_KLEUR[RushData.Vak.FE]))
+	return c
+
+
+func _icoon_server() -> Control:
+	var c := Control.new()
+	var rek: Texture2D = load("res://assets/sprites/props/serverrack_2x4.png")
+	c.draw.connect(func() -> void:
+		c.draw_texture_rect(rek, Rect2(8, 0, 14, 31), false))
+	return c
 
 
 func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, laatste: bool,
@@ -273,13 +355,7 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 	var kol := paneel.get_child(0) as VBoxContainer
 	kol.add_child(_appje(RushData.KLANT_AVOND[dag_index], minuut))
 	kol.add_child(UiKit.spacer(4))
-	if laatste:
-		kol.add_child(_lbl("VRIJHEID!", 20, Color("#3fd27f"), true))
-		kol.add_child(_lbl("De webshop staat live.", 10, Color("#d6dbe8"), true))
-	else:
-		kol.add_child(_lbl("10/10", 20, Color("#3fd27f"), true))
-		kol.add_child(_lbl("%s zit erop." % String(RushData.DAGEN[dag_index]["naam"]), 10, Color("#d6dbe8"), true))
-	kol.add_child(UiKit.spacer(4))
+	kol.add_child(_lbl("VRIJHEID!" if laatste else "10/10", 20, Color("#3fd27f"), true))
 	var sterrij := Control.new()
 	sterrij.custom_minimum_size = Vector2(0, 22)
 	sterrij.set_meta(&"te_zien", 0.0)
@@ -293,47 +369,49 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 		tw.tween_method(func(v: float) -> void:
 			sterrij.set_meta(&"te_zien", v)
 			sterrij.queue_redraw(), float(i), float(i + 1), 0.28)
-	kol.add_child(UiKit.spacer(2))
-	kol.add_child(_lbl("Naar huis om %s" % RushData.klok(minuut), 12, Color.WHITE, true))
-	var regel := "Ze heeft niet gebeld." if gebeld == 0 else (
-		"Ze belde 1 keer." if gebeld == 1 else "Ze belde %d keer." % gebeld)
-	kol.add_child(_lbl(regel, 10, Color("#8a93a8"), true))
-	if ontsnap_sec >= 0.0:
-		var t := "Ontsnapt in %.1f s" % ontsnap_sec
-		kol.add_child(_lbl(t + ("  · record!" if record else ""), 10,
-			Color("#ff9f43") if record else Color("#8a93a8"), true))
-	if sterren < 3:
-		kol.add_child(_lbl("Drie sterren: thuis voor 17:00.", 10, Color("#8a93a8"), true))
-	if laatste:
-		kol.add_child(UiKit.spacer(2))
-		kol.add_child(_lbl("Sprint 14: %d van de 15 sterren." % RushSave.totaal(), 12, Color("#ffd23f"), true))
-	if plek > 0:
-		kol.add_child(_lbl("#%d in de eregalerij van %s" % [plek, String(RushData.DAGEN[dag_index]["naam"]).to_lower()],
-			10, Color("#ffd23f") if plek == 1 else Color("#8fb3ff"), true))
-	kol.add_child(UiKit.spacer(8))
-	if not laatste:
-		var verder := _knop("Volgende dag", true)
-		verder.pressed.connect(func() -> void: volgende.emit())
-		kol.add_child(verder)
-	else:
-		var verder := _knop("Naar het weekend", true)
-		verder.pressed.connect(func() -> void: naar_menu.emit())
-		kol.add_child(verder)
-	# Delen gaat via een plaatje dat je zelf ergens neerzet; online alleen als
-	# het scorebord aanstaat. Samen op één rij, en "Nog een keer" en "Menu" ook:
-	# zo kost delen geen hoogte en past het voller paneel (vrijdag, minder dan
-	# drie sterren, een plek) nog op 192x416.
-	var deelrij := HBoxContainer.new()
-	deelrij.add_theme_constant_override(&"separation", 3)
-	var deel := _knop("Deel je score", false)
+	# Drie getallen naast elkaar in plaats van drie zinnen onder elkaar.
+	var cijfers := HBoxContainer.new()
+	cijfers.add_theme_constant_override(&"separation", 2)
+	cijfers.add_child(_cijfer("THUIS", RushData.klok(minuut),
+		Color.WHITE if minuut <= RushData.EIND_MIN else Color("#ff8a95")))
+	cijfers.add_child(_cijfer("GEBELD", "%d×" % gebeld, Color.WHITE if gebeld == 0 else Color("#ff8a95")))
+	cijfers.add_child(_cijfer("ONTSNAPT", ("%.1fs" % ontsnap_sec).replace(".", ",") if ontsnap_sec >= 0.0 else "-",
+		Color("#ff9f43") if record else Color.WHITE))
+	kol.add_child(cijfers)
+	var lof := ""
+	if plek == 1:
+		lof = "Beste tijd op dit apparaat!"
+	elif record:
+		lof = "Snelste ontsnapping!"
+	elif laatste:
+		lof = "Sprint 14: %d van de 15 sterren" % RushSave.totaal()
+	if lof != "":
+		kol.add_child(_lbl(lof, 10, Color("#ffd23f"), true))
+	kol.add_child(UiKit.spacer(6))
+	var verder := _knop("Naar het weekend" if laatste else "Volgende dag", true)
+	verder.pressed.connect(func() -> void:
+		if laatste:
+			naar_menu.emit()
+		else:
+			volgende.emit())
+	kol.add_child(verder)
+	var rij := HBoxContainer.new()
+	rij.add_theme_constant_override(&"separation", 3)
+	kol.add_child(rij)
+	var nog := _knop("Opnieuw", false)
+	nog.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nog.pressed.connect(func() -> void: opnieuw.emit())
+	rij.add_child(nog)
+	var deel := _knop("Deel", false)
 	deel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	deel.add_theme_color_override(&"font_color", Color("#ffd23f"))
 	deel.add_theme_color_override(&"font_hover_color", Color("#ffd23f"))
 	deel.pressed.connect(func() -> void: RushDeelkaart.deel(_laatste_regel))
-	deelrij.add_child(deel)
+	rij.add_child(deel)
+	# Online alleen als het scorebord aanstaat.
 	var online: Object = RushOnline
 	if RushOnline.actief() and online.has_method(&"stuur") and not score.is_empty():
-		var zet := _knop("Zet online", false)
+		var zet := _knop("Online", false)
 		zet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		zet.pressed.connect(func() -> void:
 			zet.disabled = true
@@ -342,35 +420,32 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 			if not is_instance_valid(zet):
 				return
 			var online_plek := int(uit) if uit is int or uit is float else 0
-			zet.text = "Online #%d" % online_plek if online_plek > 0 else "Niet gelukt"
+			zet.text = "#%d" % online_plek if online_plek > 0 else "Mislukt"
 			if online_plek <= 0:
 				zet.disabled = false)
-		deelrij.add_child(zet)
-	kol.add_child(deelrij)
-	# Op vrijdag is er geen "Menu" en wel een regel meer tekst: dan past
-	# "Nog een keer" naast het delen.
-	var onderrij := deelrij
-	if not laatste or deelrij.get_child_count() > 1:
-		onderrij = HBoxContainer.new()
-		onderrij.add_theme_constant_override(&"separation", 3)
-		kol.add_child(onderrij)
-	var nog := _knop("Nog een keer", false)
-	nog.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	nog.pressed.connect(func() -> void: opnieuw.emit())
-	onderrij.add_child(nog)
+		rij.add_child(zet)
 	if not laatste:
 		var menu := _knop("Menu", false)
 		menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		menu.pressed.connect(func() -> void: naar_menu.emit())
-		onderrij.add_child(menu)
+		rij.add_child(menu)
 	# Even wachten voor de knoppen reageren: wie nog aan het tikken was,
-	# drukt anders per ongeluk op "Nog een keer".
+	# drukt anders per ongeluk op "Opnieuw".
 	for n: Node in kol.find_children("*", "Button", true, false):
 		var k := n as Button
 		k.disabled = true
 		get_tree().create_timer(0.6, true).timeout.connect(func() -> void:
 			if is_instance_valid(k):
 				k.disabled = false)
+
+
+func _cijfer(kop: String, waarde: String, kleur: Color) -> Control:
+	var k := VBoxContainer.new()
+	k.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	k.add_theme_constant_override(&"separation", 0)
+	k.add_child(_lbl(kop, 10, Color("#8a93a8"), true))
+	k.add_child(_lbl(waarde, 12, kleur, true))
+	return k
 
 
 ## Haar berichtje van die avond, als telefoonmelding.
