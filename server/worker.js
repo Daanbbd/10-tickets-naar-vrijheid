@@ -6,6 +6,8 @@
 //   - er wordt nergens gelezen: IP, User-Agent, cookies. Er is geen console.*.
 //   - de sleutel van de speler wordt gehasht en dan weggegooid.
 //   - alles wat niet exact past, wordt geweigerd.
+//   - er gaat alleen iets de deur uit als jij de Slack-webhook zelf hebt aangezet
+//     (secret `SLACK_WEBHOOK`): één regel tekst, zonder portret of sleutel.
 
 // ---- Instellingen -----------------------------------------------------------
 
@@ -16,7 +18,7 @@ export const TOEGESTANE_ORIGINS = [
   "http://127.0.0.1:8060",
 ];
 
-const TOP = 20; // zo veel regels per dag per maand
+const TOP = 20; // zo veel regels per dag per sprint (week)
 const MAX_BODY = 4096; // bytes
 const DAGEN = 5; // dag 0..4
 const MINUUT_MIN = 600; // 10:00; niemand is eerder klaar
@@ -24,9 +26,11 @@ const MINUUT_MAX = 1800;
 const NAAM_MAX = 12;
 const PORTRET_LENGTE = 32 * 40; // zie scripts/rush/rush_pixel.gd
 
-// Een maand-sleutel verdwijnt uit KV op de 10e van de maand erna. Een regel
-// leeft dus 10 tot 41 dagen, nooit langer.
-const EXTRA_DAGEN_NA_MAAND = 10;
+const DAG_MS = 24 * 60 * 60 * 1000;
+const DAGNAMEN = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag"]; // dag 0..4
+
+// Waar de Slack-melding naar verwijst.
+const SPEL_ADRES = "https://daanbbd.github.io/10-tickets-naar-vrijheid/";
 
 // De zes rollen van een zelfgemaakt personage (RushProfiel.ROL_NAAM) en de
 // rollen van de zeven vaste personages (data/characters.json, veld `role`).
@@ -53,7 +57,7 @@ const DELEN = ["kanker", "tering", "tyfus", "mongool", "hitler", "fuck", "shit",
 
 // ---- Valideren --------------------------------------------------------------
 
-const TOEGESTANE_VELDEN = ["dag", "naam", "rol", "minuut", "ontsnap", "portret", "sleutel"];
+const TOEGESTANE_VELDEN = ["dag", "naam", "rol", "minuut", "ontsnap", "punten", "portret", "sleutel"];
 const NAAM_PATROON = /^[\p{Script=Latin}0-9 _-]+$/u;
 const PORTRET_PATROON = /^[0-9a-v]*$/;
 const SLEUTEL_PATROON = /^[0-9a-f]{32}$/;
@@ -71,6 +75,23 @@ function isDag(d) {
 
 function rond(n) {
   return Math.round(n * 10) / 10;
+}
+
+/**
+ * De bovengrens van `punten` bij deze eindtijd en ontsnaptijd. Het is de
+ * formule uit het spel, op zijn gunstigst: basis 1000, een tijdbonus van 5 per
+ * minuut vóór 17:00 (1020), reeks, spoedtickets en dubbel-punten samen hooguit
+ * ~2500, en een ontsnapbonus van 10 per seconde onder de 40 s (alleen als je
+ * ontsnapte). Naar beneden afgerond.
+ *
+ * Dit is geen anti-cheat: wie `curl` gebruikt kan nog steeds precies de grens
+ * invullen. Het is een zeef tegen onzin (negatieve punten, een miljoen punten,
+ * een tikfout), meer niet; zie "Valsspelen gaat op vertrouwen" in README.md.
+ */
+export function maxPunten(minuut, ontsnap) {
+  const tijdbonus = Math.max(0, 1020 - minuut) * 5;
+  const ontsnapbonus = ontsnap >= 0 ? Math.max(0, 40 - ontsnap) * 10 : 0;
+  return Math.floor(1000 + tijdbonus + 2500 + ontsnapbonus);
 }
 
 function vereenvoudig(naam) {
@@ -131,6 +152,10 @@ export function valideerScore(b) {
   }
   const ontsnap = b.ontsnap === -1 ? -1 : rond(b.ontsnap);
 
+  if (!Number.isInteger(b.punten) || b.punten < 0 || b.punten > maxPunten(minuut, ontsnap)) {
+    return { fout: "punten" };
+  }
+
   if (typeof b.portret !== "string" ||
       !(b.portret === "" || (b.portret.length === PORTRET_LENGTE && PORTRET_PATROON.test(b.portret)))) {
     return { fout: "portret" };
@@ -141,7 +166,7 @@ export function valideerScore(b) {
   return {
     sleutel: b.sleutel,
     dag: b.dag,
-    regel: { naam, rol: b.rol, minuut, sterren: sterrenVoor(minuut), ontsnap, portret: b.portret },
+    regel: { naam, rol: b.rol, minuut, sterren: sterrenVoor(minuut), ontsnap, punten: b.punten, portret: b.portret },
   };
 }
 
@@ -154,21 +179,36 @@ export async function hash(sleutel) {
   return [...new Uint8Array(digest)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
-/** "2026-10": de huidige sprint (kalendermaand, UTC). */
+/**
+ * "2026-W42": de huidige sprint, een ISO-week (UTC). Een week loopt van maandag
+ * tot en met zondag en hoort bij het jaar waarin haar donderdag valt; zo is
+ * 2026-12-31 nog 2026-W53 en 2020-12-31 ook W53 van 2020.
+ */
 export function sprintVan(datum) {
-  return `${datum.getUTCFullYear()}-${String(datum.getUTCMonth() + 1).padStart(2, "0")}`;
+  const donderdag = new Date(Date.UTC(datum.getUTCFullYear(), datum.getUTCMonth(), datum.getUTCDate()));
+  donderdag.setUTCDate(donderdag.getUTCDate() + 3 - ((donderdag.getUTCDay() + 6) % 7));
+  const jaar = donderdag.getUTCFullYear();
+  const dagVanJaar = Math.round((donderdag.getTime() - Date.UTC(jaar, 0, 1)) / DAG_MS);
+  const week = Math.floor(dagVanJaar / 7) + 1;
+  return `${jaar}-W${String(week).padStart(2, "0")}`;
 }
 
-function vorigeSprint(datum) {
-  return sprintVan(new Date(Date.UTC(datum.getUTCFullYear(), datum.getUTCMonth() - 1, 1)));
+/** Dezelfde tijd een week eerder: waar de vorige sprint te vinden is. */
+function weekEerder(datum) {
+  return new Date(datum.getTime() - 7 * DAG_MS);
 }
 
 const sleutelNaam = (sprint, dag) => `scores:${sprint}:${dag}`;
 
-/** Unix-seconden waarop de maand-sleutel uit KV verdwijnt. */
+/**
+ * Unix-seconden waarop de sleutel van de sprint van `datum` uit KV verdwijnt:
+ * het einde van de week erna, dus de maandag 00:00 UTC twee weken na de maandag
+ * van deze sprint. Een sleutel leeft zo 7 tot 14 dagen, nooit langer.
+ */
 function verlooptOp(datum) {
-  const volgendeMaand = Date.UTC(datum.getUTCFullYear(), datum.getUTCMonth() + 1, 1 + EXTRA_DAGEN_NA_MAAND);
-  return Math.floor(volgendeMaand / 1000);
+  const dag0 = Date.UTC(datum.getUTCFullYear(), datum.getUTCMonth(), datum.getUTCDate());
+  const maandag = dag0 - ((new Date(dag0).getUTCDay() + 6) % 7) * DAG_MS;
+  return Math.floor((maandag + 14 * DAG_MS) / 1000);
 }
 
 function corsHeaders(origin) {
@@ -246,24 +286,92 @@ async function leesLijst(env, sprint, dag) {
   return Array.isArray(lijst) ? lijst : [];
 }
 
-/** Op minuut oplopend; bij gelijke tijd blijft de oudste voor (stabiele sortering). */
-function sorteer(lijst) {
-  return lijst.sort((a, b) => a.minuut - b.minuut);
+/**
+ * De rangschikking: negatief als `a` boven `b` hoort. Meer punten eerst; bij
+ * gelijke punten de lagere `minuut`, dan de snellere `ontsnap` (-1, niet
+ * ontsnapt, telt als de langzaamste).
+ */
+function vergelijk(a, b) {
+  if (a.punten !== b.punten) return b.punten - a.punten;
+  if (a.minuut !== b.minuut) return a.minuut - b.minuut;
+  const sa = a.ontsnap === -1 ? Infinity : a.ontsnap;
+  const sb = b.ontsnap === -1 ? Infinity : b.ontsnap;
+  if (sa === sb) return 0;
+  return sa < sb ? -1 : 1;
 }
 
-// ---- De drie routes ---------------------------------------------------------
+/** Sorteert op `vergelijk`; bij een volledig gelijke stand blijft de oudste voor (stabiel). */
+function sorteer(lijst) {
+  return lijst.sort(vergelijk);
+}
+
+/** Wat een speler te zien krijgt. Zonder `h`: de hash van de sleutel verlaat de server nooit. */
+function openbaar({ naam, rol, minuut, sterren, ontsnap, punten, portret }) {
+  return { naam, rol, minuut, sterren, ontsnap, punten, portret };
+}
+
+// ---- Slack ------------------------------------------------------------------
+
+/** 2340 wordt "2.340". Zonder toLocaleString: dat hangt af van de ICU-data van de host. */
+function metPunten(n) {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+/** Slack leest `&`, `<` en `>` als opmaak. */
+function slackEscape(tekst) {
+  return tekst.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/**
+ * De melding voor een nieuwe nummer 1. Alleen bijnaam, dag, punten en tijd:
+ * geen portret, geen rol, geen sleutel of hash.
+ */
+export function slackBericht(regel, dag) {
+  const uur = Math.floor(regel.minuut / 60);
+  const min = Math.floor(regel.minuut % 60);
+  const tijd = `${String(uur).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+  return `\u{1F3C6} *${slackEscape(regel.naam)}* staat nu #1 op ${DAGNAMEN[dag]} met ` +
+    `${metPunten(regel.punten)} punten (thuis om ${tijd}). Wie gaat erover? ${SPEL_ADRES}`;
+}
+
+/**
+ * Eén POST naar de webhook. Fouten worden bewust genegeerd en niets wordt
+ * gelogd: de melding is een extraatje, de score is al bewaard.
+ */
+async function stuurSlack(webhook, regel, dag, netwerk) {
+  try {
+    await netwerk(webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: slackBericht(regel, dag) }),
+    });
+  } catch {
+    // genegeerd
+  }
+}
+
+// ---- De routes --------------------------------------------------------------
 
 async function haalScores(url, env, nu, origin) {
   const ruw = url.searchParams.get("dag");
   if (ruw === null || !/^\d$/.test(ruw) || !isDag(Number(ruw))) return fout(400, "dag", origin);
-  const lijst = sorteer(await leesLijst(env, sprintVan(nu), Number(ruw))).slice(0, TOP);
-  // Zonder `h`: de hash van de sleutel verlaat de server nooit.
-  const scores = lijst.map(({ naam, rol, minuut, sterren, ontsnap, portret }) =>
-    ({ naam, rol, minuut, sterren, ontsnap, portret }));
-  return antwoord(200, { scores }, origin);
+  const sprint = sprintVan(nu);
+  const lijst = sorteer(await leesLijst(env, sprint, Number(ruw))).slice(0, TOP);
+  return antwoord(200, { sprint, scores: lijst.map(openbaar) }, origin);
 }
 
-async function zetScore(request, env, nu, origin) {
+/** De nummer 1 van elke dag in één antwoord: vijf reads, `null` voor een lege dag. */
+async function haalKoplopers(env, nu, origin) {
+  const sprint = sprintVan(nu);
+  const lijsten = await Promise.all(Array.from({ length: DAGEN }, (_, dag) => leesLijst(env, sprint, dag)));
+  const dagen = lijsten.map((lijst) => {
+    const eerste = sorteer(lijst)[0];
+    return eerste ? openbaar(eerste) : null;
+  });
+  return antwoord(200, { sprint, dagen }, origin);
+}
+
+async function zetScore(request, env, nu, origin, ctx, netwerk) {
   const gelezen = await leesJson(request, origin);
   if (gelezen.antwoord) return gelezen.antwoord;
   const v = valideerScore(gelezen.body);
@@ -273,14 +381,13 @@ async function zetScore(request, env, nu, origin) {
   const sprint = sprintVan(nu);
   const lijst = await leesLijst(env, sprint, v.dag);
   const nieuw = { h, ...v.regel };
+  const vorigeNummerEen = sorteer([...lijst])[0];
 
   const bestaand = lijst.findIndex((r) => r.h === h);
   if (bestaand >= 0) {
     const oud = lijst[bestaand];
-    const beter = nieuw.minuut < oud.minuut ||
-      (nieuw.minuut === oud.minuut && nieuw.ontsnap !== -1 && (oud.ontsnap === -1 || nieuw.ontsnap < oud.ontsnap));
-    if (!beter) {
-      // Je oude regel blijft staan; je hoort waar die staat.
+    if (vergelijk(nieuw, oud) >= 0) {
+      // Je oude regel blijft staan (even goed telt niet als beter); je hoort waar die staat.
       return antwoord(200, { plek: sorteer(lijst).indexOf(oud) + 1 }, origin);
     }
     lijst.splice(bestaand, 1);
@@ -294,6 +401,14 @@ async function zetScore(request, env, nu, origin) {
     return antwoord(200, { plek: 0 }, origin);
   }
   await env.SCORES.put(sleutelNaam(sprint, v.dag), JSON.stringify(top), { expiration: verlooptOp(nu) });
+
+  // Alleen als er een webhook is ingesteld, jij nummer 1 werd en dat eerst
+  // iemand anders was (of niemand): één bericht, waar de speler niet op wacht.
+  const webhook = typeof env.SLACK_WEBHOOK === "string" ? env.SLACK_WEBHOOK.trim() : "";
+  if (webhook.startsWith("https://") && plek === 1 && (!vorigeNummerEen || vorigeNummerEen.h !== h)) {
+    const bericht = stuurSlack(webhook, nieuw, v.dag, netwerk);
+    if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(bericht);
+  }
   return antwoord(200, { plek }, origin);
 }
 
@@ -307,15 +422,16 @@ async function wisScores(request, env, nu, origin) {
   }
   const h = await hash(b.sleutel);
   let verwijderd = 0;
-  // Door de vaste verloopdatum bestaan er hooguit twee maanden tegelijk.
-  for (const sprint of [sprintVan(nu), vorigeSprint(nu)]) {
+  // Door de vaste verloopdatum bestaan er hooguit twee weken tegelijk.
+  for (const moment of [nu, weekEerder(nu)]) {
+    const sprint = sprintVan(moment);
     for (let dag = 0; dag < DAGEN; dag++) {
       const naam = sleutelNaam(sprint, dag);
       const lijst = await leesLijst(env, sprint, dag);
       const rest = lijst.filter((r) => r.h !== h);
       if (rest.length === lijst.length) continue;
       verwijderd += lijst.length - rest.length;
-      const exp = verlooptOp(sprintDatum(sprint));
+      const exp = verlooptOp(moment);
       // KV eist minstens een minuut vooruit; zo kort voor het verlopen is weggooien genoeg.
       if (rest.length === 0 || exp * 1000 - nu.getTime() < 120000) await env.SCORES.delete(naam);
       else await env.SCORES.put(naam, JSON.stringify(rest), { expiration: exp });
@@ -324,16 +440,18 @@ async function wisScores(request, env, nu, origin) {
   return antwoord(200, { verwijderd }, origin);
 }
 
-/** De eerste dag van een sprint "JJJJ-MM", om de verloopdatum van die maand te vinden. */
-function sprintDatum(sprint) {
-  const [j, m] = sprint.split("-").map(Number);
-  return new Date(Date.UTC(j, m - 1, 1));
-}
-
 // ---- Ingang -----------------------------------------------------------------
 
-/** De hele afhandeling; `nu` is een functie zodat tests de klok kunnen vastzetten. */
-export async function verwerk(request, env, nu = () => new Date()) {
+const voorvlucht = (origin) =>
+  new Response(null, { status: 204, headers: { "Cache-Control": "no-store", ...corsHeaders(origin) } });
+
+/**
+ * De hele afhandeling. `nu` is een functie zodat tests de klok kunnen vastzetten;
+ * `ctx` is de ExecutionContext van Workers (voor `waitUntil`, optioneel); `netwerk`
+ * is de fetch voor de Slack-melding, zodat tests niets echt versturen.
+ */
+export async function verwerk(request, env, nu = () => new Date(), ctx = undefined,
+    netwerk = (...args) => fetch(...args)) {
   const origin = request.headers.get("Origin");
   // Een browser van een andere website komt er niet in. Zonder Origin (curl,
   // het spel op desktop) is er niets om te toetsen; dat is bewust.
@@ -343,9 +461,7 @@ export async function verwerk(request, env, nu = () => new Date()) {
   // `POST /scores/wis` doet hetzelfde als `DELETE /scores`: niet elke
   // HTTP-client (Godot op het web) stuurt een body mee bij DELETE.
   if (url.pathname === "/scores/wis") {
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: { "Cache-Control": "no-store", ...corsHeaders(origin) } });
-    }
+    if (request.method === "OPTIONS") return voorvlucht(origin);
     if (request.method !== "POST") return fout(405, "methode", origin, { Allow: "POST, OPTIONS" });
     try {
       return await wisScores(request, env, nu(), origin);
@@ -353,15 +469,22 @@ export async function verwerk(request, env, nu = () => new Date()) {
       return fout(500, "er ging iets mis", origin);
     }
   }
+  if (url.pathname === "/koplopers") {
+    if (request.method === "OPTIONS") return voorvlucht(origin);
+    if (request.method !== "GET") return fout(405, "methode", origin, { Allow: "GET, OPTIONS" });
+    try {
+      return await haalKoplopers(env, nu(), origin);
+    } catch {
+      return fout(500, "er ging iets mis", origin);
+    }
+  }
   if (url.pathname !== "/scores") return fout(404, "onbekend", origin);
 
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: { "Cache-Control": "no-store", ...corsHeaders(origin) } });
-  }
+  if (request.method === "OPTIONS") return voorvlucht(origin);
   try {
     const nuDatum = nu();
     if (request.method === "GET") return await haalScores(url, env, nuDatum, origin);
-    if (request.method === "POST") return await zetScore(request, env, nuDatum, origin);
+    if (request.method === "POST") return await zetScore(request, env, nuDatum, origin, ctx, netwerk);
     if (request.method === "DELETE") return await wisScores(request, env, nuDatum, origin);
     return fout(405, "methode", origin, { Allow: "GET, POST, DELETE, OPTIONS" });
   } catch {
@@ -371,7 +494,7 @@ export async function verwerk(request, env, nu = () => new Date()) {
 }
 
 export default {
-  fetch(request, env) {
-    return verwerk(request, env);
+  fetch(request, env, ctx) {
+    return verwerk(request, env, undefined, ctx);
   },
 };

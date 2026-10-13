@@ -1,7 +1,10 @@
 // Het scorebord lokaal proberen, zonder Cloudflare-account en zonder wrangler:
 //   node server/lokaal.mjs        (luistert op http://localhost:8787)
-// De opslag zit in het geheugen en is weg zodra je stopt. Zet in
-// scripts/rush/rush_online.gd tijdelijk ADRES op "http://localhost:8787".
+// Alle routes werken, ook /koplopers en de sprints per week (ISO-week, UTC). De
+// opslag zit in het geheugen en is weg zodra je stopt (het verloop uit
+// `expiration` wordt hier niet nagebootst). Er is geen SLACK_WEBHOOK: lokaal gaat
+// er nooit iets naar buiten. Zet in scripts/rush/rush_online.gd tijdelijk ADRES
+// op "http://localhost:8787".
 import { createServer } from "node:http";
 import { verwerk } from "./worker.js";
 
