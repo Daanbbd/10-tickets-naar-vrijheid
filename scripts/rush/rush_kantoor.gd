@@ -25,7 +25,7 @@ const BUREAUS: Array[Vector2] = [
 ## Het bureau van een zelfgemaakt personage, op de plek van de plant.
 const EIGEN_BUREAU := Vector2(96, 224)
 
-const BORD_RECT := Rect2(20, 5, 152, 40)
+const BORD_RECT := Rect2(30, 5, 144, 40)
 const BORD_SLOTS := 6
 const KOFFIE_RECT := Rect2(146, 192, 28, 30)
 const SERVER_RECT := Rect2(144, 248, 32, 72)
@@ -41,11 +41,14 @@ var deur_open := false
 ## Je hebt iets in je handen dat live kan.
 var server_gloed := false
 var _tijd := 0.0
+## De nummer 1 van vandaag: zijn portret hangt in een lijstje naast het bord.
+var _koploper_tex: Texture2D = null
+var _koploper_naam := ""
 var _server_flits := 0.0
 
 
 func slot_positie(i: int) -> Vector2:
-	return Vector2(BORD_RECT.position.x + 18 + i * 23, BORD_RECT.position.y + 22)
+	return Vector2(BORD_RECT.position.x + 15 + i * 23, BORD_RECT.position.y + 22)
 
 
 func slot_benader(i: int) -> Vector2:
@@ -62,6 +65,12 @@ func server_benader() -> Vector2:
 
 func deur_punt() -> Vector2:
 	return Vector2(DEUR_RECT.get_center().x, 330)
+
+
+func zet_koploper(r: Dictionary) -> void:
+	var img := RushPixel.van_code(String(r.get("portret", "")))
+	_koploper_tex = ImageTexture.create_from_image(img) if img != null else null
+	_koploper_naam = String(r.get("naam", ""))
 
 
 func flits_server() -> void:
@@ -133,11 +142,12 @@ func _muren() -> void:
 	draw_rect(Rect2(0, 0, BREED, 3 * T), Color("#59617a"))
 	draw_rect(Rect2(0, 0, BREED, 3), Color("#3d4356"))
 	draw_rect(Rect2(0, 3 * T - 3, BREED, 3), Color("#2f3442"))
-	# Ramen links en rechts van het bord.
-	for x: float in [4.0, 176.0]:
-		draw_rect(Rect2(x, 8, 12, 26), Color("#8fb7d9"))
-		draw_rect(Rect2(x, 8, 12, 26), Color("#2f3442"), false, 1.0)
-		draw_line(Vector2(x + 6, 8), Vector2(x + 6, 34), Color("#2f3442"))
+	# Links het lijstje van de koploper (of een raam), rechts een raam.
+	if _koploper_naam != "":
+		_lijstje(Rect2(3, 5, 24, 36))
+	else:
+		_raam(10.0)
+	_raam(178.0)
 	# Onderwand met de uitgang.
 	draw_rect(Rect2(0, HOOG - T, BREED, T), Color("#3d4356"))
 	draw_rect(Rect2(0, HOOG - T, BREED, 2), Color("#2f3442"))
@@ -155,13 +165,35 @@ func _muren() -> void:
 	draw_rect(Rect2(BREED - 1, 0, 1, HOOG), Color("#2f3442"))
 
 
+func _raam(x: float) -> void:
+	draw_rect(Rect2(x, 8, 12, 26), Color("#8fb7d9"))
+	draw_rect(Rect2(x, 8, 12, 26), Color("#2f3442"), false, 1.0)
+	draw_line(Vector2(x + 6, 8), Vector2(x + 6, 34), Color("#2f3442"))
+
+
+## Medewerker van de week: een gouden lijstje met het pixelportret, en een
+## kroontje dat zachtjes glimt.
+func _lijstje(r: Rect2) -> void:
+	draw_rect(Rect2(r.position + Vector2(1, 1), r.size), Color(0, 0, 0, 0.3))
+	draw_rect(r, Color("#c99a2e"))
+	draw_rect(r.grow(-1), Color("#ffd23f"))
+	var foto := Rect2(r.position + Vector2(2, 2), Vector2(20, 25))
+	draw_rect(foto, Color("#141824"))
+	if _koploper_tex != null:
+		draw_texture_rect(_koploper_tex, foto, false)
+	draw_rect(Rect2(r.position.x + 2, r.position.y + 28, 20, 6), Color("#141824"))
+	_kleine_tekst("#1", Vector2(r.position.x + 7, r.position.y + 34), Color("#ffd23f"))
+	var glim := 0.5 + 0.5 * sin(_tijd * 3.0)
+	draw_rect(Rect2(r.position.x + 18, r.position.y + 3, 2, 2), Color(1, 1, 1, glim))
+
+
 func _bord() -> void:
 	var r := BORD_RECT
 	draw_rect(Rect2(r.position + Vector2(1, 2), r.size), Color(0, 0, 0, 0.3))
 	draw_rect(r, Color("#c9ccd4"))
 	draw_rect(r.grow(-2), Color("#f4f5f7"))
 	draw_rect(Rect2(r.position.x + 2, r.position.y + 2, r.size.x - 4, 8), Color("#243cec"))
-	_kleine_tekst("SPRINT 14  ·  TO DO", Vector2(r.position.x + 6, r.position.y + 9), Color.WHITE)
+	_kleine_tekst("SPRINT %d  ·  TO DO" % RushData.sprint_nummer(), Vector2(r.position.x + 6, r.position.y + 9), Color.WHITE)
 	for i: int in BORD_SLOTS:
 		var p := slot_positie(i)
 		draw_rect(Rect2(p - Vector2(7, 8), Vector2(14, 16)), Color("#e3e5ea"))

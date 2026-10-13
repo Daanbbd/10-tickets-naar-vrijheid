@@ -32,6 +32,58 @@ func _ready() -> void:
 	AudioDirector.stop_music(0.3)
 	RushKlank.muziek(&"rush_menu", &"intro", 0.6)
 	_titel()
+	_check_ingehaald.call_deferred()
+
+
+## Stond je ergens op 1 en heeft iemand je ingehaald? Dan hoor je dat hier,
+## als eerste ding als je het spel opent: een reden om meteen terug te slaan.
+func _check_ingehaald() -> void:
+	if not RushOnline.actief() or RushSave.online_keuze != 1 or RushSave.mijn_online.is_empty():
+		return
+	var lijst: Array = await RushOnline.koplopers(self)
+	if lijst.size() != 5:
+		return
+	var sprint := RushData.sprint_id()
+	var meldingen: Array[String] = []
+	for dag: int in 5:
+		var mijn: Dictionary = RushSave.mijn_online.get(str(dag), {})
+		if mijn.is_empty() or String(mijn.get("sprint", "")) != sprint or not bool(mijn.get("eerste", false)):
+			continue
+		var kop: Variant = lijst[dag]
+		if kop is Dictionary and int(kop.get("punten", 0)) > int(mijn.get("punten", 0)):
+			meldingen.append("%s is je voorbij op %s: %s punten" % [String(kop.get("naam", "?")),
+				String(RushData.DAGEN[dag]["naam"]).to_lower(), RushData.getal(int(kop.get("punten", 0)))])
+			mijn["eerste"] = false
+	if meldingen.is_empty():
+		return
+	RushSave.bewaar()
+	_toast("\n".join(meldingen))
+
+
+func _toast(tekst: String) -> void:
+	var p := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("#2a1418")
+	sb.border_color = Color("#ff6b7a")
+	sb.set_border_width_all(1)
+	sb.content_margin_left = 6
+	sb.content_margin_right = 6
+	sb.content_margin_top = 4
+	sb.content_margin_bottom = 5
+	p.add_theme_stylebox_override(&"panel", sb)
+	var l := _lbl(tekst, 10, Color("#ffd0d5"), true)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size = Vector2(get_viewport_rect().size.x - 32.0, 0)
+	p.add_child(l)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(p)
+	p.position = Vector2(10, -60)
+	RushKlank.sfx(&"rush_bel", &"hinnik", 0.0, -6.0)
+	var tw := p.create_tween()
+	tw.tween_property(p, ^"position:y", 6.0, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(4.5)
+	tw.tween_property(p, ^"position:y", -80.0, 0.3)
+	tw.tween_callback(p.queue_free)
 
 
 func _process(delta: float) -> void:
@@ -259,7 +311,7 @@ func _portretknop(id: StringName) -> Control:
 
 func _week() -> void:
 	var kol := _leeg()
-	kol.add_child(_lbl("SPRINT 14", 20, Color("#3a86ff"), true))
+	kol.add_child(_lbl("SPRINT %d" % RushData.sprint_nummer(), 20, Color("#3a86ff"), true))
 	var def: CharacterDef = GameData.character(RushSave.karakter)
 	var wie := RushProfiel.naam if RushSave.karakter == RushProfiel.ID else (def.name if def != null else "?")
 	kol.add_child(_lbl("Jij bent %s. Tien tickets per dag." % wie, 10, Color("#b0b4c2"), true))

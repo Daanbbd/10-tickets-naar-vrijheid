@@ -131,7 +131,7 @@ func _toon() -> void:
 		_zet_tab(_dagknoppen[i], i == _dag)
 	for i: int in _bronknoppen.size():
 		_zet_tab(_bronknoppen[i], (i == 1) == _online)
-	_onder_titel.text = "Iedereen die online zette" if _online else "De beste tien van dit apparaat"
+	_onder_titel.text = ("Sprint %d · iedereen online" if _online else "Sprint %d · dit apparaat") % RushData.sprint_nummer()
 	_vraag += 1
 	if _online and _kan_online(&"haal"):
 		_toon_online(_vraag)
@@ -263,16 +263,14 @@ func _rij(plek: int, r: Dictionary) -> Control:
 	var onder := HBoxContainer.new()
 	onder.add_theme_constant_override(&"separation", 4)
 	info.add_child(onder)
-	var klok := _lbl(RushData.klok(float(r.get("minuut", 0.0))), 12, kleur if plek <= 3 else LICHTBLAUW)
-	klok.autowrap_mode = TextServer.AUTOWRAP_OFF
-	onder.add_child(klok)
-	var ontsnap := float(r.get("ontsnap", -1.0))
-	if ontsnap >= 0.0:
-		var o := _lbl("uit in %.1fs" % ontsnap, 10, ORANJE)
-		_eenregelig(o)
-		o.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		o.size_flags_vertical = Control.SIZE_SHRINK_END
-		onder.add_child(o)
+	var punten := _lbl(RushData.getal(int(r.get("punten", 0))), 12, kleur if plek <= 3 else LICHTBLAUW)
+	punten.autowrap_mode = TextServer.AUTOWRAP_OFF
+	onder.add_child(punten)
+	var o := _lbl("thuis %s" % RushData.klok(float(r.get("minuut", 0.0))), 10, ORANJE)
+	_eenregelig(o)
+	o.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	o.size_flags_vertical = Control.SIZE_SHRINK_END
+	onder.add_child(o)
 	return vak
 
 

@@ -215,6 +215,46 @@ const TWEE_STERREN_MIN := 18 * 60 + 30
 const BEL_BOETE_MIN := 20
 
 
+## De sprint is de ISO-week (UTC), net als op de server: "2026-W42". Elke
+## week krijgt iedereen een nieuwe vaste reeks tickets en een leeg bord.
+static func sprint_id(unix: float = -1.0) -> String:
+	var t := Time.get_unix_time_from_system() if unix < 0.0 else unix
+	var dagen := floori(t / 86400.0)
+	var weekdag := posmod(dagen + 3, 7) + 1          # maandag 1 .. zondag 7
+	var donderdag := dagen - (weekdag - 4)
+	var d := Time.get_datetime_dict_from_unix_time(donderdag * 86400)
+	var jaar := int(d["year"])
+	var nieuwjaar := floori(Time.get_unix_time_from_datetime_dict(
+		{"year": jaar, "month": 1, "day": 1, "hour": 0, "minute": 0, "second": 0}) / 86400.0)
+	var week := (donderdag - nieuwjaar) / 7 + 1
+	return "%d-W%02d" % [jaar, week]
+
+
+static func sprint_nummer() -> int:
+	return int(sprint_id().get_slice("W", 1))
+
+
+## De punten van een dag. Basis voor tien tickets, vijf per minuut dat je voor
+## 17:00 thuis bent, wat je onderweg verdiende (reeksen, spoed, dubbel; samen
+## hooguit 2500) en tien per seconde dat je ontsnapping onder de 40 bleef.
+## De server rekent met dezelfde bovengrens.
+static func punten_voor(minuut: float, bonus: int, ontsnap: float) -> int:
+	var p := 1000 + maxi(0, floori((EIND_MIN - minuut) * 5.0)) + clampi(bonus, 0, 2500)
+	if ontsnap >= 0.0:
+		p += maxi(0, floori((40.0 - ontsnap) * 10.0))
+	return p
+
+
+## 2340 -> "2.340"
+static func getal(n: int) -> String:
+	var s := str(absi(n))
+	var uit := ""
+	while s.length() > 3:
+		uit = "." + s.right(3) + uit
+		s = s.left(s.length() - 3)
+	return ("-" if n < 0 else "") + s + uit
+
+
 static func vak_van(persoon: StringName) -> int:
 	return int(VAK_VAN.get(persoon, Vak.FE))
 

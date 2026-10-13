@@ -66,6 +66,10 @@ var _tutorial := false
 var _laatste_hint := ""
 ## Deploys achter elkaar zonder dat ze belt. Elke deploy klinkt een tikje hoger.
 var _reeks := 0
+## Punten die je onderweg verdient: reeksen, spoed, dubbel.
+var _bonus := 0
+## De nummer 1 van deze dag op het online bord, als die er is.
+var _koploper: Dictionary = {}
 
 ## De dag ligt vast: iedereen krijgt dezelfde tickets op dezelfde momenten,
 ## zodat scores in de eregalerij eerlijk te vergelijken zijn. Alleen wat er
@@ -89,7 +93,7 @@ func _ready() -> void:
 	speler_id = RushSave.karakter if RushSave.karakter != &"" else &"daan"
 	_tutorial = dag_index == 0
 	_lees_qa_vlaggen()
-	_rng.seed = hash("sprint14-dag%d" % dag_index)
+	_rng.seed = hash("%s-dag%d" % [RushData.sprint_id(), dag_index])
 	if speler_id == RushProfiel.ID:
 		if not RushProfiel.bestaat():
 			_testprofiel()
@@ -99,6 +103,7 @@ func _ready() -> void:
 	_pas_layout()
 	get_viewport().size_changed.connect(_pas_layout)
 
+	_haal_koploper.call_deferred()
 	_klets_timer = _rng.randf_range(14.0, 20.0)
 	_dirk_timer = _rng.randf_range(12.0, 18.0)
 	_brand_timer = _rng.randf_range(16.0, 24.0)
@@ -468,6 +473,11 @@ func _deploy() -> void:
 		if t.spoed:
 			spoed_n += 1
 	kantoor.flits_server()
+	for i: int in klaar_t.size():
+		_bonus += mini(200, 20 * (_reeks + i))
+	if klaar_t.size() >= 2:
+		_bonus += 50
+	_bonus += 100 * spoed_n
 	_reeks += klaar_t.size()
 	RushKlank.toon(&"rush_deploy", &"deploy_ok", 1.0 + minf(_reeks - 1, 8) * 0.06)
 	for drempel: int in RushData.REEKS_ROEP:
@@ -874,8 +884,9 @@ func _dag_klaar() -> void:
 	speler.pad.append(kantoor.deur_punt() + Vector2(0, 16))
 	RushPop.confetti(veld, speler.position + Vector2(0, -30), 30)
 	if bot and not bot_blijf:
-		print("RUSH-BOT dag=%d speler=%s klaar=%s sterren=%d gebeld=%d" % [
-			dag_index + 1, speler_id, RushData.klok(minuut), sterren, gebeld])
+		print("RUSH-BOT dag=%d speler=%s klaar=%s sterren=%d gebeld=%d punten=%d" % [
+			dag_index + 1, speler_id, RushData.klok(minuut), sterren, gebeld,
+			RushData.punten_voor(minuut, _bonus, 25.0)])
 		get_tree().quit()
 		return
 	await get_tree().create_timer(1.4).timeout
@@ -896,10 +907,14 @@ func _dag_klaar() -> void:
 			ontsnap_sec = float(uit[0])
 			record = RushSave.noteer_ontsnapping(dag_index, ontsnap_sec)
 	regel["ontsnap"] = ontsnap_sec
+	regel["punten"] = RushData.punten_voor(minuut, _bonus, ontsnap_sec)
 	var plek := 0 if bot else RushSave.noteer_score(regel)
+	var online_plek := 0
+	if not bot and RushOnline.actief() and RushSave.online_keuze == 1:
+		online_plek = await _zet_online(regel)
 	RushKlank.laag(&"overwinning", &"rush_uitslag", &"overwinning", 0.3)
 	hud.toon_resultaat(dag_index, minuut, sterren, gebeld, dag_index == RushData.DAGEN.size() - 1,
-		ontsnap_sec, record, plek, regel)
+		ontsnap_sec, record, plek, regel, online_plek, _koploper)
 
 
 ## Eén regel voor de eregalerij: wie, wanneer klaar, en het pixelportret als
@@ -920,9 +935,36 @@ func _score_regel(sterren: int) -> Dictionary:
 			if def.portrait != "" and ResourceLoader.exists(def.portrait):
 				portret = (load(def.portrait) as Texture2D).get_image()
 	var code := RushPixel.naar_code(portret) if portret != null else ""
-	return {"dag": dag_index, "naam": naam, "wie": String(speler_id), "rol": rol,
+	return {"dag": dag_index, "sprint": RushData.sprint_id(), "punten": 0,
+		"naam": naam, "wie": String(speler_id), "rol": rol,
 		"minuut": snappedf(minuut, 0.1), "sterren": sterren, "gebeld": gebeld,
 		"ontsnap": -1.0, "portret": code}
+
+
+## Zet de regel online en onthoudt wat je deed, voor "X is je voorbij".
+func _zet_online(regel: Dictionary) -> int:
+	var plek: int = await RushOnline.stuur(self, regel)
+	if plek > 0:
+		var oud: Dictionary = RushSave.mijn_online.get(str(dag_index), {})
+		if String(oud.get("sprint", "")) != regel["sprint"] or int(oud.get("punten", 0)) < int(regel["punten"]):
+			RushSave.mijn_online[str(dag_index)] = {"sprint": regel["sprint"],
+				"punten": int(regel["punten"]), "eerste": plek == 1}
+		elif plek == 1:
+			RushSave.mijn_online[str(dag_index)]["eerste"] = true
+		RushSave.bewaar()
+	return plek
+
+
+## Haalt de koploper van vandaag op en hangt zijn portret aan de muur.
+func _haal_koploper() -> void:
+	if bot or not RushOnline.actief():
+		return
+	var lijst: Array = await RushOnline.koplopers(self)
+	if lijst.size() != 5 or lijst[dag_index] == null:
+		return
+	_koploper = lijst[dag_index]
+	kantoor.zet_koploper(_koploper)
+	hud.zet_doel(_koploper)
 
 
 ## QA: `--speler=eigen` zonder profiel; dan een testpersoon, niet bewaard.

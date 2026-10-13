@@ -14,6 +14,8 @@ const ONDER := 24
 var _dag: Label
 var _klok: Label
 var _pips: Control
+## De score van de koploper van vandaag, als doel bovenin.
+var _doel: Label
 var _hint: Label
 var _bel: PanelContainer
 var _bel_tekst: Label
@@ -54,6 +56,10 @@ func _ready() -> void:
 	_dag = _lbl("MA", 10, Color("#8fb3ff"))
 	_dag.position = Vector2(6, 2)
 	boven.add_child(_dag)
+
+	_doel = _lbl("", 10, Color("#ffd23f"))
+	_doel.position = Vector2(26, 2)
+	boven.add_child(_doel)
 
 	_pips = Control.new()
 	_pips.position = Vector2(6, 17)
@@ -193,6 +199,10 @@ func zet(dagkort: String, geleverd: int, minuut: float) -> void:
 	elif minuut > RushData.EIND_MIN - 60:
 		k = Color("#ffd27a")
 	_klok.add_theme_color_override(&"font_color", k)
+
+
+func zet_doel(koploper: Dictionary) -> void:
+	_doel.text = "#1 %s" % RushData.getal(int(koploper.get("punten", 0)))
 
 
 func klok_puls() -> void:
@@ -349,13 +359,15 @@ func _icoon_server() -> Control:
 
 func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, laatste: bool,
 		ontsnap_sec: float = -1.0, record: bool = false, plek: int = 0,
-		score: Dictionary = {}) -> void:
+		score: Dictionary = {}, online_plek: int = 0, koploper: Dictionary = {}) -> void:
 	_laatste_regel = score
 	var paneel := _maak_overlay(0.6)
 	var kol := paneel.get_child(0) as VBoxContainer
 	kol.add_child(_appje(RushData.KLANT_AVOND[dag_index], minuut))
 	kol.add_child(UiKit.spacer(4))
-	kol.add_child(_lbl("VRIJHEID!" if laatste else "10/10", 20, Color("#3fd27f"), true))
+	kol.add_child(_lbl("VRIJHEID!" if laatste else "10/10", 12, Color("#3fd27f"), true))
+	var punten := int(score.get("punten", 0))
+	kol.add_child(_lbl("%s punten" % RushData.getal(punten), 20, Color.WHITE, true))
 	var sterrij := Control.new()
 	sterrij.custom_minimum_size = Vector2(0, 22)
 	sterrij.set_meta(&"te_zien", 0.0)
@@ -379,12 +391,19 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 		Color("#ff9f43") if record else Color.WHITE))
 	kol.add_child(cijfers)
 	var lof := ""
-	if plek == 1:
-		lof = "Beste tijd op dit apparaat!"
+	if online_plek == 1:
+		lof = "Jij bent #1 van deze week!"
+	elif online_plek > 1:
+		lof = "#%d online deze week" % online_plek
+	elif not koploper.is_empty() and int(koploper.get("punten", 0)) > punten:
+		lof = "#1 is %s: %s punten" % [String(koploper.get("naam", "?")),
+			RushData.getal(int(koploper.get("punten", 0)))]
+	elif plek == 1:
+		lof = "Beste score op dit apparaat!"
 	elif record:
 		lof = "Snelste ontsnapping!"
 	elif laatste:
-		lof = "Sprint 14: %d van de 15 sterren" % RushSave.totaal()
+		lof = "Sprint %d: %d van de 15 sterren" % [RushData.sprint_nummer(), RushSave.totaal()]
 	if lof != "":
 		kol.add_child(_lbl(lof, 10, Color("#ffd23f"), true))
 	kol.add_child(UiKit.spacer(6))
@@ -410,7 +429,9 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 	rij.add_child(deel)
 	# Online alleen als het scorebord aanstaat.
 	var online: Object = RushOnline
-	if RushOnline.actief() and online.has_method(&"stuur") and not score.is_empty():
+	if RushOnline.actief() and RushSave.online_keuze == -1 and not score.is_empty():
+		kol.add_child(_online_vraag(score))
+	elif RushOnline.actief() and RushSave.online_keuze == 0 and online.has_method(&"stuur") and not score.is_empty():
 		var zet := _knop("Online", false)
 		zet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		zet.pressed.connect(func() -> void:
@@ -419,9 +440,9 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 			var uit: Variant = await online.call(&"stuur", self, _laatste_regel)
 			if not is_instance_valid(zet):
 				return
-			var online_plek := int(uit) if uit is int or uit is float else 0
-			zet.text = "#%d" % online_plek if online_plek > 0 else "Mislukt"
-			if online_plek <= 0:
+			var handmatig := int(uit) if uit is int or uit is float else 0
+			zet.text = "#%d" % handmatig if handmatig > 0 else "Mislukt"
+			if handmatig <= 0:
 				zet.disabled = false)
 		rij.add_child(zet)
 	if not laatste:
@@ -437,6 +458,37 @@ func toon_resultaat(dag_index: int, minuut: float, sterren: int, gebeld: int, la
 		get_tree().create_timer(0.6, true).timeout.connect(func() -> void:
 			if is_instance_valid(k):
 				k.disabled = false)
+
+
+## Eén keer: wil je op het online bord? Ja geldt voor altijd (en zet deze
+## dag er meteen op); nee kan per dag nog met de knop "Online".
+func _online_vraag(score: Dictionary) -> Control:
+	var k := VBoxContainer.new()
+	k.add_theme_constant_override(&"separation", 2)
+	k.add_child(_lbl("Op het online bord? Alleen je bijnaam, pixelportret en score.", 10, Color("#8fb3ff"), true))
+	var rij := HBoxContainer.new()
+	rij.add_theme_constant_override(&"separation", 3)
+	k.add_child(rij)
+	var ja := _knop("Ja, altijd", false)
+	ja.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var nee := _knop("Nee", false)
+	nee.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rij.add_child(ja)
+	rij.add_child(nee)
+	ja.pressed.connect(func() -> void:
+		RushSave.online_keuze = 1
+		RushSave.bewaar()
+		ja.disabled = true
+		nee.visible = false
+		ja.text = "Even..."
+		var p: int = await RushOnline.stuur(self, score)
+		if is_instance_valid(ja):
+			ja.text = "Online #%d" % p if p > 0 else "Niet gelukt")
+	nee.pressed.connect(func() -> void:
+		RushSave.online_keuze = 0
+		RushSave.bewaar()
+		k.queue_free())
+	return k
 
 
 func _cijfer(kop: String, waarde: String, kleur: Color) -> Control:

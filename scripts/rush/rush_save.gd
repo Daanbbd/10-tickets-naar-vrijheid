@@ -21,6 +21,12 @@ const SCORES_PER_DAG := 10
 static var sleutel := ""
 ## Heeft deze speler "Zo werkt het" al gezien? Dan komt het niet meer vanzelf.
 static var uitleg_gezien := false
+## Online meedoen: -1 nog niet gevraagd, 0 nee, 1 ja (dan gaat elke dag
+## vanzelf mee).
+static var online_keuze := -1
+## Wat je online zette, per dag: {sprint, punten, eerste}. Daarmee kan het
+## spel zien dat iemand je van de eerste plek heeft gestoten.
+static var mijn_online: Dictionary = {}
 
 ## De dag die nu gespeeld wordt; gezet door het menu, gelezen door het spel.
 static var dag: int = 0
@@ -54,6 +60,10 @@ static func laad() -> void:
 				scores.append(r)
 	sleutel = String(d.get("sleutel", ""))
 	uitleg_gezien = bool(d.get("uitleg_gezien", false))
+	online_keuze = int(d.get("online_keuze", -1))
+	var mo: Variant = d.get("mijn_online", {})
+	if mo is Dictionary:
+		mijn_online = mo
 	var o: Variant = d.get("ontsnapping", [])
 	if o is Array:
 		for i: int in mini(o.size(), ontsnapping.size()):
@@ -66,20 +76,27 @@ static func bewaar() -> void:
 		return
 	f.store_string(JSON.stringify({"karakter": String(karakter), "sterren": sterren,
 		"ontsnapping": ontsnapping, "profiel": RushProfiel.naar_dict(), "scores": scores,
-		"sleutel": sleutel, "uitleg_gezien": uitleg_gezien}))
+		"sleutel": sleutel, "uitleg_gezien": uitleg_gezien, "online_keuze": online_keuze,
+		"mijn_online": mijn_online}))
 
 
 ## Zet een gespeelde dag in de eregalerij. Geeft de plek terug (1 is de
 ## beste), of 0 als hij de tien niet haalt.
 static func noteer_score(regel: Dictionary) -> int:
 	var dag := int(regel.get("dag", 0))
+	var sprint := String(regel.get("sprint", ""))
+	# Regels van een vorige sprint ruimen we op: die tellen niet meer mee.
+	var nu: Array[Dictionary] = []
+	for r: Dictionary in scores:
+		if String(r.get("sprint", "")) == sprint:
+			nu.append(r)
+	scores = nu
 	var van_dag: Array[Dictionary] = []
 	for r: Dictionary in scores:
 		if int(r.get("dag", -1)) == dag:
 			van_dag.append(r)
 	van_dag.append(regel)
-	van_dag.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return float(a.get("minuut", 9999.0)) < float(b.get("minuut", 9999.0)))
+	van_dag.sort_custom(_beter)
 	van_dag = van_dag.slice(0, SCORES_PER_DAG)
 	var plek := van_dag.find(regel) + 1
 	var rest: Array[Dictionary] = []
@@ -92,14 +109,25 @@ static func noteer_score(regel: Dictionary) -> int:
 	return plek
 
 
+## De eregalerij van deze dag, alleen van deze sprint: van een andere week
+## waren de tickets anders, dus dat valt niet te vergelijken.
 static func scores_van(dag: int) -> Array[Dictionary]:
+	var sprint := RushData.sprint_id()
 	var uit: Array[Dictionary] = []
 	for r: Dictionary in scores:
-		if int(r.get("dag", -1)) == dag:
+		if int(r.get("dag", -1)) == dag and String(r.get("sprint", "")) == sprint:
 			uit.append(r)
-	uit.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return float(a.get("minuut", 9999.0)) < float(b.get("minuut", 9999.0)))
+	uit.sort_custom(_beter)
 	return uit
+
+
+## Meer punten wint; gelijk: eerder thuis.
+static func _beter(a: Dictionary, b: Dictionary) -> bool:
+	var pa := int(a.get("punten", 0))
+	var pb := int(b.get("punten", 0))
+	if pa != pb:
+		return pa > pb
+	return float(a.get("minuut", 9999.0)) < float(b.get("minuut", 9999.0))
 
 
 static func geef_sleutel() -> String:

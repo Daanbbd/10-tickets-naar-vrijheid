@@ -26,15 +26,15 @@ const TIJD_MAX := 6.0
 
 ## Wat er van een regel uit de eregalerij mee gaat. Nooit `wie`, `gebeld`
 ## of `sterren`: de server rekent de sterren zelf uit.
-const VERSTUURD := ["dag", "naam", "rol", "minuut", "ontsnap", "portret"]
+const VERSTUURD := ["dag", "naam", "rol", "minuut", "ontsnap", "punten", "portret"]
 
 
 static func actief() -> bool:
 	return ADRES != ""
 
 
-## De top 20 van deze dag, op eindtijd. Elke regel is
-## {naam, rol, minuut, sterren, ontsnap, portret}. Leeg bij een fout.
+## De top 20 van deze dag in deze sprint, op punten. Elke regel is
+## {naam, rol, minuut, sterren, ontsnap, punten, portret}. Leeg bij een fout.
 static func haal(ouder: Node, dag: int) -> Array:
 	var antw: Dictionary = await _vraag(ouder, HTTPClient.METHOD_GET, "/scores?dag=%d" % dag)
 	var uit: Array = []
@@ -65,6 +65,7 @@ static func stuur(ouder: Node, regel: Dictionary) -> int:
 		"rol": _tekst(regel["rol"]),
 		"minuut": _getal(regel["minuut"], 0.0),
 		"ontsnap": _getal(regel["ontsnap"], -1.0),
+		"punten": int(_getal(regel["punten"], 0.0)),
 		"portret": portret,
 		"sleutel": RushSave.geef_sleutel(),
 	}
@@ -118,8 +119,24 @@ static func _schoon(r: Dictionary) -> Dictionary:
 		"minuut": _getal(r.get("minuut"), 0.0),
 		"sterren": clampi(int(_getal(r.get("sterren"), 1.0)), 1, 3),
 		"ontsnap": _getal(r.get("ontsnap"), -1.0),
+		"punten": int(_getal(r.get("punten"), 0.0)),
 		"portret": portret if RushPixel.geldig(portret) else "",
 	}
+
+
+## De nummer 1 van elke dag van deze sprint: vijf regels, of null waar nog
+## niemand staat. Leeg bij een fout.
+static func koplopers(ouder: Node) -> Array:
+	var antw: Dictionary = await _vraag(ouder, HTTPClient.METHOD_GET, "/koplopers")
+	if antw["status"] != 200 or not antw["data"] is Dictionary:
+		return []
+	var dagen: Variant = (antw["data"] as Dictionary).get("dagen", [])
+	if not dagen is Array or (dagen as Array).size() != 5:
+		return []
+	var uit: Array = []
+	for r: Variant in dagen:
+		uit.append(_schoon(r) if r is Dictionary else null)
+	return uit
 
 
 static func _tekst(v: Variant) -> String:
