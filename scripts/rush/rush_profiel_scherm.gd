@@ -484,7 +484,10 @@ func _opslaan() -> void:
 	RushProfiel.naam = n
 	RushProfiel.portret = _portret.duplicate() as Image
 	RushProfiel.uit_foto = true
-	if not alleen_wie:
+	# Ook bij alleen naam en foto een uiterlijk bewaren als er nog geen is: dan
+	# lijkt het poppetje meteen op je (huid en haar komen uit de selfie), als je
+	# later toch jezelf speelt.
+	if not alleen_wie or RushProfiel.look.is_empty():
 		RushProfiel.rol = _rol
 		RushProfiel.look = _look.duplicate()
 		RushProfiel.kleuren = _kleuren.duplicate()

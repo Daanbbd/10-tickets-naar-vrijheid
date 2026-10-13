@@ -69,8 +69,11 @@ static func vakken() -> Array:
 	return ROL_VAKKEN[rol]
 
 
+## Altijd een zichtbaar poppetje: wie alleen naam en foto invulde en nooit
+## een uiterlijk koos, krijgt het standaarduiterlijk in plaats van nul lagen.
 static func frames() -> SpriteFrames:
-	return CharacterSprites.frames_for(look, _kleur(&"shirt", "#3a86ff"), _kleur(&"skin", "#e0b491"),
+	return CharacterSprites.frames_for(CharacterSprites.normaliseer_look(look),
+		_kleur(&"shirt", "#3a86ff"), _kleur(&"skin", "#e0b491"),
 		_kleur(&"hair", "#6b4b36"), _kleur(&"pants", "#34384e"), _kleur(&"accent", "#f4a259"))
 
 

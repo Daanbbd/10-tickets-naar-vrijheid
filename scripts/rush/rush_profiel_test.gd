@@ -171,6 +171,17 @@ func _opslaan_en_annuleren(scherm: RushProfielScherm) -> void:
 	s._opslaan()
 	_ok(uitkomst == [false, true], "klaar kwam niet als verwacht: %s" % [uitkomst])
 	_ok(RushProfiel.uit_foto and RushProfiel.heeft_identiteit(), "na een foto heb je een identiteit")
+	# Een profiel zonder gekozen uiterlijk moet toch een zichtbaar poppetje geven.
+	var bewaard := RushProfiel.look
+	RushProfiel.look = {}
+	var img := RushProfiel.frames().get_frame_texture(&"idle_down", 0).get_image()
+	var zichtbaar := 0
+	for y: int in img.get_height():
+		for x: int in img.get_width():
+			if img.get_pixel(x, y).a > 0.1:
+				zichtbaar += 1
+	_ok(zichtbaar > 50, "een leeg uiterlijk geeft een onzichtbaar poppetje (%d pixels)" % zichtbaar)
+	RushProfiel.look = bewaard
 	_ok(RushProfiel.naam == "Nieuw" and RushProfiel.rol == RushProfiel.Rol.SALES, "opslaan zette naam/rol niet")
 	_ok(RushProfiel.portret != null and RushProfiel.portret.get_size() == Vector2i(32, 40), "opslaan zonder portret")
 	s.queue_free()
