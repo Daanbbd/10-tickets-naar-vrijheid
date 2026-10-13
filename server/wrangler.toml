@@ -7,15 +7,14 @@ compatibility_date = "2026-09-01"
 # Een adres van de vorm https://tickets-scorebord.<jouw-naam>.workers.dev
 workers_dev = true
 
-# De opslag. Maak hem met `npx wrangler kv namespace create SCORES` en zet de id
-# die dat geeft hieronder. Zolang hier de plaatshouder staat, weigert
-# `wrangler deploy` te deployen; dat is de bedoeling.
+# Privacy: geen logs, geen sporen. De code gebruikt ook geen console.*.
+# (Dit moet boven de eerste [tabel] staan, anders leest TOML het als een veld van die tabel.)
+logpush = false
+
+# De opslag, aangemaakt met `npx wrangler kv namespace create SCORES`.
 [[kv_namespaces]]
 binding = "SCORES"
-id = "VERVANG_MET_DE_ID_VAN_JE_KV_NAMESPACE"
-
-# Privacy: geen logs, geen sporen. De code gebruikt ook geen console.*.
-logpush = false
+id = "b083be9805a845608e137c28154c99a5"
 
 [observability]
 enabled = false
